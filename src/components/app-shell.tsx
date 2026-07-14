@@ -44,7 +44,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               </div>
               <nav className="p-2 space-y-0.5">
                 {navItems.map(it => {
-                  const active = (('exact' in it) ? pathname === it.to ) : pathname.startsWith(it.to.split("/").slice(0, 2).join("/"));
+                  const active = it.to === "/" ? pathname === "/" : pathname.startsWith(it.to.split("/").slice(0, 2).join("/"));
                   const Icon = it.icon;
                   return (
                     <Link key={it.to} to={it.to} className={cn(
