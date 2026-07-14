@@ -10,18 +10,67 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as RepositoryRouteImport } from './routes/repository'
+import { Route as PromptsRouteImport } from './routes/prompts'
+import { Route as GraphRouteImport } from './routes/graph'
+import { Route as GovernanceRouteImport } from './routes/governance'
+import { Route as DataRouteImport } from './routes/data'
+import { Route as AgentsRouteImport } from './routes/agents'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ReleasesIdRouteImport } from './routes/releases.$id'
+import { Route as PublicationsIdRouteImport } from './routes/publications.$id'
+import { Route as KnowledgeObjectsNewRouteImport } from './routes/knowledge-objects.new'
 import { Route as FrameworksIdRouteImport } from './routes/frameworks.$id'
 import { Route as ConceptsIdRouteImport } from './routes/concepts.$id'
+import { Route as ClientToolsNewRouteImport } from './routes/client-tools.new'
 
 const RepositoryRoute = RepositoryRouteImport.update({
   id: '/repository',
   path: '/repository',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PromptsRoute = PromptsRouteImport.update({
+  id: '/prompts',
+  path: '/prompts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GraphRoute = GraphRouteImport.update({
+  id: '/graph',
+  path: '/graph',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GovernanceRoute = GovernanceRouteImport.update({
+  id: '/governance',
+  path: '/governance',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DataRoute = DataRouteImport.update({
+  id: '/data',
+  path: '/data',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AgentsRoute = AgentsRouteImport.update({
+  id: '/agents',
+  path: '/agents',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReleasesIdRoute = ReleasesIdRouteImport.update({
+  id: '/releases/$id',
+  path: '/releases/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PublicationsIdRoute = PublicationsIdRouteImport.update({
+  id: '/publications/$id',
+  path: '/publications/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KnowledgeObjectsNewRoute = KnowledgeObjectsNewRouteImport.update({
+  id: '/knowledge-objects/new',
+  path: '/knowledge-objects/new',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FrameworksIdRoute = FrameworksIdRouteImport.update({
@@ -34,39 +83,120 @@ const ConceptsIdRoute = ConceptsIdRouteImport.update({
   path: '/concepts/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ClientToolsNewRoute = ClientToolsNewRouteImport.update({
+  id: '/client-tools/new',
+  path: '/client-tools/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/agents': typeof AgentsRoute
+  '/data': typeof DataRoute
+  '/governance': typeof GovernanceRoute
+  '/graph': typeof GraphRoute
+  '/prompts': typeof PromptsRoute
   '/repository': typeof RepositoryRoute
+  '/client-tools/new': typeof ClientToolsNewRoute
   '/concepts/$id': typeof ConceptsIdRoute
   '/frameworks/$id': typeof FrameworksIdRoute
+  '/knowledge-objects/new': typeof KnowledgeObjectsNewRoute
+  '/publications/$id': typeof PublicationsIdRoute
+  '/releases/$id': typeof ReleasesIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/agents': typeof AgentsRoute
+  '/data': typeof DataRoute
+  '/governance': typeof GovernanceRoute
+  '/graph': typeof GraphRoute
+  '/prompts': typeof PromptsRoute
   '/repository': typeof RepositoryRoute
+  '/client-tools/new': typeof ClientToolsNewRoute
   '/concepts/$id': typeof ConceptsIdRoute
   '/frameworks/$id': typeof FrameworksIdRoute
+  '/knowledge-objects/new': typeof KnowledgeObjectsNewRoute
+  '/publications/$id': typeof PublicationsIdRoute
+  '/releases/$id': typeof ReleasesIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/agents': typeof AgentsRoute
+  '/data': typeof DataRoute
+  '/governance': typeof GovernanceRoute
+  '/graph': typeof GraphRoute
+  '/prompts': typeof PromptsRoute
   '/repository': typeof RepositoryRoute
+  '/client-tools/new': typeof ClientToolsNewRoute
   '/concepts/$id': typeof ConceptsIdRoute
   '/frameworks/$id': typeof FrameworksIdRoute
+  '/knowledge-objects/new': typeof KnowledgeObjectsNewRoute
+  '/publications/$id': typeof PublicationsIdRoute
+  '/releases/$id': typeof ReleasesIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/repository' | '/concepts/$id' | '/frameworks/$id'
+  fullPaths:
+    | '/'
+    | '/agents'
+    | '/data'
+    | '/governance'
+    | '/graph'
+    | '/prompts'
+    | '/repository'
+    | '/client-tools/new'
+    | '/concepts/$id'
+    | '/frameworks/$id'
+    | '/knowledge-objects/new'
+    | '/publications/$id'
+    | '/releases/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/repository' | '/concepts/$id' | '/frameworks/$id'
-  id: '__root__' | '/' | '/repository' | '/concepts/$id' | '/frameworks/$id'
+  to:
+    | '/'
+    | '/agents'
+    | '/data'
+    | '/governance'
+    | '/graph'
+    | '/prompts'
+    | '/repository'
+    | '/client-tools/new'
+    | '/concepts/$id'
+    | '/frameworks/$id'
+    | '/knowledge-objects/new'
+    | '/publications/$id'
+    | '/releases/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/agents'
+    | '/data'
+    | '/governance'
+    | '/graph'
+    | '/prompts'
+    | '/repository'
+    | '/client-tools/new'
+    | '/concepts/$id'
+    | '/frameworks/$id'
+    | '/knowledge-objects/new'
+    | '/publications/$id'
+    | '/releases/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AgentsRoute: typeof AgentsRoute
+  DataRoute: typeof DataRoute
+  GovernanceRoute: typeof GovernanceRoute
+  GraphRoute: typeof GraphRoute
+  PromptsRoute: typeof PromptsRoute
   RepositoryRoute: typeof RepositoryRoute
+  ClientToolsNewRoute: typeof ClientToolsNewRoute
   ConceptsIdRoute: typeof ConceptsIdRoute
   FrameworksIdRoute: typeof FrameworksIdRoute
+  KnowledgeObjectsNewRoute: typeof KnowledgeObjectsNewRoute
+  PublicationsIdRoute: typeof PublicationsIdRoute
+  ReleasesIdRoute: typeof ReleasesIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -78,11 +208,67 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RepositoryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/prompts': {
+      id: '/prompts'
+      path: '/prompts'
+      fullPath: '/prompts'
+      preLoaderRoute: typeof PromptsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/graph': {
+      id: '/graph'
+      path: '/graph'
+      fullPath: '/graph'
+      preLoaderRoute: typeof GraphRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/governance': {
+      id: '/governance'
+      path: '/governance'
+      fullPath: '/governance'
+      preLoaderRoute: typeof GovernanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/data': {
+      id: '/data'
+      path: '/data'
+      fullPath: '/data'
+      preLoaderRoute: typeof DataRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/agents': {
+      id: '/agents'
+      path: '/agents'
+      fullPath: '/agents'
+      preLoaderRoute: typeof AgentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/releases/$id': {
+      id: '/releases/$id'
+      path: '/releases/$id'
+      fullPath: '/releases/$id'
+      preLoaderRoute: typeof ReleasesIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/publications/$id': {
+      id: '/publications/$id'
+      path: '/publications/$id'
+      fullPath: '/publications/$id'
+      preLoaderRoute: typeof PublicationsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/knowledge-objects/new': {
+      id: '/knowledge-objects/new'
+      path: '/knowledge-objects/new'
+      fullPath: '/knowledge-objects/new'
+      preLoaderRoute: typeof KnowledgeObjectsNewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/frameworks/$id': {
@@ -99,14 +285,30 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConceptsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/client-tools/new': {
+      id: '/client-tools/new'
+      path: '/client-tools/new'
+      fullPath: '/client-tools/new'
+      preLoaderRoute: typeof ClientToolsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AgentsRoute: AgentsRoute,
+  DataRoute: DataRoute,
+  GovernanceRoute: GovernanceRoute,
+  GraphRoute: GraphRoute,
+  PromptsRoute: PromptsRoute,
   RepositoryRoute: RepositoryRoute,
+  ClientToolsNewRoute: ClientToolsNewRoute,
   ConceptsIdRoute: ConceptsIdRoute,
   FrameworksIdRoute: FrameworksIdRoute,
+  KnowledgeObjectsNewRoute: KnowledgeObjectsNewRoute,
+  PublicationsIdRoute: PublicationsIdRoute,
+  ReleasesIdRoute: ReleasesIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
