@@ -1,6 +1,6 @@
 import type {
   Domain, Concept, Framework, KnowledgeObject, ClientTool,
-  PublicationBlueprint, Prompt, Agent, Release, DataSnapshot,
+  PublicationBlueprint, Prompt, Agent, Release, DataSnapshot, PromptFamily,
 } from "./schema";
 import { SCHEMA_VERSION } from "./schema";
 
