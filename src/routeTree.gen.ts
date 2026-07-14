@@ -9,38 +9,75 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as RepositoryRouteImport } from './routes/repository'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as FrameworksIdRouteImport } from './routes/frameworks.$id'
+import { Route as ConceptsIdRouteImport } from './routes/concepts.$id'
 
+const RepositoryRoute = RepositoryRouteImport.update({
+  id: '/repository',
+  path: '/repository',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FrameworksIdRoute = FrameworksIdRouteImport.update({
+  id: '/frameworks/$id',
+  path: '/frameworks/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConceptsIdRoute = ConceptsIdRouteImport.update({
+  id: '/concepts/$id',
+  path: '/concepts/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/repository': typeof RepositoryRoute
+  '/concepts/$id': typeof ConceptsIdRoute
+  '/frameworks/$id': typeof FrameworksIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/repository': typeof RepositoryRoute
+  '/concepts/$id': typeof ConceptsIdRoute
+  '/frameworks/$id': typeof FrameworksIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/repository': typeof RepositoryRoute
+  '/concepts/$id': typeof ConceptsIdRoute
+  '/frameworks/$id': typeof FrameworksIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/repository' | '/concepts/$id' | '/frameworks/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/repository' | '/concepts/$id' | '/frameworks/$id'
+  id: '__root__' | '/' | '/repository' | '/concepts/$id' | '/frameworks/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  RepositoryRoute: typeof RepositoryRoute
+  ConceptsIdRoute: typeof ConceptsIdRoute
+  FrameworksIdRoute: typeof FrameworksIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/repository': {
+      id: '/repository'
+      path: '/repository'
+      fullPath: '/repository'
+      preLoaderRoute: typeof RepositoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +85,28 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/frameworks/$id': {
+      id: '/frameworks/$id'
+      path: '/frameworks/$id'
+      fullPath: '/frameworks/$id'
+      preLoaderRoute: typeof FrameworksIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/concepts/$id': {
+      id: '/concepts/$id'
+      path: '/concepts/$id'
+      fullPath: '/concepts/$id'
+      preLoaderRoute: typeof ConceptsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  RepositoryRoute: RepositoryRoute,
+  ConceptsIdRoute: ConceptsIdRoute,
+  FrameworksIdRoute: FrameworksIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
