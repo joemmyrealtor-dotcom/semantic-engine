@@ -27,7 +27,7 @@ export function AppSidebar() {
       </div>
       <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
         {items.map(it => {
-          const active = it.exact ? pathname === it.to : pathname.startsWith(it.to.split("/").slice(0, 2).join("/"));
+          const active = (('exact' in it) ? pathname === it.to ) : pathname.startsWith(it.to.split("/").slice(0, 2).join("/"));
           const Icon = it.icon;
           return (
             <Link
