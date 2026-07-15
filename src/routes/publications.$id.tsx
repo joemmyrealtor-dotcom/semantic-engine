@@ -368,6 +368,7 @@ function ChaptersCard({ draft, snapshot, onChapters }: { draft: PublicationBluep
                   <Textarea rows={3} value={selected.learningObjectives.join("\n")} onChange={e => updateChapter({ learningObjectives: e.target.value.split("\n").map(x => x.trim()).filter(Boolean) })} />
                 </Field>
                 <Field label="Editorial notes"><Textarea rows={2} value={selected.editorialNotes} onChange={e => updateChapter({ editorialNotes: e.target.value })} /></Field>
+                <ChapterPresentationsEditor chapter={selected} onChange={presentations => updateChapter({ presentations })} />
               </div>
             )}
           </div>
