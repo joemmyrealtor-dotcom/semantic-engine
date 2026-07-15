@@ -92,6 +92,11 @@ export interface Concept extends Timestamped {
   reviewCadenceMonths: number;
   lastReviewedAt: string | null;
   humanReviewCompleted: boolean;
+  // Canonical Knowledge Core extensions
+  manufacturingStatus: ManufacturingStatus;
+  publicationLinks: string[];   // PL-### module ids traced to this concept family
+  clientToolkitLinks: string[]; // W-/C-/DT- tool ids packaged for clients
+  aiPackLinks: string[];        // PR-### / AG-### composed into AI packs
 }
 
 export interface Framework extends Timestamped {
