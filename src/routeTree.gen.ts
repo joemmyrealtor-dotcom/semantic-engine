@@ -18,6 +18,7 @@ import { Route as AgentsRouteImport } from './routes/agents'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PublicationsIndexRouteImport } from './routes/publications.index'
 import { Route as ConceptsIndexRouteImport } from './routes/concepts.index'
+import { Route as ClientToolkitsIndexRouteImport } from './routes/client-toolkits.index'
 import { Route as ReleasesIdRouteImport } from './routes/releases.$id'
 import { Route as PublicationsNewRouteImport } from './routes/publications.new'
 import { Route as PublicationsIdRouteImport } from './routes/publications.$id'
@@ -71,6 +72,11 @@ const ConceptsIndexRoute = ConceptsIndexRouteImport.update({
   path: '/concepts/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ClientToolkitsIndexRoute = ClientToolkitsIndexRouteImport.update({
+  id: '/client-toolkits/',
+  path: '/client-toolkits/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ReleasesIdRoute = ReleasesIdRouteImport.update({
   id: '/releases/$id',
   path: '/releases/$id',
@@ -122,6 +128,7 @@ export interface FileRoutesByFullPath {
   '/publications/$id': typeof PublicationsIdRoute
   '/publications/new': typeof PublicationsNewRoute
   '/releases/$id': typeof ReleasesIdRoute
+  '/client-toolkits/': typeof ClientToolkitsIndexRoute
   '/concepts/': typeof ConceptsIndexRoute
   '/publications/': typeof PublicationsIndexRoute
 }
@@ -140,6 +147,7 @@ export interface FileRoutesByTo {
   '/publications/$id': typeof PublicationsIdRoute
   '/publications/new': typeof PublicationsNewRoute
   '/releases/$id': typeof ReleasesIdRoute
+  '/client-toolkits': typeof ClientToolkitsIndexRoute
   '/concepts': typeof ConceptsIndexRoute
   '/publications': typeof PublicationsIndexRoute
 }
@@ -159,6 +167,7 @@ export interface FileRoutesById {
   '/publications/$id': typeof PublicationsIdRoute
   '/publications/new': typeof PublicationsNewRoute
   '/releases/$id': typeof ReleasesIdRoute
+  '/client-toolkits/': typeof ClientToolkitsIndexRoute
   '/concepts/': typeof ConceptsIndexRoute
   '/publications/': typeof PublicationsIndexRoute
 }
@@ -179,6 +188,7 @@ export interface FileRouteTypes {
     | '/publications/$id'
     | '/publications/new'
     | '/releases/$id'
+    | '/client-toolkits/'
     | '/concepts/'
     | '/publications/'
   fileRoutesByTo: FileRoutesByTo
@@ -197,6 +207,7 @@ export interface FileRouteTypes {
     | '/publications/$id'
     | '/publications/new'
     | '/releases/$id'
+    | '/client-toolkits'
     | '/concepts'
     | '/publications'
   id:
@@ -215,6 +226,7 @@ export interface FileRouteTypes {
     | '/publications/$id'
     | '/publications/new'
     | '/releases/$id'
+    | '/client-toolkits/'
     | '/concepts/'
     | '/publications/'
   fileRoutesById: FileRoutesById
@@ -234,6 +246,7 @@ export interface RootRouteChildren {
   PublicationsIdRoute: typeof PublicationsIdRoute
   PublicationsNewRoute: typeof PublicationsNewRoute
   ReleasesIdRoute: typeof ReleasesIdRoute
+  ClientToolkitsIndexRoute: typeof ClientToolkitsIndexRoute
   ConceptsIndexRoute: typeof ConceptsIndexRoute
   PublicationsIndexRoute: typeof PublicationsIndexRoute
 }
@@ -303,6 +316,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConceptsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/client-toolkits/': {
+      id: '/client-toolkits/'
+      path: '/client-toolkits'
+      fullPath: '/client-toolkits/'
+      preLoaderRoute: typeof ClientToolkitsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/releases/$id': {
       id: '/releases/$id'
       path: '/releases/$id'
@@ -370,6 +390,7 @@ const rootRouteChildren: RootRouteChildren = {
   PublicationsIdRoute: PublicationsIdRoute,
   PublicationsNewRoute: PublicationsNewRoute,
   ReleasesIdRoute: ReleasesIdRoute,
+  ClientToolkitsIndexRoute: ClientToolkitsIndexRoute,
   ConceptsIndexRoute: ConceptsIndexRoute,
   PublicationsIndexRoute: PublicationsIndexRoute,
 }
