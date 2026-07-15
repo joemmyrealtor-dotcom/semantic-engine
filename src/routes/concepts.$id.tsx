@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PageHeader, PageBody } from "@/components/page-header";
 import { LoadingState, StatusBadge, SectionTitle, ErrorState } from "@/components/ui-kit";
 import { useSnapshot, Repo } from "@/lib/use-snapshot";
@@ -7,10 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { validateConceptId, findDuplicateCanonical } from "@/lib/data/service";
+import { validateConceptId, findDuplicateCanonical, generateDraftKnowledgeObjects } from "@/lib/data/service";
 import { toast } from "sonner";
-import type { Concept, Status } from "@/lib/data/schema";
+import { KNOWLEDGE_OBJECT_TYPES, MANUFACTURING_STATUSES, type Concept, type KnowledgeObjectType, type ManufacturingStatus, type Status } from "@/lib/data/schema";
+import { ManufacturingBadge } from "./concepts.index";
 
 export const Route = createFileRoute("/concepts/$id")({
   head: ({ params }) => ({ meta: [{ title: `${params.id} — Concept Editor` }] }),
