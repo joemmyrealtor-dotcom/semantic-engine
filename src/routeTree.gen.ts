@@ -16,6 +16,7 @@ import { Route as GovernanceRouteImport } from './routes/governance'
 import { Route as DataRouteImport } from './routes/data'
 import { Route as AgentsRouteImport } from './routes/agents'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ConceptsIndexRouteImport } from './routes/concepts.index'
 import { Route as ReleasesIdRouteImport } from './routes/releases.$id'
 import { Route as PublicationsIdRouteImport } from './routes/publications.$id'
 import { Route as KnowledgeObjectsNewRouteImport } from './routes/knowledge-objects.new'
@@ -56,6 +57,11 @@ const AgentsRoute = AgentsRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConceptsIndexRoute = ConceptsIndexRouteImport.update({
+  id: '/concepts/',
+  path: '/concepts/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReleasesIdRoute = ReleasesIdRouteImport.update({
@@ -103,6 +109,7 @@ export interface FileRoutesByFullPath {
   '/knowledge-objects/new': typeof KnowledgeObjectsNewRoute
   '/publications/$id': typeof PublicationsIdRoute
   '/releases/$id': typeof ReleasesIdRoute
+  '/concepts/': typeof ConceptsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -118,6 +125,7 @@ export interface FileRoutesByTo {
   '/knowledge-objects/new': typeof KnowledgeObjectsNewRoute
   '/publications/$id': typeof PublicationsIdRoute
   '/releases/$id': typeof ReleasesIdRoute
+  '/concepts': typeof ConceptsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -134,6 +142,7 @@ export interface FileRoutesById {
   '/knowledge-objects/new': typeof KnowledgeObjectsNewRoute
   '/publications/$id': typeof PublicationsIdRoute
   '/releases/$id': typeof ReleasesIdRoute
+  '/concepts/': typeof ConceptsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -151,6 +160,7 @@ export interface FileRouteTypes {
     | '/knowledge-objects/new'
     | '/publications/$id'
     | '/releases/$id'
+    | '/concepts/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -166,6 +176,7 @@ export interface FileRouteTypes {
     | '/knowledge-objects/new'
     | '/publications/$id'
     | '/releases/$id'
+    | '/concepts'
   id:
     | '__root__'
     | '/'
@@ -181,6 +192,7 @@ export interface FileRouteTypes {
     | '/knowledge-objects/new'
     | '/publications/$id'
     | '/releases/$id'
+    | '/concepts/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -197,6 +209,7 @@ export interface RootRouteChildren {
   KnowledgeObjectsNewRoute: typeof KnowledgeObjectsNewRoute
   PublicationsIdRoute: typeof PublicationsIdRoute
   ReleasesIdRoute: typeof ReleasesIdRoute
+  ConceptsIndexRoute: typeof ConceptsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -248,6 +261,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/concepts/': {
+      id: '/concepts/'
+      path: '/concepts'
+      fullPath: '/concepts/'
+      preLoaderRoute: typeof ConceptsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/releases/$id': {
@@ -309,6 +329,7 @@ const rootRouteChildren: RootRouteChildren = {
   KnowledgeObjectsNewRoute: KnowledgeObjectsNewRoute,
   PublicationsIdRoute: PublicationsIdRoute,
   ReleasesIdRoute: ReleasesIdRoute,
+  ConceptsIndexRoute: ConceptsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

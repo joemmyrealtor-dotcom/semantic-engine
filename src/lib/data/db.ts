@@ -25,10 +25,22 @@ function getDB() {
 export async function loadSnapshot(): Promise<DataSnapshot> {
   const db = await getDB();
   const existing = (await db.get(STORE, SNAPSHOT_KEY)) as DataSnapshot | undefined;
-  if (existing && existing.schemaVersion === SCHEMA_VERSION) return existing;
+  if (existing && existing.schemaVersion === SCHEMA_VERSION) return migrateSnapshot(existing);
   const seeded = buildSeedSnapshot();
   await db.put(STORE, seeded, SNAPSHOT_KEY);
   return seeded;
+}
+
+// Additive, backward-compatible field backfill for Canonical Knowledge Core.
+function migrateSnapshot(s: DataSnapshot): DataSnapshot {
+  const concepts = s.concepts.map(c => ({
+    ...c,
+    manufacturingStatus: c.manufacturingStatus ?? (c.status === "Canonical" ? "Canonical" : "Draft"),
+    publicationLinks: c.publicationLinks ?? [],
+    clientToolkitLinks: c.clientToolkitLinks ?? [],
+    aiPackLinks: c.aiPackLinks ?? [],
+  }));
+  return { ...s, concepts };
 }
 
 export async function saveSnapshot(snapshot: DataSnapshot): Promise<void> {

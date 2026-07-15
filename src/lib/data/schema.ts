@@ -29,6 +29,10 @@ export type PromptFamily =
   | "Transformation"
   | "Marketing";
 
+export type ManufacturingStatus = "Draft" | "Editorial" | "QA" | "Canonical";
+
+export const MANUFACTURING_STATUSES: ManufacturingStatus[] = ["Draft", "Editorial", "QA", "Canonical"];
+
 export type KnowledgeObjectType =
   | "Definition"
   | "Why It Matters"
@@ -42,7 +46,16 @@ export type KnowledgeObjectType =
   | "FAQ"
   | "Reflection Question"
   | "Professional Boundary"
-  | "Assessment Item";
+  | "Assessment Item"
+  | "Key Insight"
+  | "Application Guide";
+
+export const KNOWLEDGE_OBJECT_TYPES: KnowledgeObjectType[] = [
+  "Definition", "Why It Matters", "Principle", "Explanation", "Example",
+  "Scenario", "Case Study", "Joe's Strategy", "Mistake Alert", "FAQ",
+  "Reflection Question", "Professional Boundary", "Assessment Item",
+  "Key Insight", "Application Guide",
+];
 
 export interface Timestamped {
   createdAt: string;
@@ -79,6 +92,11 @@ export interface Concept extends Timestamped {
   reviewCadenceMonths: number;
   lastReviewedAt: string | null;
   humanReviewCompleted: boolean;
+  // Canonical Knowledge Core extensions
+  manufacturingStatus: ManufacturingStatus;
+  publicationLinks: string[];   // PL-### module ids traced to this concept family
+  clientToolkitLinks: string[]; // W-/C-/DT- tool ids packaged for clients
+  aiPackLinks: string[];        // PR-### / AG-### composed into AI packs
 }
 
 export interface Framework extends Timestamped {
