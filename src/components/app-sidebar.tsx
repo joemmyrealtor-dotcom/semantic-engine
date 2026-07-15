@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Library, Network, BookOpen, Wrench, ScrollText, Bot, Package, ShieldCheck, Database, PenTool, BookMarked, Briefcase, Sparkles } from "lucide-react";
+import { LayoutDashboard, Library, Network, BookOpen, Wrench, ScrollText, Bot, Package, ShieldCheck, Database, PenTool, BookMarked, Briefcase, Sparkles, Workflow, Activity } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const items = [
@@ -14,6 +14,8 @@ const items = [
   { to: "/ai-packs", label: "AI Packs", icon: Sparkles },
   { to: "/prompts", label: "Prompts", icon: ScrollText },
   { to: "/agents", label: "Agents", icon: Bot },
+  { to: "/automations", label: "Automations", icon: Workflow },
+  { to: "/operations", label: "Operations", icon: Activity },
   { to: "/releases/LKR-1.0.001", label: "Releases", icon: Package },
   { to: "/governance", label: "Governance", icon: ShieldCheck },
   { to: "/data", label: "Import / Export", icon: Database },

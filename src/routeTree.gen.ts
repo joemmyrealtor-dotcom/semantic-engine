@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as RepositoryRouteImport } from './routes/repository'
 import { Route as PromptsRouteImport } from './routes/prompts'
+import { Route as OperationsRouteImport } from './routes/operations'
 import { Route as GraphRouteImport } from './routes/graph'
 import { Route as GovernanceRouteImport } from './routes/governance'
 import { Route as DataRouteImport } from './routes/data'
@@ -18,6 +19,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as PublicationsIndexRouteImport } from './routes/publications.index'
 import { Route as ConceptsIndexRouteImport } from './routes/concepts.index'
 import { Route as ClientToolkitsIndexRouteImport } from './routes/client-toolkits.index'
+import { Route as AutomationsIndexRouteImport } from './routes/automations.index'
 import { Route as AiPacksIndexRouteImport } from './routes/ai-packs.index'
 import { Route as AgentsIndexRouteImport } from './routes/agents.index'
 import { Route as ReleasesIdRouteImport } from './routes/releases.$id'
@@ -28,6 +30,8 @@ import { Route as FrameworksIdRouteImport } from './routes/frameworks.$id'
 import { Route as ConceptsIdRouteImport } from './routes/concepts.$id'
 import { Route as ClientToolsNewRouteImport } from './routes/client-tools.new'
 import { Route as ClientToolkitsIdRouteImport } from './routes/client-toolkits.$id'
+import { Route as AutomationsNewRouteImport } from './routes/automations.new'
+import { Route as AutomationsIdRouteImport } from './routes/automations.$id'
 import { Route as AiPacksIdRouteImport } from './routes/ai-packs.$id'
 import { Route as AgentsIdRouteImport } from './routes/agents.$id'
 
@@ -39,6 +43,11 @@ const RepositoryRoute = RepositoryRouteImport.update({
 const PromptsRoute = PromptsRouteImport.update({
   id: '/prompts',
   path: '/prompts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OperationsRoute = OperationsRouteImport.update({
+  id: '/operations',
+  path: '/operations',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GraphRoute = GraphRouteImport.update({
@@ -74,6 +83,11 @@ const ConceptsIndexRoute = ConceptsIndexRouteImport.update({
 const ClientToolkitsIndexRoute = ClientToolkitsIndexRouteImport.update({
   id: '/client-toolkits/',
   path: '/client-toolkits/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AutomationsIndexRoute = AutomationsIndexRouteImport.update({
+  id: '/automations/',
+  path: '/automations/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AiPacksIndexRoute = AiPacksIndexRouteImport.update({
@@ -126,6 +140,16 @@ const ClientToolkitsIdRoute = ClientToolkitsIdRouteImport.update({
   path: '/client-toolkits/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AutomationsNewRoute = AutomationsNewRouteImport.update({
+  id: '/automations/new',
+  path: '/automations/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AutomationsIdRoute = AutomationsIdRouteImport.update({
+  id: '/automations/$id',
+  path: '/automations/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AiPacksIdRoute = AiPacksIdRouteImport.update({
   id: '/ai-packs/$id',
   path: '/ai-packs/$id',
@@ -142,10 +166,13 @@ export interface FileRoutesByFullPath {
   '/data': typeof DataRoute
   '/governance': typeof GovernanceRoute
   '/graph': typeof GraphRoute
+  '/operations': typeof OperationsRoute
   '/prompts': typeof PromptsRoute
   '/repository': typeof RepositoryRoute
   '/agents/$id': typeof AgentsIdRoute
   '/ai-packs/$id': typeof AiPacksIdRoute
+  '/automations/$id': typeof AutomationsIdRoute
+  '/automations/new': typeof AutomationsNewRoute
   '/client-toolkits/$id': typeof ClientToolkitsIdRoute
   '/client-tools/new': typeof ClientToolsNewRoute
   '/concepts/$id': typeof ConceptsIdRoute
@@ -156,6 +183,7 @@ export interface FileRoutesByFullPath {
   '/releases/$id': typeof ReleasesIdRoute
   '/agents/': typeof AgentsIndexRoute
   '/ai-packs/': typeof AiPacksIndexRoute
+  '/automations/': typeof AutomationsIndexRoute
   '/client-toolkits/': typeof ClientToolkitsIndexRoute
   '/concepts/': typeof ConceptsIndexRoute
   '/publications/': typeof PublicationsIndexRoute
@@ -165,10 +193,13 @@ export interface FileRoutesByTo {
   '/data': typeof DataRoute
   '/governance': typeof GovernanceRoute
   '/graph': typeof GraphRoute
+  '/operations': typeof OperationsRoute
   '/prompts': typeof PromptsRoute
   '/repository': typeof RepositoryRoute
   '/agents/$id': typeof AgentsIdRoute
   '/ai-packs/$id': typeof AiPacksIdRoute
+  '/automations/$id': typeof AutomationsIdRoute
+  '/automations/new': typeof AutomationsNewRoute
   '/client-toolkits/$id': typeof ClientToolkitsIdRoute
   '/client-tools/new': typeof ClientToolsNewRoute
   '/concepts/$id': typeof ConceptsIdRoute
@@ -179,6 +210,7 @@ export interface FileRoutesByTo {
   '/releases/$id': typeof ReleasesIdRoute
   '/agents': typeof AgentsIndexRoute
   '/ai-packs': typeof AiPacksIndexRoute
+  '/automations': typeof AutomationsIndexRoute
   '/client-toolkits': typeof ClientToolkitsIndexRoute
   '/concepts': typeof ConceptsIndexRoute
   '/publications': typeof PublicationsIndexRoute
@@ -189,10 +221,13 @@ export interface FileRoutesById {
   '/data': typeof DataRoute
   '/governance': typeof GovernanceRoute
   '/graph': typeof GraphRoute
+  '/operations': typeof OperationsRoute
   '/prompts': typeof PromptsRoute
   '/repository': typeof RepositoryRoute
   '/agents/$id': typeof AgentsIdRoute
   '/ai-packs/$id': typeof AiPacksIdRoute
+  '/automations/$id': typeof AutomationsIdRoute
+  '/automations/new': typeof AutomationsNewRoute
   '/client-toolkits/$id': typeof ClientToolkitsIdRoute
   '/client-tools/new': typeof ClientToolsNewRoute
   '/concepts/$id': typeof ConceptsIdRoute
@@ -203,6 +238,7 @@ export interface FileRoutesById {
   '/releases/$id': typeof ReleasesIdRoute
   '/agents/': typeof AgentsIndexRoute
   '/ai-packs/': typeof AiPacksIndexRoute
+  '/automations/': typeof AutomationsIndexRoute
   '/client-toolkits/': typeof ClientToolkitsIndexRoute
   '/concepts/': typeof ConceptsIndexRoute
   '/publications/': typeof PublicationsIndexRoute
@@ -214,10 +250,13 @@ export interface FileRouteTypes {
     | '/data'
     | '/governance'
     | '/graph'
+    | '/operations'
     | '/prompts'
     | '/repository'
     | '/agents/$id'
     | '/ai-packs/$id'
+    | '/automations/$id'
+    | '/automations/new'
     | '/client-toolkits/$id'
     | '/client-tools/new'
     | '/concepts/$id'
@@ -228,6 +267,7 @@ export interface FileRouteTypes {
     | '/releases/$id'
     | '/agents/'
     | '/ai-packs/'
+    | '/automations/'
     | '/client-toolkits/'
     | '/concepts/'
     | '/publications/'
@@ -237,10 +277,13 @@ export interface FileRouteTypes {
     | '/data'
     | '/governance'
     | '/graph'
+    | '/operations'
     | '/prompts'
     | '/repository'
     | '/agents/$id'
     | '/ai-packs/$id'
+    | '/automations/$id'
+    | '/automations/new'
     | '/client-toolkits/$id'
     | '/client-tools/new'
     | '/concepts/$id'
@@ -251,6 +294,7 @@ export interface FileRouteTypes {
     | '/releases/$id'
     | '/agents'
     | '/ai-packs'
+    | '/automations'
     | '/client-toolkits'
     | '/concepts'
     | '/publications'
@@ -260,10 +304,13 @@ export interface FileRouteTypes {
     | '/data'
     | '/governance'
     | '/graph'
+    | '/operations'
     | '/prompts'
     | '/repository'
     | '/agents/$id'
     | '/ai-packs/$id'
+    | '/automations/$id'
+    | '/automations/new'
     | '/client-toolkits/$id'
     | '/client-tools/new'
     | '/concepts/$id'
@@ -274,6 +321,7 @@ export interface FileRouteTypes {
     | '/releases/$id'
     | '/agents/'
     | '/ai-packs/'
+    | '/automations/'
     | '/client-toolkits/'
     | '/concepts/'
     | '/publications/'
@@ -284,10 +332,13 @@ export interface RootRouteChildren {
   DataRoute: typeof DataRoute
   GovernanceRoute: typeof GovernanceRoute
   GraphRoute: typeof GraphRoute
+  OperationsRoute: typeof OperationsRoute
   PromptsRoute: typeof PromptsRoute
   RepositoryRoute: typeof RepositoryRoute
   AgentsIdRoute: typeof AgentsIdRoute
   AiPacksIdRoute: typeof AiPacksIdRoute
+  AutomationsIdRoute: typeof AutomationsIdRoute
+  AutomationsNewRoute: typeof AutomationsNewRoute
   ClientToolkitsIdRoute: typeof ClientToolkitsIdRoute
   ClientToolsNewRoute: typeof ClientToolsNewRoute
   ConceptsIdRoute: typeof ConceptsIdRoute
@@ -298,6 +349,7 @@ export interface RootRouteChildren {
   ReleasesIdRoute: typeof ReleasesIdRoute
   AgentsIndexRoute: typeof AgentsIndexRoute
   AiPacksIndexRoute: typeof AiPacksIndexRoute
+  AutomationsIndexRoute: typeof AutomationsIndexRoute
   ClientToolkitsIndexRoute: typeof ClientToolkitsIndexRoute
   ConceptsIndexRoute: typeof ConceptsIndexRoute
   PublicationsIndexRoute: typeof PublicationsIndexRoute
@@ -317,6 +369,13 @@ declare module '@tanstack/react-router' {
       path: '/prompts'
       fullPath: '/prompts'
       preLoaderRoute: typeof PromptsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/operations': {
+      id: '/operations'
+      path: '/operations'
+      fullPath: '/operations'
+      preLoaderRoute: typeof OperationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/graph': {
@@ -366,6 +425,13 @@ declare module '@tanstack/react-router' {
       path: '/client-toolkits'
       fullPath: '/client-toolkits/'
       preLoaderRoute: typeof ClientToolkitsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/automations/': {
+      id: '/automations/'
+      path: '/automations'
+      fullPath: '/automations/'
+      preLoaderRoute: typeof AutomationsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ai-packs/': {
@@ -438,6 +504,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClientToolkitsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/automations/new': {
+      id: '/automations/new'
+      path: '/automations/new'
+      fullPath: '/automations/new'
+      preLoaderRoute: typeof AutomationsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/automations/$id': {
+      id: '/automations/$id'
+      path: '/automations/$id'
+      fullPath: '/automations/$id'
+      preLoaderRoute: typeof AutomationsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ai-packs/$id': {
       id: '/ai-packs/$id'
       path: '/ai-packs/$id'
@@ -460,10 +540,13 @@ const rootRouteChildren: RootRouteChildren = {
   DataRoute: DataRoute,
   GovernanceRoute: GovernanceRoute,
   GraphRoute: GraphRoute,
+  OperationsRoute: OperationsRoute,
   PromptsRoute: PromptsRoute,
   RepositoryRoute: RepositoryRoute,
   AgentsIdRoute: AgentsIdRoute,
   AiPacksIdRoute: AiPacksIdRoute,
+  AutomationsIdRoute: AutomationsIdRoute,
+  AutomationsNewRoute: AutomationsNewRoute,
   ClientToolkitsIdRoute: ClientToolkitsIdRoute,
   ClientToolsNewRoute: ClientToolsNewRoute,
   ConceptsIdRoute: ConceptsIdRoute,
@@ -474,6 +557,7 @@ const rootRouteChildren: RootRouteChildren = {
   ReleasesIdRoute: ReleasesIdRoute,
   AgentsIndexRoute: AgentsIndexRoute,
   AiPacksIndexRoute: AiPacksIndexRoute,
+  AutomationsIndexRoute: AutomationsIndexRoute,
   ClientToolkitsIndexRoute: ClientToolkitsIndexRoute,
   ConceptsIndexRoute: ConceptsIndexRoute,
   PublicationsIndexRoute: PublicationsIndexRoute,

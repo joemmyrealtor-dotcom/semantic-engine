@@ -550,7 +550,157 @@ export type EntityType =
   | "agents"
   | "releases"
   | "clientToolkits"
-  | "aiPacks";
+  | "aiPacks"
+  | "automations"
+  | "automationRuns";
+
+// ===================================================================
+// Workstream 5 — Automation, Orchestration, Operational Governance
+// ===================================================================
+
+export type AutomationTriggerKind =
+  | "manual" | "stage-transition" | "readiness-threshold" | "release-gate"
+  | "review-due" | "broken-reference" | "coverage-gap" | "canonical-updated" | "scheduled";
+
+export const AUTOMATION_TRIGGER_KINDS: AutomationTriggerKind[] = [
+  "manual","stage-transition","readiness-threshold","release-gate",
+  "review-due","broken-reference","coverage-gap","canonical-updated","scheduled",
+];
+
+export type AutomationActionKind =
+  | "generate-readiness-report" | "assign-review-checkpoint" | "notify-owner"
+  | "add-release-candidate" | "remove-release-candidate" | "block-release"
+  | "create-draft-asset" | "link-canonical-asset" | "update-metadata"
+  | "export-manifest" | "request-promotion" | "escalate-overdue-review"
+  | "flag-broken-references";
+
+export const AUTOMATION_ACTION_KINDS: AutomationActionKind[] = [
+  "generate-readiness-report","assign-review-checkpoint","notify-owner",
+  "add-release-candidate","remove-release-candidate","block-release",
+  "create-draft-asset","link-canonical-asset","update-metadata",
+  "export-manifest","request-promotion","escalate-overdue-review","flag-broken-references",
+];
+
+export type AutomationEntityScope =
+  | "concept" | "framework" | "knowledgeObject" | "publication"
+  | "clientToolkit" | "aiPack" | "agent" | "clientTool" | "release" | "any";
+
+export const AUTOMATION_ENTITY_SCOPES: AutomationEntityScope[] = [
+  "concept","framework","knowledgeObject","publication",
+  "clientToolkit","aiPack","agent","clientTool","release","any",
+];
+
+export type AutomationState = "active" | "paused" | "archived";
+export type AutomationRunStatus =
+  | "pending" | "running" | "succeeded" | "failed" | "waiting-approval" | "cancelled";
+export type AutomationStepStatus =
+  | "pending" | "running" | "succeeded" | "failed" | "skipped" | "waiting-approval";
+
+export interface AutomationCondition {
+  field: string;
+  op: "eq" | "neq" | "gte" | "lte" | "contains";
+  value: string | number | boolean;
+}
+
+export interface AutomationStep {
+  id: string;                            // AST-###
+  name: string;
+  action: AutomationActionKind;
+  parameters: Record<string, string | number | boolean | string[]>;
+  conditions: AutomationCondition[];
+  requiresApproval: boolean;
+  onFailure: "abort" | "continue" | "retry";
+}
+
+export interface AutomationApprovalCheckpoint {
+  id: string;                            // AC-###
+  afterStepId: string | null;            // null => before first step
+  approverRole: Role | "Owner";
+  instructions: string;
+}
+
+export interface AutomationTrigger {
+  kind: AutomationTriggerKind;
+  entityScope: AutomationEntityScope;
+  entityIds: string[];
+  readinessThreshold?: number;
+  stage?: ManufacturingStage;
+  scheduleLabel?: string;
+  reviewDueWithinDays?: number;
+}
+
+export interface AutomationRecipe extends Timestamped {
+  id: string;                            // AUT-###
+  name: string;
+  description: string;
+  owner: string;
+  steward: string;
+  tags: string[];
+  state: AutomationState;
+  version: string;
+  trigger: AutomationTrigger;
+  steps: AutomationStep[];
+  approvals: AutomationApprovalCheckpoint[];
+  retryPolicy: { maxAttempts: number; backoffSeconds: number };
+  concurrencyKey: string;                // "recipe" | "recipe+entity"
+  idempotencyWindowMinutes: number;
+  lastRunAt: string | null;
+  nextEligibleAt: string | null;
+  successCount: number;
+  failureCount: number;
+  changeNotes: string;
+}
+
+export interface AutomationStepRun {
+  stepId: string;
+  status: AutomationStepStatus;
+  attempt: number;
+  startedAt: string;
+  endedAt: string | null;
+  output: string;
+  error: string | null;
+  mutations: string[];
+}
+
+export type AutomationRunEventKind =
+  | "created" | "started" | "step-succeeded" | "step-failed" | "step-skipped"
+  | "awaiting-approval" | "approved" | "rejected" | "completed" | "failed"
+  | "cancelled" | "retried" | "concurrency-blocked" | "idempotency-skipped";
+
+export interface AutomationRunEvent {
+  at: string;
+  actor: string;
+  kind: AutomationRunEventKind;
+  message: string;
+}
+
+export interface AutomationApprovalRecord {
+  checkpointId: string;
+  approvedBy: string | null;
+  approvedAt: string | null;
+  rejected: boolean;
+  note: string;
+}
+
+export interface AutomationRun extends Timestamped {
+  id: string;                            // RUN-###
+  recipeId: string;
+  recipeVersion: string;
+  recipeSnapshot: AutomationRecipe;      // immutable
+  triggerKind: AutomationTriggerKind;
+  triggerEventId: string;
+  entityIds: string[];
+  actor: string;
+  status: AutomationRunStatus;
+  dryRun: boolean;
+  idempotencyKey: string;
+  stepRuns: AutomationStepRun[];
+  events: AutomationRunEvent[];
+  startedAt: string | null;
+  completedAt: string | null;
+  approvals: AutomationApprovalRecord[];
+  errorSummary: string | null;
+}
 
 export interface DataSnapshot {
   schemaVersion: number;
@@ -566,9 +716,11 @@ export interface DataSnapshot {
   releases: Release[];
   clientToolkits: ClientToolkit[];
   aiPacks: AIPack[];
+  automations: AutomationRecipe[];
+  automationRuns: AutomationRun[];
 }
 
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 
 export const ID_PATTERNS: Record<string, RegExp> = {
   domain: /^DOM-\d{3}$/,
@@ -588,4 +740,8 @@ export const ID_PATTERNS: Record<string, RegExp> = {
   evaluationCase: /^EV-\d{3}$/,
   agentSpec: /^AS-\d{3}$/,
   agentEvaluation: /^AE-\d{3}$/,
+  automation: /^AUT-\d{3}$/,
+  automationStep: /^AST-\d{3}$/,
+  automationCheckpoint: /^AC-\d{3}$/,
+  automationRun: /^RUN-\d{3}$/,
 };
