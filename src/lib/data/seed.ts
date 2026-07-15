@@ -582,6 +582,166 @@ export const seedAIPacks: AIPack[] = [
   },
 ];
 
+// ---------- Automations (Workstream 5) ----------
+const stageHistory = (recipeId: string) => ({ recipeId });
+
+export const seedAutomations: AutomationRecipe[] = [
+  {
+    id: "AUT-001", name: "Publication QA Readiness",
+    description: "Generates a readiness report and notifies the owner when a publication enters QA.",
+    owner: "Editorial Board", steward: "Publishing Ops", tags: ["publication","qa","readiness"],
+    state: "active", version: "1.0.0",
+    trigger: { kind: "stage-transition", entityScope: "publication", entityIds: ["PL-101"], stage: "QA" },
+    steps: [
+      { id: "AST-001", name: "Generate readiness report", action: "generate-readiness-report",
+        parameters: {}, conditions: [], requiresApproval: false, onFailure: "abort" },
+      { id: "AST-002", name: "Notify owner", action: "notify-owner",
+        parameters: { message: "Publication reached QA — review readiness report." },
+        conditions: [], requiresApproval: false, onFailure: "continue" },
+    ],
+    approvals: [],
+    retryPolicy: { maxAttempts: 2, backoffSeconds: 30 },
+    concurrencyKey: "recipe+entity", idempotencyWindowMinutes: 60,
+    lastRunAt: now, nextEligibleAt: null, successCount: 1, failureCount: 0,
+    changeNotes: "Initial baseline.",
+    ...ts,
+  },
+  {
+    id: "AUT-002", name: "Release Candidate Compliance",
+    description: "Blocks a release when a manifest asset has broken references or fails readiness.",
+    owner: "Release Manager", steward: "Publishing Ops", tags: ["release","compliance","gate"],
+    state: "active", version: "1.1.0",
+    trigger: { kind: "release-gate", entityScope: "release", entityIds: ["LKR-1.0.001"] },
+    steps: [
+      { id: "AST-010", name: "Flag broken references", action: "flag-broken-references",
+        parameters: {}, conditions: [], requiresApproval: false, onFailure: "continue" },
+      { id: "AST-011", name: "Block release (requires approval)", action: "block-release",
+        parameters: { releaseId: "LKR-1.0.001", reason: "Broken references or ineligible assets detected." },
+        conditions: [], requiresApproval: true, onFailure: "abort" },
+    ],
+    approvals: [{ id: "AC-001", afterStepId: "AST-011", approverRole: "Owner",
+      instructions: "Review the broken-reference report before blocking the release." }],
+    retryPolicy: { maxAttempts: 1, backoffSeconds: 0 },
+    concurrencyKey: "recipe", idempotencyWindowMinutes: 120,
+    lastRunAt: now, nextEligibleAt: null, successCount: 0, failureCount: 0,
+    changeNotes: "Adds approval checkpoint before blocking.",
+    ...ts,
+  },
+  {
+    id: "AUT-003", name: "Overdue Review Escalation",
+    description: "Escalates canonical assets whose review date is due within 14 days.",
+    owner: "Governance Lead", steward: "Editorial Board", tags: ["review","governance"],
+    state: "active", version: "1.0.0",
+    trigger: { kind: "review-due", entityScope: "concept", entityIds: ["CR-001-001"], reviewDueWithinDays: 14 },
+    steps: [
+      { id: "AST-020", name: "Notify concept steward", action: "notify-owner",
+        parameters: { message: "Review cadence due within 14 days." },
+        conditions: [], requiresApproval: false, onFailure: "continue" },
+      { id: "AST-021", name: "Escalate to owner", action: "escalate-overdue-review",
+        parameters: { escalateTo: "Editorial Board" },
+        conditions: [], requiresApproval: false, onFailure: "continue" },
+    ],
+    approvals: [],
+    retryPolicy: { maxAttempts: 3, backoffSeconds: 60 },
+    concurrencyKey: "recipe+entity", idempotencyWindowMinutes: 1440,
+    lastRunAt: now, nextEligibleAt: null, successCount: 2, failureCount: 1,
+    changeNotes: "Recovered from a transient notification failure.",
+    ...ts,
+  },
+  {
+    id: "AUT-004", name: "Broken Reference Remediation",
+    description: "Detects broken references on an asset and prepares a draft canonical link candidate.",
+    owner: "Editorial Board", steward: "Publishing Ops", tags: ["quality","references"],
+    state: "active", version: "0.9.0",
+    trigger: { kind: "broken-reference", entityScope: "publication", entityIds: ["PL-101"] },
+    steps: [
+      { id: "AST-030", name: "Report broken references", action: "flag-broken-references",
+        parameters: {}, conditions: [], requiresApproval: false, onFailure: "abort" },
+      { id: "AST-031", name: "Assign editorial review", action: "assign-review-checkpoint",
+        parameters: { assignee: "Editorial Board" },
+        conditions: [], requiresApproval: false, onFailure: "continue" },
+    ],
+    approvals: [],
+    retryPolicy: { maxAttempts: 1, backoffSeconds: 0 },
+    concurrencyKey: "recipe+entity", idempotencyWindowMinutes: 30,
+    lastRunAt: now, nextEligibleAt: null, successCount: 0, failureCount: 1,
+    changeNotes: "First run failed pending catalog fix.",
+    ...ts,
+  },
+];
+
+void stageHistory;
+
+// ---------- Automation runs (historical scenarios) ----------
+export const seedAutomationRuns: AutomationRun[] = [
+  {
+    id: "RUN-001", recipeId: "AUT-001", recipeVersion: "1.0.0",
+    recipeSnapshot: seedAutomations[0]!,
+    triggerKind: "stage-transition", triggerEventId: "seed-001",
+    entityIds: ["PL-101"], actor: "publishing-ops",
+    status: "succeeded", dryRun: false, idempotencyKey: "AUT-001@1.0.0:seed-001:PL-101",
+    stepRuns: [
+      { stepId: "AST-001", status: "succeeded", attempt: 1, startedAt: now, endedAt: now,
+        output: "Readiness for PL-101: score=88 stage=QA review=complete", error: null, mutations: [] },
+      { stepId: "AST-002", status: "succeeded", attempt: 1, startedAt: now, endedAt: now,
+        output: "Notify Editorial Board · PL-101: Publication reached QA — review readiness report.",
+        error: null, mutations: [] },
+    ],
+    events: [
+      { at: now, actor: "publishing-ops", kind: "created", message: "Run created." },
+      { at: now, actor: "publishing-ops", kind: "started", message: "Started against 1 entity." },
+      { at: now, actor: "publishing-ops", kind: "step-succeeded", message: "[PL-101] Generate readiness report." },
+      { at: now, actor: "publishing-ops", kind: "step-succeeded", message: "[PL-101] Notify owner." },
+      { at: now, actor: "publishing-ops", kind: "completed", message: "Run RUN-001 completed." },
+    ],
+    startedAt: now, completedAt: now, approvals: [], errorSummary: null,
+    ...ts,
+  },
+  {
+    id: "RUN-002", recipeId: "AUT-004", recipeVersion: "0.9.0",
+    recipeSnapshot: seedAutomations[3]!,
+    triggerKind: "broken-reference", triggerEventId: "seed-002",
+    entityIds: ["PL-101"], actor: "publishing-ops",
+    status: "failed", dryRun: false, idempotencyKey: "AUT-004@0.9.0:seed-002:PL-101",
+    stepRuns: [
+      { stepId: "AST-030", status: "failed", attempt: 1, startedAt: now, endedAt: now,
+        output: "", error: "Catalog fetch failed while resolving canonical index.", mutations: [] },
+    ],
+    events: [
+      { at: now, actor: "publishing-ops", kind: "created", message: "Run created." },
+      { at: now, actor: "publishing-ops", kind: "started", message: "Started against 1 entity." },
+      { at: now, actor: "publishing-ops", kind: "step-failed", message: "[PL-101] Report broken references: Catalog fetch failed." },
+      { at: now, actor: "publishing-ops", kind: "failed", message: "Run failed at AST-030." },
+    ],
+    startedAt: now, completedAt: now, approvals: [],
+    errorSummary: "AST-030 failed: Catalog fetch failed while resolving canonical index.",
+    ...ts,
+  },
+  {
+    id: "RUN-003", recipeId: "AUT-002", recipeVersion: "1.1.0",
+    recipeSnapshot: seedAutomations[1]!,
+    triggerKind: "release-gate", triggerEventId: "seed-003",
+    entityIds: ["LKR-1.0.001"], actor: "release-manager",
+    status: "waiting-approval", dryRun: false, idempotencyKey: "AUT-002@1.1.0:seed-003:LKR-1.0.001",
+    stepRuns: [
+      { stepId: "AST-010", status: "succeeded", attempt: 1, startedAt: now, endedAt: now,
+        output: "No broken references for LKR-1.0.001.", error: null, mutations: [] },
+      { stepId: "AST-011", status: "waiting-approval", attempt: 0, startedAt: now, endedAt: now,
+        output: "Waiting for approval by Owner.", error: null, mutations: [] },
+    ],
+    events: [
+      { at: now, actor: "release-manager", kind: "created", message: "Run created." },
+      { at: now, actor: "release-manager", kind: "started", message: "Started against 1 release." },
+      { at: now, actor: "release-manager", kind: "step-succeeded", message: "[LKR-1.0.001] Flag broken references." },
+      { at: now, actor: "release-manager", kind: "awaiting-approval", message: "Awaiting Owner approval before blocking." },
+    ],
+    startedAt: now, completedAt: null,
+    approvals: [{ checkpointId: "AC-001", approvedBy: null, approvedAt: null, rejected: false, note: "" }],
+    errorSummary: null,
+    ...ts,
+  },
+];
+
 export function buildSeedSnapshot(): DataSnapshot {
   return {
     schemaVersion: SCHEMA_VERSION,
@@ -597,5 +757,7 @@ export function buildSeedSnapshot(): DataSnapshot {
     releases: seedReleases,
     clientToolkits: seedClientToolkits,
     aiPacks: seedAIPacks,
+    automations: seedAutomations,
+    automationRuns: seedAutomationRuns,
   };
 }
