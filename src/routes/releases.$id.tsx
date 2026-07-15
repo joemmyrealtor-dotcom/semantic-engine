@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageHeader, PageBody } from "@/components/page-header";
 import { LoadingState, SectionTitle, StatusBadge, ErrorState } from "@/components/ui-kit";
 import { useSnapshot, Repo } from "@/lib/use-snapshot";
-import { evaluateReleaseGate, releasePublicationReports, releaseToolkitReports, releaseAIPackReports } from "@/lib/data/service";
+import { evaluateReleaseGate, releasePublicationReports, releaseToolkitReports, releaseAIPackReports, releaseAgentReports } from "@/lib/data/service";
 import { PublicationStageBadge } from "@/components/publication-stage-badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
@@ -25,10 +25,12 @@ function ReleasePage() {
   const pubReports = releasePublicationReports(r, s);
   const tkReports = releaseToolkitReports(r, s);
   const apReports = releaseAIPackReports(r, s);
+  const agReports = releaseAgentReports(r, s);
   const ineligible = pubReports.filter(p => !p.eligible);
   const tkIneligible = tkReports.filter(t => !t.eligible);
   const apIneligible = apReports.filter(a => !a.eligible);
-  const totalIneligible = ineligible.length + tkIneligible.length + apIneligible.length;
+  const agIneligible = agReports.filter(a => !a.eligible);
+  const totalIneligible = ineligible.length + tkIneligible.length + apIneligible.length + agIneligible.length;
   const readinessBlocked = totalIneligible > 0;
 
   const advance = async (stage: ReleaseStage) => {
@@ -83,6 +85,13 @@ function ReleasePage() {
                     <span className={`mt-1 size-2.5 rounded-full ${apIneligible.length > 0 ? "bg-destructive" : "bg-evergreen"}`} />
                     <span className="font-mono text-xs w-24 text-slate-ink">AP-READY</span>
                     <span>{apIneligible.length > 0 ? `${apIneligible.length} AI pack(s) not eligible for Canonical` : "All AI packs eligible for Canonical"}</span>
+                  </li>
+                )}
+                {agReports.length > 0 && (
+                  <li className="flex items-start gap-3">
+                    <span className={`mt-1 size-2.5 rounded-full ${agIneligible.length > 0 ? "bg-destructive" : "bg-evergreen"}`} />
+                    <span className="font-mono text-xs w-24 text-slate-ink">AG-READY</span>
+                    <span>{agIneligible.length > 0 ? `${agIneligible.length} agent(s) not eligible for Canonical` : "All agents eligible for Canonical"}</span>
                   </li>
                 )}
               </ul>
@@ -203,7 +212,41 @@ function ReleasePage() {
               </div>
             )}
 
-
+            {agReports.length > 0 && (
+              <div className="editorial-card p-5">
+                <SectionTitle hint={`${agReports.length} agent(s)`}>Agent readiness</SectionTitle>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead><tr className="text-left text-[11px] uppercase tracking-widest text-slate-ink border-b border-border">
+                      <th className="py-2 pr-3">Agent</th><th className="pr-3">Stage</th><th className="pr-3">Coverage</th>
+                      <th className="pr-3">Readiness</th><th className="pr-3">Broken</th><th className="pr-3">Unreviewed</th>
+                      <th className="pr-3">Failing</th><th className="pr-3">Canonical</th><th className="pr-3">Review</th><th className="pr-3">Eligible</th>
+                    </tr></thead>
+                    <tbody>
+                      {agReports.map(ar => (
+                        <tr key={ar.agentId} className="border-b border-border/60 align-top">
+                          <td className="py-2 pr-3">
+                            <Link to="/agents/$id" params={{ id: ar.agentId }} className="text-heritage hover:underline">
+                              <span className="font-mono text-xs text-slate-ink">{ar.agentId}</span> {ar.name}
+                            </Link>
+                            {ar.blockers.length > 0 && <ul className="mt-1 text-xs text-destructive list-disc pl-4">{ar.blockers.map(b => <li key={b}>{b}</li>)}</ul>}
+                          </td>
+                          <td className="pr-3"><PublicationStageBadge stage={ar.stage} /></td>
+                          <td className="pr-3">{ar.coveragePercent}%</td>
+                          <td className="pr-3">{ar.readinessScore}</td>
+                          <td className={`pr-3 ${ar.brokenReferences ? "text-destructive" : ""}`}>{ar.brokenReferences}</td>
+                          <td className={`pr-3 ${ar.unreviewedEvaluations ? "text-destructive" : ""}`}>{ar.unreviewedEvaluations}</td>
+                          <td className={`pr-3 ${ar.failingEvaluations ? "text-destructive" : ""}`}>{ar.failingEvaluations}</td>
+                          <td className="pr-3">{ar.canonicalCompliance}%</td>
+                          <td className="pr-3">{ar.humanReviewComplete ? "✓" : "—"}</td>
+                          <td className={`pr-3 ${ar.eligible ? "text-evergreen" : "text-destructive"}`}>{ar.eligible ? "✓" : "Blocked"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
 
             <div className="editorial-card p-5">
               <SectionTitle>Manifest</SectionTitle>

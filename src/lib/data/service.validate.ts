@@ -14,7 +14,12 @@ import {
   duplicatePublication,
   isAdjacentStageTransition,
   validatePublicationPromotion,
+  agentCoverage,
+  validateAgentPromotion,
+  runAgentEvaluation,
+  nextAgentId,
 } from "./service";
+import type { Agent, AgentEvaluationCase } from "./schema";
 
 let count = 0;
 function check(name: string, cond: boolean) {
@@ -115,6 +120,63 @@ export function runValidations(): number {
   const snap2: DataSnapshot = { ...snap, publications: [pubForPromotion] } as DataSnapshot;
   const r1 = validatePublicationPromotion(pubForPromotion, "Editorial", snap2);
   check("Draft→Editorial produces a report", typeof r1 === "object" && r1 !== null);
+
+
+
+  // ---- Agent (Workstream 4) checks ----
+  const now = new Date().toISOString();
+  const baseAgent: Agent = {
+    id: "AG-900", name: "Test Agent", role: "Test", responsibilities: ["r1"],
+    governingPromptIds: [], status: "Draft", version: "0.1.0", steward: "T",
+    description: "d", purpose: "p", useCase: "Editorial Assistant",
+    targetModel: "", owner: "T", tags: [], archived: false,
+    manufacturingStage: "Draft",
+    stageHistory: [{ stage: "Draft", at: now, actor: "T" }],
+    effectiveDate: null, reviewDate: null,
+    conceptIds: [], frameworkIds: [], knowledgeObjectIds: [], publicationIds: [],
+    clientToolkitIds: [], aiPackIds: [], clientToolIds: [],
+    specifications: [], evaluationCases: [],
+    usagePolicy: "", boundaryConditions: "", prohibitedUses: "",
+    escalationGuidance: "", provenanceNotes: "",
+    humanReviewCompleted: false, releaseIds: [],
+    createdAt: now, updatedAt: now,
+  };
+  const snap3: DataSnapshot = { ...snap, agents: [baseAgent] } as DataSnapshot;
+  check("nextAgentId returns next sequence", nextAgentId(snap3) === "AG-901");
+  const cov0 = agentCoverage(baseAgent, snap3);
+  check("no spec => not ready", !cov0.hasActiveSpecification);
+  const prom0 = validateAgentPromotion(baseAgent, "Editorial", snap3);
+  check("Draft agent without spec cannot promote to Editorial", !prom0.ok);
+
+  const readyAgent: Agent = {
+    ...baseAgent,
+    specifications: [{
+      id: "AS-900", version: "1.0.0", isActive: true,
+      systemPrompt: "You are a helper.", capabilities: [], tools: [],
+      boundaries: "b", safetyPolicy: "s", changelog: "", author: "T", createdAt: now,
+    }],
+    usagePolicy: "up", boundaryConditions: "bc", provenanceNotes: "prov",
+    evaluationCases: [{
+      id: "AE-900", title: "case", scenario: "sc",
+      expectedBehavior: "greeting hello world", prohibitedBehavior: "curse",
+      requiredCitations: [], reviewerStatus: "Approved", status: "pass",
+      notes: "", coversConceptIds: [], coversFrameworkIds: [],
+    }],
+    humanReviewCompleted: true, effectiveDate: now,
+  };
+  const promReady = validateAgentPromotion(readyAgent, "Canonical", snap3);
+  check("Ready agent can promote to Canonical", promReady.ok);
+
+  const ev: AgentEvaluationCase = {
+    id: "AE-901", title: "t", scenario: "s",
+    expectedBehavior: "greet the user warmly", prohibitedBehavior: "insult",
+    requiredCitations: ["CR-004-001"], reviewerStatus: "Approved", status: "not-run",
+    notes: "", coversConceptIds: [], coversFrameworkIds: [],
+  };
+  const evPass = runAgentEvaluation(ev, "Hello, I want to greet the user warmly. Cite CR-004-001.");
+  check("runAgentEvaluation passes on match+citation", evPass.status === "pass");
+  const evFail = runAgentEvaluation(ev, "I will insult the user without citing anything.");
+  check("runAgentEvaluation fails on prohibited or missing citation", evFail.status === "fail");
 
   console.log(`OK ${count} checks`);
   return count;
