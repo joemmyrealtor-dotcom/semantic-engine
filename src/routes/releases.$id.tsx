@@ -23,12 +23,17 @@ function ReleasePage() {
   if (!r) return <ErrorState message={`Release ${id} not found.`} />;
   const gate = evaluateReleaseGate(r);
   const pubReports = releasePublicationReports(r, s);
+  const tkReports = releaseToolkitReports(r, s);
+  const apReports = releaseAIPackReports(r, s);
   const ineligible = pubReports.filter(p => !p.eligible);
-  const readinessBlocked = ineligible.length > 0;
+  const tkIneligible = tkReports.filter(t => !t.eligible);
+  const apIneligible = apReports.filter(a => !a.eligible);
+  const totalIneligible = ineligible.length + tkIneligible.length + apIneligible.length;
+  const readinessBlocked = totalIneligible > 0;
 
   const advance = async (stage: ReleaseStage) => {
     if ((stage === "Canonical" || stage === "Release Candidate") && readinessBlocked) {
-      toast.error(`Cannot advance: ${ineligible.length} publication(s) ineligible for Canonical.`);
+      toast.error(`Cannot advance: ${totalIneligible} asset(s) ineligible for Canonical.`);
       return;
     }
     if (stage === "Canonical" && !gate.readyForCanonical) { toast.error("Gate incomplete or blocking errors present."); return; }
