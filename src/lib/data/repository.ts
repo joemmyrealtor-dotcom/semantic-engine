@@ -17,6 +17,10 @@ type EntityMap = {
   aiPacks: DataSnapshot["aiPacks"][number];
   automations: DataSnapshot["automations"][number];
   automationRuns: DataSnapshot["automationRuns"][number];
+  analyticsSnapshots: DataSnapshot["analyticsSnapshots"][number];
+  executiveAlerts: DataSnapshot["executiveAlerts"][number];
+  savedExecutiveViews: DataSnapshot["savedExecutiveViews"][number];
+  reportRuns: DataSnapshot["reportRuns"][number];
 };
 
 type Listener = () => void;

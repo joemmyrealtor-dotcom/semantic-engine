@@ -86,6 +86,10 @@ export function migrateSnapshot(s: DataSnapshot): DataSnapshot {
     publications,
     automations: (s.automations ?? []).map(r => ({ ...r })),
     automationRuns: (s.automationRuns ?? []).map(r => ({ ...r })),
+    analyticsSnapshots: s.analyticsSnapshots ?? [],
+    executiveAlerts: s.executiveAlerts ?? [],
+    savedExecutiveViews: s.savedExecutiveViews ?? [],
+    reportRuns: s.reportRuns ?? [],
     clientToolkits: (s.clientToolkits ?? []).map(tk => ({
       ...tk,
       sections: (tk.sections ?? []).map(sec => ({ ...sec, presentations: sec.presentations ?? [] })),

@@ -250,6 +250,66 @@ export function runValidations(): number {
   check("release intelligence returns confidence in 0..100", ri.confidenceScore >= 0 && ri.confidenceScore <= 100);
   check("release intelligence lists no missing assets when manifest resolves", ri.assetsMissing.length === 0);
 
+  // ---- Workstream 7 — Executive Intelligence & Analytics ----
+  const {
+    computeExecutiveMetrics, metricsToSnapshotEntries, metricHistory,
+    manufacturingAnalytics, releaseAnalytics, automationAnalytics,
+    aiEvalAnalytics, evaluateAlertRules, forecastMetricToTarget,
+    generateReport, captureAnalyticsSnapshot,
+  } = require("./analytics") as typeof import("./analytics");
+
+  const snap7: DataSnapshot = {
+    ...(snapWithConcepts as DataSnapshot),
+    analyticsSnapshots: [
+      { id: "MS-001", at: new Date(Date.now() - 14 * 86400000).toISOString(), actor: "t",
+        metrics: [{ key: "health.overall", value: 60, unit: "percent" }, { key: "release.confidence", value: 55, unit: "percent" }] },
+      { id: "MS-002", at: new Date(Date.now() - 7 * 86400000).toISOString(), actor: "t",
+        metrics: [{ key: "health.overall", value: 70, unit: "percent" }, { key: "release.confidence", value: 65, unit: "percent" }] },
+      { id: "MS-003", at: new Date().toISOString(), actor: "t",
+        metrics: [{ key: "health.overall", value: 80, unit: "percent" }, { key: "release.confidence", value: 60, unit: "percent" }] },
+    ],
+    executiveAlerts: [], savedExecutiveViews: [], reportRuns: [],
+  } as DataSnapshot;
+
+  const m7 = computeExecutiveMetrics(snap7);
+  check("metrics: overall health in 0..100", m7.overallHealth >= 0 && m7.overallHealth <= 100);
+  check("metrics: automation success 0..100", m7.automationSuccessRate >= 0 && m7.automationSuccessRate <= 100);
+  const entries = metricsToSnapshotEntries(m7);
+  check("metric entries cover 12 metric keys", entries.length === 12);
+
+  const hist = metricHistory(snap7, "health.overall");
+  check("metric history returns 3 sorted points", hist.length === 3 && hist[0].value <= hist[2].value);
+  const histFiltered = metricHistory(snap7, "health.overall", undefined,
+    new Date(Date.now() - 10 * 86400000).toISOString(), null);
+  check("date-range filter narrows history", histFiltered.length === 2);
+
+  const mfg = manufacturingAnalytics(snap7);
+  check("manufacturing analytics returns stageCycles array", Array.isArray(mfg.stageCycles));
+  const rel = releaseAnalytics(snap7);
+  check("release analytics returns avgConfidence 0..100", rel.avgConfidence >= 0 && rel.avgConfidence <= 100);
+  const aut = automationAnalytics(snap7);
+  check("automation success rate 0..100", aut.successRate >= 0 && aut.successRate <= 100);
+  check("automation estimatedManualStepsAvoided >= 0", aut.estimatedManualStepsAvoided >= 0);
+  const ev7 = aiEvalAnalytics(snap7);
+  check("agent eval pass rate 0..100", ev7.agentEvalPassRate >= 0 && ev7.agentEvalPassRate <= 100);
+
+  const alerts = evaluateAlertRules(snap7);
+  check("alerts is an array", Array.isArray(alerts));
+  const forecast = forecastMetricToTarget(snap7, "health.overall", 100);
+  check("forecast returns confidence", !!forecast && ["low","medium","high"].includes(forecast.confidence));
+  check("forecast documents assumptions", !!forecast && forecast.assumptions.length >= 1);
+
+  const rpt = generateReport(snap7, {
+    kind: "weekly-manufacturing", actor: "t",
+    params: { dateFrom: null, dateTo: null },
+  });
+  check("report has id and payload", rpt.id.startsWith("RPT-") && rpt.payload !== undefined);
+  check("report traces source snapshots", Array.isArray(rpt.sourceSnapshotIds));
+
+  const capSnap = captureAnalyticsSnapshot(snap7, "t");
+  check("capture returns 12 metrics", capSnap.metrics.length === 12);
+  check("capture id follows MS-### pattern", /^MS-\d{3}$/.test(capSnap.id));
+
   console.log(`OK ${count} checks`);
   return count;
 }

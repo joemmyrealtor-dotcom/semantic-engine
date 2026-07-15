@@ -552,7 +552,11 @@ export type EntityType =
   | "clientToolkits"
   | "aiPacks"
   | "automations"
-  | "automationRuns";
+  | "automationRuns"
+  | "analyticsSnapshots"
+  | "executiveAlerts"
+  | "savedExecutiveViews"
+  | "reportRuns";
 
 // ===================================================================
 // Workstream 5 — Automation, Orchestration, Operational Governance
@@ -707,6 +711,92 @@ export interface AutomationRun extends Timestamped {
   errorSummary: string | null;
 }
 
+export interface MetricSnapshot {
+  key: string;                 // canonical metric key e.g. "release.confidence"
+  value: number;               // numeric value (percentages 0..100, counts, days)
+  scope?: string;              // optional entity/scope id (e.g. release id)
+  unit?: "percent" | "count" | "days" | "hours" | "rate";
+}
+
+export interface AnalyticsSnapshot {
+  id: string;                  // MS-###
+  at: string;                  // ISO capture timestamp
+  actor: string;
+  metrics: MetricSnapshot[];
+  note?: string;
+}
+
+export type ExecutiveAlertSeverity = "info" | "warning" | "critical";
+export type ExecutiveAlertRuleKey =
+  | "release-at-risk"
+  | "health-degradation"
+  | "overdue-reviews"
+  | "stalled-workflow"
+  | "governance-violation"
+  | "automation-failure-spike"
+  | "evaluation-decline"
+  | "broken-reference-increase";
+
+export interface ExecutiveAlert extends Timestamped {
+  id: string;                  // EA-###
+  ruleKey: ExecutiveAlertRuleKey;
+  severity: ExecutiveAlertSeverity;
+  title: string;
+  message: string;
+  entityIds: string[];         // linked source records
+  metricKey: string | null;
+  observedValue: number | null;
+  threshold: number | null;
+  firedAt: string;
+  acknowledgedAt: string | null;
+  acknowledgedBy: string | null;
+  resolvedAt: string | null;
+  explanation: string;         // why the rule fired, plain-English
+}
+
+export interface SavedExecutiveView extends Timestamped {
+  id: string;                  // SV-###
+  name: string;
+  tab: string;
+  filters: {
+    dateFrom?: string | null;
+    dateTo?: string | null;
+    entityKinds?: string[];
+    owners?: string[];
+  };
+  description?: string;
+  createdBy: string;
+}
+
+export type ReportKind =
+  | "weekly-manufacturing"
+  | "monthly-executive"
+  | "quarterly-governance"
+  | "release-readiness"
+  | "knowledge-health"
+  | "automation-operations"
+  | "ai-governance";
+
+export interface ReportRun extends Timestamped {
+  id: string;                          // RPT-###
+  kind: ReportKind;
+  title: string;
+  params: {
+    dateFrom: string | null;
+    dateTo: string | null;
+    entityKinds?: string[];
+    owners?: string[];
+    releaseId?: string | null;
+    scope?: string | null;
+  };
+  generatedAt: string;
+  actor: string;
+  sourceSnapshotIds: string[];         // links into analyticsSnapshots
+  summary: string;
+  payload: unknown;                    // deterministic JSON payload
+  format: "json" | "html";
+}
+
 export interface DataSnapshot {
   schemaVersion: number;
   exportedAt: string;
@@ -723,9 +813,14 @@ export interface DataSnapshot {
   aiPacks: AIPack[];
   automations: AutomationRecipe[];
   automationRuns: AutomationRun[];
+  // Workstream 7 — analytics history & reporting
+  analyticsSnapshots: AnalyticsSnapshot[];
+  executiveAlerts: ExecutiveAlert[];
+  savedExecutiveViews: SavedExecutiveView[];
+  reportRuns: ReportRun[];
 }
 
-export const SCHEMA_VERSION = 4;
+export const SCHEMA_VERSION = 5;
 
 export const ID_PATTERNS: Record<string, RegExp> = {
   domain: /^DOM-\d{3}$/,
@@ -749,4 +844,9 @@ export const ID_PATTERNS: Record<string, RegExp> = {
   automationStep: /^AST-\d{3}$/,
   automationCheckpoint: /^AC-\d{3}$/,
   automationRun: /^RUN-\d{3}$/,
+  analyticsSnapshot: /^MS-\d{3}$/,
+  executiveAlert: /^EA-\d{3}$/,
+  savedExecutiveView: /^SV-\d{3}$/,
+  reportRun: /^RPT-\d{3}$/,
 };
+
