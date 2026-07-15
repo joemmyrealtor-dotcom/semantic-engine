@@ -48,7 +48,7 @@ function Dashboard() {
       <PageBody>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
           <KpiCard label="Knowledge Assets" value={totalAssets} tone="gold" hint={`across ${s.domains.length} domains`} />
-          <KpiCard label="Overall Manufacturing Health" value={`${health.overall}%`} tone={health.overall >= 85 ? "evergreen" : health.overall >= 60 ? "gold" : "warn"} hint={<Link to="/knowledge" className="underline">Open Health</Link> as unknown as string} />
+          <KpiCard label="Overall Manufacturing Health" value={`${health.overall}%`} tone={health.overall >= 85 ? "evergreen" : health.overall >= 60 ? "gold" : "warn"} hint="See Knowledge → Health" />
           <KpiCard label="Knowledge Health" value={`${health.overall}%`} hint={`${health.recommendations.length} recommendation${health.recommendations.length === 1 ? "" : "s"}`} />
           <KpiCard label="Manufacturing Coverage" value={`${health.coverage}%`} />
           <KpiCard label="Release Readiness" value={`${releaseReadiness}%`} tone="evergreen" />
