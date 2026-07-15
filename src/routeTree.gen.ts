@@ -18,6 +18,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as PublicationsIndexRouteImport } from './routes/publications.index'
 import { Route as ConceptsIndexRouteImport } from './routes/concepts.index'
 import { Route as ClientToolkitsIndexRouteImport } from './routes/client-toolkits.index'
+import { Route as AutomationsIndexRouteImport } from './routes/automations.index'
 import { Route as AiPacksIndexRouteImport } from './routes/ai-packs.index'
 import { Route as AgentsIndexRouteImport } from './routes/agents.index'
 import { Route as ReleasesIdRouteImport } from './routes/releases.$id'
@@ -74,6 +75,11 @@ const ConceptsIndexRoute = ConceptsIndexRouteImport.update({
 const ClientToolkitsIndexRoute = ClientToolkitsIndexRouteImport.update({
   id: '/client-toolkits/',
   path: '/client-toolkits/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AutomationsIndexRoute = AutomationsIndexRouteImport.update({
+  id: '/automations/',
+  path: '/automations/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AiPacksIndexRoute = AiPacksIndexRouteImport.update({
@@ -156,6 +162,7 @@ export interface FileRoutesByFullPath {
   '/releases/$id': typeof ReleasesIdRoute
   '/agents/': typeof AgentsIndexRoute
   '/ai-packs/': typeof AiPacksIndexRoute
+  '/automations/': typeof AutomationsIndexRoute
   '/client-toolkits/': typeof ClientToolkitsIndexRoute
   '/concepts/': typeof ConceptsIndexRoute
   '/publications/': typeof PublicationsIndexRoute
@@ -179,6 +186,7 @@ export interface FileRoutesByTo {
   '/releases/$id': typeof ReleasesIdRoute
   '/agents': typeof AgentsIndexRoute
   '/ai-packs': typeof AiPacksIndexRoute
+  '/automations': typeof AutomationsIndexRoute
   '/client-toolkits': typeof ClientToolkitsIndexRoute
   '/concepts': typeof ConceptsIndexRoute
   '/publications': typeof PublicationsIndexRoute
@@ -203,6 +211,7 @@ export interface FileRoutesById {
   '/releases/$id': typeof ReleasesIdRoute
   '/agents/': typeof AgentsIndexRoute
   '/ai-packs/': typeof AiPacksIndexRoute
+  '/automations/': typeof AutomationsIndexRoute
   '/client-toolkits/': typeof ClientToolkitsIndexRoute
   '/concepts/': typeof ConceptsIndexRoute
   '/publications/': typeof PublicationsIndexRoute
@@ -228,6 +237,7 @@ export interface FileRouteTypes {
     | '/releases/$id'
     | '/agents/'
     | '/ai-packs/'
+    | '/automations/'
     | '/client-toolkits/'
     | '/concepts/'
     | '/publications/'
@@ -251,6 +261,7 @@ export interface FileRouteTypes {
     | '/releases/$id'
     | '/agents'
     | '/ai-packs'
+    | '/automations'
     | '/client-toolkits'
     | '/concepts'
     | '/publications'
@@ -274,6 +285,7 @@ export interface FileRouteTypes {
     | '/releases/$id'
     | '/agents/'
     | '/ai-packs/'
+    | '/automations/'
     | '/client-toolkits/'
     | '/concepts/'
     | '/publications/'
@@ -298,6 +310,7 @@ export interface RootRouteChildren {
   ReleasesIdRoute: typeof ReleasesIdRoute
   AgentsIndexRoute: typeof AgentsIndexRoute
   AiPacksIndexRoute: typeof AiPacksIndexRoute
+  AutomationsIndexRoute: typeof AutomationsIndexRoute
   ClientToolkitsIndexRoute: typeof ClientToolkitsIndexRoute
   ConceptsIndexRoute: typeof ConceptsIndexRoute
   PublicationsIndexRoute: typeof PublicationsIndexRoute
@@ -366,6 +379,13 @@ declare module '@tanstack/react-router' {
       path: '/client-toolkits'
       fullPath: '/client-toolkits/'
       preLoaderRoute: typeof ClientToolkitsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/automations/': {
+      id: '/automations/'
+      path: '/automations'
+      fullPath: '/automations/'
+      preLoaderRoute: typeof AutomationsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ai-packs/': {
@@ -474,6 +494,7 @@ const rootRouteChildren: RootRouteChildren = {
   ReleasesIdRoute: ReleasesIdRoute,
   AgentsIndexRoute: AgentsIndexRoute,
   AiPacksIndexRoute: AiPacksIndexRoute,
+  AutomationsIndexRoute: AutomationsIndexRoute,
   ClientToolkitsIndexRoute: ClientToolkitsIndexRoute,
   ConceptsIndexRoute: ConceptsIndexRoute,
   PublicationsIndexRoute: PublicationsIndexRoute,
