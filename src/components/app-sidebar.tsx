@@ -1,9 +1,11 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Library, Network, BookOpen, Wrench, ScrollText, Bot, Package, ShieldCheck, Database, PenTool, BookMarked, Briefcase, Sparkles, Workflow, Activity, Brain } from "lucide-react";
+import { LayoutDashboard, Library, Network, BookOpen, Wrench, ScrollText, Bot, Package, ShieldCheck, Database, PenTool, BookMarked, Briefcase, Sparkles, Workflow, Activity, Brain, LineChart, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const items = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, exact: true },
+  { to: "/executive", label: "Executive Analytics", icon: LineChart },
+  { to: "/reports", label: "Reports", icon: FileText },
   { to: "/knowledge", label: "Knowledge Intelligence", icon: Brain },
   { to: "/repository", label: "Repository", icon: Library },
   { to: "/concepts", label: "Concept Registry", icon: BookMarked },

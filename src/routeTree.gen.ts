@@ -15,6 +15,7 @@ import { Route as OperationsRouteImport } from './routes/operations'
 import { Route as KnowledgeRouteImport } from './routes/knowledge'
 import { Route as GraphRouteImport } from './routes/graph'
 import { Route as GovernanceRouteImport } from './routes/governance'
+import { Route as ExecutiveRouteImport } from './routes/executive'
 import { Route as DataRouteImport } from './routes/data'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PublicationsIndexRouteImport } from './routes/publications.index'
@@ -65,6 +66,11 @@ const GraphRoute = GraphRouteImport.update({
 const GovernanceRoute = GovernanceRouteImport.update({
   id: '/governance',
   path: '/governance',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExecutiveRoute = ExecutiveRouteImport.update({
+  id: '/executive',
+  path: '/executive',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DataRoute = DataRouteImport.update({
@@ -176,6 +182,7 @@ const AgentsIdRoute = AgentsIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/data': typeof DataRoute
+  '/executive': typeof ExecutiveRoute
   '/governance': typeof GovernanceRoute
   '/graph': typeof GraphRoute
   '/knowledge': typeof KnowledgeRouteWithChildren
@@ -205,6 +212,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/data': typeof DataRoute
+  '/executive': typeof ExecutiveRoute
   '/governance': typeof GovernanceRoute
   '/graph': typeof GraphRoute
   '/knowledge': typeof KnowledgeRouteWithChildren
@@ -235,6 +243,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/data': typeof DataRoute
+  '/executive': typeof ExecutiveRoute
   '/governance': typeof GovernanceRoute
   '/graph': typeof GraphRoute
   '/knowledge': typeof KnowledgeRouteWithChildren
@@ -266,6 +275,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/data'
+    | '/executive'
     | '/governance'
     | '/graph'
     | '/knowledge'
@@ -295,6 +305,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/data'
+    | '/executive'
     | '/governance'
     | '/graph'
     | '/knowledge'
@@ -324,6 +335,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/data'
+    | '/executive'
     | '/governance'
     | '/graph'
     | '/knowledge'
@@ -354,6 +366,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DataRoute: typeof DataRoute
+  ExecutiveRoute: typeof ExecutiveRoute
   GovernanceRoute: typeof GovernanceRoute
   GraphRoute: typeof GraphRoute
   KnowledgeRoute: typeof KnowledgeRouteWithChildren
@@ -422,6 +435,13 @@ declare module '@tanstack/react-router' {
       path: '/governance'
       fullPath: '/governance'
       preLoaderRoute: typeof GovernanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/executive': {
+      id: '/executive'
+      path: '/executive'
+      fullPath: '/executive'
+      preLoaderRoute: typeof ExecutiveRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/data': {
@@ -589,6 +609,7 @@ const KnowledgeRouteWithChildren = KnowledgeRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DataRoute: DataRoute,
+  ExecutiveRoute: ExecutiveRoute,
   GovernanceRoute: GovernanceRoute,
   GraphRoute: GraphRoute,
   KnowledgeRoute: KnowledgeRouteWithChildren,

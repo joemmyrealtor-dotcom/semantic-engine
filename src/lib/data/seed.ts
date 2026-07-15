@@ -742,6 +742,104 @@ export const seedAutomationRuns: AutomationRun[] = [
   },
 ];
 
+// ---------- Analytics history (Workstream 7) ----------
+// Deterministic 12-week trend series demonstrating both improving and
+// deteriorating scenarios. Every entry is derived, transparent demo data.
+function isoWeeksAgo(n: number): string {
+  const base = new Date(now).getTime();
+  return new Date(base - n * 7 * 24 * 3600 * 1000).toISOString();
+}
+
+export const seedAnalyticsSnapshots: import("./schema").AnalyticsSnapshot[] = (() => {
+  const out: import("./schema").AnalyticsSnapshot[] = [];
+  // week index 11 = oldest, 0 = current
+  for (let i = 11; i >= 0; i--) {
+    const idx = 11 - i;
+    // Improving: automation success climbs from 65 → 92
+    const automationSuccess = Math.round(65 + (idx / 11) * 27);
+    // Deteriorating: freshness drops from 88 → 62 (triggers alert)
+    const freshness = Math.round(88 - (idx / 11) * 26);
+    // Release confidence drifts down 78 → 61 (release risk)
+    const releaseConfidence = Math.round(78 - (idx / 11) * 17);
+    // Overall health mostly stable with small dip
+    const overallHealth = Math.round(82 - Math.sin(idx / 3) * 4);
+    const brokenRefs = Math.max(0, Math.round(6 - idx / 3));
+    out.push({
+      id: `MS-${String(idx + 1).padStart(3, "0")}`,
+      at: isoWeeksAgo(i),
+      actor: "analytics-engine",
+      note: i === 0 ? "Current baseline" : `Historical snapshot week -${i}`,
+      metrics: [
+        { key: "health.overall", value: overallHealth, unit: "percent" },
+        { key: "health.freshness", value: freshness, unit: "percent" },
+        { key: "automation.successRate", value: automationSuccess, unit: "percent" },
+        { key: "release.confidence", value: releaseConfidence, scope: "LKR-1.0.001", unit: "percent" },
+        { key: "references.broken", value: brokenRefs, unit: "count" },
+        { key: "reviews.overdue", value: Math.round(2 + idx * 0.6), unit: "count" },
+      ],
+    });
+  }
+  return out;
+})();
+
+export const seedExecutiveAlerts: import("./schema").ExecutiveAlert[] = [
+  {
+    id: "EA-001", ruleKey: "health-degradation", severity: "warning",
+    title: "Concept freshness trending down",
+    message: "Concept freshness dropped 26 points across the last 12 weeks. Review cadence backlog is growing.",
+    entityIds: ["CR-001-001","CR-002-001"], metricKey: "health.freshness",
+    observedValue: 62, threshold: 75,
+    firedAt: now, acknowledgedAt: null, acknowledgedBy: null, resolvedAt: null,
+    explanation: "Rule fires when health.freshness falls below 75 and the 12-week trend slope is negative.",
+    ...ts,
+  },
+  {
+    id: "EA-002", ruleKey: "release-at-risk", severity: "critical",
+    title: "LKR-1.0.001 release confidence below threshold",
+    message: "Release confidence for LKR-1.0.001 is 61 (threshold 70). Outstanding approvals and broken references remain.",
+    entityIds: ["LKR-1.0.001"], metricKey: "release.confidence",
+    observedValue: 61, threshold: 70,
+    firedAt: now, acknowledgedAt: null, acknowledgedBy: null, resolvedAt: null,
+    explanation: "Rule fires when release.confidence for a Planned/Candidate release is < 70.",
+    ...ts,
+  },
+  {
+    id: "EA-003", ruleKey: "automation-failure-spike", severity: "info",
+    title: "AUT-004 remediation recipe recorded failures",
+    message: "Broken Reference Remediation logged a failed run. Success rate recovering (65 → 92 over 12 weeks).",
+    entityIds: ["AUT-004"], metricKey: "automation.successRate",
+    observedValue: 92, threshold: 80,
+    firedAt: now, acknowledgedAt: now, acknowledgedBy: "publishing-ops", resolvedAt: null,
+    explanation: "Informational: retained for audit even after acknowledgement.",
+    ...ts,
+  },
+];
+
+export const seedSavedExecutiveViews: import("./schema").SavedExecutiveView[] = [
+  {
+    id: "SV-001", name: "Weekly leadership review",
+    tab: "overview",
+    filters: { entityKinds: ["Publication","Release","Agent"], owners: [] },
+    description: "Default view opened during Monday leadership standup.",
+    createdBy: "Editorial Board",
+    ...ts,
+  },
+];
+
+export const seedReportRuns: import("./schema").ReportRun[] = [
+  {
+    id: "RPT-001", kind: "weekly-manufacturing",
+    title: "Weekly Manufacturing Report — seed baseline",
+    params: { dateFrom: isoWeeksAgo(1), dateTo: now, entityKinds: null as unknown as string[] | undefined, releaseId: null, scope: null },
+    generatedAt: now, actor: "analytics-engine",
+    sourceSnapshotIds: ["MS-012","MS-011"],
+    summary: "Seeded example run demonstrating deterministic report payload.",
+    payload: { note: "Regenerate from /reports for live data." },
+    format: "json",
+    ...ts,
+  },
+];
+
 export function buildSeedSnapshot(): DataSnapshot {
   return {
     schemaVersion: SCHEMA_VERSION,
@@ -759,5 +857,10 @@ export function buildSeedSnapshot(): DataSnapshot {
     aiPacks: seedAIPacks,
     automations: seedAutomations,
     automationRuns: seedAutomationRuns,
+    analyticsSnapshots: seedAnalyticsSnapshots,
+    executiveAlerts: seedExecutiveAlerts,
+    savedExecutiveViews: seedSavedExecutiveViews,
+    reportRuns: seedReportRuns,
   };
 }
+
