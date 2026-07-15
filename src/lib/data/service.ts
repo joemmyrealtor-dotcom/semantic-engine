@@ -56,6 +56,46 @@ export function buildGraph(s: DataSnapshot): { nodes: GraphNode[]; edges: GraphE
       for (const tId of ch.clientToolIds) edges.push({ from: ch.id, to: tId, kind: "publishes-tool" });
     }
   }
+  for (const tk of s.clientToolkits ?? []) {
+    if (tk.archived) continue;
+    nodes.push({ id: tk.id, label: tk.title, kind: "Client Toolkit" });
+    for (const cId of tk.conceptIds) edges.push({ from: tk.id, to: cId, kind: "toolkit-concept" });
+    for (const fId of tk.frameworkIds) edges.push({ from: tk.id, to: fId, kind: "toolkit-framework" });
+    for (const kId of tk.knowledgeObjectIds) edges.push({ from: tk.id, to: kId, kind: "toolkit-ko" });
+    for (const tId of tk.clientToolIds) edges.push({ from: tk.id, to: tId, kind: "toolkit-tool" });
+    for (const pId of tk.publicationIds) edges.push({ from: tk.id, to: pId, kind: "toolkit-publication" });
+    for (const sec of tk.sections) {
+      nodes.push({ id: sec.id, label: sec.title, kind: "Toolkit Section" });
+      edges.push({ from: tk.id, to: sec.id, kind: "contains-section" });
+      for (const cId of sec.conceptIds) edges.push({ from: sec.id, to: cId, kind: "section-concept" });
+      for (const fId of sec.frameworkIds) edges.push({ from: sec.id, to: fId, kind: "section-framework" });
+      for (const kId of sec.knowledgeObjectIds) edges.push({ from: sec.id, to: kId, kind: "section-ko" });
+      for (const tId of sec.clientToolIds) edges.push({ from: sec.id, to: tId, kind: "section-tool" });
+      for (const pId of sec.publicationIds) edges.push({ from: sec.id, to: pId, kind: "section-publication" });
+    }
+  }
+  for (const ap of s.aiPacks ?? []) {
+    if (ap.archived) continue;
+    nodes.push({ id: ap.id, label: ap.title, kind: "AI Pack" });
+    for (const cId of ap.conceptIds) edges.push({ from: ap.id, to: cId, kind: "pack-concept" });
+    for (const fId of ap.frameworkIds) edges.push({ from: ap.id, to: fId, kind: "pack-framework" });
+    for (const kId of ap.knowledgeObjectIds) edges.push({ from: ap.id, to: kId, kind: "pack-ko" });
+    for (const pId of ap.publicationIds) edges.push({ from: ap.id, to: pId, kind: "pack-publication" });
+    for (const tkId of ap.clientToolkitIds) edges.push({ from: ap.id, to: tkId, kind: "pack-toolkit" });
+    for (const prId of ap.promptIds) edges.push({ from: ap.id, to: prId, kind: "pack-prompt" });
+    for (const agId of ap.agentIds) edges.push({ from: ap.id, to: agId, kind: "pack-agent" });
+    for (const m of ap.modules) {
+      nodes.push({ id: m.id, label: m.title, kind: "AI Pack Module" });
+      edges.push({ from: ap.id, to: m.id, kind: "contains-module" });
+      if (m.referenceId) edges.push({ from: m.id, to: m.referenceId, kind: `module-${m.kind.toLowerCase().replace(/\s+/g, "-")}` });
+    }
+    for (const ev of ap.evaluationCases) {
+      nodes.push({ id: ev.id, label: ev.title, kind: "Evaluation Case" });
+      edges.push({ from: ap.id, to: ev.id, kind: "contains-evaluation" });
+      for (const cId of ev.coversConceptIds) edges.push({ from: ev.id, to: cId, kind: "covers-concept" });
+      for (const fId of ev.coversFrameworkIds) edges.push({ from: ev.id, to: fId, kind: "covers-framework" });
+    }
+  }
   for (const r of s.releases) {
     nodes.push({ id: r.id, label: r.name, kind: "Release" });
     for (const m of r.manifest) for (const id of m.ids) edges.push({ from: r.id, to: id, kind: `releases-${m.entityType}` });
