@@ -188,8 +188,10 @@ export const seedClientTools: ClientTool[] = [
   { id: "DT-014", kind: "Decision Aid", name: "Offer Strategy Decision Tree", purpose: "Route buyers through offer construction based on market and priorities.", sourceConceptIds: ["CR-004-001","CR-004-002","CR-004-007"], sourceFrameworkIds: ["F-009","F-013"], sourceKnowledgeObjectIds: [], promptId: "PR-008", status: "Canonical", version: "1.0.0", humanReviewCompleted: true, steward: "Editorial Board", ...ts },
 ];
 
-// ---------- Publications ----------
-export const seedPublications: PublicationBlueprint[] = [
+// Publications — new W2 fields (description, frameworkId, tags, owner, publicationType,
+// effectiveDate, reviewDate, editorialNotes, reviewNotes, manufacturingStage, stageHistory,
+// archived, presentations) are backfilled by migrateSnapshot(); same for chapter additions.
+export const seedPublications: PublicationBlueprint[] = ([
   {
     id: "PL-101",
     title: "Legacy Homebuyer Guide, First Edition",
@@ -206,7 +208,8 @@ export const seedPublications: PublicationBlueprint[] = [
     ],
     ...ts,
   },
-];
+] as unknown) as PublicationBlueprint[];
+
 
 // ---------- Prompts ----------
 const promptSeed: [string, string, PromptFamily, string][] = [

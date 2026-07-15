@@ -33,6 +33,49 @@ export type ManufacturingStatus = "Draft" | "Editorial" | "QA" | "Canonical";
 
 export const MANUFACTURING_STATUSES: ManufacturingStatus[] = ["Draft", "Editorial", "QA", "Canonical"];
 
+// Workstream 2 — unified publication manufacturing pipeline.
+export type PublicationStage =
+  | "Draft"
+  | "Editorial"
+  | "Review"
+  | "SME Review"
+  | "QA"
+  | "Canonical"
+  | "Released";
+
+export const PUBLICATION_STAGES: PublicationStage[] = [
+  "Draft", "Editorial", "Review", "SME Review", "QA", "Canonical", "Released",
+];
+
+export type PublicationType =
+  | "Book" | "Guide" | "Course" | "Toolkit" | "Playbook" | "Report" | "Reference";
+
+export const PUBLICATION_TYPES: PublicationType[] = [
+  "Book","Guide","Course","Toolkit","Playbook","Report","Reference",
+];
+
+export type PresentationKind =
+  | "Slide Deck" | "Workshop" | "Training Video" | "Presentation" | "Course" | "Client Delivery";
+
+export const PRESENTATION_KINDS: PresentationKind[] = [
+  "Slide Deck","Workshop","Training Video","Presentation","Course","Client Delivery",
+];
+
+export interface PresentationLink {
+  id: string;
+  kind: PresentationKind;
+  title: string;
+  url: string;
+  notes?: string;
+}
+
+export interface StageHistoryEntry {
+  stage: PublicationStage;
+  at: string;
+  actor: string;
+  note?: string;
+}
+
 export type KnowledgeObjectType =
   | "Definition"
   | "Why It Matters"
@@ -158,9 +201,17 @@ export interface ChapterBlueprint {
   frameworkIds: string[];
   knowledgeObjectIds: string[];
   clientToolIds: string[];
-  presentationLinks: string[];
+  presentationLinks: string[];              // legacy id list (Workstream 1)
   reviewStatus: Status;
   order: number;
+  // Workstream 2 additions
+  description: string;
+  editorialNotes: string;
+  estimatedEffortHours: number;
+  chapterVersion: string;
+  parentChapterId: string | null;
+  presentations: PresentationLink[];
+  manufacturingStage: PublicationStage;
 }
 
 export interface PublicationBlueprint extends Timestamped {
@@ -172,6 +223,20 @@ export interface PublicationBlueprint extends Timestamped {
   status: Status;
   version: string;
   steward: string;
+  // Workstream 2 additions
+  description: string;
+  frameworkId: string | null;
+  tags: string[];
+  owner: string;
+  publicationType: PublicationType;
+  effectiveDate: string | null;
+  reviewDate: string | null;
+  editorialNotes: string;
+  reviewNotes: string;
+  manufacturingStage: PublicationStage;
+  stageHistory: StageHistoryEntry[];
+  archived: boolean;
+  presentations: PresentationLink[];
 }
 
 export interface Prompt extends Timestamped {
