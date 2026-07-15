@@ -472,13 +472,12 @@ function AssetRow({ checked, onToggle, id, label, status, dupe, unreviewed }: { 
   );
 }
 
-/* ---------- Coverage Intelligence ---------- */
-function CoverageIntelligenceCard({ cov, draft, snapshot }: { cov: ReturnType<typeof publicationCoverage>; draft: PublicationBlueprint; snapshot: ReturnType<typeof useSnapshot> }) {
+/* ---------- Coverage Intelligence with gap remediation ---------- */
+function CoverageIntelligenceCard({ cov, draft, snapshot, onChapters }: { cov: ReturnType<typeof publicationCoverage>; draft: PublicationBlueprint; snapshot: ReturnType<typeof useSnapshot>; onChapters: (chs: ChapterBlueprint[]) => void }) {
   if (!snapshot) return null;
   const unused = useMemo(() => {
-    // asset-level unused restricted to what this publication ignores from its own governing framework
     const govFramework = draft.frameworkId ? snapshot.frameworks.find(f => f.id === draft.frameworkId) : null;
-    if (!govFramework) return { concepts: [], frameworks: [] };
+    if (!govFramework) return { concepts: [] as string[], frameworks: [] as string[] };
     const usedConcepts = new Set(draft.chapters.flatMap(c => c.conceptIds));
     return {
       concepts: govFramework.governingConceptIds.filter(c => !usedConcepts.has(c)),
@@ -486,18 +485,77 @@ function CoverageIntelligenceCard({ cov, draft, snapshot }: { cov: ReturnType<ty
     };
   }, [draft, snapshot]);
 
+  // Remediation helpers
+  const removeBrokenRef = (kind: string, id: string) => {
+    const keyMap: Record<string, keyof ChapterBlueprint> = { concept: "conceptIds", framework: "frameworkIds", "knowledge-object": "knowledgeObjectIds", "client-tool": "clientToolIds" };
+    const key = keyMap[kind]; if (!key) return;
+    onChapters(draft.chapters.map(ch => ({ ...ch, [key]: (ch[key] as string[]).filter(x => x !== id) })));
+    toast.success(`Removed broken ${kind} reference ${id}.`);
+  };
+  const dedupeChapterRef = (kind: string, id: string) => {
+    const keyMap: Record<string, keyof ChapterBlueprint> = { concept: "conceptIds", framework: "frameworkIds", ko: "knowledgeObjectIds", tool: "clientToolIds" };
+    const key = keyMap[kind]; if (!key) return;
+    onChapters(draft.chapters.map(ch => {
+      const arr = ch[key] as string[];
+      const first = arr.indexOf(id);
+      if (first === -1) return ch;
+      const cleaned = arr.filter((x, i) => x !== id || i === first);
+      return { ...ch, [key]: cleaned };
+    }));
+    toast.success(`Deduped ${kind} ${id}.`);
+  };
+  const linkUnusedConcept = (conceptId: string) => {
+    const first = [...draft.chapters].sort((a, b) => a.order - b.order)[0];
+    if (!first) return;
+    if (first.conceptIds.includes(conceptId)) { toast.info("Already linked."); return; }
+    onChapters(draft.chapters.map(c => c.id === first.id ? { ...c, conceptIds: [...c.conceptIds, conceptId] } : c));
+    toast.success(`Linked ${conceptId} into ${first.id}.`);
+  };
+  const linkUnusedFramework = (frameworkId: string) => {
+    const first = [...draft.chapters].sort((a, b) => a.order - b.order)[0];
+    if (!first) return;
+    if (first.frameworkIds.includes(frameworkId)) { toast.info("Already linked."); return; }
+    onChapters(draft.chapters.map(c => c.id === first.id ? { ...c, frameworkIds: [...c.frameworkIds, frameworkId] } : c));
+    toast.success(`Linked ${frameworkId} into ${first.id}.`);
+  };
+  const koFactoryFor = (conceptId: string) => `/knowledge-objects/new?concept=${encodeURIComponent(conceptId)}${draft.frameworkId ? `&framework=${encodeURIComponent(draft.frameworkId)}` : ""}&pub=${encodeURIComponent(draft.id)}`;
+
   return (
     <div className="editorial-card p-5 space-y-3">
       <SectionTitle>Coverage intelligence</SectionTitle>
       <div className="grid md:grid-cols-2 gap-3 text-sm">
-        <CovGroup title={`Missing Concepts (${cov.missingConcepts.length})`} items={cov.missingConcepts} tone="destructive" />
-        <CovGroup title={`Missing Frameworks (${cov.missingFrameworks.length})`} items={cov.missingFrameworks} tone="destructive" />
-        <CovGroup title={`Missing Knowledge Objects (${cov.missingKnowledgeObjects.length})`} items={cov.missingKnowledgeObjects} tone="destructive" />
-        <CovGroup title={`Missing Client Tools (${cov.missingClientTools.length})`} items={cov.missingClientTools} tone="destructive" />
-        <CovGroup title={`Duplicate references (${cov.duplicateReferences.length})`} items={cov.duplicateReferences.map(d => `${d.kind}:${d.id} ×${d.count}`)} tone="gold" />
-        <CovGroup title={`Chapters missing objectives (${cov.chaptersWithoutObjectives.length})`} items={cov.chaptersWithoutObjectives} tone="gold" />
-        <CovGroup title={`Unused governing Concepts (${unused.concepts.length})`} items={unused.concepts} tone="muted" />
-        <CovGroup title={`Unused governing Frameworks (${unused.frameworks.length})`} items={unused.frameworks} tone="muted" />
+        <ActionableGroup title={`Missing Concepts (${cov.missingConcepts.length})`} tone="destructive"
+          rows={cov.missingConcepts.map(id => ({ id, actions: [
+            { label: "Remove", onClick: () => removeBrokenRef("concept", id) },
+            { label: "Open Concept", to: `/concepts/${id}` },
+          ] }))} />
+        <ActionableGroup title={`Missing Frameworks (${cov.missingFrameworks.length})`} tone="destructive"
+          rows={cov.missingFrameworks.map(id => ({ id, actions: [
+            { label: "Remove", onClick: () => removeBrokenRef("framework", id) },
+          ] }))} />
+        <ActionableGroup title={`Missing Knowledge Objects (${cov.missingKnowledgeObjects.length})`} tone="destructive"
+          rows={cov.missingKnowledgeObjects.map(id => ({ id, actions: [
+            { label: "Remove", onClick: () => removeBrokenRef("knowledge-object", id) },
+          ] }))} />
+        <ActionableGroup title={`Missing Client Tools (${cov.missingClientTools.length})`} tone="destructive"
+          rows={cov.missingClientTools.map(id => ({ id, actions: [
+            { label: "Remove", onClick: () => removeBrokenRef("client-tool", id) },
+          ] }))} />
+        <ActionableGroup title={`Duplicate references (${cov.duplicateReferences.length})`} tone="gold"
+          rows={cov.duplicateReferences.map(d => ({ id: `${d.kind}:${d.id} ×${d.count}`, actions: [
+            { label: "Dedupe", onClick: () => dedupeChapterRef(d.kind, d.id) },
+          ] }))} />
+        <ActionableGroup title={`Chapters missing objectives (${cov.chaptersWithoutObjectives.length})`} tone="gold"
+          rows={cov.chaptersWithoutObjectives.map(id => ({ id, actions: [] }))} />
+        <ActionableGroup title={`Unused governing Concepts (${unused.concepts.length})`} tone="muted"
+          rows={unused.concepts.map(id => ({ id, actions: [
+            { label: "Link → first chapter", onClick: () => linkUnusedConcept(id) },
+            { label: "Draft KO", to: koFactoryFor(id) },
+          ] }))} />
+        <ActionableGroup title={`Unused governing Frameworks (${unused.frameworks.length})`} tone="muted"
+          rows={unused.frameworks.map(id => ({ id, actions: [
+            { label: "Link → first chapter", onClick: () => linkUnusedFramework(id) },
+          ] }))} />
       </div>
       <div className="pt-3 border-t border-border grid grid-cols-3 gap-3 text-xs">
         <div><div className="text-slate-ink uppercase tracking-wider">Coverage</div><CoverageBar percent={cov.coveragePercent} /></div>
@@ -508,24 +566,45 @@ function CoverageIntelligenceCard({ cov, draft, snapshot }: { cov: ReturnType<ty
   );
 }
 
-function CovGroup({ title, items, tone }: { title: string; items: string[]; tone: "destructive" | "gold" | "muted" }) {
+type ActionRow = { label: string; onClick?: () => void; to?: string };
+function ActionableGroup({ title, rows, tone }: { title: string; rows: { id: string; actions: ActionRow[] }[]; tone: "destructive" | "gold" | "muted" }) {
   const toneCls = tone === "destructive" ? "text-destructive" : tone === "gold" ? "text-gold" : "text-muted-foreground";
   return (
     <div className="border border-border rounded p-3">
       <div className={`text-xs font-medium mb-1 ${toneCls}`}>{title}</div>
-      {items.length === 0 ? <div className="text-[11px] text-evergreen">Clean.</div> : (
-        <ul className="text-[11px] space-y-0.5 max-h-24 overflow-y-auto">{items.slice(0, 20).map((x, i) => <li key={i} className="font-mono">· {x}</li>)}{items.length > 20 && <li className="text-muted-foreground">+{items.length - 20} more</li>}</ul>
+      {rows.length === 0 ? <div className="text-[11px] text-evergreen">Clean.</div> : (
+        <ul className="text-[11px] space-y-1 max-h-32 overflow-y-auto">
+          {rows.slice(0, 20).map((r, i) => (
+            <li key={i} className="flex items-center gap-1 flex-wrap">
+              <span className="font-mono flex-1 truncate">· {r.id}</span>
+              {r.actions.map((a, ai) => a.to
+                ? <Link key={ai} to={a.to} className="text-[10px] underline text-heritage inline-flex items-center gap-0.5">{a.label}<ExternalLink className="size-2.5" /></Link>
+                : <button key={ai} onClick={a.onClick} className="text-[10px] underline text-heritage">{a.label}</button>)}
+            </li>
+          ))}
+          {rows.length > 20 && <li className="text-muted-foreground">+{rows.length - 20} more</li>}
+        </ul>
       )}
     </div>
   );
 }
 
 /* ---------- Manufacturing Pipeline ---------- */
-function ManufacturingPipelineCard({ draft, snapshot, promote }: { draft: PublicationBlueprint; snapshot: ReturnType<typeof useSnapshot>; promote: (t: PublicationStage) => void }) {
+function ManufacturingPipelineCard({ draft, snapshot, promote }: { draft: PublicationBlueprint; snapshot: ReturnType<typeof useSnapshot>; promote: (t: PublicationStage, opts?: { override?: boolean; note?: string }) => void }) {
+  const [overrideStage, setOverrideStage] = useState<PublicationStage | null>(null);
+  const [overrideNote, setOverrideNote] = useState("");
   if (!snapshot) return null;
   const currentIdx = PUBLICATION_STAGES.indexOf(draft.manufacturingStage);
   const nextStage = PUBLICATION_STAGES[currentIdx + 1] ?? null;
+  const prevStage = PUBLICATION_STAGES[currentIdx - 1] ?? null;
   const validation = nextStage ? validatePublicationPromotion(draft, nextStage, snapshot) : { ok: false, blockers: ["Already at final stage."], nextStage: null };
+
+  const applyOverride = () => {
+    if (!overrideStage) return;
+    if (!overrideNote.trim()) { toast.error("Override requires an audit note."); return; }
+    promote(overrideStage, { override: true, note: overrideNote.trim() });
+    setOverrideStage(null); setOverrideNote("");
+  };
 
   return (
     <div className="editorial-card p-5 space-y-3">
@@ -545,20 +624,67 @@ function ManufacturingPipelineCard({ draft, snapshot, promote }: { draft: Public
             Promote to {nextStage}
           </Button>
         )}
+        {prevStage && (
+          <Button size="sm" variant="outline" className="w-full" onClick={() => setOverrideStage(prevStage)}>
+            Step back to {prevStage} (audited)
+          </Button>
+        )}
         {validation.blockers.length > 0 && (
-          <div className="text-[11px] text-destructive space-y-0.5">
+          <div className="text-[11px] text-destructive space-y-0.5" role="status">
             {validation.blockers.slice(0, 4).map((b, i) => <div key={i}>· {b}</div>)}
           </div>
         )}
       </div>
       <div className="pt-2 border-t border-border">
-        <Label className="text-xs uppercase tracking-wider text-slate-ink">Force stage (governance override)</Label>
-        <Select value={draft.manufacturingStage} onValueChange={v => promote(v as PublicationStage)}>
-          <SelectTrigger><SelectValue /></SelectTrigger>
-          <SelectContent>{PUBLICATION_STAGES.map(x => <SelectItem key={x} value={x}>{x}</SelectItem>)}</SelectContent>
+        <Label className="text-xs uppercase tracking-wider text-slate-ink">Governance override</Label>
+        <Select value={overrideStage ?? ""} onValueChange={v => setOverrideStage(v as PublicationStage)}>
+          <SelectTrigger><SelectValue placeholder="Select target stage" /></SelectTrigger>
+          <SelectContent>{PUBLICATION_STAGES.filter(s => s !== draft.manufacturingStage).map(x => <SelectItem key={x} value={x}>{x}</SelectItem>)}</SelectContent>
         </Select>
-        <div className="text-[10px] text-muted-foreground mt-1">Validation still enforced on manual selection.</div>
+        {overrideStage && (
+          <div className="space-y-2 mt-2">
+            <Textarea rows={2} placeholder="Override reason (required, recorded in stage history)" value={overrideNote} onChange={e => setOverrideNote(e.target.value)} />
+            <Button size="sm" variant="destructive" className="w-full" onClick={applyOverride}>Apply override → {overrideStage}</Button>
+          </div>
+        )}
+        <div className="text-[10px] text-muted-foreground mt-2">Overrides bypass validation and are stamped OVERRIDE in stage history.</div>
       </div>
+    </div>
+  );
+}
+
+/* ---------- Chapter presentations editor ---------- */
+function ChapterPresentationsEditor({ chapter, onChange }: { chapter: ChapterBlueprint; onChange: (p: PresentationLink[]) => void }) {
+  const add = () => {
+    const id = `PRES-${chapter.id}-${String(chapter.presentations.length + 1).padStart(2, "0")}`;
+    onChange([...chapter.presentations, { id, kind: "Slide Deck", title: "New chapter presentation", url: "" }]);
+  };
+  const update = (idx: number, patch: Partial<PresentationLink>) =>
+    onChange(chapter.presentations.map((p, i) => i === idx ? { ...p, ...patch } : p));
+  const remove = (idx: number) => onChange(chapter.presentations.filter((_, i) => i !== idx));
+  return (
+    <div className="border border-border rounded p-2 space-y-2">
+      <div className="flex items-center justify-between">
+        <Label className="text-xs uppercase tracking-wider text-slate-ink">Chapter presentations</Label>
+        <Button size="sm" variant="outline" onClick={add}><Plus className="size-3 mr-1" /> Add</Button>
+      </div>
+      {chapter.presentations.length === 0 ? (
+        <div className="text-[11px] text-muted-foreground">No presentations at this chapter level.</div>
+      ) : (
+        <div className="space-y-1">
+          {chapter.presentations.map((p, i) => (
+            <div key={p.id} className="grid grid-cols-[110px_1fr_1fr_auto] gap-1 items-center">
+              <Select value={p.kind} onValueChange={v => update(i, { kind: v as PresentationKind })}>
+                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>{PRESENTATION_KINDS.map(k => <SelectItem key={k} value={k}>{k}</SelectItem>)}</SelectContent>
+              </Select>
+              <Input className="h-8 text-xs" placeholder="Title" value={p.title} onChange={e => update(i, { title: e.target.value })} />
+              <Input className="h-8 text-xs" placeholder="URL" value={p.url} onChange={e => update(i, { url: e.target.value })} />
+              <Button size="icon" variant="ghost" className="h-8 w-8" aria-label={`Remove ${p.id}`} onClick={() => remove(i)}><Trash2 className="size-3 text-destructive" /></Button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
