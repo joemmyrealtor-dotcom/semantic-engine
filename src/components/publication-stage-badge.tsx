@@ -4,7 +4,6 @@ import { cn } from "@/lib/utils";
 const map: Record<PublicationStage, string> = {
   Draft: "bg-muted text-muted-foreground",
   Editorial: "bg-gold/15 text-heritage border border-gold/40",
-  Review: "bg-accent text-accent-foreground border border-border",
   "SME Review": "bg-accent text-accent-foreground border border-border",
   QA: "bg-gold/25 text-heritage border border-gold/50",
   Canonical: "bg-heritage text-heritage-foreground",
