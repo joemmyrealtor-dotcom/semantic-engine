@@ -26,6 +26,7 @@ import { Route as KnowledgeObjectsNewRouteImport } from './routes/knowledge-obje
 import { Route as FrameworksIdRouteImport } from './routes/frameworks.$id'
 import { Route as ConceptsIdRouteImport } from './routes/concepts.$id'
 import { Route as ClientToolsNewRouteImport } from './routes/client-tools.new'
+import { Route as ClientToolkitsIdRouteImport } from './routes/client-toolkits.$id'
 
 const RepositoryRoute = RepositoryRouteImport.update({
   id: '/repository',
@@ -112,6 +113,11 @@ const ClientToolsNewRoute = ClientToolsNewRouteImport.update({
   path: '/client-tools/new',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ClientToolkitsIdRoute = ClientToolkitsIdRouteImport.update({
+  id: '/client-toolkits/$id',
+  path: '/client-toolkits/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -121,6 +127,7 @@ export interface FileRoutesByFullPath {
   '/graph': typeof GraphRoute
   '/prompts': typeof PromptsRoute
   '/repository': typeof RepositoryRoute
+  '/client-toolkits/$id': typeof ClientToolkitsIdRoute
   '/client-tools/new': typeof ClientToolsNewRoute
   '/concepts/$id': typeof ConceptsIdRoute
   '/frameworks/$id': typeof FrameworksIdRoute
@@ -140,6 +147,7 @@ export interface FileRoutesByTo {
   '/graph': typeof GraphRoute
   '/prompts': typeof PromptsRoute
   '/repository': typeof RepositoryRoute
+  '/client-toolkits/$id': typeof ClientToolkitsIdRoute
   '/client-tools/new': typeof ClientToolsNewRoute
   '/concepts/$id': typeof ConceptsIdRoute
   '/frameworks/$id': typeof FrameworksIdRoute
@@ -160,6 +168,7 @@ export interface FileRoutesById {
   '/graph': typeof GraphRoute
   '/prompts': typeof PromptsRoute
   '/repository': typeof RepositoryRoute
+  '/client-toolkits/$id': typeof ClientToolkitsIdRoute
   '/client-tools/new': typeof ClientToolsNewRoute
   '/concepts/$id': typeof ConceptsIdRoute
   '/frameworks/$id': typeof FrameworksIdRoute
@@ -181,6 +190,7 @@ export interface FileRouteTypes {
     | '/graph'
     | '/prompts'
     | '/repository'
+    | '/client-toolkits/$id'
     | '/client-tools/new'
     | '/concepts/$id'
     | '/frameworks/$id'
@@ -200,6 +210,7 @@ export interface FileRouteTypes {
     | '/graph'
     | '/prompts'
     | '/repository'
+    | '/client-toolkits/$id'
     | '/client-tools/new'
     | '/concepts/$id'
     | '/frameworks/$id'
@@ -219,6 +230,7 @@ export interface FileRouteTypes {
     | '/graph'
     | '/prompts'
     | '/repository'
+    | '/client-toolkits/$id'
     | '/client-tools/new'
     | '/concepts/$id'
     | '/frameworks/$id'
@@ -239,6 +251,7 @@ export interface RootRouteChildren {
   GraphRoute: typeof GraphRoute
   PromptsRoute: typeof PromptsRoute
   RepositoryRoute: typeof RepositoryRoute
+  ClientToolkitsIdRoute: typeof ClientToolkitsIdRoute
   ClientToolsNewRoute: typeof ClientToolsNewRoute
   ConceptsIdRoute: typeof ConceptsIdRoute
   FrameworksIdRoute: typeof FrameworksIdRoute
@@ -372,6 +385,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClientToolsNewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/client-toolkits/$id': {
+      id: '/client-toolkits/$id'
+      path: '/client-toolkits/$id'
+      fullPath: '/client-toolkits/$id'
+      preLoaderRoute: typeof ClientToolkitsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -383,6 +403,7 @@ const rootRouteChildren: RootRouteChildren = {
   GraphRoute: GraphRoute,
   PromptsRoute: PromptsRoute,
   RepositoryRoute: RepositoryRoute,
+  ClientToolkitsIdRoute: ClientToolkitsIdRoute,
   ClientToolsNewRoute: ClientToolsNewRoute,
   ConceptsIdRoute: ConceptsIdRoute,
   FrameworksIdRoute: FrameworksIdRoute,
