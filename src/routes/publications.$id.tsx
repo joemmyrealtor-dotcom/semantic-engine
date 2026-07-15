@@ -290,19 +290,39 @@ function ChaptersCard({ draft, snapshot, onChapters }: { draft: PublicationBluep
         <div className="grid md:grid-cols-2 gap-4">
           <div className="border border-border rounded divide-y divide-border max-h-[420px] overflow-y-auto">
             {tree.map(({ chapter, depth }) => {
-              const idx = sortedFlat.findIndex(c => c.id === chapter.id);
+              const siblings = draft.chapters.filter(c => (c.parentChapterId ?? null) === (chapter.parentChapterId ?? null)).sort((a,b) => a.order - b.order);
+              const sibIdx = siblings.findIndex(c => c.id === chapter.id);
               const active = chapter.id === selectedId;
+              const isDragging = dragId === chapter.id;
               return (
-                <div key={chapter.id} className={`px-2 py-2 flex items-center gap-2 text-sm ${active ? "bg-accent/60" : "hover:bg-accent/30"}`} style={{ paddingLeft: 8 + depth * 16 }}>
+                <div
+                  key={chapter.id}
+                  draggable
+                  onDragStart={e => { setDragId(chapter.id); e.dataTransfer.effectAllowed = "move"; }}
+                  onDragEnd={() => setDragId(null)}
+                  onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; }}
+                  onDrop={e => {
+                    e.preventDefault();
+                    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                    const y = e.clientY - rect.top;
+                    const mode: "before" | "after" | "child" =
+                      y < rect.height * 0.25 ? "before" : y > rect.height * 0.75 ? "after" : "child";
+                    handleDrop(chapter.id, mode);
+                  }}
+                  className={`px-2 py-2 flex items-center gap-2 text-sm ${active ? "bg-accent/60" : "hover:bg-accent/30"} ${isDragging ? "opacity-40" : ""}`}
+                  style={{ paddingLeft: 8 + depth * 16 }}
+                  aria-grabbed={isDragging}
+                >
+                  <GripVertical className="size-3 text-muted-foreground shrink-0 cursor-grab" aria-hidden />
                   {depth > 0 && <ChevronRight className="size-3 text-muted-foreground shrink-0" />}
                   <button className="flex-1 text-left min-w-0" onClick={() => setSelectedId(chapter.id)}>
                     <div className="font-mono text-[10px] text-slate-ink">{chapter.id} · #{chapter.order}</div>
                     <div className="truncate">{chapter.title}</div>
                   </button>
                   <PublicationStageBadge stage={chapter.manufacturingStage} className="text-[9px]" />
-                  <button className="p-1 text-muted-foreground hover:text-heritage disabled:opacity-30" disabled={idx === 0} onClick={() => move(idx, -1)}><ArrowUp className="size-3" /></button>
-                  <button className="p-1 text-muted-foreground hover:text-heritage disabled:opacity-30" disabled={idx === sortedFlat.length - 1} onClick={() => move(idx, 1)}><ArrowDown className="size-3" /></button>
-                  <button className="p-1 text-destructive/70 hover:text-destructive" onClick={() => remove(chapter.id)}><Trash2 className="size-3" /></button>
+                  <button aria-label={`Move ${chapter.id} up`} className="p-1 text-muted-foreground hover:text-heritage disabled:opacity-30" disabled={sibIdx === 0} onClick={() => move(chapter.id, -1)}><ArrowUp className="size-3" /></button>
+                  <button aria-label={`Move ${chapter.id} down`} className="p-1 text-muted-foreground hover:text-heritage disabled:opacity-30" disabled={sibIdx === siblings.length - 1} onClick={() => move(chapter.id, 1)}><ArrowDown className="size-3" /></button>
+                  <button aria-label={`Delete ${chapter.id}`} className="p-1 text-destructive/70 hover:text-destructive" onClick={() => remove(chapter.id)}><Trash2 className="size-3" /></button>
                 </div>
               );
             })}
@@ -324,7 +344,7 @@ function ChaptersCard({ draft, snapshot, onChapters }: { draft: PublicationBluep
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="__root__">— Top level</SelectItem>
-                        {draft.chapters.filter(c => c.id !== selected.id).map(c => <SelectItem key={c.id} value={c.id}>{c.id} · {c.title}</SelectItem>)}
+                        {draft.chapters.filter(c => !invalidParentIds.has(c.id)).map(c => <SelectItem key={c.id} value={c.id}>{c.id} · {c.title}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </Field>
