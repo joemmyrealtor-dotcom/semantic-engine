@@ -308,7 +308,7 @@ export interface DataSnapshot {
   releases: Release[];
 }
 
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 export const ID_PATTERNS: Record<string, RegExp> = {
   domain: /^DOM-\d{3}$/,
