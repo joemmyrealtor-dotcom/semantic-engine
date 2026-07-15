@@ -68,6 +68,7 @@ function PublicationRegistryPage() {
   }, {});
 
   const create = async () => {
+    if (!s) return;
     const id = nextPublicationId(s);
     const now = new Date().toISOString();
     const p: PublicationBlueprint = {
