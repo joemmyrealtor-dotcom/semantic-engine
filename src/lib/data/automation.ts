@@ -634,6 +634,8 @@ export function shouldTriggerFire(recipe: AutomationRecipe, ctx: Record<string, 
       return true;
   }
   return false;
+}
+
 
 // Placeholder handler map is exposed for the test harness.
 export const _ACTION_KINDS: readonly AutomationActionKind[] = Object.keys(ACTIONS) as AutomationActionKind[];
