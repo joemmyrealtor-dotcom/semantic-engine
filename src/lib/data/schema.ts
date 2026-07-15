@@ -586,4 +586,6 @@ export const ID_PATTERNS: Record<string, RegExp> = {
   aiPack: /^AP-\d{3}$/,
   aiPackModule: /^AM-\d{3}$/,
   evaluationCase: /^EV-\d{3}$/,
+  agentSpec: /^AS-\d{3}$/,
+  agentEvaluation: /^AE-\d{3}$/,
 };
