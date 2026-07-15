@@ -16,6 +16,7 @@ import { Route as GovernanceRouteImport } from './routes/governance'
 import { Route as DataRouteImport } from './routes/data'
 import { Route as AgentsRouteImport } from './routes/agents'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PublicationsIndexRouteImport } from './routes/publications.index'
 import { Route as ConceptsIndexRouteImport } from './routes/concepts.index'
 import { Route as ReleasesIdRouteImport } from './routes/releases.$id'
 import { Route as PublicationsIdRouteImport } from './routes/publications.$id'
@@ -57,6 +58,11 @@ const AgentsRoute = AgentsRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PublicationsIndexRoute = PublicationsIndexRouteImport.update({
+  id: '/publications/',
+  path: '/publications/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConceptsIndexRoute = ConceptsIndexRouteImport.update({
@@ -110,6 +116,7 @@ export interface FileRoutesByFullPath {
   '/publications/$id': typeof PublicationsIdRoute
   '/releases/$id': typeof ReleasesIdRoute
   '/concepts/': typeof ConceptsIndexRoute
+  '/publications/': typeof PublicationsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -126,6 +133,7 @@ export interface FileRoutesByTo {
   '/publications/$id': typeof PublicationsIdRoute
   '/releases/$id': typeof ReleasesIdRoute
   '/concepts': typeof ConceptsIndexRoute
+  '/publications': typeof PublicationsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -143,6 +151,7 @@ export interface FileRoutesById {
   '/publications/$id': typeof PublicationsIdRoute
   '/releases/$id': typeof ReleasesIdRoute
   '/concepts/': typeof ConceptsIndexRoute
+  '/publications/': typeof PublicationsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -161,6 +170,7 @@ export interface FileRouteTypes {
     | '/publications/$id'
     | '/releases/$id'
     | '/concepts/'
+    | '/publications/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -177,6 +187,7 @@ export interface FileRouteTypes {
     | '/publications/$id'
     | '/releases/$id'
     | '/concepts'
+    | '/publications'
   id:
     | '__root__'
     | '/'
@@ -193,6 +204,7 @@ export interface FileRouteTypes {
     | '/publications/$id'
     | '/releases/$id'
     | '/concepts/'
+    | '/publications/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -210,6 +222,7 @@ export interface RootRouteChildren {
   PublicationsIdRoute: typeof PublicationsIdRoute
   ReleasesIdRoute: typeof ReleasesIdRoute
   ConceptsIndexRoute: typeof ConceptsIndexRoute
+  PublicationsIndexRoute: typeof PublicationsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -261,6 +274,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/publications/': {
+      id: '/publications/'
+      path: '/publications'
+      fullPath: '/publications/'
+      preLoaderRoute: typeof PublicationsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/concepts/': {
@@ -330,6 +350,7 @@ const rootRouteChildren: RootRouteChildren = {
   PublicationsIdRoute: PublicationsIdRoute,
   ReleasesIdRoute: ReleasesIdRoute,
   ConceptsIndexRoute: ConceptsIndexRoute,
+  PublicationsIndexRoute: PublicationsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
