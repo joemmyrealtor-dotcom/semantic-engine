@@ -75,11 +75,16 @@ export function migrateSnapshot(s: DataSnapshot): DataSnapshot {
   return { ...s, concepts, publications };
 }
 
-function mapStatusToStage(status: string | undefined): "Draft"|"Editorial"|"Review"|"SME Review"|"QA"|"Canonical"|"Released" {
+function mapStatusToStage(status: string | undefined): "Draft"|"Editorial"|"SME Review"|"QA"|"Canonical"|"Released" {
   switch (status) {
+    case "Released": return "Released";
     case "Canonical": return "Canonical";
     case "Approved": return "QA";
-    case "In Review": return "Review";
+    case "QA": return "QA";
+    case "SME Review": return "SME Review";
+    case "Review": return "SME Review"; // schema v1 → v2 migration
+    case "In Review": return "SME Review";
+    case "Editorial": return "Editorial";
     case "Deprecated":
     case "Archived":
     case "Draft":
