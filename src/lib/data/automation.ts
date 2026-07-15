@@ -281,7 +281,7 @@ const ACTIONS: Record<AutomationActionKind, ActionHandler> = {
           agent: "agents", concept: "concepts", framework: "frameworks",
         } as Record<string, keyof DataSnapshot>)[kind];
         if (!arrKey) return snap;
-        return { ...snap, [arrKey]: (snap[arrKey] as {id:string;[k:string]:unknown}[]).map(e => {
+        return { ...snap, [arrKey]: (snap[arrKey] as unknown as {id:string;[k:string]:unknown}[]).map(e => {
           if (e.id !== entityId) return e;
           const cur = Array.isArray(e[field]) ? (e[field] as string[]) : [];
           return { ...e, [field]: Array.from(new Set([...cur, targetId])) };
@@ -302,7 +302,7 @@ const ACTIONS: Record<AutomationActionKind, ActionHandler> = {
           agent: "agents", concept: "concepts", framework: "frameworks", knowledgeObject: "knowledgeObjects",
         } as Record<string, keyof DataSnapshot>)[kind];
         if (!arrKey) return snap;
-        return { ...snap, [arrKey]: (snap[arrKey] as {id:string;[k:string]:unknown}[]).map(e =>
+        return { ...snap, [arrKey]: (snap[arrKey] as unknown as {id:string;[k:string]:unknown}[]).map(e =>
           e.id === entityId ? { ...e, [field]: value, updatedAt: nowISO() } : e,
         ) } as DataSnapshot;
       },
@@ -344,7 +344,7 @@ const ACTIONS: Record<AutomationActionKind, ActionHandler> = {
       destructive: target === "Canonical" || target === "Released",
       apply: (snap) => ({
         ...snap,
-        [arrKey]: (snap[arrKey] as {id:string; manufacturingStage:string; stageHistory:unknown[]; [k:string]:unknown}[]).map(e =>
+        [arrKey]: (snap[arrKey] as unknown as {id:string; manufacturingStage:string; stageHistory:unknown[]; [k:string]:unknown}[]).map(e =>
           e.id === entityId ? {
             ...e, manufacturingStage: target,
             stageHistory: [...(e.stageHistory as unknown[]), { stage: target, at: nowISO(), actor: "automation", note: "Automation-promoted (approved)." }],
