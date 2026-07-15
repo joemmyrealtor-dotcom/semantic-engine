@@ -14,8 +14,9 @@ import {
 } from "@/lib/data/schema";
 import type {
   AutomationRecipe, AutomationStep, AutomationTriggerKind, AutomationActionKind,
-  AutomationEntityScope, AutomationApprovalCheckpoint,
+  AutomationEntityScope, AutomationApprovalCheckpoint, ManufacturingStage, Role,
 } from "@/lib/data/schema";
+import { MANUFACTURING_STAGES } from "@/lib/data/schema";
 import { executeRecipe, validateRecipe, nextStepId, nextCheckpointId } from "@/lib/data/automation";
 
 export const Route = createFileRoute("/automations/$id")({
