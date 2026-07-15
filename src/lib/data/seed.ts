@@ -1,7 +1,7 @@
 import type {
   Domain, Concept, Framework, KnowledgeObject, ClientTool,
   PublicationBlueprint, Prompt, Agent, Release, DataSnapshot, PromptFamily,
-  ClientToolkit, AIPack,
+  ClientToolkit, AIPack, AutomationRecipe, AutomationRun,
 } from "./schema";
 import { SCHEMA_VERSION } from "./schema";
 
