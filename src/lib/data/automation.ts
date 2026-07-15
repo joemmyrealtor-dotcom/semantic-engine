@@ -625,9 +625,15 @@ export function shouldTriggerFire(recipe: AutomationRecipe, ctx: Record<string, 
     case "canonical-updated":
     case "release-gate":
     case "scheduled":
+    case "duplicate-detected":
+    case "knowledge-health-threshold":
+    case "dependency-change":
+    case "relationship-added":
+    case "relationship-removed":
+    case "coverage-drop":
       return true;
   }
-}
+  return false;
 
 // Placeholder handler map is exposed for the test harness.
 export const _ACTION_KINDS: readonly AutomationActionKind[] = Object.keys(ACTIONS) as AutomationActionKind[];
