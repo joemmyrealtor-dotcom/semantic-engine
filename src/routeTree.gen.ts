@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as RepositoryRouteImport } from './routes/repository'
 import { Route as PromptsRouteImport } from './routes/prompts'
+import { Route as OperationsRouteImport } from './routes/operations'
 import { Route as GraphRouteImport } from './routes/graph'
 import { Route as GovernanceRouteImport } from './routes/governance'
 import { Route as DataRouteImport } from './routes/data'
@@ -42,6 +43,11 @@ const RepositoryRoute = RepositoryRouteImport.update({
 const PromptsRoute = PromptsRouteImport.update({
   id: '/prompts',
   path: '/prompts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OperationsRoute = OperationsRouteImport.update({
+  id: '/operations',
+  path: '/operations',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GraphRoute = GraphRouteImport.update({
@@ -160,6 +166,7 @@ export interface FileRoutesByFullPath {
   '/data': typeof DataRoute
   '/governance': typeof GovernanceRoute
   '/graph': typeof GraphRoute
+  '/operations': typeof OperationsRoute
   '/prompts': typeof PromptsRoute
   '/repository': typeof RepositoryRoute
   '/agents/$id': typeof AgentsIdRoute
@@ -186,6 +193,7 @@ export interface FileRoutesByTo {
   '/data': typeof DataRoute
   '/governance': typeof GovernanceRoute
   '/graph': typeof GraphRoute
+  '/operations': typeof OperationsRoute
   '/prompts': typeof PromptsRoute
   '/repository': typeof RepositoryRoute
   '/agents/$id': typeof AgentsIdRoute
@@ -213,6 +221,7 @@ export interface FileRoutesById {
   '/data': typeof DataRoute
   '/governance': typeof GovernanceRoute
   '/graph': typeof GraphRoute
+  '/operations': typeof OperationsRoute
   '/prompts': typeof PromptsRoute
   '/repository': typeof RepositoryRoute
   '/agents/$id': typeof AgentsIdRoute
@@ -241,6 +250,7 @@ export interface FileRouteTypes {
     | '/data'
     | '/governance'
     | '/graph'
+    | '/operations'
     | '/prompts'
     | '/repository'
     | '/agents/$id'
@@ -267,6 +277,7 @@ export interface FileRouteTypes {
     | '/data'
     | '/governance'
     | '/graph'
+    | '/operations'
     | '/prompts'
     | '/repository'
     | '/agents/$id'
@@ -293,6 +304,7 @@ export interface FileRouteTypes {
     | '/data'
     | '/governance'
     | '/graph'
+    | '/operations'
     | '/prompts'
     | '/repository'
     | '/agents/$id'
@@ -320,6 +332,7 @@ export interface RootRouteChildren {
   DataRoute: typeof DataRoute
   GovernanceRoute: typeof GovernanceRoute
   GraphRoute: typeof GraphRoute
+  OperationsRoute: typeof OperationsRoute
   PromptsRoute: typeof PromptsRoute
   RepositoryRoute: typeof RepositoryRoute
   AgentsIdRoute: typeof AgentsIdRoute
@@ -356,6 +369,13 @@ declare module '@tanstack/react-router' {
       path: '/prompts'
       fullPath: '/prompts'
       preLoaderRoute: typeof PromptsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/operations': {
+      id: '/operations'
+      path: '/operations'
+      fullPath: '/operations'
+      preLoaderRoute: typeof OperationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/graph': {
@@ -520,6 +540,7 @@ const rootRouteChildren: RootRouteChildren = {
   DataRoute: DataRoute,
   GovernanceRoute: GovernanceRoute,
   GraphRoute: GraphRoute,
+  OperationsRoute: OperationsRoute,
   PromptsRoute: PromptsRoute,
   RepositoryRoute: RepositoryRoute,
   AgentsIdRoute: AgentsIdRoute,
