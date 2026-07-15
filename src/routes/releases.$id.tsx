@@ -55,7 +55,8 @@ function ReleasePage() {
           </Select>
         </>} />
       <PageBody>
-        <div className="grid lg:grid-cols-3 gap-6">
+        <ReleaseIntelligencePanel releaseId={id} />
+        <div className="grid lg:grid-cols-3 gap-6 mt-4">
           <div className="lg:col-span-2 space-y-4">
             <div className="editorial-card p-5">
               <SectionTitle hint={`${gate.passed}/${gate.total} gates${readinessBlocked ? ` · ${ineligible.length} publication blocker(s)` : ""}`}>Gate checklist</SectionTitle>
