@@ -11,22 +11,31 @@ import { toast } from "sonner";
 
 const ALL_TYPES: KnowledgeObjectType[] = ["Definition","Why It Matters","Principle","Example","Scenario","Joe's Strategy","Mistake Alert","FAQ","Reflection Question"];
 
+type NewKOSearch = { concept?: string; framework?: string; pub?: string; chapter?: string };
+
 export const Route = createFileRoute("/knowledge-objects/new")({
   head: () => ({ meta: [{ title: "Knowledge Object Factory — Legacy Platform" }] }),
+  validateSearch: (raw: Record<string, unknown>): NewKOSearch => ({
+    concept: typeof raw.concept === "string" ? raw.concept : undefined,
+    framework: typeof raw.framework === "string" ? raw.framework : undefined,
+    pub: typeof raw.pub === "string" ? raw.pub : undefined,
+    chapter: typeof raw.chapter === "string" ? raw.chapter : undefined,
+  }),
   component: KOFactoryPage,
 });
 
 function KOFactoryPage() {
   const s = useSnapshot();
-  const [selConcepts, setSelConcepts] = useState<string[]>([]);
-  const [selFrameworks, setSelFrameworks] = useState<string[]>([]);
+  const search = Route.useSearch();
+  const [selConcepts, setSelConcepts] = useState<string[]>(search.concept ? [search.concept] : []);
+  const [selFrameworks, setSelFrameworks] = useState<string[]>(search.framework ? [search.framework] : []);
   const [types, setTypes] = useState<KnowledgeObjectType[]>(["Definition","Why It Matters","Principle"]);
   const [drafts, setDrafts] = useState<KnowledgeObject[]>([]);
 
   if (!s) return <LoadingState />;
 
-  const approvedConcepts = s.concepts.filter(c => c.status === "Canonical" || c.status === "Approved");
-  const approvedFrameworks = s.frameworks.filter(f => f.status === "Canonical" || f.status === "Approved");
+  const approvedConcepts = s.concepts.filter(c => c.status === "Canonical" || c.status === "Approved" || selConcepts.includes(c.id));
+  const approvedFrameworks = s.frameworks.filter(f => f.status === "Canonical" || f.status === "Approved" || selFrameworks.includes(f.id));
   const toggle = <T,>(arr: T[], v: T, setter: (a: T[]) => void) => setter(arr.includes(v) ? arr.filter(x => x !== v) : [...arr, v]);
 
   const generate = () => {
@@ -47,6 +56,15 @@ function KOFactoryPage() {
       <PageHeader eyebrow="Knowledge Object Factory" title="Draft from approved sources"
         description="Local demo generation. Drafts are marked human-review-required and cannot become Canonical without recorded approval." />
       <PageBody>
+        {(search.concept || search.framework || search.pub) && (
+          <div className="editorial-card p-3 mb-4 text-xs border-gold/40 flex flex-wrap gap-3 items-center">
+            <span className="uppercase tracking-widest text-gold">Prefilled from remediation</span>
+            {search.concept && <span>Concept <span className="font-mono">{search.concept}</span></span>}
+            {search.framework && <span>Framework <span className="font-mono">{search.framework}</span></span>}
+            {search.pub && <span>Publication <span className="font-mono">{search.pub}</span></span>}
+            {search.chapter && <span>Chapter <span className="font-mono">{search.chapter}</span></span>}
+          </div>
+        )}
         <div className="grid lg:grid-cols-3 gap-6">
           <div className="editorial-card p-5">
             <SectionTitle>Source Concepts</SectionTitle>

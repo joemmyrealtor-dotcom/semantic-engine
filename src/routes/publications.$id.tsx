@@ -17,11 +17,12 @@ import {
 } from "@/lib/data/schema";
 import {
   publicationCoverage, validatePublicationPromotion, appendStageHistory,
-  reorderChapters, chapterTree, nextChapterId,
+  chapterTree, nextChapterId, moveChapter, wouldCreateChapterCycle, chapterDescendantIds,
+  isAdjacentStageTransition,
 } from "@/lib/data/service";
 import { PublicationStageBadge } from "@/components/publication-stage-badge";
 import { CoverageBar } from "./publications.index";
-import { ArrowDown, ArrowUp, Plus, Trash2, Save, ChevronRight } from "lucide-react";
+import { ArrowDown, ArrowUp, GripVertical, Plus, Trash2, Save, ChevronRight, ExternalLink } from "lucide-react";
 
 export const Route = createFileRoute("/publications/$id")({
   head: ({ params }) => ({ meta: [{ title: `${params.id} — Publication Editor` }] }),
@@ -42,18 +43,31 @@ function PublicationEditorPage() {
 
   useEffect(() => { if (original && !draft) setDraft(original); }, [original, draft]);
 
-  // Autosave through Repo
+  // Autosave through Repo — retains dirty state on failure so edits are never silently lost.
   useEffect(() => {
     if (!draft || !dirty) return;
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(async () => {
       setSaving(true);
-      await Repo.update("publications", id, draft);
-      setSaving(false);
-      setDirty(false);
+      try {
+        await Repo.update("publications", id, draft);
+        setDirty(false);
+      } catch (err) {
+        toast.error(`Autosave failed: ${(err as Error).message}. Changes kept locally — will retry.`);
+      } finally {
+        setSaving(false);
+      }
     }, AUTOSAVE_MS);
     return () => { if (timer.current) clearTimeout(timer.current); };
   }, [draft, dirty, id]);
+
+  // Warn if the underlying record changed elsewhere while we hold unsaved edits.
+  useEffect(() => {
+    if (!draft || !original) return;
+    if (dirty && original.updatedAt && draft.updatedAt && original.updatedAt > draft.updatedAt) {
+      toast.warning("Publication changed elsewhere. Your local edits are still active — save will overwrite.");
+    }
+  }, [original?.updatedAt, dirty, draft, original]);
 
   if (!s) return <LoadingState />;
   if (!original) return <ErrorState message={`Publication ${id} not found.`} />;
@@ -66,23 +80,31 @@ function PublicationEditorPage() {
 
   const cov = publicationCoverage(draft, s);
 
-  const promote = async (target: PublicationStage) => {
+  const promote = async (target: PublicationStage, opts?: { override?: boolean; note?: string }) => {
+    const isBackwards = PUBLICATION_STAGES.indexOf(target) < PUBLICATION_STAGES.indexOf(draft.manufacturingStage);
+    const nonAdjacent = !isAdjacentStageTransition(draft.manufacturingStage, target);
+    if ((isBackwards || nonAdjacent) && !opts?.override) {
+      toast.error("Non-adjacent or backwards moves require a governance override with note.");
+      return;
+    }
     const result = validatePublicationPromotion(draft, target, s);
-    if (!result.ok) {
+    if (!result.ok && !opts?.override) {
       toast.error(`Cannot promote to ${target}: ${result.blockers[0]}`);
       return;
     }
+    const notePrefix = opts?.override ? "OVERRIDE" : "Promoted";
+    const note = `${notePrefix}: ${target}${opts?.note ? " — " + opts.note : ""}${!result.ok ? ` (blockers: ${result.blockers.length})` : ""}`;
     const next: PublicationBlueprint = {
       ...draft,
       manufacturingStage: target,
-      stageHistory: appendStageHistory(draft, target, draft.owner || draft.steward, `Promoted to ${target}.`),
+      stageHistory: appendStageHistory(draft, target, draft.owner || draft.steward, note),
     };
     setDraft(next); setDirty(true);
-    toast.success(`Promoted to ${target}.`);
+    toast.success(`${opts?.override ? "Override applied" : "Promoted"} → ${target}.`);
   };
 
   const removePub = async () => {
-    if (!confirm(`Delete ${draft.id}?`)) return;
+    if (!confirm(`Delete ${draft.id}? This cannot be undone.`)) return;
     await Repo.remove("publications", draft.id);
     navigate({ to: "/publications" });
   };
@@ -119,7 +141,7 @@ function PublicationEditorPage() {
             <GeneralInfoCard draft={draft} set={set} />
             <ChaptersCard draft={draft} snapshot={s} onChapters={setChapters} />
             <CanonicalAssemblyCard draft={draft} snapshot={s} onChapters={setChapters} />
-            <CoverageIntelligenceCard cov={cov} draft={draft} snapshot={s} />
+            <CoverageIntelligenceCard cov={cov} draft={draft} snapshot={s} onChapters={setChapters} />
             <PresentationsCard draft={draft} set={set} />
           </div>
 
@@ -200,15 +222,44 @@ function ChaptersCard({ draft, snapshot, onChapters }: { draft: PublicationBluep
     setSelectedId(id);
   };
 
-  const move = (idx: number, dir: -1 | 1) => {
-    const flat = [...draft.chapters].sort((a, b) => a.order - b.order);
-    const to = idx + dir;
-    if (to < 0 || to >= flat.length) return;
-    onChapters(reorderChapters(flat, idx, to));
+  // Keyboard-accessible reorder: moves within the current parent scope.
+  const move = (chapterId: string, dir: -1 | 1) => {
+    const ch = draft.chapters.find(c => c.id === chapterId); if (!ch) return;
+    const siblings = draft.chapters.filter(c => (c.parentChapterId ?? null) === (ch.parentChapterId ?? null))
+      .sort((a, b) => a.order - b.order);
+    const curIdx = siblings.findIndex(c => c.id === chapterId);
+    const to = curIdx + dir;
+    if (to < 0 || to >= siblings.length) return;
+    onChapters(moveChapter(draft.chapters, chapterId, ch.parentChapterId ?? null, to));
+  };
+
+  // Drag-and-drop reorder: drop onto another chapter's row (same or different parent).
+  const [dragId, setDragId] = useState<string | null>(null);
+  const handleDrop = (targetId: string, mode: "before" | "after" | "child") => {
+    if (!dragId || dragId === targetId) return;
+    if (mode === "child") {
+      if (wouldCreateChapterCycle(draft.chapters, dragId, targetId)) {
+        toast.error("Cannot nest a chapter inside itself or its descendant.");
+        return;
+      }
+      const kids = draft.chapters.filter(c => c.parentChapterId === targetId);
+      onChapters(moveChapter(draft.chapters, dragId, targetId, kids.length));
+      return;
+    }
+    const target = draft.chapters.find(c => c.id === targetId); if (!target) return;
+    const newParent = target.parentChapterId ?? null;
+    if (wouldCreateChapterCycle(draft.chapters, dragId, newParent)) {
+      toast.error("Cannot move — would create a chapter cycle.");
+      return;
+    }
+    const siblings = draft.chapters.filter(c => (c.parentChapterId ?? null) === newParent && c.id !== dragId).sort((a, b) => a.order - b.order);
+    const tIdx = siblings.findIndex(c => c.id === targetId);
+    const idx = mode === "before" ? tIdx : tIdx + 1;
+    onChapters(moveChapter(draft.chapters, dragId, newParent, idx));
   };
 
   const remove = (id: string) => {
-    if (!confirm(`Delete chapter ${id}?`)) return;
+    if (!confirm(`Delete chapter ${id}? Any children will re-parent to top level.`)) return;
     const kept = draft.chapters.filter(c => c.id !== id).map(c => ({ ...c, parentChapterId: c.parentChapterId === id ? null : c.parentChapterId }));
     onChapters(kept);
     if (selectedId === id) setSelectedId(null);
@@ -216,10 +267,16 @@ function ChaptersCard({ draft, snapshot, onChapters }: { draft: PublicationBluep
 
   const updateChapter = (patch: Partial<ChapterBlueprint>) => {
     if (!selected) return;
+    // Parent cycle guard.
+    if (patch.parentChapterId !== undefined && wouldCreateChapterCycle(draft.chapters, selected.id, patch.parentChapterId)) {
+      toast.error("Cannot set parent — would create a cycle.");
+      return;
+    }
     onChapters(draft.chapters.map(c => c.id === selected.id ? { ...c, ...patch } : c));
   };
 
   const sortedFlat = [...draft.chapters].sort((a, b) => a.order - b.order);
+  const invalidParentIds = selected ? new Set([selected.id, ...chapterDescendantIds(draft.chapters, selected.id)]) : new Set<string>();
 
   return (
     <div className="editorial-card p-5 space-y-3">
@@ -233,19 +290,39 @@ function ChaptersCard({ draft, snapshot, onChapters }: { draft: PublicationBluep
         <div className="grid md:grid-cols-2 gap-4">
           <div className="border border-border rounded divide-y divide-border max-h-[420px] overflow-y-auto">
             {tree.map(({ chapter, depth }) => {
-              const idx = sortedFlat.findIndex(c => c.id === chapter.id);
+              const siblings = draft.chapters.filter(c => (c.parentChapterId ?? null) === (chapter.parentChapterId ?? null)).sort((a,b) => a.order - b.order);
+              const sibIdx = siblings.findIndex(c => c.id === chapter.id);
               const active = chapter.id === selectedId;
+              const isDragging = dragId === chapter.id;
               return (
-                <div key={chapter.id} className={`px-2 py-2 flex items-center gap-2 text-sm ${active ? "bg-accent/60" : "hover:bg-accent/30"}`} style={{ paddingLeft: 8 + depth * 16 }}>
+                <div
+                  key={chapter.id}
+                  draggable
+                  onDragStart={e => { setDragId(chapter.id); e.dataTransfer.effectAllowed = "move"; }}
+                  onDragEnd={() => setDragId(null)}
+                  onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; }}
+                  onDrop={e => {
+                    e.preventDefault();
+                    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                    const y = e.clientY - rect.top;
+                    const mode: "before" | "after" | "child" =
+                      y < rect.height * 0.25 ? "before" : y > rect.height * 0.75 ? "after" : "child";
+                    handleDrop(chapter.id, mode);
+                  }}
+                  className={`px-2 py-2 flex items-center gap-2 text-sm ${active ? "bg-accent/60" : "hover:bg-accent/30"} ${isDragging ? "opacity-40" : ""}`}
+                  style={{ paddingLeft: 8 + depth * 16 }}
+                  aria-grabbed={isDragging}
+                >
+                  <GripVertical className="size-3 text-muted-foreground shrink-0 cursor-grab" aria-hidden />
                   {depth > 0 && <ChevronRight className="size-3 text-muted-foreground shrink-0" />}
                   <button className="flex-1 text-left min-w-0" onClick={() => setSelectedId(chapter.id)}>
                     <div className="font-mono text-[10px] text-slate-ink">{chapter.id} · #{chapter.order}</div>
                     <div className="truncate">{chapter.title}</div>
                   </button>
                   <PublicationStageBadge stage={chapter.manufacturingStage} className="text-[9px]" />
-                  <button className="p-1 text-muted-foreground hover:text-heritage disabled:opacity-30" disabled={idx === 0} onClick={() => move(idx, -1)}><ArrowUp className="size-3" /></button>
-                  <button className="p-1 text-muted-foreground hover:text-heritage disabled:opacity-30" disabled={idx === sortedFlat.length - 1} onClick={() => move(idx, 1)}><ArrowDown className="size-3" /></button>
-                  <button className="p-1 text-destructive/70 hover:text-destructive" onClick={() => remove(chapter.id)}><Trash2 className="size-3" /></button>
+                  <button aria-label={`Move ${chapter.id} up`} className="p-1 text-muted-foreground hover:text-heritage disabled:opacity-30" disabled={sibIdx === 0} onClick={() => move(chapter.id, -1)}><ArrowUp className="size-3" /></button>
+                  <button aria-label={`Move ${chapter.id} down`} className="p-1 text-muted-foreground hover:text-heritage disabled:opacity-30" disabled={sibIdx === siblings.length - 1} onClick={() => move(chapter.id, 1)}><ArrowDown className="size-3" /></button>
+                  <button aria-label={`Delete ${chapter.id}`} className="p-1 text-destructive/70 hover:text-destructive" onClick={() => remove(chapter.id)}><Trash2 className="size-3" /></button>
                 </div>
               );
             })}
@@ -267,7 +344,7 @@ function ChaptersCard({ draft, snapshot, onChapters }: { draft: PublicationBluep
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="__root__">— Top level</SelectItem>
-                        {draft.chapters.filter(c => c.id !== selected.id).map(c => <SelectItem key={c.id} value={c.id}>{c.id} · {c.title}</SelectItem>)}
+                        {draft.chapters.filter(c => !invalidParentIds.has(c.id)).map(c => <SelectItem key={c.id} value={c.id}>{c.id} · {c.title}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </Field>
@@ -291,6 +368,7 @@ function ChaptersCard({ draft, snapshot, onChapters }: { draft: PublicationBluep
                   <Textarea rows={3} value={selected.learningObjectives.join("\n")} onChange={e => updateChapter({ learningObjectives: e.target.value.split("\n").map(x => x.trim()).filter(Boolean) })} />
                 </Field>
                 <Field label="Editorial notes"><Textarea rows={2} value={selected.editorialNotes} onChange={e => updateChapter({ editorialNotes: e.target.value })} /></Field>
+                <ChapterPresentationsEditor chapter={selected} onChange={presentations => updateChapter({ presentations })} />
               </div>
             )}
           </div>
@@ -394,13 +472,12 @@ function AssetRow({ checked, onToggle, id, label, status, dupe, unreviewed }: { 
   );
 }
 
-/* ---------- Coverage Intelligence ---------- */
-function CoverageIntelligenceCard({ cov, draft, snapshot }: { cov: ReturnType<typeof publicationCoverage>; draft: PublicationBlueprint; snapshot: ReturnType<typeof useSnapshot> }) {
+/* ---------- Coverage Intelligence with gap remediation ---------- */
+function CoverageIntelligenceCard({ cov, draft, snapshot, onChapters }: { cov: ReturnType<typeof publicationCoverage>; draft: PublicationBlueprint; snapshot: ReturnType<typeof useSnapshot>; onChapters: (chs: ChapterBlueprint[]) => void }) {
   if (!snapshot) return null;
   const unused = useMemo(() => {
-    // asset-level unused restricted to what this publication ignores from its own governing framework
     const govFramework = draft.frameworkId ? snapshot.frameworks.find(f => f.id === draft.frameworkId) : null;
-    if (!govFramework) return { concepts: [], frameworks: [] };
+    if (!govFramework) return { concepts: [] as string[], frameworks: [] as string[] };
     const usedConcepts = new Set(draft.chapters.flatMap(c => c.conceptIds));
     return {
       concepts: govFramework.governingConceptIds.filter(c => !usedConcepts.has(c)),
@@ -408,18 +485,77 @@ function CoverageIntelligenceCard({ cov, draft, snapshot }: { cov: ReturnType<ty
     };
   }, [draft, snapshot]);
 
+  // Remediation helpers
+  const removeBrokenRef = (kind: string, id: string) => {
+    const keyMap: Record<string, keyof ChapterBlueprint> = { concept: "conceptIds", framework: "frameworkIds", "knowledge-object": "knowledgeObjectIds", "client-tool": "clientToolIds" };
+    const key = keyMap[kind]; if (!key) return;
+    onChapters(draft.chapters.map(ch => ({ ...ch, [key]: (ch[key] as string[]).filter(x => x !== id) })));
+    toast.success(`Removed broken ${kind} reference ${id}.`);
+  };
+  const dedupeChapterRef = (kind: string, id: string) => {
+    const keyMap: Record<string, keyof ChapterBlueprint> = { concept: "conceptIds", framework: "frameworkIds", ko: "knowledgeObjectIds", tool: "clientToolIds" };
+    const key = keyMap[kind]; if (!key) return;
+    onChapters(draft.chapters.map(ch => {
+      const arr = ch[key] as string[];
+      const first = arr.indexOf(id);
+      if (first === -1) return ch;
+      const cleaned = arr.filter((x, i) => x !== id || i === first);
+      return { ...ch, [key]: cleaned };
+    }));
+    toast.success(`Deduped ${kind} ${id}.`);
+  };
+  const linkUnusedConcept = (conceptId: string) => {
+    const first = [...draft.chapters].sort((a, b) => a.order - b.order)[0];
+    if (!first) return;
+    if (first.conceptIds.includes(conceptId)) { toast.info("Already linked."); return; }
+    onChapters(draft.chapters.map(c => c.id === first.id ? { ...c, conceptIds: [...c.conceptIds, conceptId] } : c));
+    toast.success(`Linked ${conceptId} into ${first.id}.`);
+  };
+  const linkUnusedFramework = (frameworkId: string) => {
+    const first = [...draft.chapters].sort((a, b) => a.order - b.order)[0];
+    if (!first) return;
+    if (first.frameworkIds.includes(frameworkId)) { toast.info("Already linked."); return; }
+    onChapters(draft.chapters.map(c => c.id === first.id ? { ...c, frameworkIds: [...c.frameworkIds, frameworkId] } : c));
+    toast.success(`Linked ${frameworkId} into ${first.id}.`);
+  };
+  const koFactoryFor = (conceptId: string) => `/knowledge-objects/new?concept=${encodeURIComponent(conceptId)}${draft.frameworkId ? `&framework=${encodeURIComponent(draft.frameworkId)}` : ""}&pub=${encodeURIComponent(draft.id)}`;
+
   return (
     <div className="editorial-card p-5 space-y-3">
       <SectionTitle>Coverage intelligence</SectionTitle>
       <div className="grid md:grid-cols-2 gap-3 text-sm">
-        <CovGroup title={`Missing Concepts (${cov.missingConcepts.length})`} items={cov.missingConcepts} tone="destructive" />
-        <CovGroup title={`Missing Frameworks (${cov.missingFrameworks.length})`} items={cov.missingFrameworks} tone="destructive" />
-        <CovGroup title={`Missing Knowledge Objects (${cov.missingKnowledgeObjects.length})`} items={cov.missingKnowledgeObjects} tone="destructive" />
-        <CovGroup title={`Missing Client Tools (${cov.missingClientTools.length})`} items={cov.missingClientTools} tone="destructive" />
-        <CovGroup title={`Duplicate references (${cov.duplicateReferences.length})`} items={cov.duplicateReferences.map(d => `${d.kind}:${d.id} ×${d.count}`)} tone="gold" />
-        <CovGroup title={`Chapters missing objectives (${cov.chaptersWithoutObjectives.length})`} items={cov.chaptersWithoutObjectives} tone="gold" />
-        <CovGroup title={`Unused governing Concepts (${unused.concepts.length})`} items={unused.concepts} tone="muted" />
-        <CovGroup title={`Unused governing Frameworks (${unused.frameworks.length})`} items={unused.frameworks} tone="muted" />
+        <ActionableGroup title={`Missing Concepts (${cov.missingConcepts.length})`} tone="destructive"
+          rows={cov.missingConcepts.map(id => ({ id, actions: [
+            { label: "Remove", onClick: () => removeBrokenRef("concept", id) },
+            { label: "Open Concept", to: `/concepts/${id}` },
+          ] }))} />
+        <ActionableGroup title={`Missing Frameworks (${cov.missingFrameworks.length})`} tone="destructive"
+          rows={cov.missingFrameworks.map(id => ({ id, actions: [
+            { label: "Remove", onClick: () => removeBrokenRef("framework", id) },
+          ] }))} />
+        <ActionableGroup title={`Missing Knowledge Objects (${cov.missingKnowledgeObjects.length})`} tone="destructive"
+          rows={cov.missingKnowledgeObjects.map(id => ({ id, actions: [
+            { label: "Remove", onClick: () => removeBrokenRef("knowledge-object", id) },
+          ] }))} />
+        <ActionableGroup title={`Missing Client Tools (${cov.missingClientTools.length})`} tone="destructive"
+          rows={cov.missingClientTools.map(id => ({ id, actions: [
+            { label: "Remove", onClick: () => removeBrokenRef("client-tool", id) },
+          ] }))} />
+        <ActionableGroup title={`Duplicate references (${cov.duplicateReferences.length})`} tone="gold"
+          rows={cov.duplicateReferences.map(d => ({ id: `${d.kind}:${d.id} ×${d.count}`, actions: [
+            { label: "Dedupe", onClick: () => dedupeChapterRef(d.kind, d.id) },
+          ] }))} />
+        <ActionableGroup title={`Chapters missing objectives (${cov.chaptersWithoutObjectives.length})`} tone="gold"
+          rows={cov.chaptersWithoutObjectives.map(id => ({ id, actions: [] }))} />
+        <ActionableGroup title={`Unused governing Concepts (${unused.concepts.length})`} tone="muted"
+          rows={unused.concepts.map(id => ({ id, actions: [
+            { label: "Link → first chapter", onClick: () => linkUnusedConcept(id) },
+            { label: "Draft KO", to: koFactoryFor(id) },
+          ] }))} />
+        <ActionableGroup title={`Unused governing Frameworks (${unused.frameworks.length})`} tone="muted"
+          rows={unused.frameworks.map(id => ({ id, actions: [
+            { label: "Link → first chapter", onClick: () => linkUnusedFramework(id) },
+          ] }))} />
       </div>
       <div className="pt-3 border-t border-border grid grid-cols-3 gap-3 text-xs">
         <div><div className="text-slate-ink uppercase tracking-wider">Coverage</div><CoverageBar percent={cov.coveragePercent} /></div>
@@ -430,24 +566,45 @@ function CoverageIntelligenceCard({ cov, draft, snapshot }: { cov: ReturnType<ty
   );
 }
 
-function CovGroup({ title, items, tone }: { title: string; items: string[]; tone: "destructive" | "gold" | "muted" }) {
+type ActionRow = { label: string; onClick?: () => void; to?: string };
+function ActionableGroup({ title, rows, tone }: { title: string; rows: { id: string; actions: ActionRow[] }[]; tone: "destructive" | "gold" | "muted" }) {
   const toneCls = tone === "destructive" ? "text-destructive" : tone === "gold" ? "text-gold" : "text-muted-foreground";
   return (
     <div className="border border-border rounded p-3">
       <div className={`text-xs font-medium mb-1 ${toneCls}`}>{title}</div>
-      {items.length === 0 ? <div className="text-[11px] text-evergreen">Clean.</div> : (
-        <ul className="text-[11px] space-y-0.5 max-h-24 overflow-y-auto">{items.slice(0, 20).map((x, i) => <li key={i} className="font-mono">· {x}</li>)}{items.length > 20 && <li className="text-muted-foreground">+{items.length - 20} more</li>}</ul>
+      {rows.length === 0 ? <div className="text-[11px] text-evergreen">Clean.</div> : (
+        <ul className="text-[11px] space-y-1 max-h-32 overflow-y-auto">
+          {rows.slice(0, 20).map((r, i) => (
+            <li key={i} className="flex items-center gap-1 flex-wrap">
+              <span className="font-mono flex-1 truncate">· {r.id}</span>
+              {r.actions.map((a, ai) => a.to
+                ? <Link key={ai} to={a.to} className="text-[10px] underline text-heritage inline-flex items-center gap-0.5">{a.label}<ExternalLink className="size-2.5" /></Link>
+                : <button key={ai} onClick={a.onClick} className="text-[10px] underline text-heritage">{a.label}</button>)}
+            </li>
+          ))}
+          {rows.length > 20 && <li className="text-muted-foreground">+{rows.length - 20} more</li>}
+        </ul>
       )}
     </div>
   );
 }
 
 /* ---------- Manufacturing Pipeline ---------- */
-function ManufacturingPipelineCard({ draft, snapshot, promote }: { draft: PublicationBlueprint; snapshot: ReturnType<typeof useSnapshot>; promote: (t: PublicationStage) => void }) {
+function ManufacturingPipelineCard({ draft, snapshot, promote }: { draft: PublicationBlueprint; snapshot: ReturnType<typeof useSnapshot>; promote: (t: PublicationStage, opts?: { override?: boolean; note?: string }) => void }) {
+  const [overrideStage, setOverrideStage] = useState<PublicationStage | null>(null);
+  const [overrideNote, setOverrideNote] = useState("");
   if (!snapshot) return null;
   const currentIdx = PUBLICATION_STAGES.indexOf(draft.manufacturingStage);
   const nextStage = PUBLICATION_STAGES[currentIdx + 1] ?? null;
+  const prevStage = PUBLICATION_STAGES[currentIdx - 1] ?? null;
   const validation = nextStage ? validatePublicationPromotion(draft, nextStage, snapshot) : { ok: false, blockers: ["Already at final stage."], nextStage: null };
+
+  const applyOverride = () => {
+    if (!overrideStage) return;
+    if (!overrideNote.trim()) { toast.error("Override requires an audit note."); return; }
+    promote(overrideStage, { override: true, note: overrideNote.trim() });
+    setOverrideStage(null); setOverrideNote("");
+  };
 
   return (
     <div className="editorial-card p-5 space-y-3">
@@ -467,20 +624,67 @@ function ManufacturingPipelineCard({ draft, snapshot, promote }: { draft: Public
             Promote to {nextStage}
           </Button>
         )}
+        {prevStage && (
+          <Button size="sm" variant="outline" className="w-full" onClick={() => setOverrideStage(prevStage)}>
+            Step back to {prevStage} (audited)
+          </Button>
+        )}
         {validation.blockers.length > 0 && (
-          <div className="text-[11px] text-destructive space-y-0.5">
+          <div className="text-[11px] text-destructive space-y-0.5" role="status">
             {validation.blockers.slice(0, 4).map((b, i) => <div key={i}>· {b}</div>)}
           </div>
         )}
       </div>
       <div className="pt-2 border-t border-border">
-        <Label className="text-xs uppercase tracking-wider text-slate-ink">Force stage (governance override)</Label>
-        <Select value={draft.manufacturingStage} onValueChange={v => promote(v as PublicationStage)}>
-          <SelectTrigger><SelectValue /></SelectTrigger>
-          <SelectContent>{PUBLICATION_STAGES.map(x => <SelectItem key={x} value={x}>{x}</SelectItem>)}</SelectContent>
+        <Label className="text-xs uppercase tracking-wider text-slate-ink">Governance override</Label>
+        <Select value={overrideStage ?? ""} onValueChange={v => setOverrideStage(v as PublicationStage)}>
+          <SelectTrigger><SelectValue placeholder="Select target stage" /></SelectTrigger>
+          <SelectContent>{PUBLICATION_STAGES.filter(s => s !== draft.manufacturingStage).map(x => <SelectItem key={x} value={x}>{x}</SelectItem>)}</SelectContent>
         </Select>
-        <div className="text-[10px] text-muted-foreground mt-1">Validation still enforced on manual selection.</div>
+        {overrideStage && (
+          <div className="space-y-2 mt-2">
+            <Textarea rows={2} placeholder="Override reason (required, recorded in stage history)" value={overrideNote} onChange={e => setOverrideNote(e.target.value)} />
+            <Button size="sm" variant="destructive" className="w-full" onClick={applyOverride}>Apply override → {overrideStage}</Button>
+          </div>
+        )}
+        <div className="text-[10px] text-muted-foreground mt-2">Overrides bypass validation and are stamped OVERRIDE in stage history.</div>
       </div>
+    </div>
+  );
+}
+
+/* ---------- Chapter presentations editor ---------- */
+function ChapterPresentationsEditor({ chapter, onChange }: { chapter: ChapterBlueprint; onChange: (p: PresentationLink[]) => void }) {
+  const add = () => {
+    const id = `PRES-${chapter.id}-${String(chapter.presentations.length + 1).padStart(2, "0")}`;
+    onChange([...chapter.presentations, { id, kind: "Slide Deck", title: "New chapter presentation", url: "" }]);
+  };
+  const update = (idx: number, patch: Partial<PresentationLink>) =>
+    onChange(chapter.presentations.map((p, i) => i === idx ? { ...p, ...patch } : p));
+  const remove = (idx: number) => onChange(chapter.presentations.filter((_, i) => i !== idx));
+  return (
+    <div className="border border-border rounded p-2 space-y-2">
+      <div className="flex items-center justify-between">
+        <Label className="text-xs uppercase tracking-wider text-slate-ink">Chapter presentations</Label>
+        <Button size="sm" variant="outline" onClick={add}><Plus className="size-3 mr-1" /> Add</Button>
+      </div>
+      {chapter.presentations.length === 0 ? (
+        <div className="text-[11px] text-muted-foreground">No presentations at this chapter level.</div>
+      ) : (
+        <div className="space-y-1">
+          {chapter.presentations.map((p, i) => (
+            <div key={p.id} className="grid grid-cols-[110px_1fr_1fr_auto] gap-1 items-center">
+              <Select value={p.kind} onValueChange={v => update(i, { kind: v as PresentationKind })}>
+                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>{PRESENTATION_KINDS.map(k => <SelectItem key={k} value={k}>{k}</SelectItem>)}</SelectContent>
+              </Select>
+              <Input className="h-8 text-xs" placeholder="Title" value={p.title} onChange={e => update(i, { title: e.target.value })} />
+              <Input className="h-8 text-xs" placeholder="URL" value={p.url} onChange={e => update(i, { url: e.target.value })} />
+              <Button size="icon" variant="ghost" className="h-8 w-8" aria-label={`Remove ${p.id}`} onClick={() => remove(i)}><Trash2 className="size-3 text-destructive" /></Button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

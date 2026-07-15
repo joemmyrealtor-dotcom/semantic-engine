@@ -19,6 +19,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as PublicationsIndexRouteImport } from './routes/publications.index'
 import { Route as ConceptsIndexRouteImport } from './routes/concepts.index'
 import { Route as ReleasesIdRouteImport } from './routes/releases.$id'
+import { Route as PublicationsNewRouteImport } from './routes/publications.new'
 import { Route as PublicationsIdRouteImport } from './routes/publications.$id'
 import { Route as KnowledgeObjectsNewRouteImport } from './routes/knowledge-objects.new'
 import { Route as FrameworksIdRouteImport } from './routes/frameworks.$id'
@@ -75,6 +76,11 @@ const ReleasesIdRoute = ReleasesIdRouteImport.update({
   path: '/releases/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PublicationsNewRoute = PublicationsNewRouteImport.update({
+  id: '/publications/new',
+  path: '/publications/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PublicationsIdRoute = PublicationsIdRouteImport.update({
   id: '/publications/$id',
   path: '/publications/$id',
@@ -114,6 +120,7 @@ export interface FileRoutesByFullPath {
   '/frameworks/$id': typeof FrameworksIdRoute
   '/knowledge-objects/new': typeof KnowledgeObjectsNewRoute
   '/publications/$id': typeof PublicationsIdRoute
+  '/publications/new': typeof PublicationsNewRoute
   '/releases/$id': typeof ReleasesIdRoute
   '/concepts/': typeof ConceptsIndexRoute
   '/publications/': typeof PublicationsIndexRoute
@@ -131,6 +138,7 @@ export interface FileRoutesByTo {
   '/frameworks/$id': typeof FrameworksIdRoute
   '/knowledge-objects/new': typeof KnowledgeObjectsNewRoute
   '/publications/$id': typeof PublicationsIdRoute
+  '/publications/new': typeof PublicationsNewRoute
   '/releases/$id': typeof ReleasesIdRoute
   '/concepts': typeof ConceptsIndexRoute
   '/publications': typeof PublicationsIndexRoute
@@ -149,6 +157,7 @@ export interface FileRoutesById {
   '/frameworks/$id': typeof FrameworksIdRoute
   '/knowledge-objects/new': typeof KnowledgeObjectsNewRoute
   '/publications/$id': typeof PublicationsIdRoute
+  '/publications/new': typeof PublicationsNewRoute
   '/releases/$id': typeof ReleasesIdRoute
   '/concepts/': typeof ConceptsIndexRoute
   '/publications/': typeof PublicationsIndexRoute
@@ -168,6 +177,7 @@ export interface FileRouteTypes {
     | '/frameworks/$id'
     | '/knowledge-objects/new'
     | '/publications/$id'
+    | '/publications/new'
     | '/releases/$id'
     | '/concepts/'
     | '/publications/'
@@ -185,6 +195,7 @@ export interface FileRouteTypes {
     | '/frameworks/$id'
     | '/knowledge-objects/new'
     | '/publications/$id'
+    | '/publications/new'
     | '/releases/$id'
     | '/concepts'
     | '/publications'
@@ -202,6 +213,7 @@ export interface FileRouteTypes {
     | '/frameworks/$id'
     | '/knowledge-objects/new'
     | '/publications/$id'
+    | '/publications/new'
     | '/releases/$id'
     | '/concepts/'
     | '/publications/'
@@ -220,6 +232,7 @@ export interface RootRouteChildren {
   FrameworksIdRoute: typeof FrameworksIdRoute
   KnowledgeObjectsNewRoute: typeof KnowledgeObjectsNewRoute
   PublicationsIdRoute: typeof PublicationsIdRoute
+  PublicationsNewRoute: typeof PublicationsNewRoute
   ReleasesIdRoute: typeof ReleasesIdRoute
   ConceptsIndexRoute: typeof ConceptsIndexRoute
   PublicationsIndexRoute: typeof PublicationsIndexRoute
@@ -297,6 +310,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReleasesIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/publications/new': {
+      id: '/publications/new'
+      path: '/publications/new'
+      fullPath: '/publications/new'
+      preLoaderRoute: typeof PublicationsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/publications/$id': {
       id: '/publications/$id'
       path: '/publications/$id'
@@ -348,6 +368,7 @@ const rootRouteChildren: RootRouteChildren = {
   FrameworksIdRoute: FrameworksIdRoute,
   KnowledgeObjectsNewRoute: KnowledgeObjectsNewRoute,
   PublicationsIdRoute: PublicationsIdRoute,
+  PublicationsNewRoute: PublicationsNewRoute,
   ReleasesIdRoute: ReleasesIdRoute,
   ConceptsIndexRoute: ConceptsIndexRoute,
   PublicationsIndexRoute: PublicationsIndexRoute,

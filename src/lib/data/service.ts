@@ -278,12 +278,22 @@ export function nextChapterId(s: DataSnapshot): string {
 }
 
 export function duplicatePublication(source: PublicationBlueprint, newId: string, s: DataSnapshot): PublicationBlueprint {
-  let seq = Math.max(0, ...s.publications.flatMap(p => p.chapters.map(c => Number(c.id.replace("CH-", "")) || 0)));
+  let seq = 0;
+  for (const p of s.publications) for (const ch of p.chapters) {
+    const n = Number(ch.id.replace("CH-", "")); if (!Number.isNaN(n)) seq = Math.max(seq, n);
+  }
   const now = new Date().toISOString();
-  const cloneChapters = source.chapters.map(ch => {
+  // Deterministic remap old chapter id → new chapter id so parent hierarchy is preserved.
+  const idMap = new Map<string, string>();
+  for (const ch of source.chapters) {
     seq += 1;
-    return { ...ch, id: `CH-${String(seq).padStart(3, "0")}`, parentChapterId: null };
-  });
+    idMap.set(ch.id, `CH-${String(seq).padStart(3, "0")}`);
+  }
+  const cloneChapters = source.chapters.map(ch => ({
+    ...ch,
+    id: idMap.get(ch.id)!,
+    parentChapterId: ch.parentChapterId ? (idMap.get(ch.parentChapterId) ?? null) : null,
+  }));
   return {
     ...source,
     id: newId,
@@ -297,6 +307,55 @@ export function duplicatePublication(source: PublicationBlueprint, newId: string
     createdAt: now,
     updatedAt: now,
   };
+}
+
+// -------- Chapter hierarchy integrity --------
+/** True if `candidateAncestor` is an ancestor of `chapterId` (or equal). */
+export function isChapterAncestor(chapters: ChapterBlueprint[], candidateAncestor: string, chapterId: string): boolean {
+  if (candidateAncestor === chapterId) return true;
+  const byId = new Map(chapters.map(c => [c.id, c] as const));
+  let cur = byId.get(chapterId);
+  const seen = new Set<string>();
+  while (cur?.parentChapterId) {
+    if (seen.has(cur.parentChapterId)) return false;
+    seen.add(cur.parentChapterId);
+    if (cur.parentChapterId === candidateAncestor) return true;
+    cur = byId.get(cur.parentChapterId);
+  }
+  return false;
+}
+
+/** Returns true if setting `chapterId.parent = newParentId` would create a cycle. */
+export function wouldCreateChapterCycle(chapters: ChapterBlueprint[], chapterId: string, newParentId: string | null): boolean {
+  if (!newParentId) return false;
+  if (newParentId === chapterId) return true;
+  return isChapterAncestor(chapters, chapterId, newParentId);
+}
+
+/** Depth-first list of descendant ids for a chapter (excluding itself). */
+export function chapterDescendantIds(chapters: ChapterBlueprint[], chapterId: string): string[] {
+  const out: string[] = [];
+  const walk = (id: string) => {
+    for (const ch of chapters) if (ch.parentChapterId === id) { out.push(ch.id); walk(ch.id); }
+  };
+  walk(chapterId);
+  return out;
+}
+
+/** Move `chapterId` to index `newIndex` within its siblings (same parent), preserving hierarchy. */
+export function moveChapter(chapters: ChapterBlueprint[], chapterId: string, newParentId: string | null, newIndex: number): ChapterBlueprint[] {
+  if (wouldCreateChapterCycle(chapters, chapterId, newParentId)) return chapters;
+  const moving = chapters.find(c => c.id === chapterId);
+  if (!moving) return chapters;
+  const updated = chapters.map(c => c.id === chapterId ? { ...c, parentChapterId: newParentId } : c);
+  const siblings = updated
+    .filter(c => c.parentChapterId === newParentId)
+    .sort((a, b) => a.order - b.order);
+  const without = siblings.filter(c => c.id !== chapterId);
+  const target = Math.max(0, Math.min(newIndex, without.length));
+  const reordered = [...without.slice(0, target), updated.find(c => c.id === chapterId)!, ...without.slice(target)];
+  const orderMap = new Map(reordered.map((c, i) => [c.id, (i + 1) * 10] as const));
+  return updated.map(c => orderMap.has(c.id) ? { ...c, order: orderMap.get(c.id)! } : c);
 }
 
 // -------- Coverage intelligence --------
@@ -419,18 +478,32 @@ export function validatePublicationPromotion(
   const blockers: string[] = [];
   if (p.chapters.length === 0) blockers.push("Publication has no chapters.");
   if (cov.brokenReferences.length > 0) blockers.push(`${cov.brokenReferences.length} broken references must be resolved.`);
+  const targetIdx = PUBLICATION_STAGES.indexOf(target);
   if (target === "QA" || target === "Canonical" || target === "Released") {
     if (cov.chaptersWithoutObjectives.length > 0) blockers.push(`Chapters missing learning objectives: ${cov.chaptersWithoutObjectives.join(", ")}.`);
     if (cov.humanReviewRatio < 1) blockers.push("Referenced AI-generated knowledge objects require human review completion.");
+    // Chapter stage alignment: every chapter must be at least one stage behind the publication target.
+    const minChapterIdx = Math.max(0, targetIdx - 1);
+    const lagging = p.chapters.filter(c => PUBLICATION_STAGES.indexOf(c.manufacturingStage) < minChapterIdx);
+    if (lagging.length > 0) blockers.push(`Chapters not yet at ${PUBLICATION_STAGES[minChapterIdx]}: ${lagging.map(c => c.id).join(", ")}.`);
   }
   if (target === "Canonical" || target === "Released") {
     if (cov.canonicalCompliance < 80) blockers.push(`Canonical compliance ${cov.canonicalCompliance}% below 80% threshold.`);
     if (cov.readinessScore < 85) blockers.push(`Readiness score ${cov.readinessScore} below 85 threshold.`);
+    const chapterLag = p.chapters.filter(c => PUBLICATION_STAGES.indexOf(c.manufacturingStage) < targetIdx);
+    if (target === "Canonical" && chapterLag.length > 0) blockers.push(`Chapters below Canonical: ${chapterLag.map(c => c.id).join(", ")}.`);
   }
   if (target === "Released") {
     if (!p.effectiveDate) blockers.push("Effective date required for Released stage.");
   }
   return { ok: blockers.length === 0, blockers, nextStage: blockers.length === 0 ? target : null };
+}
+
+/** Returns true when the transition is a normal single-step adjacent move (forward or backward by one). */
+export function isAdjacentStageTransition(from: PublicationStage, to: PublicationStage): boolean {
+  const a = PUBLICATION_STAGES.indexOf(from);
+  const b = PUBLICATION_STAGES.indexOf(to);
+  return Math.abs(a - b) === 1;
 }
 
 export function appendStageHistory(p: PublicationBlueprint, stage: PublicationStage, actor: string, note?: string): StageHistoryEntry[] {

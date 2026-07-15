@@ -43,7 +43,11 @@ export function migrateSnapshot(s: DataSnapshot): DataSnapshot {
   }));
 
   const publications = s.publications.map(p => {
-    const stage = p.manufacturingStage ?? mapStatusToStage(p.status);
+    const rawStage = (p.manufacturingStage as string | undefined) ?? mapStatusToStage(p.status);
+    // Fold retired "Review" stage into "SME Review".
+    const stage = rawStage === "Review" ? "SME Review" : mapStatusToStage(rawStage);
+    const migratedHistory = (p.stageHistory ?? [{ stage: stage, at: p.createdAt, actor: p.steward ?? "system", note: "Initial baseline." }])
+      .map(h => ({ ...h, stage: (h.stage as string) === "Review" ? "SME Review" : h.stage }));
     return {
       ...p,
       description: p.description ?? p.purpose ?? "",
@@ -56,30 +60,39 @@ export function migrateSnapshot(s: DataSnapshot): DataSnapshot {
       editorialNotes: p.editorialNotes ?? "",
       reviewNotes: p.reviewNotes ?? "",
       manufacturingStage: stage,
-      stageHistory: p.stageHistory ?? [{ stage, at: p.createdAt, actor: p.steward ?? "system", note: "Initial baseline." }],
+      stageHistory: migratedHistory,
       archived: p.archived ?? false,
       presentations: p.presentations ?? [],
-      chapters: (p.chapters ?? []).map(ch => ({
-        ...ch,
-        description: ch.description ?? "",
-        editorialNotes: ch.editorialNotes ?? "",
-        estimatedEffortHours: ch.estimatedEffortHours ?? 0,
-        chapterVersion: ch.chapterVersion ?? "0.1.0",
-        parentChapterId: ch.parentChapterId ?? null,
-        presentations: ch.presentations ?? [],
-        manufacturingStage: ch.manufacturingStage ?? mapStatusToStage(ch.reviewStatus),
-      })),
+      chapters: (p.chapters ?? []).map(ch => {
+        const chRaw = (ch.manufacturingStage as string | undefined) ?? mapStatusToStage(ch.reviewStatus);
+        const chStage = chRaw === "Review" ? "SME Review" : mapStatusToStage(chRaw);
+        return {
+          ...ch,
+          description: ch.description ?? "",
+          editorialNotes: ch.editorialNotes ?? "",
+          estimatedEffortHours: ch.estimatedEffortHours ?? 0,
+          chapterVersion: ch.chapterVersion ?? "0.1.0",
+          parentChapterId: ch.parentChapterId ?? null,
+          presentations: ch.presentations ?? [],
+          manufacturingStage: chStage,
+        };
+      }),
     };
   });
 
   return { ...s, concepts, publications };
 }
 
-function mapStatusToStage(status: string | undefined): "Draft"|"Editorial"|"Review"|"SME Review"|"QA"|"Canonical"|"Released" {
+function mapStatusToStage(status: string | undefined): "Draft"|"Editorial"|"SME Review"|"QA"|"Canonical"|"Released" {
   switch (status) {
+    case "Released": return "Released";
     case "Canonical": return "Canonical";
     case "Approved": return "QA";
-    case "In Review": return "Review";
+    case "QA": return "QA";
+    case "SME Review": return "SME Review";
+    case "Review": return "SME Review"; // schema v1 → v2 migration
+    case "In Review": return "SME Review";
+    case "Editorial": return "Editorial";
     case "Deprecated":
     case "Archived":
     case "Draft":
