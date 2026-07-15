@@ -87,8 +87,9 @@ function PublicationRegistryPage() {
   };
 
   const duplicate = async (p: PublicationBlueprint) => {
-    const id = nextPublicationId(Repo.snapshot()!);
-    const cloned = duplicatePublication(p, id, Repo.snapshot()!);
+    if (!s) return;
+    const id = nextPublicationId(s);
+    const cloned = duplicatePublication(p, id, s);
     await Repo.create("publications", cloned);
     toast.success(`Duplicated as ${id}`);
   };
