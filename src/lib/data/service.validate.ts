@@ -99,8 +99,10 @@ export function runValidations(): number {
     ["QA", "Canonical", true],
     ["Canonical", "Released", true],
     ["Draft", "QA", false],
-    ["QA", "Draft", false],
-    ["Released", "Canonical", false],
+    ["Released", "Draft", false],
+    // Adjacent backward step is permitted (governance override still audits it via stage history).
+    ["Released", "Canonical", true],
+    ["QA", "SME Review", true],
   ];
   for (const [f, t, want] of adj) eq(`adjacent ${f}→${t}`, isAdjacentStageTransition(f, t), want);
 
