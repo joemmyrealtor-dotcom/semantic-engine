@@ -17,11 +17,12 @@ import {
 } from "@/lib/data/schema";
 import {
   publicationCoverage, validatePublicationPromotion, appendStageHistory,
-  reorderChapters, chapterTree, nextChapterId,
+  chapterTree, nextChapterId, moveChapter, wouldCreateChapterCycle, chapterDescendantIds,
+  isAdjacentStageTransition,
 } from "@/lib/data/service";
 import { PublicationStageBadge } from "@/components/publication-stage-badge";
 import { CoverageBar } from "./publications.index";
-import { ArrowDown, ArrowUp, Plus, Trash2, Save, ChevronRight } from "lucide-react";
+import { ArrowDown, ArrowUp, GripVertical, Plus, Trash2, Save, ChevronRight, ExternalLink } from "lucide-react";
 
 export const Route = createFileRoute("/publications/$id")({
   head: ({ params }) => ({ meta: [{ title: `${params.id} — Publication Editor` }] }),
