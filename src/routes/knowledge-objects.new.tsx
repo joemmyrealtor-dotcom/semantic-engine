@@ -11,22 +11,31 @@ import { toast } from "sonner";
 
 const ALL_TYPES: KnowledgeObjectType[] = ["Definition","Why It Matters","Principle","Example","Scenario","Joe's Strategy","Mistake Alert","FAQ","Reflection Question"];
 
+type NewKOSearch = { concept?: string; framework?: string; pub?: string; chapter?: string };
+
 export const Route = createFileRoute("/knowledge-objects/new")({
   head: () => ({ meta: [{ title: "Knowledge Object Factory — Legacy Platform" }] }),
+  validateSearch: (raw: Record<string, unknown>): NewKOSearch => ({
+    concept: typeof raw.concept === "string" ? raw.concept : undefined,
+    framework: typeof raw.framework === "string" ? raw.framework : undefined,
+    pub: typeof raw.pub === "string" ? raw.pub : undefined,
+    chapter: typeof raw.chapter === "string" ? raw.chapter : undefined,
+  }),
   component: KOFactoryPage,
 });
 
 function KOFactoryPage() {
   const s = useSnapshot();
-  const [selConcepts, setSelConcepts] = useState<string[]>([]);
-  const [selFrameworks, setSelFrameworks] = useState<string[]>([]);
+  const search = Route.useSearch();
+  const [selConcepts, setSelConcepts] = useState<string[]>(search.concept ? [search.concept] : []);
+  const [selFrameworks, setSelFrameworks] = useState<string[]>(search.framework ? [search.framework] : []);
   const [types, setTypes] = useState<KnowledgeObjectType[]>(["Definition","Why It Matters","Principle"]);
   const [drafts, setDrafts] = useState<KnowledgeObject[]>([]);
 
   if (!s) return <LoadingState />;
 
-  const approvedConcepts = s.concepts.filter(c => c.status === "Canonical" || c.status === "Approved");
-  const approvedFrameworks = s.frameworks.filter(f => f.status === "Canonical" || f.status === "Approved");
+  const approvedConcepts = s.concepts.filter(c => c.status === "Canonical" || c.status === "Approved" || selConcepts.includes(c.id));
+  const approvedFrameworks = s.frameworks.filter(f => f.status === "Canonical" || f.status === "Approved" || selFrameworks.includes(f.id));
   const toggle = <T,>(arr: T[], v: T, setter: (a: T[]) => void) => setter(arr.includes(v) ? arr.filter(x => x !== v) : [...arr, v]);
 
   const generate = () => {
