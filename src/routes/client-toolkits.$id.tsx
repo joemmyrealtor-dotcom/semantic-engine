@@ -215,7 +215,7 @@ function ClientToolkitStudioPage() {
           <div className="space-y-6">
             <section className="editorial-card p-5">
               <div className="flex items-center justify-between mb-3">
-                <SectionTitle className="mb-0">Sections</SectionTitle>
+                <SectionTitle>Sections</SectionTitle>
                 <Button size="sm" onClick={() => addSection(null)}><Plus className="size-4 mr-1" />Add root</Button>
               </div>
               {visibleTree.length === 0 ? (
@@ -269,7 +269,7 @@ function ClientToolkitStudioPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-[11px] font-mono text-heritage">{selected.id}</div>
-                    <SectionTitle className="mb-0">Section editor</SectionTitle>
+                    <SectionTitle>Section editor</SectionTitle>
                   </div>
                   <PublicationStageBadge stage={selected.manufacturingStage} />
                 </div>
