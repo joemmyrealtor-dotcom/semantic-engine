@@ -43,18 +43,31 @@ function PublicationEditorPage() {
 
   useEffect(() => { if (original && !draft) setDraft(original); }, [original, draft]);
 
-  // Autosave through Repo
+  // Autosave through Repo — retains dirty state on failure so edits are never silently lost.
   useEffect(() => {
     if (!draft || !dirty) return;
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(async () => {
       setSaving(true);
-      await Repo.update("publications", id, draft);
-      setSaving(false);
-      setDirty(false);
+      try {
+        await Repo.update("publications", id, draft);
+        setDirty(false);
+      } catch (err) {
+        toast.error(`Autosave failed: ${(err as Error).message}. Changes kept locally — will retry.`);
+      } finally {
+        setSaving(false);
+      }
     }, AUTOSAVE_MS);
     return () => { if (timer.current) clearTimeout(timer.current); };
   }, [draft, dirty, id]);
+
+  // Warn if the underlying record changed elsewhere while we hold unsaved edits.
+  useEffect(() => {
+    if (!draft || !original) return;
+    if (dirty && original.updatedAt && draft.updatedAt && original.updatedAt > draft.updatedAt) {
+      toast.warning("Publication changed elsewhere. Your local edits are still active — save will overwrite.");
+    }
+  }, [original?.updatedAt, dirty, draft, original]);
 
   if (!s) return <LoadingState />;
   if (!original) return <ErrorState message={`Publication ${id} not found.`} />;
