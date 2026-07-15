@@ -56,6 +56,15 @@ function KOFactoryPage() {
       <PageHeader eyebrow="Knowledge Object Factory" title="Draft from approved sources"
         description="Local demo generation. Drafts are marked human-review-required and cannot become Canonical without recorded approval." />
       <PageBody>
+        {(search.concept || search.framework || search.pub) && (
+          <div className="editorial-card p-3 mb-4 text-xs border-gold/40 flex flex-wrap gap-3 items-center">
+            <span className="uppercase tracking-widest text-gold">Prefilled from remediation</span>
+            {search.concept && <span>Concept <span className="font-mono">{search.concept}</span></span>}
+            {search.framework && <span>Framework <span className="font-mono">{search.framework}</span></span>}
+            {search.pub && <span>Publication <span className="font-mono">{search.pub}</span></span>}
+            {search.chapter && <span>Chapter <span className="font-mono">{search.chapter}</span></span>}
+          </div>
+        )}
         <div className="grid lg:grid-cols-3 gap-6">
           <div className="editorial-card p-5">
             <SectionTitle>Source Concepts</SectionTitle>
