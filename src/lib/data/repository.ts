@@ -13,6 +13,8 @@ type EntityMap = {
   prompts: DataSnapshot["prompts"][number];
   agents: DataSnapshot["agents"][number];
   releases: DataSnapshot["releases"][number];
+  clientToolkits: DataSnapshot["clientToolkits"][number];
+  aiPacks: DataSnapshot["aiPacks"][number];
 };
 
 type Listener = () => void;
