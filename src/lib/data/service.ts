@@ -118,6 +118,16 @@ export function buildGraph(s: DataSnapshot): { nodes: GraphNode[]; edges: GraphE
     nodes.push({ id: r.id, label: r.name, kind: "Release" });
     for (const m of r.manifest) for (const id of m.ids) edges.push({ from: r.id, to: id, kind: `releases-${m.entityType}` });
   }
+  for (const a of s.automations ?? []) {
+    if (a.state === "archived") continue;
+    nodes.push({ id: a.id, label: a.name, kind: "Automation" });
+    for (const eId of a.trigger.entityIds) edges.push({ from: a.id, to: eId, kind: "automates" });
+  }
+  for (const r of s.automationRuns ?? []) {
+    nodes.push({ id: r.id, label: `${r.recipeId} · ${r.status}`, kind: "Automation Run" });
+    edges.push({ from: r.id, to: r.recipeId, kind: "run-of" });
+    for (const eId of r.entityIds) edges.push({ from: r.id, to: eId, kind: "run-affects" });
+  }
   return { nodes, edges };
 }
 
