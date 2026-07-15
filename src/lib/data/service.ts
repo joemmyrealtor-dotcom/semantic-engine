@@ -1284,7 +1284,7 @@ export function agentCoverage(a: Agent, s: DataSnapshot): AgentCoverage {
     + (a.clientToolkitIds?.length ?? 0) + (a.aiPackIds?.length ?? 0)
     + (a.clientToolIds?.length ?? 0);
   const resolved = totalRefs - brokenReferences.length;
-  const coveragePercent = totalRefs === 0 ? 0 : Math.round((resolved / totalRefs) * 100);
+  const coveragePercent = totalRefs === 0 ? 100 : Math.round((resolved / totalRefs) * 100);
   const canonicalCompliance = Math.round(canonicalConceptRatio * 100);
 
   const editorialScore = Math.max(0, Math.round(
