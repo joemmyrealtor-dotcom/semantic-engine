@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Library, Network, BookOpen, Wrench, ScrollText, Bot, Package, ShieldCheck, Database, PenTool, BookMarked } from "lucide-react";
+import { LayoutDashboard, Library, Network, BookOpen, Wrench, ScrollText, Bot, Package, ShieldCheck, Database, PenTool, BookMarked, Briefcase, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const items = [
@@ -10,6 +10,8 @@ const items = [
   { to: "/knowledge-objects/new", label: "KO Factory", icon: PenTool },
   { to: "/client-tools/new", label: "Client Tools", icon: Wrench },
   { to: "/publications", label: "Publications", icon: BookOpen },
+  { to: "/client-toolkits", label: "Client Toolkits", icon: Briefcase },
+  { to: "/ai-packs", label: "AI Packs", icon: Sparkles },
   { to: "/prompts", label: "Prompts", icon: ScrollText },
   { to: "/agents", label: "Agents", icon: Bot },
   { to: "/releases/LKR-1.0.001", label: "Releases", icon: Package },

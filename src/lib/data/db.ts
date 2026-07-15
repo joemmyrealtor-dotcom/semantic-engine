@@ -80,7 +80,33 @@ export function migrateSnapshot(s: DataSnapshot): DataSnapshot {
     };
   });
 
-  return { ...s, concepts, publications };
+  return {
+    ...s,
+    concepts,
+    publications,
+    clientToolkits: (s.clientToolkits ?? []).map(tk => ({
+      ...tk,
+      sections: (tk.sections ?? []).map(sec => ({ ...sec, presentations: sec.presentations ?? [] })),
+      presentations: tk.presentations ?? [],
+      stageHistory: tk.stageHistory ?? [{ stage: tk.manufacturingStage ?? "Draft", at: tk.createdAt, actor: tk.steward ?? "system" }],
+      releaseIds: tk.releaseIds ?? [],
+      tags: tk.tags ?? [],
+      conceptIds: tk.conceptIds ?? [], frameworkIds: tk.frameworkIds ?? [],
+      knowledgeObjectIds: tk.knowledgeObjectIds ?? [], clientToolIds: tk.clientToolIds ?? [],
+      publicationIds: tk.publicationIds ?? [],
+    })),
+    aiPacks: (s.aiPacks ?? []).map(ap => ({
+      ...ap,
+      modules: ap.modules ?? [],
+      evaluationCases: ap.evaluationCases ?? [],
+      stageHistory: ap.stageHistory ?? [{ stage: ap.manufacturingStage ?? "Draft", at: ap.createdAt, actor: ap.steward ?? "system" }],
+      releaseIds: ap.releaseIds ?? [],
+      tags: ap.tags ?? [],
+      conceptIds: ap.conceptIds ?? [], frameworkIds: ap.frameworkIds ?? [],
+      knowledgeObjectIds: ap.knowledgeObjectIds ?? [], publicationIds: ap.publicationIds ?? [],
+      clientToolkitIds: ap.clientToolkitIds ?? [], promptIds: ap.promptIds ?? [], agentIds: ap.agentIds ?? [],
+    })),
+  };
 }
 
 function mapStatusToStage(status: string | undefined): "Draft"|"Editorial"|"SME Review"|"QA"|"Canonical"|"Released" {

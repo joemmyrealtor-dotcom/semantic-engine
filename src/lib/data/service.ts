@@ -2,6 +2,8 @@ import type {
   Concept, Framework, KnowledgeObject, KnowledgeObjectType,
   PublicationBlueprint, ChapterBlueprint, Release, ClientTool, DataSnapshot,
   PublicationStage, StageHistoryEntry, PresentationLink,
+  ClientToolkit, ClientToolkitSection, AIPack, AIPackModule, AIPackEvaluationCase,
+  ManufacturingStage,
 } from "./schema";
 import { ID_PATTERNS, PUBLICATION_STAGES } from "./schema";
 import { Repo } from "./repository";
@@ -52,6 +54,46 @@ export function buildGraph(s: DataSnapshot): { nodes: GraphNode[]; edges: GraphE
       for (const fId of ch.frameworkIds) edges.push({ from: ch.id, to: fId, kind: "publishes-framework" });
       for (const kId of ch.knowledgeObjectIds) edges.push({ from: ch.id, to: kId, kind: "publishes-ko" });
       for (const tId of ch.clientToolIds) edges.push({ from: ch.id, to: tId, kind: "publishes-tool" });
+    }
+  }
+  for (const tk of s.clientToolkits ?? []) {
+    if (tk.archived) continue;
+    nodes.push({ id: tk.id, label: tk.title, kind: "Client Toolkit" });
+    for (const cId of tk.conceptIds) edges.push({ from: tk.id, to: cId, kind: "toolkit-concept" });
+    for (const fId of tk.frameworkIds) edges.push({ from: tk.id, to: fId, kind: "toolkit-framework" });
+    for (const kId of tk.knowledgeObjectIds) edges.push({ from: tk.id, to: kId, kind: "toolkit-ko" });
+    for (const tId of tk.clientToolIds) edges.push({ from: tk.id, to: tId, kind: "toolkit-tool" });
+    for (const pId of tk.publicationIds) edges.push({ from: tk.id, to: pId, kind: "toolkit-publication" });
+    for (const sec of tk.sections) {
+      nodes.push({ id: sec.id, label: sec.title, kind: "Toolkit Section" });
+      edges.push({ from: tk.id, to: sec.id, kind: "contains-section" });
+      for (const cId of sec.conceptIds) edges.push({ from: sec.id, to: cId, kind: "section-concept" });
+      for (const fId of sec.frameworkIds) edges.push({ from: sec.id, to: fId, kind: "section-framework" });
+      for (const kId of sec.knowledgeObjectIds) edges.push({ from: sec.id, to: kId, kind: "section-ko" });
+      for (const tId of sec.clientToolIds) edges.push({ from: sec.id, to: tId, kind: "section-tool" });
+      for (const pId of sec.publicationIds) edges.push({ from: sec.id, to: pId, kind: "section-publication" });
+    }
+  }
+  for (const ap of s.aiPacks ?? []) {
+    if (ap.archived) continue;
+    nodes.push({ id: ap.id, label: ap.title, kind: "AI Pack" });
+    for (const cId of ap.conceptIds) edges.push({ from: ap.id, to: cId, kind: "pack-concept" });
+    for (const fId of ap.frameworkIds) edges.push({ from: ap.id, to: fId, kind: "pack-framework" });
+    for (const kId of ap.knowledgeObjectIds) edges.push({ from: ap.id, to: kId, kind: "pack-ko" });
+    for (const pId of ap.publicationIds) edges.push({ from: ap.id, to: pId, kind: "pack-publication" });
+    for (const tkId of ap.clientToolkitIds) edges.push({ from: ap.id, to: tkId, kind: "pack-toolkit" });
+    for (const prId of ap.promptIds) edges.push({ from: ap.id, to: prId, kind: "pack-prompt" });
+    for (const agId of ap.agentIds) edges.push({ from: ap.id, to: agId, kind: "pack-agent" });
+    for (const m of ap.modules) {
+      nodes.push({ id: m.id, label: m.title, kind: "AI Pack Module" });
+      edges.push({ from: ap.id, to: m.id, kind: "contains-module" });
+      if (m.referenceId) edges.push({ from: m.id, to: m.referenceId, kind: `module-${m.kind.toLowerCase().replace(/\s+/g, "-")}` });
+    }
+    for (const ev of ap.evaluationCases) {
+      nodes.push({ id: ev.id, label: ev.title, kind: "Evaluation Case" });
+      edges.push({ from: ap.id, to: ev.id, kind: "contains-evaluation" });
+      for (const cId of ev.coversConceptIds) edges.push({ from: ev.id, to: cId, kind: "covers-concept" });
+      for (const fId of ev.coversFrameworkIds) edges.push({ from: ev.id, to: fId, kind: "covers-framework" });
     }
   }
   for (const r of s.releases) {
@@ -251,6 +293,8 @@ export function parseImport(json: string): ImportResult {
     domains: obj.domains!, concepts: obj.concepts!, frameworks: obj.frameworks!,
     knowledgeObjects: obj.knowledgeObjects!, clientTools: obj.clientTools!,
     publications: obj.publications!, prompts: obj.prompts!, agents: obj.agents!, releases: obj.releases!,
+    clientToolkits: obj.clientToolkits ?? [],
+    aiPacks: obj.aiPacks ?? [],
   };
   return { snapshot: snap, errors, brokenReferences: detectBrokenReferences(snap) };
 }
@@ -579,3 +623,511 @@ export function chapterTree(chapters: ChapterBlueprint[]): { chapter: ChapterBlu
 export const _WS2_STAGES: readonly PublicationStage[] = PUBLICATION_STAGES;
 // Marker export retained so schema import survives tree-shaking.
 export type { PresentationLink, ChapterBlueprint };
+
+// ===================================================================
+// Workstream 3 — Client Toolkits & AI Packs
+// ===================================================================
+
+// ---------- ID generation ----------
+function maxNum(ids: string[], prefix: string): number {
+  return ids
+    .filter(id => id.startsWith(prefix))
+    .map(id => Number(id.slice(prefix.length)))
+    .filter(n => !Number.isNaN(n))
+    .reduce((m, n) => Math.max(m, n), 0);
+}
+export function nextClientToolkitId(s: DataSnapshot): string {
+  const n = maxNum(s.clientToolkits.map(x => x.id), "TK-");
+  return `TK-${String(n + 1).padStart(3, "0")}`;
+}
+export function nextToolkitSectionId(s: DataSnapshot): string {
+  const all = s.clientToolkits.flatMap(tk => tk.sections.map(sec => sec.id));
+  const n = maxNum(all, "TS-");
+  return `TS-${String(n + 1).padStart(3, "0")}`;
+}
+export function nextAIPackId(s: DataSnapshot): string {
+  const n = maxNum(s.aiPacks.map(x => x.id), "AP-");
+  return `AP-${String(n + 1).padStart(3, "0")}`;
+}
+export function nextAIPackModuleId(s: DataSnapshot): string {
+  const all = s.aiPacks.flatMap(ap => ap.modules.map(m => m.id));
+  const n = maxNum(all, "AM-");
+  return `AM-${String(n + 1).padStart(3, "0")}`;
+}
+export function nextEvaluationCaseId(s: DataSnapshot): string {
+  const all = s.aiPacks.flatMap(ap => ap.evaluationCases.map(e => e.id));
+  const n = maxNum(all, "EV-");
+  return `EV-${String(n + 1).padStart(3, "0")}`;
+}
+
+// ---------- Generic hierarchy helpers (sections mirror chapters) ----------
+export interface HierarchyNode { id: string; parentId: string | null; order: number }
+
+export function isSectionAncestor(items: ClientToolkitSection[], candidateAncestor: string, sectionId: string): boolean {
+  if (candidateAncestor === sectionId) return true;
+  const byId = new Map(items.map(i => [i.id, i] as const));
+  let cur = byId.get(sectionId);
+  const seen = new Set<string>();
+  while (cur?.parentSectionId) {
+    if (seen.has(cur.parentSectionId)) return false;
+    seen.add(cur.parentSectionId);
+    if (cur.parentSectionId === candidateAncestor) return true;
+    cur = byId.get(cur.parentSectionId);
+  }
+  return false;
+}
+export function wouldCreateSectionCycle(items: ClientToolkitSection[], sectionId: string, newParentId: string | null): boolean {
+  if (!newParentId) return false;
+  if (newParentId === sectionId) return true;
+  return isSectionAncestor(items, sectionId, newParentId);
+}
+export function sectionDescendantIds(items: ClientToolkitSection[], sectionId: string): string[] {
+  const out: string[] = [];
+  const walk = (id: string) => {
+    for (const s of items) if (s.parentSectionId === id) { out.push(s.id); walk(s.id); }
+  };
+  walk(sectionId);
+  return out;
+}
+export function moveSection(items: ClientToolkitSection[], sectionId: string, newParentId: string | null, newIndex: number): ClientToolkitSection[] {
+  if (wouldCreateSectionCycle(items, sectionId, newParentId)) return items;
+  const moving = items.find(s => s.id === sectionId);
+  if (!moving) return items;
+  const updated = items.map(s => s.id === sectionId ? { ...s, parentSectionId: newParentId } : s);
+  const siblings = updated.filter(s => s.parentSectionId === newParentId).sort((a, b) => a.order - b.order);
+  const without = siblings.filter(s => s.id !== sectionId);
+  const target = Math.max(0, Math.min(newIndex, without.length));
+  const reordered = [...without.slice(0, target), updated.find(s => s.id === sectionId)!, ...without.slice(target)];
+  const orderMap = new Map(reordered.map((s, i) => [s.id, (i + 1) * 10] as const));
+  return updated.map(s => orderMap.has(s.id) ? { ...s, order: orderMap.get(s.id)! } : s);
+}
+export function sectionTree(items: ClientToolkitSection[]): { section: ClientToolkitSection; depth: number }[] {
+  const sorted = [...items].sort((a, b) => a.order - b.order);
+  const byParent = new Map<string | null, ClientToolkitSection[]>();
+  for (const s of sorted) {
+    const key = s.parentSectionId ?? null;
+    if (!byParent.has(key)) byParent.set(key, []);
+    byParent.get(key)!.push(s);
+  }
+  const out: { section: ClientToolkitSection; depth: number }[] = [];
+  const walk = (parent: string | null, depth: number) => {
+    for (const sec of byParent.get(parent) ?? []) {
+      out.push({ section: sec, depth });
+      walk(sec.id, depth + 1);
+    }
+  };
+  walk(null, 0);
+  return out;
+}
+
+// ---------- Duplication (hierarchy-preserving) ----------
+export function duplicateClientToolkit(source: ClientToolkit, newId: string, s: DataSnapshot): ClientToolkit {
+  let seq = maxNum(s.clientToolkits.flatMap(tk => tk.sections.map(x => x.id)), "TS-");
+  const idMap = new Map<string, string>();
+  for (const sec of source.sections) {
+    seq += 1;
+    idMap.set(sec.id, `TS-${String(seq).padStart(3, "0")}`);
+  }
+  const sections = source.sections.map(sec => ({
+    ...sec,
+    id: idMap.get(sec.id)!,
+    parentSectionId: sec.parentSectionId ? (idMap.get(sec.parentSectionId) ?? null) : null,
+  }));
+  const now = new Date().toISOString();
+  return {
+    ...source,
+    id: newId,
+    title: `${source.title} (Copy)`,
+    version: "0.1.0",
+    status: "Draft",
+    manufacturingStage: "Draft",
+    archived: false,
+    sections,
+    stageHistory: [{ stage: "Draft", at: now, actor: source.owner || source.steward, note: `Duplicated from ${source.id}.` }],
+    releaseIds: [],
+    createdAt: now, updatedAt: now,
+  };
+}
+
+export function duplicateAIPack(source: AIPack, newId: string, s: DataSnapshot): AIPack {
+  let modSeq = maxNum(s.aiPacks.flatMap(a => a.modules.map(m => m.id)), "AM-");
+  let evSeq = maxNum(s.aiPacks.flatMap(a => a.evaluationCases.map(e => e.id)), "EV-");
+  const modules = source.modules.map(m => { modSeq += 1; return { ...m, id: `AM-${String(modSeq).padStart(3, "0")}` }; });
+  const evaluationCases = source.evaluationCases.map(e => { evSeq += 1; return { ...e, id: `EV-${String(evSeq).padStart(3, "0")}`, status: "not-run" as const }; });
+  const now = new Date().toISOString();
+  return {
+    ...source,
+    id: newId,
+    title: `${source.title} (Copy)`,
+    version: "0.1.0",
+    manufacturingStage: "Draft",
+    archived: false,
+    modules,
+    evaluationCases,
+    stageHistory: [{ stage: "Draft", at: now, actor: source.owner || source.steward, note: `Duplicated from ${source.id}.` }],
+    releaseIds: [],
+    humanReviewCompleted: false,
+    createdAt: now, updatedAt: now,
+  };
+}
+
+// ---------- Coverage: Client Toolkit ----------
+export interface ToolkitCoverage {
+  missingConcepts: string[];
+  missingFrameworks: string[];
+  missingKnowledgeObjects: string[];
+  missingClientTools: string[];
+  missingPublications: string[];
+  brokenReferences: { source: string; targetId: string; kind: string }[];
+  duplicateReferences: { kind: string; id: string; count: number }[];
+  unusedAssets: string[]; // top-level selected but not used by any section
+  sectionsWithoutObjectives: string[];
+  sectionsWithoutAssets: string[];
+  governingConceptCount: number;
+  governingFrameworkCount: number;
+  canonicalConceptRatio: number;
+  humanReviewRatio: number;
+  coveragePercent: number;
+  readinessScore: number;
+  editorialScore: number;
+  canonicalCompliance: number;
+}
+
+export function toolkitCoverage(tk: ClientToolkit, s: DataSnapshot): ToolkitCoverage {
+  const dup = new Map<string, { kind: string; count: number }>();
+  const bump = (kind: string, id: string) => {
+    const k = `${kind}:${id}`;
+    const cur = dup.get(k) ?? { kind, count: 0 };
+    cur.count += 1;
+    dup.set(k, cur);
+  };
+  const conceptIds = new Set<string>();
+  const frameworkIds = new Set<string>();
+  const koIds = new Set<string>();
+  const toolIds = new Set<string>();
+  const pubIds = new Set<string>();
+
+  const record = (arr: string[], kind: string, set: Set<string>) => {
+    for (const id of arr) { set.add(id); bump(kind, id); }
+  };
+  record(tk.conceptIds, "concept", conceptIds);
+  record(tk.frameworkIds, "framework", frameworkIds);
+  record(tk.knowledgeObjectIds, "ko", koIds);
+  record(tk.clientToolIds, "tool", toolIds);
+  record(tk.publicationIds, "publication", pubIds);
+
+  const sectionsWithoutObjectives: string[] = [];
+  const sectionsWithoutAssets: string[] = [];
+  const sectionUsage = { concept: new Set<string>(), framework: new Set<string>(), ko: new Set<string>(), tool: new Set<string>(), pub: new Set<string>() };
+  for (const sec of tk.sections) {
+    if (!sec.objective.trim()) sectionsWithoutObjectives.push(sec.id);
+    const total = sec.conceptIds.length + sec.frameworkIds.length + sec.knowledgeObjectIds.length + sec.clientToolIds.length + sec.publicationIds.length;
+    if (total === 0) sectionsWithoutAssets.push(sec.id);
+    for (const id of sec.conceptIds) { conceptIds.add(id); bump("concept", id); sectionUsage.concept.add(id); }
+    for (const id of sec.frameworkIds) { frameworkIds.add(id); bump("framework", id); sectionUsage.framework.add(id); }
+    for (const id of sec.knowledgeObjectIds) { koIds.add(id); bump("ko", id); sectionUsage.ko.add(id); }
+    for (const id of sec.clientToolIds) { toolIds.add(id); bump("tool", id); sectionUsage.tool.add(id); }
+    for (const id of sec.publicationIds) { pubIds.add(id); bump("publication", id); sectionUsage.pub.add(id); }
+  }
+
+  const missingConcepts = [...conceptIds].filter(id => !s.concepts.some(c => c.id === id));
+  const missingFrameworks = [...frameworkIds].filter(id => !s.frameworks.some(f => f.id === id));
+  const missingKnowledgeObjects = [...koIds].filter(id => !s.knowledgeObjects.some(k => k.id === id));
+  const missingClientTools = [...toolIds].filter(id => !s.clientTools.some(t => t.id === id));
+  const missingPublications = [...pubIds].filter(id => !s.publications.some(p => p.id === id));
+
+  const brokenReferences = [
+    ...missingConcepts.map(id => ({ source: tk.id, targetId: id, kind: "concept" })),
+    ...missingFrameworks.map(id => ({ source: tk.id, targetId: id, kind: "framework" })),
+    ...missingKnowledgeObjects.map(id => ({ source: tk.id, targetId: id, kind: "knowledge-object" })),
+    ...missingClientTools.map(id => ({ source: tk.id, targetId: id, kind: "client-tool" })),
+    ...missingPublications.map(id => ({ source: tk.id, targetId: id, kind: "publication" })),
+  ];
+
+  const duplicateReferences = [...dup.entries()]
+    .filter(([, v]) => v.count > 1)
+    .map(([k, v]) => ({ kind: v.kind, id: k.split(":")[1], count: v.count }));
+
+  const unusedAssets = [
+    ...tk.conceptIds.filter(id => !sectionUsage.concept.has(id)),
+    ...tk.frameworkIds.filter(id => !sectionUsage.framework.has(id)),
+    ...tk.knowledgeObjectIds.filter(id => !sectionUsage.ko.has(id)),
+    ...tk.clientToolIds.filter(id => !sectionUsage.tool.has(id)),
+    ...tk.publicationIds.filter(id => !sectionUsage.pub.has(id)),
+  ];
+
+  const presentConcepts = [...conceptIds].filter(id => s.concepts.some(c => c.id === id));
+  const canonicalConceptRatio = presentConcepts.length === 0 ? 0 :
+    presentConcepts.filter(id => {
+      const c = s.concepts.find(x => x.id === id)!;
+      return c.status === "Canonical" || c.status === "Approved";
+    }).length / presentConcepts.length;
+
+  const referencedKOs = s.knowledgeObjects.filter(k => koIds.has(k.id));
+  const humanReviewRatio = referencedKOs.length === 0 ? 1 :
+    referencedKOs.filter(k => k.humanReviewCompleted).length / referencedKOs.length;
+
+  const totalRefs = conceptIds.size + frameworkIds.size + koIds.size + toolIds.size + pubIds.size;
+  const resolved = totalRefs - brokenReferences.length;
+  const coveragePercent = totalRefs === 0 ? 0 : Math.round((resolved / totalRefs) * 100);
+  const canonicalCompliance = Math.round(canonicalConceptRatio * 100);
+  const editorialScore = Math.max(0, Math.round(
+    100
+    - sectionsWithoutObjectives.length * 10
+    - sectionsWithoutAssets.length * 12
+    - duplicateReferences.length * 2
+    - (tk.sections.length === 0 ? 40 : 0)
+  ));
+  const readinessScore = Math.round(
+    coveragePercent * 0.35 + canonicalCompliance * 0.3 + humanReviewRatio * 100 * 0.2 + editorialScore * 0.15
+  );
+
+  return {
+    missingConcepts, missingFrameworks, missingKnowledgeObjects, missingClientTools, missingPublications,
+    brokenReferences, duplicateReferences, unusedAssets,
+    sectionsWithoutObjectives, sectionsWithoutAssets,
+    governingConceptCount: conceptIds.size,
+    governingFrameworkCount: frameworkIds.size,
+    canonicalConceptRatio, humanReviewRatio, coveragePercent,
+    readinessScore, editorialScore, canonicalCompliance,
+  };
+}
+
+export function validateToolkitPromotion(tk: ClientToolkit, target: ManufacturingStage, s: DataSnapshot) {
+  const cov = toolkitCoverage(tk, s);
+  const blockers: string[] = [];
+  if (tk.sections.length === 0) blockers.push("Toolkit has no sections.");
+  if (cov.brokenReferences.length > 0) blockers.push(`${cov.brokenReferences.length} broken references must be resolved.`);
+  const targetIdx = PUBLICATION_STAGES.indexOf(target);
+  if (target === "QA" || target === "Canonical" || target === "Released") {
+    if (cov.sectionsWithoutObjectives.length > 0) blockers.push(`Sections missing objective: ${cov.sectionsWithoutObjectives.join(", ")}.`);
+    if (cov.sectionsWithoutAssets.length > 0) blockers.push(`Sections missing canonical assets: ${cov.sectionsWithoutAssets.join(", ")}.`);
+    if (cov.humanReviewRatio < 1) blockers.push("Referenced knowledge objects require human review completion.");
+    const minSectionIdx = Math.max(0, targetIdx - 1);
+    const lag = tk.sections.filter(s => PUBLICATION_STAGES.indexOf(s.manufacturingStage) < minSectionIdx);
+    if (lag.length > 0) blockers.push(`Sections not yet at ${PUBLICATION_STAGES[minSectionIdx]}: ${lag.map(s => s.id).join(", ")}.`);
+  }
+  if (target === "Canonical" || target === "Released") {
+    if (cov.canonicalCompliance < 80) blockers.push(`Canonical compliance ${cov.canonicalCompliance}% below 80% threshold.`);
+    if (cov.readinessScore < 85) blockers.push(`Readiness score ${cov.readinessScore} below 85 threshold.`);
+  }
+  if (target === "Released") {
+    if (!tk.effectiveDate) blockers.push("Effective date required for Released stage.");
+  }
+  return { ok: blockers.length === 0, blockers, nextStage: blockers.length === 0 ? target : null };
+}
+
+// ---------- Coverage: AI Pack ----------
+export interface AIPackCoverage {
+  missingConcepts: string[];
+  missingFrameworks: string[];
+  missingKnowledgeObjects: string[];
+  missingPublications: string[];
+  missingClientToolkits: string[];
+  missingPrompts: string[];
+  missingAgents: string[];
+  brokenReferences: { source: string; targetId: string; kind: string }[];
+  brokenModuleReferences: { moduleId: string; targetId: string; kind: string }[];
+  brokenEvaluationCitations: { evaluationId: string; targetId: string }[];
+  duplicateInstructions: string[];
+  modulesWithoutInstructions: string[];
+  evaluationCount: number;
+  evaluationsReviewed: number;
+  evaluationsPassed: number;
+  unreviewedEvaluations: string[];
+  canonicalConceptRatio: number;
+  coveragePercent: number;
+  readinessScore: number;
+  editorialScore: number;
+  canonicalCompliance: number;
+  provenanceComplete: boolean;
+  hasGovernance: boolean;
+  hasSystemInstructions: boolean;
+}
+
+export function aiPackCoverage(ap: AIPack, s: DataSnapshot): AIPackCoverage {
+  const missingConcepts = ap.conceptIds.filter(id => !s.concepts.some(c => c.id === id));
+  const missingFrameworks = ap.frameworkIds.filter(id => !s.frameworks.some(f => f.id === id));
+  const missingKnowledgeObjects = ap.knowledgeObjectIds.filter(id => !s.knowledgeObjects.some(k => k.id === id));
+  const missingPublications = ap.publicationIds.filter(id => !s.publications.some(p => p.id === id));
+  const missingClientToolkits = ap.clientToolkitIds.filter(id => !s.clientToolkits.some(t => t.id === id));
+  const missingPrompts = ap.promptIds.filter(id => !s.prompts.some(p => p.id === id));
+  const missingAgents = ap.agentIds.filter(id => !s.agents.some(a => a.id === id));
+
+  const brokenReferences = [
+    ...missingConcepts.map(id => ({ source: ap.id, targetId: id, kind: "concept" })),
+    ...missingFrameworks.map(id => ({ source: ap.id, targetId: id, kind: "framework" })),
+    ...missingKnowledgeObjects.map(id => ({ source: ap.id, targetId: id, kind: "knowledge-object" })),
+    ...missingPublications.map(id => ({ source: ap.id, targetId: id, kind: "publication" })),
+    ...missingClientToolkits.map(id => ({ source: ap.id, targetId: id, kind: "client-toolkit" })),
+    ...missingPrompts.map(id => ({ source: ap.id, targetId: id, kind: "prompt" })),
+    ...missingAgents.map(id => ({ source: ap.id, targetId: id, kind: "agent" })),
+  ];
+
+  const knownIds = new Set<string>();
+  for (const arr of [s.concepts, s.frameworks, s.knowledgeObjects, s.publications, s.clientToolkits, s.prompts, s.agents]) {
+    for (const x of arr as { id: string }[]) knownIds.add(x.id);
+  }
+  const brokenModuleReferences = ap.modules
+    .filter(m => m.referenceId && !knownIds.has(m.referenceId))
+    .map(m => ({ moduleId: m.id, targetId: m.referenceId!, kind: m.kind }));
+
+  const brokenEvaluationCitations: { evaluationId: string; targetId: string }[] = [];
+  for (const ev of ap.evaluationCases) {
+    for (const cite of ev.requiredCitations) {
+      if (!knownIds.has(cite)) brokenEvaluationCitations.push({ evaluationId: ev.id, targetId: cite });
+    }
+  }
+
+  const modulesWithoutInstructions = ap.modules
+    .filter(m => (m.kind === "Instruction" || m.kind === "Policy") && !m.packInstructions.trim())
+    .map(m => m.id);
+
+  // Duplicate/conflicting instructions: modules with identical packInstructions text (non-empty).
+  const instrCount = new Map<string, string[]>();
+  for (const m of ap.modules) {
+    const key = m.packInstructions.trim();
+    if (!key) continue;
+    if (!instrCount.has(key)) instrCount.set(key, []);
+    instrCount.get(key)!.push(m.id);
+  }
+  const duplicateInstructions = [...instrCount.entries()].filter(([, ids]) => ids.length > 1).flatMap(([, ids]) => ids);
+
+  const evaluationCount = ap.evaluationCases.length;
+  const evaluationsReviewed = ap.evaluationCases.filter(e => e.reviewerStatus !== "Draft").length;
+  const evaluationsPassed = ap.evaluationCases.filter(e => e.status === "pass").length;
+  const unreviewedEvaluations = ap.evaluationCases.filter(e => e.reviewerStatus === "Draft").map(e => e.id);
+
+  const presentConcepts = ap.conceptIds.filter(id => s.concepts.some(c => c.id === id));
+  const canonicalConceptRatio = presentConcepts.length === 0 ? 0 :
+    presentConcepts.filter(id => {
+      const c = s.concepts.find(x => x.id === id)!;
+      return c.status === "Canonical" || c.status === "Approved";
+    }).length / presentConcepts.length;
+
+  const totalRefs = ap.conceptIds.length + ap.frameworkIds.length + ap.knowledgeObjectIds.length +
+    ap.publicationIds.length + ap.clientToolkitIds.length + ap.promptIds.length + ap.agentIds.length;
+  const resolved = totalRefs - brokenReferences.length;
+  const coveragePercent = totalRefs === 0 ? 0 : Math.round((resolved / totalRefs) * 100);
+  const canonicalCompliance = Math.round(canonicalConceptRatio * 100);
+  const hasGovernance = Boolean(ap.usagePolicy.trim() && ap.boundaryConditions.trim());
+  const hasSystemInstructions = Boolean(ap.systemInstructions.trim());
+  const provenanceComplete = Boolean(ap.provenanceNotes.trim());
+
+  const editorialScore = Math.max(0, Math.round(
+    100
+    - modulesWithoutInstructions.length * 12
+    - brokenModuleReferences.length * 15
+    - brokenEvaluationCitations.length * 5
+    - unreviewedEvaluations.length * 4
+    - duplicateInstructions.length * 2
+    - (hasGovernance ? 0 : 20)
+    - (hasSystemInstructions ? 0 : 25)
+  ));
+  const readinessScore = Math.round(
+    coveragePercent * 0.3 + canonicalCompliance * 0.25 + editorialScore * 0.25 +
+    (evaluationCount === 0 ? 0 : (evaluationsPassed / evaluationCount) * 100) * 0.2
+  );
+
+  return {
+    missingConcepts, missingFrameworks, missingKnowledgeObjects,
+    missingPublications, missingClientToolkits, missingPrompts, missingAgents,
+    brokenReferences, brokenModuleReferences, brokenEvaluationCitations,
+    duplicateInstructions, modulesWithoutInstructions,
+    evaluationCount, evaluationsReviewed, evaluationsPassed, unreviewedEvaluations,
+    canonicalConceptRatio, coveragePercent, readinessScore, editorialScore, canonicalCompliance,
+    provenanceComplete, hasGovernance, hasSystemInstructions,
+  };
+}
+
+export function validateAIPackPromotion(ap: AIPack, target: ManufacturingStage, s: DataSnapshot) {
+  const cov = aiPackCoverage(ap, s);
+  const blockers: string[] = [];
+  if (!cov.hasSystemInstructions) blockers.push("System instructions are required.");
+  if (cov.brokenReferences.length > 0) blockers.push(`${cov.brokenReferences.length} broken references must be resolved.`);
+  if (cov.brokenModuleReferences.length > 0) blockers.push(`${cov.brokenModuleReferences.length} module references are unresolved.`);
+  if (target === "SME Review" || target === "QA" || target === "Canonical" || target === "Released") {
+    if (!cov.hasGovernance) blockers.push("Usage policy and boundary conditions are required.");
+    if (cov.modulesWithoutInstructions.length > 0) blockers.push(`Instruction/Policy modules missing text: ${cov.modulesWithoutInstructions.join(", ")}.`);
+  }
+  if (target === "QA" || target === "Canonical" || target === "Released") {
+    if (cov.evaluationCount === 0) blockers.push("At least one evaluation case is required.");
+    if (cov.unreviewedEvaluations.length > 0) blockers.push(`Unreviewed evaluations: ${cov.unreviewedEvaluations.join(", ")}.`);
+  }
+  if (target === "Canonical" || target === "Released") {
+    if (!cov.provenanceComplete) blockers.push("Provenance notes are required for canonical release.");
+    if (cov.canonicalCompliance < 80) blockers.push(`Canonical compliance ${cov.canonicalCompliance}% below 80% threshold.`);
+    if (cov.readinessScore < 85) blockers.push(`Readiness score ${cov.readinessScore} below 85 threshold.`);
+    if (!ap.humanReviewCompleted) blockers.push("Human review must be completed before canonical release.");
+  }
+  if (target === "Released") {
+    if (!ap.effectiveDate) blockers.push("Effective date required for Released stage.");
+  }
+  return { ok: blockers.length === 0, blockers, nextStage: blockers.length === 0 ? target : null };
+}
+
+// ---------- Release reports ----------
+export interface ToolkitReleaseReport {
+  toolkitId: string; title: string; stage: ManufacturingStage;
+  coveragePercent: number; readinessScore: number;
+  brokenReferences: number; canonicalCompliance: number;
+  humanReviewComplete: boolean; eligible: boolean; blockers: string[];
+}
+export function releaseToolkitReports(r: Release, s: DataSnapshot): ToolkitReleaseReport[] {
+  const ids = new Set(r.manifest.filter(m => m.entityType === "clientToolkits").flatMap(m => m.ids));
+  return s.clientToolkits.filter(t => ids.has(t.id)).map(tk => {
+    const cov = toolkitCoverage(tk, s);
+    const promo = validateToolkitPromotion(tk, "Canonical", s);
+    return {
+      toolkitId: tk.id, title: tk.title, stage: tk.manufacturingStage,
+      coveragePercent: cov.coveragePercent, readinessScore: cov.readinessScore,
+      brokenReferences: cov.brokenReferences.length, canonicalCompliance: cov.canonicalCompliance,
+      humanReviewComplete: cov.humanReviewRatio >= 1, eligible: promo.ok, blockers: promo.blockers,
+    };
+  });
+}
+
+export interface AIPackReleaseReport {
+  packId: string; title: string; stage: ManufacturingStage;
+  coveragePercent: number; readinessScore: number;
+  brokenReferences: number; unreviewedEvaluations: number;
+  canonicalCompliance: number; humanReviewComplete: boolean;
+  eligible: boolean; blockers: string[];
+}
+export function releaseAIPackReports(r: Release, s: DataSnapshot): AIPackReleaseReport[] {
+  const ids = new Set(r.manifest.filter(m => m.entityType === "aiPacks").flatMap(m => m.ids));
+  return s.aiPacks.filter(a => ids.has(a.id)).map(ap => {
+    const cov = aiPackCoverage(ap, s);
+    const promo = validateAIPackPromotion(ap, "Canonical", s);
+    return {
+      packId: ap.id, title: ap.title, stage: ap.manufacturingStage,
+      coveragePercent: cov.coveragePercent, readinessScore: cov.readinessScore,
+      brokenReferences: cov.brokenReferences.length + cov.brokenModuleReferences.length,
+      unreviewedEvaluations: cov.unreviewedEvaluations.length,
+      canonicalCompliance: cov.canonicalCompliance,
+      humanReviewComplete: ap.humanReviewCompleted,
+      eligible: promo.ok, blockers: promo.blockers,
+    };
+  });
+}
+
+// ---------- Traceability lookup ----------
+export function findToolkitsReferencing(s: DataSnapshot, entityId: string): ClientToolkit[] {
+  return s.clientToolkits.filter(tk => {
+    if ([...tk.conceptIds, ...tk.frameworkIds, ...tk.knowledgeObjectIds, ...tk.clientToolIds, ...tk.publicationIds].includes(entityId)) return true;
+    return tk.sections.some(sec =>
+      [...sec.conceptIds, ...sec.frameworkIds, ...sec.knowledgeObjectIds, ...sec.clientToolIds, ...sec.publicationIds].includes(entityId)
+    );
+  });
+}
+export function findAIPacksReferencing(s: DataSnapshot, entityId: string): AIPack[] {
+  return s.aiPacks.filter(ap => {
+    const top = [...ap.conceptIds, ...ap.frameworkIds, ...ap.knowledgeObjectIds, ...ap.publicationIds, ...ap.clientToolkitIds, ...ap.promptIds, ...ap.agentIds];
+    if (top.includes(entityId)) return true;
+    if (ap.modules.some(m => m.referenceId === entityId)) return true;
+    return ap.evaluationCases.some(e => e.requiredCitations.includes(entityId));
+  });
+}
+
+// Type re-exports for consumers
+export type { ClientToolkit, ClientToolkitSection, AIPack, AIPackModule, AIPackEvaluationCase };

@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageHeader, PageBody } from "@/components/page-header";
 import { LoadingState, SectionTitle, StatusBadge, ErrorState } from "@/components/ui-kit";
 import { useSnapshot, Repo } from "@/lib/use-snapshot";
-import { evaluateReleaseGate, releasePublicationReports } from "@/lib/data/service";
+import { evaluateReleaseGate, releasePublicationReports, releaseToolkitReports, releaseAIPackReports } from "@/lib/data/service";
 import { PublicationStageBadge } from "@/components/publication-stage-badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
@@ -23,12 +23,17 @@ function ReleasePage() {
   if (!r) return <ErrorState message={`Release ${id} not found.`} />;
   const gate = evaluateReleaseGate(r);
   const pubReports = releasePublicationReports(r, s);
+  const tkReports = releaseToolkitReports(r, s);
+  const apReports = releaseAIPackReports(r, s);
   const ineligible = pubReports.filter(p => !p.eligible);
-  const readinessBlocked = ineligible.length > 0;
+  const tkIneligible = tkReports.filter(t => !t.eligible);
+  const apIneligible = apReports.filter(a => !a.eligible);
+  const totalIneligible = ineligible.length + tkIneligible.length + apIneligible.length;
+  const readinessBlocked = totalIneligible > 0;
 
   const advance = async (stage: ReleaseStage) => {
     if ((stage === "Canonical" || stage === "Release Candidate") && readinessBlocked) {
-      toast.error(`Cannot advance: ${ineligible.length} publication(s) ineligible for Canonical.`);
+      toast.error(`Cannot advance: ${totalIneligible} asset(s) ineligible for Canonical.`);
       return;
     }
     if (stage === "Canonical" && !gate.readyForCanonical) { toast.error("Gate incomplete or blocking errors present."); return; }
@@ -61,9 +66,23 @@ function ReleasePage() {
                 ))}
                 {pubReports.length > 0 && (
                   <li className="flex items-start gap-3 pt-2 border-t border-border mt-2">
-                    <span className={`mt-1 size-2.5 rounded-full ${readinessBlocked ? "bg-destructive" : "bg-evergreen"}`} />
+                    <span className={`mt-1 size-2.5 rounded-full ${ineligible.length > 0 ? "bg-destructive" : "bg-evergreen"}`} />
                     <span className="font-mono text-xs w-24 text-slate-ink">PUB-READY</span>
-                    <span>{readinessBlocked ? `${ineligible.length} publication(s) not eligible for Canonical` : "All publications eligible for Canonical"}</span>
+                    <span>{ineligible.length > 0 ? `${ineligible.length} publication(s) not eligible for Canonical` : "All publications eligible for Canonical"}</span>
+                  </li>
+                )}
+                {tkReports.length > 0 && (
+                  <li className="flex items-start gap-3">
+                    <span className={`mt-1 size-2.5 rounded-full ${tkIneligible.length > 0 ? "bg-destructive" : "bg-evergreen"}`} />
+                    <span className="font-mono text-xs w-24 text-slate-ink">TK-READY</span>
+                    <span>{tkIneligible.length > 0 ? `${tkIneligible.length} toolkit(s) not eligible for Canonical` : "All toolkits eligible for Canonical"}</span>
+                  </li>
+                )}
+                {apReports.length > 0 && (
+                  <li className="flex items-start gap-3">
+                    <span className={`mt-1 size-2.5 rounded-full ${apIneligible.length > 0 ? "bg-destructive" : "bg-evergreen"}`} />
+                    <span className="font-mono text-xs w-24 text-slate-ink">AP-READY</span>
+                    <span>{apIneligible.length > 0 ? `${apIneligible.length} AI pack(s) not eligible for Canonical` : "All AI packs eligible for Canonical"}</span>
                   </li>
                 )}
               </ul>
@@ -114,6 +133,77 @@ function ReleasePage() {
                 </div>
               </div>
             )}
+
+            {tkReports.length > 0 && (
+              <div className="editorial-card p-5">
+                <SectionTitle hint={`${tkReports.length} toolkit(s)`}>Client Toolkit readiness</SectionTitle>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead><tr className="text-left text-[11px] uppercase tracking-widest text-slate-ink border-b border-border">
+                      <th className="py-2 pr-3">Toolkit</th><th className="pr-3">Stage</th><th className="pr-3">Coverage</th>
+                      <th className="pr-3">Readiness</th><th className="pr-3">Broken</th><th className="pr-3">Canonical</th>
+                      <th className="pr-3">Review</th><th className="pr-3">Eligible</th>
+                    </tr></thead>
+                    <tbody>
+                      {tkReports.map(tr => (
+                        <tr key={tr.toolkitId} className="border-b border-border/60 align-top">
+                          <td className="py-2 pr-3">
+                            <Link to="/client-toolkits/$id" params={{ id: tr.toolkitId }} className="text-heritage hover:underline">
+                              <span className="font-mono text-xs text-slate-ink">{tr.toolkitId}</span> {tr.title}
+                            </Link>
+                            {tr.blockers.length > 0 && <ul className="mt-1 text-xs text-destructive list-disc pl-4">{tr.blockers.map(b => <li key={b}>{b}</li>)}</ul>}
+                          </td>
+                          <td className="pr-3"><PublicationStageBadge stage={tr.stage} /></td>
+                          <td className="pr-3">{tr.coveragePercent}%</td>
+                          <td className="pr-3">{tr.readinessScore}</td>
+                          <td className={`pr-3 ${tr.brokenReferences ? "text-destructive" : ""}`}>{tr.brokenReferences}</td>
+                          <td className="pr-3">{tr.canonicalCompliance}%</td>
+                          <td className="pr-3">{tr.humanReviewComplete ? "✓" : "—"}</td>
+                          <td className={`pr-3 ${tr.eligible ? "text-evergreen" : "text-destructive"}`}>{tr.eligible ? "✓" : "Blocked"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {apReports.length > 0 && (
+              <div className="editorial-card p-5">
+                <SectionTitle hint={`${apReports.length} AI pack(s)`}>AI Pack readiness</SectionTitle>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead><tr className="text-left text-[11px] uppercase tracking-widest text-slate-ink border-b border-border">
+                      <th className="py-2 pr-3">AI Pack</th><th className="pr-3">Stage</th><th className="pr-3">Coverage</th>
+                      <th className="pr-3">Readiness</th><th className="pr-3">Broken</th><th className="pr-3">Unreviewed evals</th>
+                      <th className="pr-3">Canonical</th><th className="pr-3">Review</th><th className="pr-3">Eligible</th>
+                    </tr></thead>
+                    <tbody>
+                      {apReports.map(ar => (
+                        <tr key={ar.packId} className="border-b border-border/60 align-top">
+                          <td className="py-2 pr-3">
+                            <Link to="/ai-packs/$id" params={{ id: ar.packId }} className="text-heritage hover:underline">
+                              <span className="font-mono text-xs text-slate-ink">{ar.packId}</span> {ar.title}
+                            </Link>
+                            {ar.blockers.length > 0 && <ul className="mt-1 text-xs text-destructive list-disc pl-4">{ar.blockers.map(b => <li key={b}>{b}</li>)}</ul>}
+                          </td>
+                          <td className="pr-3"><PublicationStageBadge stage={ar.stage} /></td>
+                          <td className="pr-3">{ar.coveragePercent}%</td>
+                          <td className="pr-3">{ar.readinessScore}</td>
+                          <td className={`pr-3 ${ar.brokenReferences ? "text-destructive" : ""}`}>{ar.brokenReferences}</td>
+                          <td className={`pr-3 ${ar.unreviewedEvaluations ? "text-destructive" : ""}`}>{ar.unreviewedEvaluations}</td>
+                          <td className="pr-3">{ar.canonicalCompliance}%</td>
+                          <td className="pr-3">{ar.humanReviewComplete ? "✓" : "—"}</td>
+                          <td className={`pr-3 ${ar.eligible ? "text-evergreen" : "text-destructive"}`}>{ar.eligible ? "✓" : "Blocked"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+
 
             <div className="editorial-card p-5">
               <SectionTitle>Manifest</SectionTitle>
