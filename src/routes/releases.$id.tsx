@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageHeader, PageBody } from "@/components/page-header";
 import { LoadingState, SectionTitle, StatusBadge, ErrorState } from "@/components/ui-kit";
 import { useSnapshot, Repo } from "@/lib/use-snapshot";
-import { evaluateReleaseGate, releasePublicationReports } from "@/lib/data/service";
+import { evaluateReleaseGate, releasePublicationReports, releaseToolkitReports, releaseAIPackReports } from "@/lib/data/service";
 import { PublicationStageBadge } from "@/components/publication-stage-badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
