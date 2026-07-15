@@ -134,6 +134,77 @@ function ReleasePage() {
               </div>
             )}
 
+            {tkReports.length > 0 && (
+              <div className="editorial-card p-5">
+                <SectionTitle hint={`${tkReports.length} toolkit(s)`}>Client Toolkit readiness</SectionTitle>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead><tr className="text-left text-[11px] uppercase tracking-widest text-slate-ink border-b border-border">
+                      <th className="py-2 pr-3">Toolkit</th><th className="pr-3">Stage</th><th className="pr-3">Coverage</th>
+                      <th className="pr-3">Readiness</th><th className="pr-3">Broken</th><th className="pr-3">Canonical</th>
+                      <th className="pr-3">Review</th><th className="pr-3">Eligible</th>
+                    </tr></thead>
+                    <tbody>
+                      {tkReports.map(tr => (
+                        <tr key={tr.toolkitId} className="border-b border-border/60 align-top">
+                          <td className="py-2 pr-3">
+                            <Link to="/client-toolkits/$id" params={{ id: tr.toolkitId }} className="text-heritage hover:underline">
+                              <span className="font-mono text-xs text-slate-ink">{tr.toolkitId}</span> {tr.title}
+                            </Link>
+                            {tr.blockers.length > 0 && <ul className="mt-1 text-xs text-destructive list-disc pl-4">{tr.blockers.map(b => <li key={b}>{b}</li>)}</ul>}
+                          </td>
+                          <td className="pr-3"><PublicationStageBadge stage={tr.stage} /></td>
+                          <td className="pr-3">{tr.coveragePercent}%</td>
+                          <td className="pr-3">{tr.readinessScore}</td>
+                          <td className={`pr-3 ${tr.brokenReferences ? "text-destructive" : ""}`}>{tr.brokenReferences}</td>
+                          <td className="pr-3">{tr.canonicalCompliance}%</td>
+                          <td className="pr-3">{tr.humanReviewComplete ? "✓" : "—"}</td>
+                          <td className={`pr-3 ${tr.eligible ? "text-evergreen" : "text-destructive"}`}>{tr.eligible ? "✓" : "Blocked"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {apReports.length > 0 && (
+              <div className="editorial-card p-5">
+                <SectionTitle hint={`${apReports.length} AI pack(s)`}>AI Pack readiness</SectionTitle>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead><tr className="text-left text-[11px] uppercase tracking-widest text-slate-ink border-b border-border">
+                      <th className="py-2 pr-3">AI Pack</th><th className="pr-3">Stage</th><th className="pr-3">Coverage</th>
+                      <th className="pr-3">Readiness</th><th className="pr-3">Broken</th><th className="pr-3">Unreviewed evals</th>
+                      <th className="pr-3">Canonical</th><th className="pr-3">Review</th><th className="pr-3">Eligible</th>
+                    </tr></thead>
+                    <tbody>
+                      {apReports.map(ar => (
+                        <tr key={ar.packId} className="border-b border-border/60 align-top">
+                          <td className="py-2 pr-3">
+                            <Link to="/ai-packs/$id" params={{ id: ar.packId }} className="text-heritage hover:underline">
+                              <span className="font-mono text-xs text-slate-ink">{ar.packId}</span> {ar.title}
+                            </Link>
+                            {ar.blockers.length > 0 && <ul className="mt-1 text-xs text-destructive list-disc pl-4">{ar.blockers.map(b => <li key={b}>{b}</li>)}</ul>}
+                          </td>
+                          <td className="pr-3"><PublicationStageBadge stage={ar.stage} /></td>
+                          <td className="pr-3">{ar.coveragePercent}%</td>
+                          <td className="pr-3">{ar.readinessScore}</td>
+                          <td className={`pr-3 ${ar.brokenReferences ? "text-destructive" : ""}`}>{ar.brokenReferences}</td>
+                          <td className={`pr-3 ${ar.unreviewedEvaluations ? "text-destructive" : ""}`}>{ar.unreviewedEvaluations}</td>
+                          <td className="pr-3">{ar.canonicalCompliance}%</td>
+                          <td className="pr-3">{ar.humanReviewComplete ? "✓" : "—"}</td>
+                          <td className={`pr-3 ${ar.eligible ? "text-evergreen" : "text-destructive"}`}>{ar.eligible ? "✓" : "Blocked"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+
+
             <div className="editorial-card p-5">
               <SectionTitle>Manifest</SectionTitle>
               <div className="grid md:grid-cols-2 gap-3 text-sm">
