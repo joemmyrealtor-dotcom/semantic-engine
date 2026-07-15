@@ -254,3 +254,255 @@ export function parseImport(json: string): ImportResult {
   };
   return { snapshot: snap, errors, brokenReferences: detectBrokenReferences(snap) };
 }
+
+// ===================================================================
+// Workstream 2 — Publication Manufacturing Studio
+// ===================================================================
+
+export function nextPublicationId(s: DataSnapshot): string {
+  const n = s.publications
+    .map(p => Number(p.id.replace("PL-", "")))
+    .filter(x => !Number.isNaN(x))
+    .reduce((m, x) => Math.max(m, x), 100);
+  return `PL-${String(n + 1).padStart(3, "0")}`;
+}
+
+export function nextChapterId(s: DataSnapshot): string {
+  const all: number[] = [];
+  for (const p of s.publications) for (const ch of p.chapters) {
+    const n = Number(ch.id.replace("CH-", ""));
+    if (!Number.isNaN(n)) all.push(n);
+  }
+  const n = all.reduce((m, x) => Math.max(m, x), 0);
+  return `CH-${String(n + 1).padStart(3, "0")}`;
+}
+
+export function duplicatePublication(source: PublicationBlueprint, newId: string, s: DataSnapshot): PublicationBlueprint {
+  let seq = Math.max(0, ...s.publications.flatMap(p => p.chapters.map(c => Number(c.id.replace("CH-", "")) || 0)));
+  const now = new Date().toISOString();
+  const cloneChapters = source.chapters.map(ch => {
+    seq += 1;
+    return { ...ch, id: `CH-${String(seq).padStart(3, "0")}`, parentChapterId: null };
+  });
+  return {
+    ...source,
+    id: newId,
+    title: `${source.title} (Copy)`,
+    version: "0.1.0",
+    status: "Draft",
+    manufacturingStage: "Draft",
+    archived: false,
+    chapters: cloneChapters,
+    stageHistory: [{ stage: "Draft", at: now, actor: source.owner || source.steward, note: `Duplicated from ${source.id}.` }],
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+// -------- Coverage intelligence --------
+export interface PublicationCoverage {
+  missingConcepts: string[];
+  missingFrameworks: string[];
+  missingKnowledgeObjects: string[];
+  missingClientTools: string[];
+  duplicateReferences: { kind: string; id: string; count: number }[];
+  brokenReferences: { source: string; targetId: string; kind: string }[];
+  chaptersWithoutObjectives: string[];
+  canonicalConceptRatio: number;   // 0..1 (share of concepts referenced that are Canonical/Approved)
+  humanReviewRatio: number;        // 0..1 (share of referenced KOs with human review complete)
+  coveragePercent: number;         // aggregate
+  readinessScore: number;          // 0..100
+  editorialScore: number;          // 0..100
+  canonicalCompliance: number;     // 0..100
+}
+
+export function publicationCoverage(p: PublicationBlueprint, s: DataSnapshot): PublicationCoverage {
+  const conceptIds = new Set<string>();
+  const frameworkIds = new Set<string>();
+  const koIds = new Set<string>();
+  const toolIds = new Set<string>();
+  const refCounts = new Map<string, { kind: string; count: number }>();
+  const bumpDup = (kind: string, id: string) => {
+    const key = `${kind}:${id}`;
+    const cur = refCounts.get(key) ?? { kind, count: 0 };
+    cur.count += 1;
+    refCounts.set(key, cur);
+  };
+  const chaptersWithoutObjectives: string[] = [];
+  for (const ch of p.chapters) {
+    if (ch.learningObjectives.length === 0) chaptersWithoutObjectives.push(ch.id);
+    for (const id of ch.conceptIds) { conceptIds.add(id); bumpDup("concept", id); }
+    for (const id of ch.frameworkIds) { frameworkIds.add(id); bumpDup("framework", id); }
+    for (const id of ch.knowledgeObjectIds) { koIds.add(id); bumpDup("ko", id); }
+    for (const id of ch.clientToolIds) { toolIds.add(id); bumpDup("tool", id); }
+  }
+  const missingConcepts = [...conceptIds].filter(id => !s.concepts.some(c => c.id === id));
+  const missingFrameworks = [...frameworkIds].filter(id => !s.frameworks.some(f => f.id === id));
+  const missingKnowledgeObjects = [...koIds].filter(id => !s.knowledgeObjects.some(k => k.id === id));
+  const missingClientTools = [...toolIds].filter(id => !s.clientTools.some(t => t.id === id));
+
+  const duplicateReferences = [...refCounts.entries()]
+    .filter(([, v]) => v.count > 1)
+    .map(([k, v]) => ({ kind: v.kind, id: k.split(":")[1], count: v.count }));
+
+  const brokenReferences: PublicationCoverage["brokenReferences"] = [
+    ...missingConcepts.map(id => ({ source: p.id, targetId: id, kind: "concept" })),
+    ...missingFrameworks.map(id => ({ source: p.id, targetId: id, kind: "framework" })),
+    ...missingKnowledgeObjects.map(id => ({ source: p.id, targetId: id, kind: "knowledge-object" })),
+    ...missingClientTools.map(id => ({ source: p.id, targetId: id, kind: "client-tool" })),
+  ];
+
+  const presentConcepts = [...conceptIds].filter(id => s.concepts.some(c => c.id === id));
+  const canonicalConceptRatio = presentConcepts.length === 0 ? 0 :
+    presentConcepts.filter(id => {
+      const c = s.concepts.find(x => x.id === id)!;
+      return c.status === "Canonical" || c.status === "Approved";
+    }).length / presentConcepts.length;
+
+  const referencedKOs = s.knowledgeObjects.filter(k => koIds.has(k.id));
+  const humanReviewRatio = referencedKOs.length === 0 ? 1 :
+    referencedKOs.filter(k => k.humanReviewCompleted).length / referencedKOs.length;
+
+  // Coverage % = fraction of chapter-declared refs that resolve.
+  const totalRefs = conceptIds.size + frameworkIds.size + koIds.size + toolIds.size;
+  const resolved = totalRefs - brokenReferences.length;
+  const coveragePercent = totalRefs === 0 ? 0 : Math.round((resolved / totalRefs) * 100);
+
+  const editorialScore = Math.round(
+    100
+    - (chaptersWithoutObjectives.length * 10)
+    - (duplicateReferences.length * 3)
+    - Math.max(0, (p.chapters.length === 0 ? 30 : 0))
+  );
+  const canonicalCompliance = Math.round(canonicalConceptRatio * 100);
+  const readinessScore = Math.round(
+    coveragePercent * 0.4 + canonicalCompliance * 0.3 + humanReviewRatio * 100 * 0.2 + Math.max(0, editorialScore) * 0.1
+  );
+
+  return {
+    missingConcepts, missingFrameworks, missingKnowledgeObjects, missingClientTools,
+    duplicateReferences, brokenReferences, chaptersWithoutObjectives,
+    canonicalConceptRatio, humanReviewRatio, coveragePercent,
+    readinessScore, editorialScore: Math.max(0, editorialScore), canonicalCompliance,
+  };
+}
+
+// Canonical assets defined in the repository but NOT referenced by any active publication.
+export function unusedCanonicalAssets(s: DataSnapshot) {
+  const used = { concept: new Set<string>(), framework: new Set<string>(), ko: new Set<string>(), tool: new Set<string>() };
+  for (const p of s.publications) if (!p.archived) for (const ch of p.chapters) {
+    ch.conceptIds.forEach(id => used.concept.add(id));
+    ch.frameworkIds.forEach(id => used.framework.add(id));
+    ch.knowledgeObjectIds.forEach(id => used.ko.add(id));
+    ch.clientToolIds.forEach(id => used.tool.add(id));
+  }
+  const isCanonical = (st: string) => st === "Canonical";
+  return {
+    concepts: s.concepts.filter(c => isCanonical(c.status) && !used.concept.has(c.id)).map(c => c.id),
+    frameworks: s.frameworks.filter(f => isCanonical(f.status) && !used.framework.has(f.id)).map(f => f.id),
+    knowledgeObjects: s.knowledgeObjects.filter(k => isCanonical(k.status) && !used.ko.has(k.id)).map(k => k.id),
+    clientTools: s.clientTools.filter(t => isCanonical(t.status) && !used.tool.has(t.id)).map(t => t.id),
+  };
+}
+
+// -------- Manufacturing workflow --------
+export interface PromotionResult {
+  ok: boolean;
+  blockers: string[];
+  nextStage: PublicationStage | null;
+}
+
+export function validatePublicationPromotion(
+  p: PublicationBlueprint, target: PublicationStage, s: DataSnapshot,
+): PromotionResult {
+  const cov = publicationCoverage(p, s);
+  const blockers: string[] = [];
+  if (p.chapters.length === 0) blockers.push("Publication has no chapters.");
+  if (cov.brokenReferences.length > 0) blockers.push(`${cov.brokenReferences.length} broken references must be resolved.`);
+  if (target === "QA" || target === "Canonical" || target === "Released") {
+    if (cov.chaptersWithoutObjectives.length > 0) blockers.push(`Chapters missing learning objectives: ${cov.chaptersWithoutObjectives.join(", ")}.`);
+    if (cov.humanReviewRatio < 1) blockers.push("Referenced AI-generated knowledge objects require human review completion.");
+  }
+  if (target === "Canonical" || target === "Released") {
+    if (cov.canonicalCompliance < 80) blockers.push(`Canonical compliance ${cov.canonicalCompliance}% below 80% threshold.`);
+    if (cov.readinessScore < 85) blockers.push(`Readiness score ${cov.readinessScore} below 85 threshold.`);
+  }
+  if (target === "Released") {
+    if (!p.effectiveDate) blockers.push("Effective date required for Released stage.");
+  }
+  return { ok: blockers.length === 0, blockers, nextStage: blockers.length === 0 ? target : null };
+}
+
+export function appendStageHistory(p: PublicationBlueprint, stage: PublicationStage, actor: string, note?: string): StageHistoryEntry[] {
+  return [...p.stageHistory, { stage, at: new Date().toISOString(), actor, note }];
+}
+
+// -------- Release integration --------
+export interface PublicationReleaseReport {
+  publicationId: string;
+  title: string;
+  stage: PublicationStage;
+  coveragePercent: number;
+  readinessScore: number;
+  brokenReferences: number;
+  missingKnowledgeObjects: number;
+  canonicalCompliance: number;
+  humanReviewComplete: boolean;
+  eligible: boolean;
+  blockers: string[];
+}
+
+export function releasePublicationReports(r: Release, s: DataSnapshot): PublicationReleaseReport[] {
+  const pubIds = new Set(r.manifest.filter(m => m.entityType === "publications").flatMap(m => m.ids));
+  return s.publications
+    .filter(p => pubIds.has(p.id))
+    .map(p => {
+      const cov = publicationCoverage(p, s);
+      const eligibility = validatePublicationPromotion(p, "Canonical", s);
+      return {
+        publicationId: p.id,
+        title: p.title,
+        stage: p.manufacturingStage,
+        coveragePercent: cov.coveragePercent,
+        readinessScore: cov.readinessScore,
+        brokenReferences: cov.brokenReferences.length,
+        missingKnowledgeObjects: cov.missingKnowledgeObjects.length,
+        canonicalCompliance: cov.canonicalCompliance,
+        humanReviewComplete: cov.humanReviewRatio >= 1,
+        eligible: eligibility.ok,
+        blockers: eligibility.blockers,
+      };
+    });
+}
+
+// -------- Chapter helpers --------
+export function reorderChapters(chapters: ChapterBlueprint[], fromIndex: number, toIndex: number): ChapterBlueprint[] {
+  const arr = [...chapters];
+  const [moved] = arr.splice(fromIndex, 1);
+  arr.splice(toIndex, 0, moved);
+  return arr.map((c, i) => ({ ...c, order: (i + 1) * 10 }));
+}
+
+export function chapterTree(chapters: ChapterBlueprint[]): { chapter: ChapterBlueprint; depth: number }[] {
+  const sorted = [...chapters].sort((a, b) => a.order - b.order);
+  const byParent = new Map<string | null, ChapterBlueprint[]>();
+  for (const c of sorted) {
+    const key = c.parentChapterId ?? null;
+    if (!byParent.has(key)) byParent.set(key, []);
+    byParent.get(key)!.push(c);
+  }
+  const out: { chapter: ChapterBlueprint; depth: number }[] = [];
+  const walk = (parent: string | null, depth: number) => {
+    for (const ch of byParent.get(parent) ?? []) {
+      out.push({ chapter: ch, depth });
+      walk(ch.id, depth + 1);
+    }
+  };
+  walk(null, 0);
+  return out;
+}
+
+// Marker used by unused-asset detector when nothing references an asset.
+export const _WS2_STAGES: readonly PublicationStage[] = PUBLICATION_STAGES;
+// Marker export retained so schema import survives tree-shaking.
+export type { PresentationLink, ChapterBlueprint };
