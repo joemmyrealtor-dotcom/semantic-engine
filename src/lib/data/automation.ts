@@ -144,10 +144,10 @@ function buildEntityContext(s: DataSnapshot, scope: AutomationEntityScope, entit
   ctx.owner = e.owner ?? e.steward;
   // readiness where applicable
   switch (found.kind) {
-    case "publication":  ctx.readinessScore = publicationCoverage(e as PublicationBlueprint, s).readinessScore; break;
-    case "clientToolkit":ctx.readinessScore = toolkitCoverage(e as ClientToolkit, s).readinessScore; break;
-    case "aiPack":       ctx.readinessScore = aiPackCoverage(e as AIPack, s).readinessScore; break;
-    case "agent":        ctx.readinessScore = agentCoverage(e as Agent, s).readinessScore; break;
+    case "publication":  ctx.readinessScore = publicationCoverage(found.entity as PublicationBlueprint, s).readinessScore; break;
+    case "clientToolkit":ctx.readinessScore = toolkitCoverage(found.entity as ClientToolkit, s).readinessScore; break;
+    case "aiPack":       ctx.readinessScore = aiPackCoverage(found.entity as AIPack, s).readinessScore; break;
+    case "agent":        ctx.readinessScore = agentCoverage(found.entity as Agent, s).readinessScore; break;
     default: ctx.readinessScore = 0;
   }
   return ctx;
