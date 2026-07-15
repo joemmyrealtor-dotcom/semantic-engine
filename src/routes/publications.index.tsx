@@ -117,7 +117,10 @@ function PublicationRegistryPage() {
         eyebrow="Publication Manufacturing Studio"
         title="Publications"
         description="Every publication blueprint, its manufacturing stage, coverage health, and QA readiness."
-        actions={<Button onClick={create}><Plus className="size-4 mr-1" /> Create Publication</Button>}
+        actions={<div className="flex gap-2">
+          <Button variant="outline" onClick={() => navigate({ to: "/publications/new" })}>Assemble from Concepts…</Button>
+          <Button onClick={create}><Plus className="size-4 mr-1" /> Create Publication</Button>
+        </div>}
       />
       <PageBody>
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2 mb-6">
