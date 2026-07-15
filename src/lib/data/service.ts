@@ -1,8 +1,9 @@
 import type {
   Concept, Framework, KnowledgeObject, KnowledgeObjectType,
-  PublicationBlueprint, Release, ClientTool, DataSnapshot,
+  PublicationBlueprint, ChapterBlueprint, Release, ClientTool, DataSnapshot,
+  PublicationStage, StageHistoryEntry, PresentationLink,
 } from "./schema";
-import { ID_PATTERNS } from "./schema";
+import { ID_PATTERNS, PUBLICATION_STAGES } from "./schema";
 import { Repo } from "./repository";
 
 // ---------- Validation ----------
@@ -42,11 +43,20 @@ export function buildGraph(s: DataSnapshot): { nodes: GraphNode[]; edges: GraphE
     for (const fId of t.sourceFrameworkIds) edges.push({ from: t.id, to: fId, kind: "sources-framework" });
   }
   for (const p of s.publications) {
+    if (p.archived) continue;
     nodes.push({ id: p.id, label: p.title, kind: "Publication" });
     for (const ch of p.chapters) {
-      for (const cId of ch.conceptIds) edges.push({ from: p.id, to: cId, kind: "publishes-concept" });
-      for (const fId of ch.frameworkIds) edges.push({ from: p.id, to: fId, kind: "publishes-framework" });
+      nodes.push({ id: ch.id, label: ch.title, kind: "Chapter" });
+      edges.push({ from: p.id, to: ch.id, kind: "contains-chapter" });
+      for (const cId of ch.conceptIds) edges.push({ from: ch.id, to: cId, kind: "publishes-concept" });
+      for (const fId of ch.frameworkIds) edges.push({ from: ch.id, to: fId, kind: "publishes-framework" });
+      for (const kId of ch.knowledgeObjectIds) edges.push({ from: ch.id, to: kId, kind: "publishes-ko" });
+      for (const tId of ch.clientToolIds) edges.push({ from: ch.id, to: tId, kind: "publishes-tool" });
     }
+  }
+  for (const r of s.releases) {
+    nodes.push({ id: r.id, label: r.name, kind: "Release" });
+    for (const m of r.manifest) for (const id of m.ids) edges.push({ from: r.id, to: id, kind: `releases-${m.entityType}` });
   }
   return { nodes, edges };
 }
