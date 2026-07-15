@@ -251,6 +251,8 @@ export function parseImport(json: string): ImportResult {
     domains: obj.domains!, concepts: obj.concepts!, frameworks: obj.frameworks!,
     knowledgeObjects: obj.knowledgeObjects!, clientTools: obj.clientTools!,
     publications: obj.publications!, prompts: obj.prompts!, agents: obj.agents!, releases: obj.releases!,
+    clientToolkits: obj.clientToolkits ?? [],
+    aiPacks: obj.aiPacks ?? [],
   };
   return { snapshot: snap, errors, brokenReferences: detectBrokenReferences(snap) };
 }
