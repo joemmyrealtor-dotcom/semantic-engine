@@ -178,6 +178,78 @@ export function runValidations(): number {
   const evFail = runAgentEvaluation(ev, "I will insult the user without citing anything.");
   check("runAgentEvaluation fails on prohibited or missing citation", evFail.status === "fail");
 
+  // ---- Workstream 6 — Knowledge Intelligence checks ----
+  // Import lazily so this harness continues to run standalone.
+  const {
+    buildUniversalIndex, universalSearch, knowledgeHealth,
+    detectDuplicates, validateDependencies, impactAnalysis, inspectRelationships,
+    releaseIntelligence,
+  } = require("./intelligence") as typeof import("./intelligence");
+
+  const snapWithConcepts: DataSnapshot = {
+    ...(snap as DataSnapshot),
+    concepts: [
+      {
+        id: "CR-999-001", canonicalName: "Test Concept", canonicalDefinition: "d",
+        purpose: "p", scope: "s", exclusions: "", domainIds: [], aliases: ["Test Concept Alias"],
+        keywords: ["testing"], relatedConceptIds: [], frameworkIds: [], audience: "a",
+        readingLevel: "advanced", aiRetrievalTags: [], steward: "T", status: "Canonical", version: "1.0.0",
+        reviewCadenceMonths: 6, lastReviewedAt: new Date().toISOString(),
+        humanReviewCompleted: true, manufacturingStatus: "Canonical",
+        publicationLinks: [], clientToolkitLinks: [], aiPackLinks: [],
+        createdAt: now, updatedAt: now,
+      },
+      {
+        id: "CR-999-002", canonicalName: "Test Concept", canonicalDefinition: "d",
+        purpose: "p", scope: "s", exclusions: "", domainIds: [], aliases: [],
+        keywords: [], relatedConceptIds: [], frameworkIds: [], audience: "a",
+        readingLevel: "advanced", aiRetrievalTags: [], steward: "T", status: "Draft", version: "0.1.0",
+        reviewCadenceMonths: 6, lastReviewedAt: null,
+        humanReviewCompleted: false, manufacturingStatus: "Draft",
+        publicationLinks: [], clientToolkitLinks: [], aiPackLinks: [],
+        createdAt: now, updatedAt: now,
+      },
+    ],
+    releases: [{
+      id: "LKR-9.9.999", name: "Test release", stage: "Planned", version: "9.9.999",
+      manifest: [{ entityType: "concepts", ids: ["CR-999-001"] }],
+      changelog: [], releaseNotes: "", validationSummary: "", editorialReview: "",
+      qaEvidence: "", traceability: "", knownIssues: [], migrationNotes: "",
+      gateChecklist: [{ id: "G1", label: "gate", passed: true }],
+      blockingErrors: 0, alignmentWarnings: 0, steward: "T",
+      createdAt: now, updatedAt: now,
+    }],
+  } as DataSnapshot;
+
+  const index = buildUniversalIndex(snapWithConcepts);
+  check("universal index includes every kind for concepts", index.filter(a => a.kind === "Concept").length >= 2);
+  check("universal index includes releases", index.some(a => a.kind === "Release"));
+
+  const hits = universalSearch(index, "test concept");
+  check("universal search returns ranked hits", hits.length >= 2 && hits[0].score > 0);
+  check("universal search sorts by score", hits[0].score >= hits[hits.length - 1].score);
+
+  const dupes = detectDuplicates(snapWithConcepts);
+  check("duplicate detection finds identical concept titles", dupes.some(d => d.kind === "Concept" && d.confidence >= 85));
+
+  const findings = validateDependencies(snapWithConcepts);
+  check("dependency validation returns findings array", Array.isArray(findings));
+
+  const h = knowledgeHealth(snapWithConcepts);
+  check("knowledge health overall in 0..100", h.overall >= 0 && h.overall <= 100);
+  check("knowledge health emits recommendations", h.recommendations.length >= 1);
+
+  const impact = impactAnalysis("CR-999-001", snapWithConcepts);
+  check("impact analysis returns risk level", ["Low","Medium","High","Critical"].includes(impact.risk));
+  check("impact analysis includes release when release manifests concept", impact.affectedReleases.includes("LKR-9.9.999"));
+
+  const insp = inspectRelationships("CR-999-001", snapWithConcepts);
+  check("relationship inspector returns edge arrays", Array.isArray(insp.incoming) && Array.isArray(insp.outgoing));
+
+  const ri = releaseIntelligence(snapWithConcepts.releases[0], snapWithConcepts);
+  check("release intelligence returns confidence in 0..100", ri.confidenceScore >= 0 && ri.confidenceScore <= 100);
+  check("release intelligence lists no missing assets when manifest resolves", ri.assetsMissing.length === 0);
+
   console.log(`OK ${count} checks`);
   return count;
 }
