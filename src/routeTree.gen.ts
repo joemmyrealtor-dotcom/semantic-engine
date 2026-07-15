@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as RepositoryRouteImport } from './routes/repository'
 import { Route as PromptsRouteImport } from './routes/prompts'
 import { Route as OperationsRouteImport } from './routes/operations'
+import { Route as KnowledgeRouteImport } from './routes/knowledge'
 import { Route as GraphRouteImport } from './routes/graph'
 import { Route as GovernanceRouteImport } from './routes/governance'
 import { Route as DataRouteImport } from './routes/data'
@@ -48,6 +49,11 @@ const PromptsRoute = PromptsRouteImport.update({
 const OperationsRoute = OperationsRouteImport.update({
   id: '/operations',
   path: '/operations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KnowledgeRoute = KnowledgeRouteImport.update({
+  id: '/knowledge',
+  path: '/knowledge',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GraphRoute = GraphRouteImport.update({
@@ -166,6 +172,7 @@ export interface FileRoutesByFullPath {
   '/data': typeof DataRoute
   '/governance': typeof GovernanceRoute
   '/graph': typeof GraphRoute
+  '/knowledge': typeof KnowledgeRoute
   '/operations': typeof OperationsRoute
   '/prompts': typeof PromptsRoute
   '/repository': typeof RepositoryRoute
@@ -193,6 +200,7 @@ export interface FileRoutesByTo {
   '/data': typeof DataRoute
   '/governance': typeof GovernanceRoute
   '/graph': typeof GraphRoute
+  '/knowledge': typeof KnowledgeRoute
   '/operations': typeof OperationsRoute
   '/prompts': typeof PromptsRoute
   '/repository': typeof RepositoryRoute
@@ -221,6 +229,7 @@ export interface FileRoutesById {
   '/data': typeof DataRoute
   '/governance': typeof GovernanceRoute
   '/graph': typeof GraphRoute
+  '/knowledge': typeof KnowledgeRoute
   '/operations': typeof OperationsRoute
   '/prompts': typeof PromptsRoute
   '/repository': typeof RepositoryRoute
@@ -250,6 +259,7 @@ export interface FileRouteTypes {
     | '/data'
     | '/governance'
     | '/graph'
+    | '/knowledge'
     | '/operations'
     | '/prompts'
     | '/repository'
@@ -277,6 +287,7 @@ export interface FileRouteTypes {
     | '/data'
     | '/governance'
     | '/graph'
+    | '/knowledge'
     | '/operations'
     | '/prompts'
     | '/repository'
@@ -304,6 +315,7 @@ export interface FileRouteTypes {
     | '/data'
     | '/governance'
     | '/graph'
+    | '/knowledge'
     | '/operations'
     | '/prompts'
     | '/repository'
@@ -332,6 +344,7 @@ export interface RootRouteChildren {
   DataRoute: typeof DataRoute
   GovernanceRoute: typeof GovernanceRoute
   GraphRoute: typeof GraphRoute
+  KnowledgeRoute: typeof KnowledgeRoute
   OperationsRoute: typeof OperationsRoute
   PromptsRoute: typeof PromptsRoute
   RepositoryRoute: typeof RepositoryRoute
@@ -376,6 +389,13 @@ declare module '@tanstack/react-router' {
       path: '/operations'
       fullPath: '/operations'
       preLoaderRoute: typeof OperationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/knowledge': {
+      id: '/knowledge'
+      path: '/knowledge'
+      fullPath: '/knowledge'
+      preLoaderRoute: typeof KnowledgeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/graph': {
@@ -540,6 +560,7 @@ const rootRouteChildren: RootRouteChildren = {
   DataRoute: DataRoute,
   GovernanceRoute: GovernanceRoute,
   GraphRoute: GraphRoute,
+  KnowledgeRoute: KnowledgeRoute,
   OperationsRoute: OperationsRoute,
   PromptsRoute: PromptsRoute,
   RepositoryRoute: RepositoryRoute,
