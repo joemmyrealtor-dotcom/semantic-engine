@@ -84,6 +84,8 @@ export function migrateSnapshot(s: DataSnapshot): DataSnapshot {
     ...s,
     concepts,
     publications,
+    automations: (s.automations ?? []).map(r => ({ ...r })),
+    automationRuns: (s.automationRuns ?? []).map(r => ({ ...r })),
     clientToolkits: (s.clientToolkits ?? []).map(tk => ({
       ...tk,
       sections: (tk.sections ?? []).map(sec => ({ ...sec, presentations: sec.presentations ?? [] })),
