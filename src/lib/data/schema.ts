@@ -33,8 +33,8 @@ export type ManufacturingStatus = "Draft" | "Editorial" | "QA" | "Canonical";
 
 export const MANUFACTURING_STATUSES: ManufacturingStatus[] = ["Draft", "Editorial", "QA", "Canonical"];
 
-// Workstream 2 — unified publication manufacturing pipeline.
-// Note: legacy "Review" stage was folded into "SME Review" in schema v2.
+// Workstream 2/3 — unified manufacturing pipeline shared by
+// publications, toolkits, and AI packs.
 export type PublicationStage =
   | "Draft"
   | "Editorial"
@@ -46,6 +46,10 @@ export type PublicationStage =
 export const PUBLICATION_STAGES: PublicationStage[] = [
   "Draft", "Editorial", "SME Review", "QA", "Canonical", "Released",
 ];
+
+// Alias for the shared pipeline (used by toolkits and AI packs).
+export type ManufacturingStage = PublicationStage;
+export const MANUFACTURING_STAGES: ManufacturingStage[] = PUBLICATION_STAGES;
 
 export type PublicationType =
   | "Book" | "Guide" | "Course" | "Toolkit" | "Playbook" | "Report" | "Reference";
@@ -70,7 +74,7 @@ export interface PresentationLink {
 }
 
 export interface StageHistoryEntry {
-  stage: PublicationStage;
+  stage: ManufacturingStage;
   at: string;
   actor: string;
   note?: string;
@@ -106,7 +110,7 @@ export interface Timestamped {
 }
 
 export interface Domain extends Timestamped {
-  id: string;               // DOM-###
+  id: string;
   name: string;
   summary: string;
   steward: string;
@@ -115,7 +119,7 @@ export interface Domain extends Timestamped {
 }
 
 export interface Concept extends Timestamped {
-  id: string;               // CR-DDD-###
+  id: string;
   canonicalName: string;
   canonicalDefinition: string;
   purpose: string;
@@ -135,15 +139,14 @@ export interface Concept extends Timestamped {
   reviewCadenceMonths: number;
   lastReviewedAt: string | null;
   humanReviewCompleted: boolean;
-  // Canonical Knowledge Core extensions
   manufacturingStatus: ManufacturingStatus;
-  publicationLinks: string[];   // PL-### module ids traced to this concept family
-  clientToolkitLinks: string[]; // W-/C-/DT- tool ids packaged for clients
-  aiPackLinks: string[];        // PR-### / AG-### composed into AI packs
+  publicationLinks: string[];
+  clientToolkitLinks: string[];
+  aiPackLinks: string[];
 }
 
 export interface Framework extends Timestamped {
-  id: string;               // F-###
+  id: string;
   name: string;
   mission: string;
   decisionSolved: string;
@@ -161,7 +164,7 @@ export interface Framework extends Timestamped {
 }
 
 export interface KnowledgeObject extends Timestamped {
-  id: string;               // KO-######
+  id: string;
   type: KnowledgeObjectType;
   title: string;
   body: string;
@@ -178,7 +181,7 @@ export interface KnowledgeObject extends Timestamped {
 }
 
 export interface ClientTool extends Timestamped {
-  id: string;               // W-### | C-### | DT-###
+  id: string;
   kind: "Worksheet" | "Checklist" | "Decision Aid";
   name: string;
   purpose: string;
@@ -193,7 +196,7 @@ export interface ClientTool extends Timestamped {
 }
 
 export interface ChapterBlueprint {
-  id: string;               // CH-###
+  id: string;
   title: string;
   learningObjectives: string[];
   domainIds: string[];
@@ -201,10 +204,9 @@ export interface ChapterBlueprint {
   frameworkIds: string[];
   knowledgeObjectIds: string[];
   clientToolIds: string[];
-  presentationLinks: string[];              // legacy id list (Workstream 1)
+  presentationLinks: string[];
   reviewStatus: Status;
   order: number;
-  // Workstream 2 additions
   description: string;
   editorialNotes: string;
   estimatedEffortHours: number;
@@ -215,7 +217,7 @@ export interface ChapterBlueprint {
 }
 
 export interface PublicationBlueprint extends Timestamped {
-  id: string;               // PL-###
+  id: string;
   title: string;
   audience: string;
   purpose: string;
@@ -223,7 +225,6 @@ export interface PublicationBlueprint extends Timestamped {
   status: Status;
   version: string;
   steward: string;
-  // Workstream 2 additions
   description: string;
   frameworkId: string | null;
   tags: string[];
@@ -240,7 +241,7 @@ export interface PublicationBlueprint extends Timestamped {
 }
 
 export interface Prompt extends Timestamped {
-  id: string;               // PR-###
+  id: string;
   name: string;
   family: PromptFamily;
   purpose: string;
@@ -253,7 +254,7 @@ export interface Prompt extends Timestamped {
 }
 
 export interface Agent extends Timestamped {
-  id: string;               // AG-###
+  id: string;
   name: string;
   role: string;
   responsibilities: string[];
@@ -264,7 +265,7 @@ export interface Agent extends Timestamped {
 }
 
 export interface Release extends Timestamped {
-  id: string;               // LKR-#.#.###
+  id: string;
   name: string;
   stage: ReleaseStage;
   version: string;
@@ -283,6 +284,194 @@ export interface Release extends Timestamped {
   steward: string;
 }
 
+// ===================================================================
+// Workstream 3 — Client Toolkits
+// ===================================================================
+
+export type ClientToolkitType =
+  | "Advisor Toolkit"
+  | "Client Delivery Kit"
+  | "Workshop Kit"
+  | "Onboarding Kit"
+  | "Assessment Kit"
+  | "Playbook";
+
+export const CLIENT_TOOLKIT_TYPES: ClientToolkitType[] = [
+  "Advisor Toolkit","Client Delivery Kit","Workshop Kit","Onboarding Kit","Assessment Kit","Playbook",
+];
+
+export type ClientSegment =
+  | "First-Time Buyer"
+  | "Move-Up Buyer"
+  | "Downsizer"
+  | "Investor"
+  | "Advisor"
+  | "Enterprise";
+
+export const CLIENT_SEGMENTS: ClientSegment[] = [
+  "First-Time Buyer","Move-Up Buyer","Downsizer","Investor","Advisor","Enterprise",
+];
+
+export interface ClientToolkitSection {
+  id: string;                              // TS-###
+  title: string;
+  description: string;
+  order: number;
+  parentSectionId: string | null;
+  objective: string;                       // learning or delivery objective
+  conceptIds: string[];
+  frameworkIds: string[];
+  knowledgeObjectIds: string[];
+  clientToolIds: string[];
+  publicationIds: string[];
+  presentations: PresentationLink[];
+  estimatedDurationMinutes: number;
+  facilitatorNotes: string;
+  clientNotes: string;
+  manufacturingStage: ManufacturingStage;
+  humanReviewCompleted: boolean;
+}
+
+export interface ClientToolkit extends Timestamped {
+  id: string;                              // TK-###
+  title: string;
+  description: string;
+  purpose: string;
+  audience: string;
+  toolkitType: ClientToolkitType;
+  clientSegment: ClientSegment;
+  owner: string;
+  steward: string;
+  tags: string[];
+  version: string;
+  status: Status;
+  manufacturingStage: ManufacturingStage;
+  stageHistory: StageHistoryEntry[];
+  effectiveDate: string | null;
+  reviewDate: string | null;
+  archived: boolean;
+
+  sections: ClientToolkitSection[];
+
+  // Top-level canonical references (in addition to per-section refs)
+  conceptIds: string[];
+  frameworkIds: string[];
+  knowledgeObjectIds: string[];
+  clientToolIds: string[];
+  publicationIds: string[];
+  presentations: PresentationLink[];
+
+  deliveryContext: string;
+  usageGuidance: string;
+  facilitatorNotes: string;
+  customizationNotes: string;
+
+  releaseIds: string[];
+  provenanceNotes: string;
+}
+
+// ===================================================================
+// Workstream 3 — AI Packs
+// ===================================================================
+
+export type AIPackUseCase =
+  | "Retrieval"
+  | "Reasoning"
+  | "Drafting"
+  | "Assessment"
+  | "Compliance Review"
+  | "Client-Facing Assistant"
+  | "Internal Advisor";
+
+export const AI_PACK_USE_CASES: AIPackUseCase[] = [
+  "Retrieval","Reasoning","Drafting","Assessment","Compliance Review","Client-Facing Assistant","Internal Advisor",
+];
+
+export type AIPackModuleKind =
+  | "Concept"
+  | "Framework"
+  | "Knowledge Object"
+  | "Publication"
+  | "Client Toolkit"
+  | "Prompt"
+  | "Agent"
+  | "Policy"
+  | "Instruction";
+
+export interface AIPackModule {
+  id: string;                              // AM-###
+  kind: AIPackModuleKind;
+  title: string;
+  referenceId: string | null;              // canonical asset id when kind references a repo entity
+  packInstructions: string;                // pack-specific overlay text (never overrides canonical content)
+  order: number;
+  required: boolean;
+  humanReviewCompleted: boolean;
+}
+
+export type EvaluationStatus = "not-run" | "pass" | "fail";
+
+export interface AIPackEvaluationCase {
+  id: string;                              // EV-###
+  title: string;
+  scenario: string;
+  expectedBehavior: string;
+  prohibitedBehavior: string;
+  requiredCitations: string[];             // ids of concepts/frameworks/KOs
+  reviewerStatus: "Draft" | "Reviewed" | "Approved";
+  status: EvaluationStatus;
+  notes: string;
+  coversConceptIds: string[];
+  coversFrameworkIds: string[];
+  coversPolicyIds: string[];
+}
+
+export interface AIPack extends Timestamped {
+  id: string;                              // AP-###
+  title: string;
+  description: string;
+  purpose: string;
+  useCase: AIPackUseCase;
+  targetModel: string;
+  owner: string;
+  steward: string;
+  tags: string[];
+  version: string;
+  manufacturingStage: ManufacturingStage;
+  stageHistory: StageHistoryEntry[];
+  effectiveDate: string | null;
+  reviewDate: string | null;
+  archived: boolean;
+
+  // Canonical asset references
+  conceptIds: string[];
+  frameworkIds: string[];
+  knowledgeObjectIds: string[];
+  publicationIds: string[];
+  clientToolkitIds: string[];
+  promptIds: string[];
+  agentIds: string[];
+
+  modules: AIPackModule[];
+
+  // Governance and policy
+  systemInstructions: string;
+  usagePolicy: string;
+  boundaryConditions: string;
+  prohibitedUses: string;
+  escalationGuidance: string;
+
+  evaluationCases: AIPackEvaluationCase[];
+
+  provenanceNotes: string;
+  humanReviewCompleted: boolean;
+  releaseIds: string[];
+}
+
+// ===================================================================
+// Snapshot & Entity keys
+// ===================================================================
+
 export type EntityType =
   | "domains"
   | "concepts"
@@ -292,7 +481,9 @@ export type EntityType =
   | "publications"
   | "prompts"
   | "agents"
-  | "releases";
+  | "releases"
+  | "clientToolkits"
+  | "aiPacks";
 
 export interface DataSnapshot {
   schemaVersion: number;
@@ -306,9 +497,11 @@ export interface DataSnapshot {
   prompts: Prompt[];
   agents: Agent[];
   releases: Release[];
+  clientToolkits: ClientToolkit[];
+  aiPacks: AIPack[];
 }
 
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 export const ID_PATTERNS: Record<string, RegExp> = {
   domain: /^DOM-\d{3}$/,
@@ -321,4 +514,9 @@ export const ID_PATTERNS: Record<string, RegExp> = {
   prompt: /^PR-\d{3}$/,
   agent: /^AG-\d{3}$/,
   release: /^LKR-\d+\.\d+\.\d{3}$/,
+  clientToolkit: /^TK-\d{3}$/,
+  toolkitSection: /^TS-\d{3}$/,
+  aiPack: /^AP-\d{3}$/,
+  aiPackModule: /^AM-\d{3}$/,
+  evaluationCase: /^EV-\d{3}$/,
 };
