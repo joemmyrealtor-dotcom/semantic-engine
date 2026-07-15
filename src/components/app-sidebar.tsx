@@ -1,10 +1,11 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Library, Network, BookOpen, Wrench, ScrollText, Bot, Package, ShieldCheck, Database, PenTool } from "lucide-react";
+import { LayoutDashboard, Library, Network, BookOpen, Wrench, ScrollText, Bot, Package, ShieldCheck, Database, PenTool, BookMarked } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const items = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/repository", label: "Repository", icon: Library },
+  { to: "/concepts", label: "Concept Registry", icon: BookMarked },
   { to: "/graph", label: "Relationships", icon: Network },
   { to: "/knowledge-objects/new", label: "KO Factory", icon: PenTool },
   { to: "/client-tools/new", label: "Client Tools", icon: Wrench },
