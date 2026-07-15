@@ -77,6 +77,10 @@ export const seedConcepts: Concept[] = conceptSeed.map(([id, name, def, domainId
   reviewCadenceMonths: 12,
   lastReviewedAt: now,
   humanReviewCompleted: true,
+  manufacturingStatus: "Canonical",
+  publicationLinks: [],
+  clientToolkitLinks: [],
+  aiPackLinks: [],
   ...ts,
 }));
 
