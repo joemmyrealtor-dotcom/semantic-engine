@@ -2,6 +2,8 @@ import type {
   Concept, Framework, KnowledgeObject, KnowledgeObjectType,
   PublicationBlueprint, ChapterBlueprint, Release, ClientTool, DataSnapshot,
   PublicationStage, StageHistoryEntry, PresentationLink,
+  ClientToolkit, ClientToolkitSection, AIPack, AIPackModule, AIPackEvaluationCase,
+  ManufacturingStage,
 } from "./schema";
 import { ID_PATTERNS, PUBLICATION_STAGES } from "./schema";
 import { Repo } from "./repository";
