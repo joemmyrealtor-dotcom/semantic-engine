@@ -29,6 +29,7 @@ import { Route as FrameworksIdRouteImport } from './routes/frameworks.$id'
 import { Route as ConceptsIdRouteImport } from './routes/concepts.$id'
 import { Route as ClientToolsNewRouteImport } from './routes/client-tools.new'
 import { Route as ClientToolkitsIdRouteImport } from './routes/client-toolkits.$id'
+import { Route as AutomationsNewRouteImport } from './routes/automations.new'
 import { Route as AutomationsIdRouteImport } from './routes/automations.$id'
 import { Route as AiPacksIdRouteImport } from './routes/ai-packs.$id'
 import { Route as AgentsIdRouteImport } from './routes/agents.$id'
@@ -133,6 +134,11 @@ const ClientToolkitsIdRoute = ClientToolkitsIdRouteImport.update({
   path: '/client-toolkits/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AutomationsNewRoute = AutomationsNewRouteImport.update({
+  id: '/automations/new',
+  path: '/automations/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AutomationsIdRoute = AutomationsIdRouteImport.update({
   id: '/automations/$id',
   path: '/automations/$id',
@@ -159,6 +165,7 @@ export interface FileRoutesByFullPath {
   '/agents/$id': typeof AgentsIdRoute
   '/ai-packs/$id': typeof AiPacksIdRoute
   '/automations/$id': typeof AutomationsIdRoute
+  '/automations/new': typeof AutomationsNewRoute
   '/client-toolkits/$id': typeof ClientToolkitsIdRoute
   '/client-tools/new': typeof ClientToolsNewRoute
   '/concepts/$id': typeof ConceptsIdRoute
@@ -184,6 +191,7 @@ export interface FileRoutesByTo {
   '/agents/$id': typeof AgentsIdRoute
   '/ai-packs/$id': typeof AiPacksIdRoute
   '/automations/$id': typeof AutomationsIdRoute
+  '/automations/new': typeof AutomationsNewRoute
   '/client-toolkits/$id': typeof ClientToolkitsIdRoute
   '/client-tools/new': typeof ClientToolsNewRoute
   '/concepts/$id': typeof ConceptsIdRoute
@@ -210,6 +218,7 @@ export interface FileRoutesById {
   '/agents/$id': typeof AgentsIdRoute
   '/ai-packs/$id': typeof AiPacksIdRoute
   '/automations/$id': typeof AutomationsIdRoute
+  '/automations/new': typeof AutomationsNewRoute
   '/client-toolkits/$id': typeof ClientToolkitsIdRoute
   '/client-tools/new': typeof ClientToolsNewRoute
   '/concepts/$id': typeof ConceptsIdRoute
@@ -237,6 +246,7 @@ export interface FileRouteTypes {
     | '/agents/$id'
     | '/ai-packs/$id'
     | '/automations/$id'
+    | '/automations/new'
     | '/client-toolkits/$id'
     | '/client-tools/new'
     | '/concepts/$id'
@@ -262,6 +272,7 @@ export interface FileRouteTypes {
     | '/agents/$id'
     | '/ai-packs/$id'
     | '/automations/$id'
+    | '/automations/new'
     | '/client-toolkits/$id'
     | '/client-tools/new'
     | '/concepts/$id'
@@ -287,6 +298,7 @@ export interface FileRouteTypes {
     | '/agents/$id'
     | '/ai-packs/$id'
     | '/automations/$id'
+    | '/automations/new'
     | '/client-toolkits/$id'
     | '/client-tools/new'
     | '/concepts/$id'
@@ -313,6 +325,7 @@ export interface RootRouteChildren {
   AgentsIdRoute: typeof AgentsIdRoute
   AiPacksIdRoute: typeof AiPacksIdRoute
   AutomationsIdRoute: typeof AutomationsIdRoute
+  AutomationsNewRoute: typeof AutomationsNewRoute
   ClientToolkitsIdRoute: typeof ClientToolkitsIdRoute
   ClientToolsNewRoute: typeof ClientToolsNewRoute
   ConceptsIdRoute: typeof ConceptsIdRoute
@@ -471,6 +484,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClientToolkitsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/automations/new': {
+      id: '/automations/new'
+      path: '/automations/new'
+      fullPath: '/automations/new'
+      preLoaderRoute: typeof AutomationsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/automations/$id': {
       id: '/automations/$id'
       path: '/automations/$id'
@@ -505,6 +525,7 @@ const rootRouteChildren: RootRouteChildren = {
   AgentsIdRoute: AgentsIdRoute,
   AiPacksIdRoute: AiPacksIdRoute,
   AutomationsIdRoute: AutomationsIdRoute,
+  AutomationsNewRoute: AutomationsNewRoute,
   ClientToolkitsIdRoute: ClientToolkitsIdRoute,
   ClientToolsNewRoute: ClientToolsNewRoute,
   ConceptsIdRoute: ConceptsIdRoute,
