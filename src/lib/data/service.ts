@@ -478,18 +478,32 @@ export function validatePublicationPromotion(
   const blockers: string[] = [];
   if (p.chapters.length === 0) blockers.push("Publication has no chapters.");
   if (cov.brokenReferences.length > 0) blockers.push(`${cov.brokenReferences.length} broken references must be resolved.`);
+  const targetIdx = PUBLICATION_STAGES.indexOf(target);
   if (target === "QA" || target === "Canonical" || target === "Released") {
     if (cov.chaptersWithoutObjectives.length > 0) blockers.push(`Chapters missing learning objectives: ${cov.chaptersWithoutObjectives.join(", ")}.`);
     if (cov.humanReviewRatio < 1) blockers.push("Referenced AI-generated knowledge objects require human review completion.");
+    // Chapter stage alignment: every chapter must be at least one stage behind the publication target.
+    const minChapterIdx = Math.max(0, targetIdx - 1);
+    const lagging = p.chapters.filter(c => PUBLICATION_STAGES.indexOf(c.manufacturingStage) < minChapterIdx);
+    if (lagging.length > 0) blockers.push(`Chapters not yet at ${PUBLICATION_STAGES[minChapterIdx]}: ${lagging.map(c => c.id).join(", ")}.`);
   }
   if (target === "Canonical" || target === "Released") {
     if (cov.canonicalCompliance < 80) blockers.push(`Canonical compliance ${cov.canonicalCompliance}% below 80% threshold.`);
     if (cov.readinessScore < 85) blockers.push(`Readiness score ${cov.readinessScore} below 85 threshold.`);
+    const chapterLag = p.chapters.filter(c => PUBLICATION_STAGES.indexOf(c.manufacturingStage) < targetIdx);
+    if (target === "Canonical" && chapterLag.length > 0) blockers.push(`Chapters below Canonical: ${chapterLag.map(c => c.id).join(", ")}.`);
   }
   if (target === "Released") {
     if (!p.effectiveDate) blockers.push("Effective date required for Released stage.");
   }
   return { ok: blockers.length === 0, blockers, nextStage: blockers.length === 0 ? target : null };
+}
+
+/** Returns true when the transition is a normal single-step adjacent move (forward or backward by one). */
+export function isAdjacentStageTransition(from: PublicationStage, to: PublicationStage): boolean {
+  const a = PUBLICATION_STAGES.indexOf(from);
+  const b = PUBLICATION_STAGES.indexOf(to);
+  return Math.abs(a - b) === 1;
 }
 
 export function appendStageHistory(p: PublicationBlueprint, stage: PublicationStage, actor: string, note?: string): StageHistoryEntry[] {
