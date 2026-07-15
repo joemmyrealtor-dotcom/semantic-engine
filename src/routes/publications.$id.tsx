@@ -222,15 +222,44 @@ function ChaptersCard({ draft, snapshot, onChapters }: { draft: PublicationBluep
     setSelectedId(id);
   };
 
-  const move = (idx: number, dir: -1 | 1) => {
-    const flat = [...draft.chapters].sort((a, b) => a.order - b.order);
-    const to = idx + dir;
-    if (to < 0 || to >= flat.length) return;
-    onChapters(reorderChapters(flat, idx, to));
+  // Keyboard-accessible reorder: moves within the current parent scope.
+  const move = (chapterId: string, dir: -1 | 1) => {
+    const ch = draft.chapters.find(c => c.id === chapterId); if (!ch) return;
+    const siblings = draft.chapters.filter(c => (c.parentChapterId ?? null) === (ch.parentChapterId ?? null))
+      .sort((a, b) => a.order - b.order);
+    const curIdx = siblings.findIndex(c => c.id === chapterId);
+    const to = curIdx + dir;
+    if (to < 0 || to >= siblings.length) return;
+    onChapters(moveChapter(draft.chapters, chapterId, ch.parentChapterId ?? null, to));
+  };
+
+  // Drag-and-drop reorder: drop onto another chapter's row (same or different parent).
+  const [dragId, setDragId] = useState<string | null>(null);
+  const handleDrop = (targetId: string, mode: "before" | "after" | "child") => {
+    if (!dragId || dragId === targetId) return;
+    if (mode === "child") {
+      if (wouldCreateChapterCycle(draft.chapters, dragId, targetId)) {
+        toast.error("Cannot nest a chapter inside itself or its descendant.");
+        return;
+      }
+      const kids = draft.chapters.filter(c => c.parentChapterId === targetId);
+      onChapters(moveChapter(draft.chapters, dragId, targetId, kids.length));
+      return;
+    }
+    const target = draft.chapters.find(c => c.id === targetId); if (!target) return;
+    const newParent = target.parentChapterId ?? null;
+    if (wouldCreateChapterCycle(draft.chapters, dragId, newParent)) {
+      toast.error("Cannot move — would create a chapter cycle.");
+      return;
+    }
+    const siblings = draft.chapters.filter(c => (c.parentChapterId ?? null) === newParent && c.id !== dragId).sort((a, b) => a.order - b.order);
+    const tIdx = siblings.findIndex(c => c.id === targetId);
+    const idx = mode === "before" ? tIdx : tIdx + 1;
+    onChapters(moveChapter(draft.chapters, dragId, newParent, idx));
   };
 
   const remove = (id: string) => {
-    if (!confirm(`Delete chapter ${id}?`)) return;
+    if (!confirm(`Delete chapter ${id}? Any children will re-parent to top level.`)) return;
     const kept = draft.chapters.filter(c => c.id !== id).map(c => ({ ...c, parentChapterId: c.parentChapterId === id ? null : c.parentChapterId }));
     onChapters(kept);
     if (selectedId === id) setSelectedId(null);
@@ -238,10 +267,16 @@ function ChaptersCard({ draft, snapshot, onChapters }: { draft: PublicationBluep
 
   const updateChapter = (patch: Partial<ChapterBlueprint>) => {
     if (!selected) return;
+    // Parent cycle guard.
+    if (patch.parentChapterId !== undefined && wouldCreateChapterCycle(draft.chapters, selected.id, patch.parentChapterId)) {
+      toast.error("Cannot set parent — would create a cycle.");
+      return;
+    }
     onChapters(draft.chapters.map(c => c.id === selected.id ? { ...c, ...patch } : c));
   };
 
   const sortedFlat = [...draft.chapters].sort((a, b) => a.order - b.order);
+  const invalidParentIds = selected ? new Set([selected.id, ...chapterDescendantIds(draft.chapters, selected.id)]) : new Set<string>();
 
   return (
     <div className="editorial-card p-5 space-y-3">
