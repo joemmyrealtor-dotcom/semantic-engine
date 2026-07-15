@@ -99,6 +99,10 @@ function ConceptEditorPage() {
                 <label htmlFor="hr" className="text-sm">Human review completed</label>
               </div>
             </div>
+
+            <FrameworkMappingCard draft={draft} set={set} />
+            <KnowledgeObjectFamilyCard conceptId={id} />
+            <TraceabilityCard draft={draft} set={set} />
           </div>
 
           <aside className="space-y-4">
@@ -113,18 +117,33 @@ function ConceptEditorPage() {
               </Select>
               <p className="text-xs text-muted-foreground mt-3">Promotion to Canonical requires recorded human review under LKS-001.</p>
             </div>
+
+            <div className="editorial-card p-5">
+              <SectionTitle>Manufacturing Status</SectionTitle>
+              <div className="mb-3"><ManufacturingBadge stage={draft.manufacturingStatus} /></div>
+              <Select value={draft.manufacturingStatus} onValueChange={v => set("manufacturingStatus", v as ManufacturingStatus)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {MANUFACTURING_STATUSES.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <div className="mt-4 flex items-center justify-between text-xs">
+                {MANUFACTURING_STATUSES.map((m, i) => (
+                  <div key={m} className="flex-1 flex items-center">
+                    <div className={`size-2.5 rounded-full ${MANUFACTURING_STATUSES.indexOf(draft.manufacturingStatus) >= i ? "bg-gold" : "bg-muted"}`} />
+                    {i < MANUFACTURING_STATUSES.length - 1 && <div className={`h-px flex-1 ${MANUFACTURING_STATUSES.indexOf(draft.manufacturingStatus) > i ? "bg-gold" : "bg-muted"}`} />}
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground mt-3">Draft → Editorial → QA → Canonical. QA gate requires 0 blocking errors.</p>
+            </div>
+
             <div className="editorial-card p-5 text-sm">
               <SectionTitle>Related</SectionTitle>
               <div className="text-xs uppercase text-slate-ink mb-1">Frameworks referencing this</div>
               <ul className="mb-3">
                 {s.frameworks.filter(f => f.governingConceptIds.includes(id)).map(f =>
                   <li key={f.id}><Link to="/frameworks/$id" params={{ id: f.id }} className="underline">{f.id} · {f.name}</Link></li>
-                )}
-              </ul>
-              <div className="text-xs uppercase text-slate-ink mb-1">Knowledge Objects</div>
-              <ul>
-                {s.knowledgeObjects.filter(k => k.sourceConceptIds.includes(id)).slice(0, 8).map(k =>
-                  <li key={k.id} className="text-sm truncate">{k.id} · {k.title}</li>
                 )}
               </ul>
             </div>
