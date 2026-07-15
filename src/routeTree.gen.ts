@@ -28,6 +28,7 @@ import { Route as FrameworksIdRouteImport } from './routes/frameworks.$id'
 import { Route as ConceptsIdRouteImport } from './routes/concepts.$id'
 import { Route as ClientToolsNewRouteImport } from './routes/client-tools.new'
 import { Route as ClientToolkitsIdRouteImport } from './routes/client-toolkits.$id'
+import { Route as AiPacksIdRouteImport } from './routes/ai-packs.$id'
 
 const RepositoryRoute = RepositoryRouteImport.update({
   id: '/repository',
@@ -124,6 +125,11 @@ const ClientToolkitsIdRoute = ClientToolkitsIdRouteImport.update({
   path: '/client-toolkits/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AiPacksIdRoute = AiPacksIdRouteImport.update({
+  id: '/ai-packs/$id',
+  path: '/ai-packs/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -133,6 +139,7 @@ export interface FileRoutesByFullPath {
   '/graph': typeof GraphRoute
   '/prompts': typeof PromptsRoute
   '/repository': typeof RepositoryRoute
+  '/ai-packs/$id': typeof AiPacksIdRoute
   '/client-toolkits/$id': typeof ClientToolkitsIdRoute
   '/client-tools/new': typeof ClientToolsNewRoute
   '/concepts/$id': typeof ConceptsIdRoute
@@ -154,6 +161,7 @@ export interface FileRoutesByTo {
   '/graph': typeof GraphRoute
   '/prompts': typeof PromptsRoute
   '/repository': typeof RepositoryRoute
+  '/ai-packs/$id': typeof AiPacksIdRoute
   '/client-toolkits/$id': typeof ClientToolkitsIdRoute
   '/client-tools/new': typeof ClientToolsNewRoute
   '/concepts/$id': typeof ConceptsIdRoute
@@ -176,6 +184,7 @@ export interface FileRoutesById {
   '/graph': typeof GraphRoute
   '/prompts': typeof PromptsRoute
   '/repository': typeof RepositoryRoute
+  '/ai-packs/$id': typeof AiPacksIdRoute
   '/client-toolkits/$id': typeof ClientToolkitsIdRoute
   '/client-tools/new': typeof ClientToolsNewRoute
   '/concepts/$id': typeof ConceptsIdRoute
@@ -199,6 +208,7 @@ export interface FileRouteTypes {
     | '/graph'
     | '/prompts'
     | '/repository'
+    | '/ai-packs/$id'
     | '/client-toolkits/$id'
     | '/client-tools/new'
     | '/concepts/$id'
@@ -220,6 +230,7 @@ export interface FileRouteTypes {
     | '/graph'
     | '/prompts'
     | '/repository'
+    | '/ai-packs/$id'
     | '/client-toolkits/$id'
     | '/client-tools/new'
     | '/concepts/$id'
@@ -241,6 +252,7 @@ export interface FileRouteTypes {
     | '/graph'
     | '/prompts'
     | '/repository'
+    | '/ai-packs/$id'
     | '/client-toolkits/$id'
     | '/client-tools/new'
     | '/concepts/$id'
@@ -263,6 +275,7 @@ export interface RootRouteChildren {
   GraphRoute: typeof GraphRoute
   PromptsRoute: typeof PromptsRoute
   RepositoryRoute: typeof RepositoryRoute
+  AiPacksIdRoute: typeof AiPacksIdRoute
   ClientToolkitsIdRoute: typeof ClientToolkitsIdRoute
   ClientToolsNewRoute: typeof ClientToolsNewRoute
   ConceptsIdRoute: typeof ConceptsIdRoute
@@ -412,6 +425,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClientToolkitsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ai-packs/$id': {
+      id: '/ai-packs/$id'
+      path: '/ai-packs/$id'
+      fullPath: '/ai-packs/$id'
+      preLoaderRoute: typeof AiPacksIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -423,6 +443,7 @@ const rootRouteChildren: RootRouteChildren = {
   GraphRoute: GraphRoute,
   PromptsRoute: PromptsRoute,
   RepositoryRoute: RepositoryRoute,
+  AiPacksIdRoute: AiPacksIdRoute,
   ClientToolkitsIdRoute: ClientToolkitsIdRoute,
   ClientToolsNewRoute: ClientToolsNewRoute,
   ConceptsIdRoute: ConceptsIdRoute,
