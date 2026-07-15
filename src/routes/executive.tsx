@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { PageHeader, PageBody } from "@/components/page-header";
 import { KpiCard, SectionTitle, LoadingState, StatusBadge } from "@/components/ui-kit";
 import { useSnapshot } from "@/lib/use-snapshot";
-import { repository } from "@/lib/data/repository";
+import { Repo } from "@/lib/data/repository";
 import {
   computeExecutiveMetrics, manufacturingAnalytics, teamWorkload,
   releaseAnalytics, automationAnalytics, aiEvalAnalytics,
@@ -52,7 +52,7 @@ function ExecutivePage() {
           <button
             onClick={async () => {
               const snap = captureAnalyticsSnapshot(s, "executive-user", "Manual capture");
-              await repository.create("analyticsSnapshots", snap);
+              await Repo.create("analyticsSnapshots", snap);
             }}
             className="text-xs px-3 py-1.5 rounded-md bg-heritage text-heritage-foreground hover:bg-heritage/90"
           >Capture snapshot</button>
@@ -354,7 +354,7 @@ function AlertsTab({ s }: { s: import("@/lib/data/schema").DataSnapshot }) {
                     <button
                       onClick={async () => {
                         const now = new Date().toISOString();
-                        await repository.create("executiveAlerts", {
+                        await Repo.create("executiveAlerts", {
                           id: nextExecutiveAlertId(s),
                           ruleKey: r.ruleKey, severity: r.severity, title: r.title, message: r.message,
                           entityIds: r.entityIds, metricKey: r.metricKey,
@@ -390,7 +390,7 @@ function AlertsTab({ s }: { s: import("@/lib/data/schema").DataSnapshot }) {
                     <button
                       onClick={async () => {
                         const now = new Date().toISOString();
-                        await repository.update("executiveAlerts", a.id, { acknowledgedAt: now, acknowledgedBy: "executive-user" });
+                        await Repo.update("executiveAlerts", a.id, { acknowledgedAt: now, acknowledgedBy: "executive-user" });
                       }}
                       className="text-xs px-2 py-0.5 border border-border rounded hover:bg-muted"
                     >Acknowledge</button>
@@ -416,7 +416,7 @@ function ViewsTab({ s, tab, dateFrom, dateTo }: { s: import("@/lib/data/schema")
             disabled={!name.trim()}
             onClick={async () => {
               const now = new Date().toISOString();
-              await repository.create("savedExecutiveViews", {
+              await Repo.create("savedExecutiveViews", {
                 id: nextSavedViewId(s), name: name.trim(), tab,
                 filters: { dateFrom: dateFrom || null, dateTo: dateTo || null },
                 createdBy: "executive-user", createdAt: now, updatedAt: now,
@@ -436,7 +436,7 @@ function ViewsTab({ s, tab, dateFrom, dateTo }: { s: import("@/lib/data/schema")
                   <span className="font-mono text-xs w-20">{v.id}</span>
                   <span className="flex-1">{v.name} <span className="text-xs text-muted-foreground">· tab {v.tab}</span></span>
                   <button
-                    onClick={async () => { await repository.remove("savedExecutiveViews", v.id); }}
+                    onClick={async () => { await Repo.remove("savedExecutiveViews", v.id); }}
                     className="text-xs px-2 py-0.5 border border-border rounded hover:bg-muted"
                   >Delete</button>
                 </li>
