@@ -323,6 +323,8 @@ export function parseImport(json: string): ImportResult {
     publications: obj.publications!, prompts: obj.prompts!, agents: obj.agents!, releases: obj.releases!,
     clientToolkits: obj.clientToolkits ?? [],
     aiPacks: obj.aiPacks ?? [],
+    automations: obj.automations ?? [],
+    automationRuns: obj.automationRuns ?? [],
   };
   return { snapshot: snap, errors, brokenReferences: detectBrokenReferences(snap) };
 }
