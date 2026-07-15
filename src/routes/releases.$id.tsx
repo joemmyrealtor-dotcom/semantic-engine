@@ -283,3 +283,39 @@ function ReleasePage() {
     </>
   );
 }
+
+function ReleaseIntelligencePanel({ releaseId }: { releaseId: string }) {
+  const s = useSnapshot();
+  if (!s) return null;
+  const r = s.releases.find(x => x.id === releaseId);
+  if (!r) return null;
+  const ri = releaseIntelligence(r, s);
+  const riskTone = ri.dependencyRisk === "Critical" || ri.dependencyRisk === "High" ? "warn"
+    : ri.dependencyRisk === "Medium" ? "gold" : "evergreen";
+  const confTone = ri.confidenceScore >= 85 ? "evergreen" : ri.confidenceScore >= 60 ? "gold" : "warn";
+  return (
+    <div className="editorial-card p-5 mb-2">
+      <SectionTitle hint="Workstream 6 · read-only">Release Intelligence</SectionTitle>
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 mb-3">
+        <KpiCard label="Confidence" value={`${ri.confidenceScore}%`} tone={confTone} />
+        <KpiCard label="Dependency Risk" value={ri.dependencyRisk} tone={riskTone as "warn" | "gold" | "evergreen" | "default"} />
+        <KpiCard label="Assets Included" value={ri.assetsIncluded} />
+        <KpiCard label="Assets Missing" value={ri.assetsMissing.length} tone={ri.assetsMissing.length ? "warn" : "default"} />
+        <KpiCard label="Duplicate Risk" value={ri.duplicateRisk} tone={ri.duplicateRisk ? "gold" : "default"} />
+        <KpiCard label="Health" value={`${ri.health}%`} />
+        <KpiCard label="Outstanding Reviews" value={ri.outstandingReviews} tone={ri.outstandingReviews ? "gold" : "default"} />
+        <KpiCard label="Blocked Promotions" value={ri.blockedPromotions.length} tone={ri.blockedPromotions.length ? "warn" : "default"} />
+      </div>
+      <ul className="text-sm list-disc pl-5 space-y-1">
+        {ri.notes.map(n => <li key={n}>{n}</li>)}
+      </ul>
+      {ri.blockedPromotions.length > 0 && (
+        <div className="mt-2 text-xs text-muted-foreground">
+          Not yet Canonical: {ri.blockedPromotions.map(id => (
+            <Link key={id} to="/knowledge/$id" params={{ id }} className="mr-2 underline">{id}</Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
