@@ -267,6 +267,8 @@ export const seedReleases: Release[] = [
       { entityType: "frameworks", ids: seedFrameworks.map(f => f.id) },
       { entityType: "publications", ids: ["PL-101"] },
       { entityType: "clientTools", ids: seedClientTools.map(t => t.id) },
+      { entityType: "clientToolkits", ids: ["TK-001"] },
+      { entityType: "aiPacks", ids: ["AP-001"] },
     ],
     changelog: [
       "Established canonical baseline for 10 Domains.",
