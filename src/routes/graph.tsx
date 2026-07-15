@@ -12,7 +12,7 @@ export const Route = createFileRoute("/graph")({
   component: GraphPage,
 });
 
-const NODE_KINDS = ["Domain", "Concept", "Framework", "Knowledge", "Client Tool", "Publication", "Chapter", "Release"] as const;
+const NODE_KINDS = ["Domain", "Concept", "Framework", "Knowledge", "Client Tool", "Publication", "Chapter", "Client Toolkit", "AI Pack", "Agent", "Agent Evaluation", "Release"] as const;
 
 // Map node kind to route.
 function routeForNode(kind: string, id: string): { to: string; params?: Record<string, string> } | null {
@@ -20,9 +20,11 @@ function routeForNode(kind: string, id: string): { to: string; params?: Record<s
     case "Concept": return { to: "/concepts/$id", params: { id } };
     case "Framework": return { to: "/frameworks/$id", params: { id } };
     case "Publication": return { to: "/publications/$id", params: { id } };
+    case "Client Toolkit": return { to: "/client-toolkits/$id", params: { id } };
+    case "AI Pack": return { to: "/ai-packs/$id", params: { id } };
+    case "Agent": return { to: "/agents/$id", params: { id } };
     case "Release": return { to: "/releases/$id", params: { id } };
     case "Chapter": {
-      // Chapter routes live inside their publication — link back to Publications registry with search.
       return { to: "/publications" };
     }
     default: return null;

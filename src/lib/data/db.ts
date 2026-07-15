@@ -1,5 +1,5 @@
 import { openDB, type IDBPDatabase } from "idb";
-import { SCHEMA_VERSION, type DataSnapshot, type EntityType } from "./schema";
+import { SCHEMA_VERSION, type DataSnapshot, type EntityType, type PublicationStage } from "./schema";
 import { buildSeedSnapshot } from "./seed";
 
 const DB_NAME = "legacy-platform-v2";
@@ -106,6 +106,36 @@ export function migrateSnapshot(s: DataSnapshot): DataSnapshot {
       knowledgeObjectIds: ap.knowledgeObjectIds ?? [], publicationIds: ap.publicationIds ?? [],
       clientToolkitIds: ap.clientToolkitIds ?? [], promptIds: ap.promptIds ?? [], agentIds: ap.agentIds ?? [],
     })),
+    agents: (s.agents ?? []).map(a => {
+      const stage: PublicationStage = ((a.manufacturingStage as string | undefined) ? mapStatusToStage(a.manufacturingStage as string) : mapStatusToStage(a.status));
+      return {
+        ...a,
+        description: a.description ?? a.role ?? "",
+        purpose: a.purpose ?? a.role ?? "",
+        useCase: a.useCase ?? "Editorial Assistant",
+        targetModel: a.targetModel ?? "",
+        owner: a.owner ?? a.steward ?? "Editorial Board",
+        tags: a.tags ?? [],
+        archived: a.archived ?? false,
+        manufacturingStage: stage,
+        stageHistory: a.stageHistory ?? [{ stage, at: a.createdAt, actor: a.steward ?? "system", note: "Backfilled." }],
+        effectiveDate: a.effectiveDate ?? null,
+        reviewDate: a.reviewDate ?? null,
+        conceptIds: a.conceptIds ?? [], frameworkIds: a.frameworkIds ?? [],
+        knowledgeObjectIds: a.knowledgeObjectIds ?? [], publicationIds: a.publicationIds ?? [],
+        clientToolkitIds: a.clientToolkitIds ?? [], aiPackIds: a.aiPackIds ?? [],
+        clientToolIds: a.clientToolIds ?? [],
+        specifications: a.specifications ?? [],
+        evaluationCases: a.evaluationCases ?? [],
+        usagePolicy: a.usagePolicy ?? "",
+        boundaryConditions: a.boundaryConditions ?? "",
+        prohibitedUses: a.prohibitedUses ?? "",
+        escalationGuidance: a.escalationGuidance ?? "",
+        provenanceNotes: a.provenanceNotes ?? "",
+        humanReviewCompleted: a.humanReviewCompleted ?? false,
+        releaseIds: a.releaseIds ?? [],
+      };
+    }),
   };
 }
 

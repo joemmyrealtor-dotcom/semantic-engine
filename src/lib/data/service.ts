@@ -3,7 +3,7 @@ import type {
   PublicationBlueprint, ChapterBlueprint, Release, ClientTool, DataSnapshot,
   PublicationStage, StageHistoryEntry, PresentationLink,
   ClientToolkit, ClientToolkitSection, AIPack, AIPackModule, AIPackEvaluationCase,
-  ManufacturingStage,
+  ManufacturingStage, Agent, AgentSpecification, AgentEvaluationCase,
 } from "./schema";
 import { ID_PATTERNS, PUBLICATION_STAGES } from "./schema";
 import { Repo } from "./repository";
@@ -96,6 +96,24 @@ export function buildGraph(s: DataSnapshot): { nodes: GraphNode[]; edges: GraphE
       for (const fId of ev.coversFrameworkIds) edges.push({ from: ev.id, to: fId, kind: "covers-framework" });
     }
   }
+  for (const ag of s.agents ?? []) {
+    if (ag.archived) continue;
+    nodes.push({ id: ag.id, label: ag.name || ag.id, kind: "Agent" });
+    for (const pId of ag.governingPromptIds) edges.push({ from: ag.id, to: pId, kind: "agent-prompt" });
+    for (const cId of ag.conceptIds ?? []) edges.push({ from: ag.id, to: cId, kind: "agent-concept" });
+    for (const fId of ag.frameworkIds ?? []) edges.push({ from: ag.id, to: fId, kind: "agent-framework" });
+    for (const kId of ag.knowledgeObjectIds ?? []) edges.push({ from: ag.id, to: kId, kind: "agent-ko" });
+    for (const pId of ag.publicationIds ?? []) edges.push({ from: ag.id, to: pId, kind: "agent-publication" });
+    for (const tkId of ag.clientToolkitIds ?? []) edges.push({ from: ag.id, to: tkId, kind: "agent-toolkit" });
+    for (const apId of ag.aiPackIds ?? []) edges.push({ from: ag.id, to: apId, kind: "agent-pack" });
+    for (const tId of ag.clientToolIds ?? []) edges.push({ from: ag.id, to: tId, kind: "agent-tool" });
+    for (const ev of ag.evaluationCases ?? []) {
+      nodes.push({ id: ev.id, label: ev.title, kind: "Agent Evaluation" });
+      edges.push({ from: ag.id, to: ev.id, kind: "agent-contains-evaluation" });
+      for (const cId of ev.coversConceptIds) edges.push({ from: ev.id, to: cId, kind: "agent-eval-covers-concept" });
+      for (const fId of ev.coversFrameworkIds) edges.push({ from: ev.id, to: fId, kind: "agent-eval-covers-framework" });
+    }
+  }
   for (const r of s.releases) {
     nodes.push({ id: r.id, label: r.name, kind: "Release" });
     for (const m of r.manifest) for (const id of m.ids) edges.push({ from: r.id, to: id, kind: `releases-${m.entityType}` });
@@ -132,6 +150,16 @@ export function detectBrokenReferences(s: DataSnapshot): { source: string; targe
     check(t.id, "concept", t.sourceConceptIds);
     check(t.id, "framework", t.sourceFrameworkIds);
     check(t.id, "knowledge-object", t.sourceKnowledgeObjectIds);
+  }
+  for (const ag of s.agents ?? []) {
+    check(ag.id, "prompt", ag.governingPromptIds);
+    check(ag.id, "concept", ag.conceptIds ?? []);
+    check(ag.id, "framework", ag.frameworkIds ?? []);
+    check(ag.id, "knowledge-object", ag.knowledgeObjectIds ?? []);
+    check(ag.id, "publication", ag.publicationIds ?? []);
+    check(ag.id, "client-toolkit", ag.clientToolkitIds ?? []);
+    check(ag.id, "ai-pack", ag.aiPackIds ?? []);
+    check(ag.id, "client-tool", ag.clientToolIds ?? []);
   }
   return broken;
 }
@@ -1129,5 +1157,245 @@ export function findAIPacksReferencing(s: DataSnapshot, entityId: string): AIPac
   });
 }
 
+// ===================================================================
+// Workstream 4 — Agents (Registry, Studio, Coverage, Promotion)
+// ===================================================================
+
+export function nextAgentId(s: DataSnapshot): string {
+  const n = maxNum(s.agents.map(a => a.id), "AG-");
+  return `AG-${String(n + 1).padStart(3, "0")}`;
+}
+export function nextAgentSpecId(s: DataSnapshot): string {
+  const all = s.agents.flatMap(a => (a.specifications ?? []).map(x => x.id));
+  const n = maxNum(all, "AS-");
+  return `AS-${String(n + 1).padStart(3, "0")}`;
+}
+export function nextAgentEvaluationId(s: DataSnapshot): string {
+  const all = s.agents.flatMap(a => (a.evaluationCases ?? []).map(x => x.id));
+  const n = maxNum(all, "AE-");
+  return `AE-${String(n + 1).padStart(3, "0")}`;
+}
+
+export function activeAgentSpec(a: Agent): AgentSpecification | null {
+  return (a.specifications ?? []).find(s => s.isActive) ?? (a.specifications ?? [])[0] ?? null;
+}
+
+export function duplicateAgent(source: Agent, newId: string, s: DataSnapshot): Agent {
+  let specSeq = maxNum(s.agents.flatMap(a => (a.specifications ?? []).map(x => x.id)), "AS-");
+  let evSeq = maxNum(s.agents.flatMap(a => (a.evaluationCases ?? []).map(x => x.id)), "AE-");
+  const specifications = (source.specifications ?? []).map(sp => {
+    specSeq += 1; return { ...sp, id: `AS-${String(specSeq).padStart(3, "0")}` };
+  });
+  const evaluationCases = (source.evaluationCases ?? []).map(ev => {
+    evSeq += 1; return { ...ev, id: `AE-${String(evSeq).padStart(3, "0")}`, status: "not-run" as const };
+  });
+  const now = new Date().toISOString();
+  return {
+    ...source,
+    id: newId,
+    name: `${source.name} (Copy)`,
+    version: "0.1.0",
+    status: "Draft",
+    manufacturingStage: "Draft",
+    archived: false,
+    humanReviewCompleted: false,
+    specifications,
+    evaluationCases,
+    stageHistory: [{ stage: "Draft", at: now, actor: source.owner || source.steward, note: `Duplicated from ${source.id}.` }],
+    releaseIds: [],
+    createdAt: now, updatedAt: now,
+  };
+}
+
+export interface AgentCoverage {
+  missingPrompts: string[];
+  missingConcepts: string[];
+  missingFrameworks: string[];
+  missingKnowledgeObjects: string[];
+  missingPublications: string[];
+  missingClientToolkits: string[];
+  missingAIPacks: string[];
+  missingClientTools: string[];
+  brokenReferences: { source: string; targetId: string; kind: string }[];
+  evaluationCount: number;
+  evaluationsReviewed: number;
+  evaluationsPassed: number;
+  evaluationsFailed: number;
+  unreviewedEvaluations: string[];
+  failingEvaluations: string[];
+  hasActiveSpecification: boolean;
+  hasSystemPrompt: boolean;
+  hasGovernance: boolean;
+  hasResponsibilities: boolean;
+  provenanceComplete: boolean;
+  canonicalConceptRatio: number;
+  coveragePercent: number;
+  readinessScore: number;
+  editorialScore: number;
+  canonicalCompliance: number;
+}
+
+export function agentCoverage(a: Agent, s: DataSnapshot): AgentCoverage {
+  const missingPrompts = (a.governingPromptIds ?? []).filter(id => !s.prompts.some(p => p.id === id));
+  const missingConcepts = (a.conceptIds ?? []).filter(id => !s.concepts.some(c => c.id === id));
+  const missingFrameworks = (a.frameworkIds ?? []).filter(id => !s.frameworks.some(f => f.id === id));
+  const missingKnowledgeObjects = (a.knowledgeObjectIds ?? []).filter(id => !s.knowledgeObjects.some(k => k.id === id));
+  const missingPublications = (a.publicationIds ?? []).filter(id => !s.publications.some(p => p.id === id));
+  const missingClientToolkits = (a.clientToolkitIds ?? []).filter(id => !s.clientToolkits.some(t => t.id === id));
+  const missingAIPacks = (a.aiPackIds ?? []).filter(id => !s.aiPacks.some(p => p.id === id));
+  const missingClientTools = (a.clientToolIds ?? []).filter(id => !s.clientTools.some(t => t.id === id));
+
+  const brokenReferences = [
+    ...missingPrompts.map(id => ({ source: a.id, targetId: id, kind: "prompt" })),
+    ...missingConcepts.map(id => ({ source: a.id, targetId: id, kind: "concept" })),
+    ...missingFrameworks.map(id => ({ source: a.id, targetId: id, kind: "framework" })),
+    ...missingKnowledgeObjects.map(id => ({ source: a.id, targetId: id, kind: "knowledge-object" })),
+    ...missingPublications.map(id => ({ source: a.id, targetId: id, kind: "publication" })),
+    ...missingClientToolkits.map(id => ({ source: a.id, targetId: id, kind: "client-toolkit" })),
+    ...missingAIPacks.map(id => ({ source: a.id, targetId: id, kind: "ai-pack" })),
+    ...missingClientTools.map(id => ({ source: a.id, targetId: id, kind: "client-tool" })),
+  ];
+
+  const evaluations = a.evaluationCases ?? [];
+  const evaluationCount = evaluations.length;
+  const evaluationsReviewed = evaluations.filter(e => e.reviewerStatus !== "Draft").length;
+  const evaluationsPassed = evaluations.filter(e => e.status === "pass").length;
+  const evaluationsFailed = evaluations.filter(e => e.status === "fail").length;
+  const unreviewedEvaluations = evaluations.filter(e => e.reviewerStatus === "Draft").map(e => e.id);
+  const failingEvaluations = evaluations.filter(e => e.status === "fail").map(e => e.id);
+
+  const spec = activeAgentSpec(a);
+  const hasActiveSpecification = !!spec;
+  const hasSystemPrompt = !!(spec && spec.systemPrompt.trim());
+  const hasGovernance = Boolean(a.usagePolicy?.trim() && a.boundaryConditions?.trim());
+  const hasResponsibilities = (a.responsibilities ?? []).length > 0;
+  const provenanceComplete = Boolean((a.provenanceNotes ?? "").trim());
+
+  const presentConcepts = (a.conceptIds ?? []).filter(id => s.concepts.some(c => c.id === id));
+  const canonicalConceptRatio = presentConcepts.length === 0 ? 1 :
+    presentConcepts.filter(id => {
+      const c = s.concepts.find(x => x.id === id)!;
+      return c.status === "Canonical" || c.status === "Approved";
+    }).length / presentConcepts.length;
+
+  const totalRefs = (a.governingPromptIds?.length ?? 0)
+    + (a.conceptIds?.length ?? 0) + (a.frameworkIds?.length ?? 0)
+    + (a.knowledgeObjectIds?.length ?? 0) + (a.publicationIds?.length ?? 0)
+    + (a.clientToolkitIds?.length ?? 0) + (a.aiPackIds?.length ?? 0)
+    + (a.clientToolIds?.length ?? 0);
+  const resolved = totalRefs - brokenReferences.length;
+  const coveragePercent = totalRefs === 0 ? 100 : Math.round((resolved / totalRefs) * 100);
+  const canonicalCompliance = Math.round(canonicalConceptRatio * 100);
+
+  const editorialScore = Math.max(0, Math.round(
+    100
+    - (hasActiveSpecification ? 0 : 25)
+    - (hasSystemPrompt ? 0 : 20)
+    - (hasGovernance ? 0 : 15)
+    - (hasResponsibilities ? 0 : 10)
+    - unreviewedEvaluations.length * 5
+    - failingEvaluations.length * 10
+    - brokenReferences.length * 3
+  ));
+
+  const evalScore = evaluationCount === 0 ? 0 : (evaluationsPassed / evaluationCount) * 100;
+  const readinessScore = Math.round(
+    coveragePercent * 0.25 + canonicalCompliance * 0.2 + editorialScore * 0.3 + evalScore * 0.25
+  );
+
+  return {
+    missingPrompts, missingConcepts, missingFrameworks, missingKnowledgeObjects,
+    missingPublications, missingClientToolkits, missingAIPacks, missingClientTools,
+    brokenReferences,
+    evaluationCount, evaluationsReviewed, evaluationsPassed, evaluationsFailed,
+    unreviewedEvaluations, failingEvaluations,
+    hasActiveSpecification, hasSystemPrompt, hasGovernance, hasResponsibilities,
+    provenanceComplete, canonicalConceptRatio, coveragePercent,
+    readinessScore, editorialScore, canonicalCompliance,
+  };
+}
+
+export function validateAgentPromotion(a: Agent, target: ManufacturingStage, s: DataSnapshot): PromotionResult {
+  const cov = agentCoverage(a, s);
+  const blockers: string[] = [];
+  if (!a.name.trim()) blockers.push("Agent name is required.");
+  if (!cov.hasActiveSpecification) blockers.push("At least one specification is required.");
+  if (cov.brokenReferences.length > 0) blockers.push(`${cov.brokenReferences.length} broken references must be resolved.`);
+  if (target === "Editorial" || target === "SME Review" || target === "QA" || target === "Canonical" || target === "Released") {
+    if (!cov.hasSystemPrompt) blockers.push("Active specification requires a system prompt.");
+    if (!cov.hasResponsibilities) blockers.push("Responsibilities are required.");
+  }
+  if (target === "SME Review" || target === "QA" || target === "Canonical" || target === "Released") {
+    if (!cov.hasGovernance) blockers.push("Usage policy and boundary conditions are required.");
+  }
+  if (target === "QA" || target === "Canonical" || target === "Released") {
+    if (cov.evaluationCount === 0) blockers.push("At least one evaluation case is required.");
+    if (cov.unreviewedEvaluations.length > 0) blockers.push(`Unreviewed evaluations: ${cov.unreviewedEvaluations.join(", ")}.`);
+    if (cov.failingEvaluations.length > 0) blockers.push(`Failing evaluations must be resolved: ${cov.failingEvaluations.join(", ")}.`);
+  }
+  if (target === "Canonical" || target === "Released") {
+    if (!cov.provenanceComplete) blockers.push("Provenance notes required for canonical release.");
+    if (cov.canonicalCompliance < 80) blockers.push(`Canonical compliance ${cov.canonicalCompliance}% below 80% threshold.`);
+    if (cov.readinessScore < 85) blockers.push(`Readiness score ${cov.readinessScore} below 85 threshold.`);
+    if (!a.humanReviewCompleted) blockers.push("Human review must be completed before canonical release.");
+  }
+  if (target === "Released") {
+    if (!a.effectiveDate) blockers.push("Effective date required for Released stage.");
+  }
+  return { ok: blockers.length === 0, blockers, nextStage: blockers.length === 0 ? target : null };
+}
+
+/** Execute an evaluation case: deterministic pass/fail based on captured actual behavior + expected/prohibited signals. */
+export function runAgentEvaluation(ev: AgentEvaluationCase, actualBehavior: string): AgentEvaluationCase {
+  const text = actualBehavior.toLowerCase();
+  const expected = ev.expectedBehavior.toLowerCase().split(/[.\n]/).map(s => s.trim()).filter(Boolean);
+  const prohibited = ev.prohibitedBehavior.toLowerCase().split(/[.\n]/).map(s => s.trim()).filter(Boolean);
+  const citationsHit = ev.requiredCitations.every(c => actualBehavior.includes(c));
+  const expectedHit = expected.length === 0 ? true : expected.some(e => text.includes(e.slice(0, Math.min(24, e.length))));
+  const prohibitedHit = prohibited.some(p => p.length > 4 && text.includes(p.slice(0, Math.min(24, p.length))));
+  const passed = citationsHit && expectedHit && !prohibitedHit;
+  return { ...ev, status: passed ? "pass" : "fail", notes: `${ev.notes}\n[${new Date().toISOString()}] ${passed ? "PASS" : "FAIL"} — ${passed ? "expected behavior matched" : (prohibitedHit ? "prohibited behavior detected" : !citationsHit ? "required citations missing" : "expected behavior missing")}`.trim() };
+}
+
+export interface AgentReleaseReport {
+  agentId: string; name: string; stage: ManufacturingStage;
+  coveragePercent: number; readinessScore: number;
+  brokenReferences: number; unreviewedEvaluations: number;
+  failingEvaluations: number;
+  canonicalCompliance: number; humanReviewComplete: boolean;
+  eligible: boolean; blockers: string[];
+}
+export function releaseAgentReports(r: Release, s: DataSnapshot): AgentReleaseReport[] {
+  const ids = new Set(r.manifest.filter(m => m.entityType === "agents").flatMap(m => m.ids));
+  return s.agents.filter(a => ids.has(a.id)).map(a => {
+    const cov = agentCoverage(a, s);
+    const promo = validateAgentPromotion(a, "Canonical", s);
+    return {
+      agentId: a.id, name: a.name, stage: a.manufacturingStage ?? "Draft",
+      coveragePercent: cov.coveragePercent, readinessScore: cov.readinessScore,
+      brokenReferences: cov.brokenReferences.length,
+      unreviewedEvaluations: cov.unreviewedEvaluations.length,
+      failingEvaluations: cov.failingEvaluations.length,
+      canonicalCompliance: cov.canonicalCompliance,
+      humanReviewComplete: a.humanReviewCompleted,
+      eligible: promo.ok, blockers: promo.blockers,
+    };
+  });
+}
+
+export function findAgentsReferencing(s: DataSnapshot, entityId: string): Agent[] {
+  return s.agents.filter(a => {
+    const all = [
+      ...(a.governingPromptIds ?? []),
+      ...(a.conceptIds ?? []), ...(a.frameworkIds ?? []),
+      ...(a.knowledgeObjectIds ?? []), ...(a.publicationIds ?? []),
+      ...(a.clientToolkitIds ?? []), ...(a.aiPackIds ?? []), ...(a.clientToolIds ?? []),
+    ];
+    if (all.includes(entityId)) return true;
+    return (a.evaluationCases ?? []).some(e => e.coversConceptIds.includes(entityId) || e.coversFrameworkIds.includes(entityId));
+  });
+}
+
 // Type re-exports for consumers
-export type { ClientToolkit, ClientToolkitSection, AIPack, AIPackModule, AIPackEvaluationCase };
+export type { ClientToolkit, ClientToolkitSection, AIPack, AIPackModule, AIPackEvaluationCase, Agent, AgentSpecification, AgentEvaluationCase };
+
