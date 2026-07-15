@@ -34,11 +34,11 @@ export async function loadSnapshot(): Promise<DataSnapshot> {
 // Additive, backward-compatible field backfill for Canonical Knowledge Core.
 function migrateSnapshot(s: DataSnapshot): DataSnapshot {
   const concepts = s.concepts.map(c => ({
-    manufacturingStatus: c.status === "Canonical" ? "Canonical" as const : "Draft" as const,
-    publicationLinks: [],
-    clientToolkitLinks: [],
-    aiPackLinks: [],
     ...c,
+    manufacturingStatus: c.manufacturingStatus ?? (c.status === "Canonical" ? "Canonical" : "Draft"),
+    publicationLinks: c.publicationLinks ?? [],
+    clientToolkitLinks: c.clientToolkitLinks ?? [],
+    aiPackLinks: c.aiPackLinks ?? [],
   }));
   return { ...s, concepts };
 }
