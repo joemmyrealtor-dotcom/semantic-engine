@@ -185,7 +185,13 @@ function AutomationStudio() {
                   <Input type="number" value={recipe.trigger.readinessThreshold ?? ""} onChange={e => patch({ trigger: { ...recipe.trigger, readinessThreshold: e.target.value ? Number(e.target.value) : undefined } })} />
                 </label>
                 <label className="block text-xs text-slate-ink">Stage transition
-                  <Input value={recipe.trigger.stage ?? ""} placeholder="e.g. QA" onChange={e => patch({ trigger: { ...recipe.trigger, stage: e.target.value || undefined } })} />
+                  <Select value={recipe.trigger.stage ?? "none"} onValueChange={v => patch({ trigger: { ...recipe.trigger, stage: v === "none" ? undefined : v as ManufacturingStage } })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">— None —</SelectItem>
+                      {MANUFACTURING_STAGES.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                 </label>
                 <label className="block text-xs text-slate-ink">Review due within (days)
                   <Input type="number" value={recipe.trigger.reviewDueWithinDays ?? ""} onChange={e => patch({ trigger: { ...recipe.trigger, reviewDueWithinDays: e.target.value ? Number(e.target.value) : undefined } })} />
