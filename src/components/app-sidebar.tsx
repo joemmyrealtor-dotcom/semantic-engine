@@ -9,7 +9,7 @@ const items = [
   { to: "/graph", label: "Relationships", icon: Network },
   { to: "/knowledge-objects/new", label: "KO Factory", icon: PenTool },
   { to: "/client-tools/new", label: "Client Tools", icon: Wrench },
-  { to: "/publications/PL-101", label: "Publications", icon: BookOpen },
+  { to: "/publications", label: "Publications", icon: BookOpen },
   { to: "/prompts", label: "Prompts", icon: ScrollText },
   { to: "/agents", label: "Agents", icon: Bot },
   { to: "/releases/LKR-1.0.001", label: "Releases", icon: Package },
