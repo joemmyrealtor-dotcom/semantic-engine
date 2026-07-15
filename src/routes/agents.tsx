@@ -32,7 +32,23 @@ function AgentRegistry() {
     const nums = s.agents.map(a => Number(a.id.replace("AG-",""))).filter(x => !Number.isNaN(x));
     const n = (nums.length ? Math.max(...nums) : 0) + 1;
     const now = new Date().toISOString();
-    return { id: `AG-${String(n).padStart(3, "0")}`, name: "", role: "", responsibilities: [], governingPromptIds: [], status: "Draft", version: "0.1.0", steward: "Editorial Board", createdAt: now, updatedAt: now };
+    return {
+      id: `AG-${String(n).padStart(3, "0")}`,
+      name: "", role: "", responsibilities: [], governingPromptIds: [],
+      status: "Draft", version: "0.1.0", steward: "Editorial Board",
+      description: "", purpose: "", useCase: "Editorial Assistant",
+      targetModel: "", owner: "Editorial Board", tags: [], archived: false,
+      manufacturingStage: "Draft",
+      stageHistory: [{ stage: "Draft", at: now, actor: "Editorial Board", note: "Created." }],
+      effectiveDate: null, reviewDate: null,
+      conceptIds: [], frameworkIds: [], knowledgeObjectIds: [],
+      publicationIds: [], clientToolkitIds: [], aiPackIds: [], clientToolIds: [],
+      specifications: [], evaluationCases: [],
+      usagePolicy: "", boundaryConditions: "", prohibitedUses: "",
+      escalationGuidance: "", provenanceNotes: "",
+      humanReviewCompleted: false, releaseIds: [],
+      createdAt: now, updatedAt: now,
+    };
   };
 
   return (
