@@ -34,17 +34,17 @@ export type ManufacturingStatus = "Draft" | "Editorial" | "QA" | "Canonical";
 export const MANUFACTURING_STATUSES: ManufacturingStatus[] = ["Draft", "Editorial", "QA", "Canonical"];
 
 // Workstream 2 — unified publication manufacturing pipeline.
+// Note: legacy "Review" stage was folded into "SME Review" in schema v2.
 export type PublicationStage =
   | "Draft"
   | "Editorial"
-  | "Review"
   | "SME Review"
   | "QA"
   | "Canonical"
   | "Released";
 
 export const PUBLICATION_STAGES: PublicationStage[] = [
-  "Draft", "Editorial", "Review", "SME Review", "QA", "Canonical", "Released",
+  "Draft", "Editorial", "SME Review", "QA", "Canonical", "Released",
 ];
 
 export type PublicationType =
