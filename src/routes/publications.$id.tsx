@@ -80,23 +80,31 @@ function PublicationEditorPage() {
 
   const cov = publicationCoverage(draft, s);
 
-  const promote = async (target: PublicationStage) => {
+  const promote = async (target: PublicationStage, opts?: { override?: boolean; note?: string }) => {
+    const isBackwards = PUBLICATION_STAGES.indexOf(target) < PUBLICATION_STAGES.indexOf(draft.manufacturingStage);
+    const nonAdjacent = !isAdjacentStageTransition(draft.manufacturingStage, target);
+    if ((isBackwards || nonAdjacent) && !opts?.override) {
+      toast.error("Non-adjacent or backwards moves require a governance override with note.");
+      return;
+    }
     const result = validatePublicationPromotion(draft, target, s);
-    if (!result.ok) {
+    if (!result.ok && !opts?.override) {
       toast.error(`Cannot promote to ${target}: ${result.blockers[0]}`);
       return;
     }
+    const notePrefix = opts?.override ? "OVERRIDE" : "Promoted";
+    const note = `${notePrefix}: ${target}${opts?.note ? " — " + opts.note : ""}${!result.ok ? ` (blockers: ${result.blockers.length})` : ""}`;
     const next: PublicationBlueprint = {
       ...draft,
       manufacturingStage: target,
-      stageHistory: appendStageHistory(draft, target, draft.owner || draft.steward, `Promoted to ${target}.`),
+      stageHistory: appendStageHistory(draft, target, draft.owner || draft.steward, note),
     };
     setDraft(next); setDirty(true);
-    toast.success(`Promoted to ${target}.`);
+    toast.success(`${opts?.override ? "Override applied" : "Promoted"} → ${target}.`);
   };
 
   const removePub = async () => {
-    if (!confirm(`Delete ${draft.id}?`)) return;
+    if (!confirm(`Delete ${draft.id}? This cannot be undone.`)) return;
     await Repo.remove("publications", draft.id);
     navigate({ to: "/publications" });
   };
