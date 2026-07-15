@@ -29,6 +29,7 @@ import { Route as FrameworksIdRouteImport } from './routes/frameworks.$id'
 import { Route as ConceptsIdRouteImport } from './routes/concepts.$id'
 import { Route as ClientToolsNewRouteImport } from './routes/client-tools.new'
 import { Route as ClientToolkitsIdRouteImport } from './routes/client-toolkits.$id'
+import { Route as AutomationsIdRouteImport } from './routes/automations.$id'
 import { Route as AiPacksIdRouteImport } from './routes/ai-packs.$id'
 import { Route as AgentsIdRouteImport } from './routes/agents.$id'
 
@@ -132,6 +133,11 @@ const ClientToolkitsIdRoute = ClientToolkitsIdRouteImport.update({
   path: '/client-toolkits/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AutomationsIdRoute = AutomationsIdRouteImport.update({
+  id: '/automations/$id',
+  path: '/automations/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AiPacksIdRoute = AiPacksIdRouteImport.update({
   id: '/ai-packs/$id',
   path: '/ai-packs/$id',
@@ -152,6 +158,7 @@ export interface FileRoutesByFullPath {
   '/repository': typeof RepositoryRoute
   '/agents/$id': typeof AgentsIdRoute
   '/ai-packs/$id': typeof AiPacksIdRoute
+  '/automations/$id': typeof AutomationsIdRoute
   '/client-toolkits/$id': typeof ClientToolkitsIdRoute
   '/client-tools/new': typeof ClientToolsNewRoute
   '/concepts/$id': typeof ConceptsIdRoute
@@ -176,6 +183,7 @@ export interface FileRoutesByTo {
   '/repository': typeof RepositoryRoute
   '/agents/$id': typeof AgentsIdRoute
   '/ai-packs/$id': typeof AiPacksIdRoute
+  '/automations/$id': typeof AutomationsIdRoute
   '/client-toolkits/$id': typeof ClientToolkitsIdRoute
   '/client-tools/new': typeof ClientToolsNewRoute
   '/concepts/$id': typeof ConceptsIdRoute
@@ -201,6 +209,7 @@ export interface FileRoutesById {
   '/repository': typeof RepositoryRoute
   '/agents/$id': typeof AgentsIdRoute
   '/ai-packs/$id': typeof AiPacksIdRoute
+  '/automations/$id': typeof AutomationsIdRoute
   '/client-toolkits/$id': typeof ClientToolkitsIdRoute
   '/client-tools/new': typeof ClientToolsNewRoute
   '/concepts/$id': typeof ConceptsIdRoute
@@ -227,6 +236,7 @@ export interface FileRouteTypes {
     | '/repository'
     | '/agents/$id'
     | '/ai-packs/$id'
+    | '/automations/$id'
     | '/client-toolkits/$id'
     | '/client-tools/new'
     | '/concepts/$id'
@@ -251,6 +261,7 @@ export interface FileRouteTypes {
     | '/repository'
     | '/agents/$id'
     | '/ai-packs/$id'
+    | '/automations/$id'
     | '/client-toolkits/$id'
     | '/client-tools/new'
     | '/concepts/$id'
@@ -275,6 +286,7 @@ export interface FileRouteTypes {
     | '/repository'
     | '/agents/$id'
     | '/ai-packs/$id'
+    | '/automations/$id'
     | '/client-toolkits/$id'
     | '/client-tools/new'
     | '/concepts/$id'
@@ -300,6 +312,7 @@ export interface RootRouteChildren {
   RepositoryRoute: typeof RepositoryRoute
   AgentsIdRoute: typeof AgentsIdRoute
   AiPacksIdRoute: typeof AiPacksIdRoute
+  AutomationsIdRoute: typeof AutomationsIdRoute
   ClientToolkitsIdRoute: typeof ClientToolkitsIdRoute
   ClientToolsNewRoute: typeof ClientToolsNewRoute
   ConceptsIdRoute: typeof ConceptsIdRoute
@@ -458,6 +471,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClientToolkitsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/automations/$id': {
+      id: '/automations/$id'
+      path: '/automations/$id'
+      fullPath: '/automations/$id'
+      preLoaderRoute: typeof AutomationsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ai-packs/$id': {
       id: '/ai-packs/$id'
       path: '/ai-packs/$id'
@@ -484,6 +504,7 @@ const rootRouteChildren: RootRouteChildren = {
   RepositoryRoute: RepositoryRoute,
   AgentsIdRoute: AgentsIdRoute,
   AiPacksIdRoute: AiPacksIdRoute,
+  AutomationsIdRoute: AutomationsIdRoute,
   ClientToolkitsIdRoute: ClientToolkitsIdRoute,
   ClientToolsNewRoute: ClientToolsNewRoute,
   ConceptsIdRoute: ConceptsIdRoute,
