@@ -141,7 +141,7 @@ function PublicationEditorPage() {
             <GeneralInfoCard draft={draft} set={set} />
             <ChaptersCard draft={draft} snapshot={s} onChapters={setChapters} />
             <CanonicalAssemblyCard draft={draft} snapshot={s} onChapters={setChapters} />
-            <CoverageIntelligenceCard cov={cov} draft={draft} snapshot={s} />
+            <CoverageIntelligenceCard cov={cov} draft={draft} snapshot={s} onChapters={setChapters} />
             <PresentationsCard draft={draft} set={set} />
           </div>
 
