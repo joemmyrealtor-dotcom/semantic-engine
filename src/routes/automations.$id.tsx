@@ -260,7 +260,7 @@ function AutomationStudio() {
                 <div key={cp.id} className="border border-border rounded-md p-3 grid grid-cols-1 md:grid-cols-4 gap-2 items-end">
                   <span className="font-mono text-xs text-slate-ink">{cp.id}</span>
                   <label className="block text-xs text-slate-ink">After step
-                    <Select value={cp.afterStepId} onValueChange={v => patch({ approvals: recipe.approvals.map(a => a.id === cp.id ? { ...a, afterStepId: v } : a) })}>
+                    <Select value={cp.afterStepId ?? ""} onValueChange={v => patch({ approvals: recipe.approvals.map(a => a.id === cp.id ? { ...a, afterStepId: v || null } : a) })}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {recipe.steps.map(s => <SelectItem key={s.id} value={s.id}>{s.id} — {s.name}</SelectItem>)}
@@ -268,7 +268,12 @@ function AutomationStudio() {
                     </Select>
                   </label>
                   <label className="block text-xs text-slate-ink">Approver role
-                    <Input value={cp.approverRole} onChange={e => patch({ approvals: recipe.approvals.map(a => a.id === cp.id ? { ...a, approverRole: e.target.value } : a) })} />
+                    <Select value={cp.approverRole} onValueChange={v => patch({ approvals: recipe.approvals.map(a => a.id === cp.id ? { ...a, approverRole: v as Role | "Owner" } : a) })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {(["Owner","Editor","Reviewer","Contributor","Viewer"] as const).map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
                   </label>
                   <Button size="sm" variant="ghost" onClick={() => removeCheckpoint(cp.id)}>Remove</Button>
                   <label className="block text-xs text-slate-ink md:col-span-4">Instructions
