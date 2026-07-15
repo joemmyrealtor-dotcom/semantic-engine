@@ -253,6 +253,44 @@ export interface Prompt extends Timestamped {
   steward: string;
 }
 
+export type AgentUseCase =
+  | "Advisory Assistant" | "Editorial Assistant" | "QA Auditor"
+  | "Content Author" | "Client Coach" | "Compliance Reviewer" | "Retrieval Bot";
+export const AGENT_USE_CASES: AgentUseCase[] = [
+  "Advisory Assistant","Editorial Assistant","QA Auditor",
+  "Content Author","Client Coach","Compliance Reviewer","Retrieval Bot",
+];
+
+export type AgentEvaluationStatus = "not-run" | "pass" | "fail";
+
+export interface AgentSpecification {
+  id: string;                         // AS-###
+  version: string;
+  isActive: boolean;
+  systemPrompt: string;
+  capabilities: string[];
+  tools: string[];
+  boundaries: string;
+  safetyPolicy: string;
+  changelog: string;
+  author: string;
+  createdAt: string;
+}
+
+export interface AgentEvaluationCase {
+  id: string;                         // AE-###
+  title: string;
+  scenario: string;
+  expectedBehavior: string;
+  prohibitedBehavior: string;
+  requiredCitations: string[];
+  reviewerStatus: "Draft" | "Reviewed" | "Approved";
+  status: AgentEvaluationStatus;
+  notes: string;
+  coversConceptIds: string[];
+  coversFrameworkIds: string[];
+}
+
 export interface Agent extends Timestamped {
   id: string;
   name: string;
@@ -262,6 +300,35 @@ export interface Agent extends Timestamped {
   status: Status;
   version: string;
   steward: string;
+
+  // Workstream 4 additions
+  description: string;
+  purpose: string;
+  useCase: AgentUseCase;
+  targetModel: string;
+  owner: string;
+  tags: string[];
+  archived: boolean;
+  manufacturingStage: ManufacturingStage;
+  stageHistory: StageHistoryEntry[];
+  effectiveDate: string | null;
+  reviewDate: string | null;
+  conceptIds: string[];
+  frameworkIds: string[];
+  knowledgeObjectIds: string[];
+  publicationIds: string[];
+  clientToolkitIds: string[];
+  aiPackIds: string[];
+  clientToolIds: string[];
+  specifications: AgentSpecification[];
+  evaluationCases: AgentEvaluationCase[];
+  usagePolicy: string;
+  boundaryConditions: string;
+  prohibitedUses: string;
+  escalationGuidance: string;
+  provenanceNotes: string;
+  humanReviewCompleted: boolean;
+  releaseIds: string[];
 }
 
 export interface Release extends Timestamped {
