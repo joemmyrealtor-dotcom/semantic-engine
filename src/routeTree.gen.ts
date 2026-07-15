@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as RepositoryRouteImport } from './routes/repository'
+import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as PromptsRouteImport } from './routes/prompts'
 import { Route as OperationsRouteImport } from './routes/operations'
 import { Route as KnowledgeRouteImport } from './routes/knowledge'
@@ -41,6 +42,11 @@ import { Route as AgentsIdRouteImport } from './routes/agents.$id'
 const RepositoryRoute = RepositoryRouteImport.update({
   id: '/repository',
   path: '/repository',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReportsRoute = ReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PromptsRoute = PromptsRouteImport.update({
@@ -188,6 +194,7 @@ export interface FileRoutesByFullPath {
   '/knowledge': typeof KnowledgeRouteWithChildren
   '/operations': typeof OperationsRoute
   '/prompts': typeof PromptsRoute
+  '/reports': typeof ReportsRoute
   '/repository': typeof RepositoryRoute
   '/agents/$id': typeof AgentsIdRoute
   '/ai-packs/$id': typeof AiPacksIdRoute
@@ -218,6 +225,7 @@ export interface FileRoutesByTo {
   '/knowledge': typeof KnowledgeRouteWithChildren
   '/operations': typeof OperationsRoute
   '/prompts': typeof PromptsRoute
+  '/reports': typeof ReportsRoute
   '/repository': typeof RepositoryRoute
   '/agents/$id': typeof AgentsIdRoute
   '/ai-packs/$id': typeof AiPacksIdRoute
@@ -249,6 +257,7 @@ export interface FileRoutesById {
   '/knowledge': typeof KnowledgeRouteWithChildren
   '/operations': typeof OperationsRoute
   '/prompts': typeof PromptsRoute
+  '/reports': typeof ReportsRoute
   '/repository': typeof RepositoryRoute
   '/agents/$id': typeof AgentsIdRoute
   '/ai-packs/$id': typeof AiPacksIdRoute
@@ -281,6 +290,7 @@ export interface FileRouteTypes {
     | '/knowledge'
     | '/operations'
     | '/prompts'
+    | '/reports'
     | '/repository'
     | '/agents/$id'
     | '/ai-packs/$id'
@@ -311,6 +321,7 @@ export interface FileRouteTypes {
     | '/knowledge'
     | '/operations'
     | '/prompts'
+    | '/reports'
     | '/repository'
     | '/agents/$id'
     | '/ai-packs/$id'
@@ -341,6 +352,7 @@ export interface FileRouteTypes {
     | '/knowledge'
     | '/operations'
     | '/prompts'
+    | '/reports'
     | '/repository'
     | '/agents/$id'
     | '/ai-packs/$id'
@@ -372,6 +384,7 @@ export interface RootRouteChildren {
   KnowledgeRoute: typeof KnowledgeRouteWithChildren
   OperationsRoute: typeof OperationsRoute
   PromptsRoute: typeof PromptsRoute
+  ReportsRoute: typeof ReportsRoute
   RepositoryRoute: typeof RepositoryRoute
   AgentsIdRoute: typeof AgentsIdRoute
   AiPacksIdRoute: typeof AiPacksIdRoute
@@ -400,6 +413,13 @@ declare module '@tanstack/react-router' {
       path: '/repository'
       fullPath: '/repository'
       preLoaderRoute: typeof RepositoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reports': {
+      id: '/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof ReportsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/prompts': {
@@ -615,6 +635,7 @@ const rootRouteChildren: RootRouteChildren = {
   KnowledgeRoute: KnowledgeRouteWithChildren,
   OperationsRoute: OperationsRoute,
   PromptsRoute: PromptsRoute,
+  ReportsRoute: ReportsRoute,
   RepositoryRoute: RepositoryRoute,
   AgentsIdRoute: AgentsIdRoute,
   AiPacksIdRoute: AiPacksIdRoute,
