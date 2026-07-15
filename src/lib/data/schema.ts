@@ -560,11 +560,16 @@ export type EntityType =
 
 export type AutomationTriggerKind =
   | "manual" | "stage-transition" | "readiness-threshold" | "release-gate"
-  | "review-due" | "broken-reference" | "coverage-gap" | "canonical-updated" | "scheduled";
+  | "review-due" | "broken-reference" | "coverage-gap" | "canonical-updated" | "scheduled"
+  // Workstream 6 — Knowledge Intelligence triggers
+  | "duplicate-detected" | "knowledge-health-threshold" | "dependency-change"
+  | "relationship-added" | "relationship-removed" | "coverage-drop";
 
 export const AUTOMATION_TRIGGER_KINDS: AutomationTriggerKind[] = [
   "manual","stage-transition","readiness-threshold","release-gate",
   "review-due","broken-reference","coverage-gap","canonical-updated","scheduled",
+  "duplicate-detected","knowledge-health-threshold","dependency-change",
+  "relationship-added","relationship-removed","coverage-drop",
 ];
 
 export type AutomationActionKind =
