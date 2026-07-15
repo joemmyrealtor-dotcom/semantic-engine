@@ -66,9 +66,23 @@ function ReleasePage() {
                 ))}
                 {pubReports.length > 0 && (
                   <li className="flex items-start gap-3 pt-2 border-t border-border mt-2">
-                    <span className={`mt-1 size-2.5 rounded-full ${readinessBlocked ? "bg-destructive" : "bg-evergreen"}`} />
+                    <span className={`mt-1 size-2.5 rounded-full ${ineligible.length > 0 ? "bg-destructive" : "bg-evergreen"}`} />
                     <span className="font-mono text-xs w-24 text-slate-ink">PUB-READY</span>
-                    <span>{readinessBlocked ? `${ineligible.length} publication(s) not eligible for Canonical` : "All publications eligible for Canonical"}</span>
+                    <span>{ineligible.length > 0 ? `${ineligible.length} publication(s) not eligible for Canonical` : "All publications eligible for Canonical"}</span>
+                  </li>
+                )}
+                {tkReports.length > 0 && (
+                  <li className="flex items-start gap-3">
+                    <span className={`mt-1 size-2.5 rounded-full ${tkIneligible.length > 0 ? "bg-destructive" : "bg-evergreen"}`} />
+                    <span className="font-mono text-xs w-24 text-slate-ink">TK-READY</span>
+                    <span>{tkIneligible.length > 0 ? `${tkIneligible.length} toolkit(s) not eligible for Canonical` : "All toolkits eligible for Canonical"}</span>
+                  </li>
+                )}
+                {apReports.length > 0 && (
+                  <li className="flex items-start gap-3">
+                    <span className={`mt-1 size-2.5 rounded-full ${apIneligible.length > 0 ? "bg-destructive" : "bg-evergreen"}`} />
+                    <span className="font-mono text-xs w-24 text-slate-ink">AP-READY</span>
+                    <span>{apIneligible.length > 0 ? `${apIneligible.length} AI pack(s) not eligible for Canonical` : "All AI packs eligible for Canonical"}</span>
                   </li>
                 )}
               </ul>
