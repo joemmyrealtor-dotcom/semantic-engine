@@ -18,6 +18,8 @@ import type {
 } from "@/lib/data/schema";
 import { MANUFACTURING_STAGES } from "@/lib/data/schema";
 import { executeRecipe, validateRecipe, nextStepId, nextCheckpointId } from "@/lib/data/automation";
+import { usePatchSave } from "@/hooks/use-patch-save";
+import { SaveIndicator } from "@/components/save-indicator";
 
 export const Route = createFileRoute("/automations/$id")({
   head: () => ({ meta: [{ title: "Automation Studio — Legacy Platform" }] }),
