@@ -269,6 +269,10 @@ export function runValidations(): number {
         metrics: [{ key: "health.overall", value: 80, unit: "percent" }, { key: "release.confidence", value: 60, unit: "percent" }] },
     ],
     executiveAlerts: [], savedExecutiveViews: [], reportRuns: [],
+    integrationConnections: [], webhookEndpoints: [], webhookDeliveries: [],
+    apiClients: [], importJobs: [], exportJobs: [], syncMappings: [],
+    externalReferences: [], deliveryPackages: [], deliveryRuns: [],
+    eventSubscriptions: [], domainEvents: [],
   } as DataSnapshot;
 
   const m7 = computeExecutiveMetrics(snap7);
