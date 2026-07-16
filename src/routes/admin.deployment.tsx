@@ -101,10 +101,10 @@ function DeploymentPage() {
                 <div className="text-sm font-medium mb-2">Current role (demo)</div>
                 <select
                   value={getRole()}
-                  onChange={e => { setRole(e.target.value as typeof ALL_ROLES[number]); toast.success(`Role set to ${e.target.value}`); }}
+                  onChange={e => { setRole(e.target.value as Role); toast.success(`Role set to ${e.target.value}`); }}
                   className="border border-border rounded px-2 py-1 text-sm bg-background w-full"
                 >
-                  {ALL_ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+                  {ALL_ROLES.map((r: Role) => <option key={r} value={r}>{r}</option>)}
                 </select>
                 <div className="text-xs text-muted-foreground mt-2">Permissions: {permissionsFor(getRole()).length}</div>
               </div>
