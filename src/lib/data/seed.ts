@@ -674,6 +674,23 @@ export const seedAutomations: AutomationRecipe[] = [
     changeNotes: "First run failed pending catalog fix.",
     ...ts,
   },
+  {
+    id: "AUT-005", name: "Scheduled Analytics Capture",
+    description: "Captures a weekly analytics snapshot for executive dashboards and forecasts. Idempotent — skips duplicate captures inside the window.",
+    owner: "Publishing Ops", steward: "Publishing Ops", tags: ["analytics","scheduled"],
+    state: "active", version: "1.0.0",
+    trigger: { kind: "scheduled", entityScope: "publication", entityIds: [], cron: "0 6 * * 1" },
+    steps: [
+      { id: "AST-040", name: "Capture analytics snapshot", action: "capture-analytics-snapshot",
+        parameters: { windowMinutes: 60 * 24 * 6 }, conditions: [], requiresApproval: false, onFailure: "abort" },
+    ],
+    approvals: [],
+    retryPolicy: { maxAttempts: 2, backoffSeconds: 60 },
+    concurrencyKey: "recipe", idempotencyWindowMinutes: 60 * 24 * 6,
+    lastRunAt: null, nextEligibleAt: null, successCount: 0, failureCount: 0,
+    changeNotes: "Weekly analytics capture, aligned to Monday 06:00 UTC.",
+    ...ts,
+  },
 ];
 
 void stageHistory;
