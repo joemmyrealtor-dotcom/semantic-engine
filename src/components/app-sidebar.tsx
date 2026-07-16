@@ -24,6 +24,11 @@ const items = [
   { to: "/releases/$id", params: { id: "LKR-1.0.001" }, label: "Releases", icon: Package },
   { to: "/governance", label: "Governance", icon: ShieldCheck },
   { to: "/data", label: "Import / Export", icon: Database },
+  { to: "/admin/audit", label: "Audit Explorer", icon: AuditIcon },
+  { to: "/admin/monitoring", label: "Monitoring", icon: Gauge },
+  { to: "/admin/backups", label: "Backups", icon: HardDrive },
+  { to: "/admin/workspaces", label: "Workspaces", icon: Users },
+  { to: "/admin/deployment", label: "Deployment", icon: Rocket },
 ] as const;
 
 export function AppSidebar() {
