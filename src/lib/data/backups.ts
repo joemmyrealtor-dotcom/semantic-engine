@@ -9,8 +9,9 @@ import type { BackupSnapshot, DataSnapshot } from "./schema";
 import { SCHEMA_VERSION } from "./schema";
 import { contentHash, redactSecrets } from "./security";
 
-export function nextBackupId(existing: BackupSnapshot[]): string {
-  const nums = existing.map(b => Number(b.id.replace(/^BKP-/, ""))).filter(n => !isNaN(n));
+export function nextBackupId(existing: BackupSnapshot[] | undefined): string {
+  const list = existing ?? [];
+  const nums = list.map(b => Number(b.id.replace(/^BKP-/, ""))).filter(n => !isNaN(n));
   return `BKP-${String((nums.length ? Math.max(...nums) : 0) + 1).padStart(3, "0")}`;
 }
 
