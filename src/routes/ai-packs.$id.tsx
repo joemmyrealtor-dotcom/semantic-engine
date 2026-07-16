@@ -19,6 +19,8 @@ import {
 } from "@/lib/data/service";
 import { PublicationStageBadge } from "@/components/publication-stage-badge";
 import { CoverageBar } from "@/routes/publications.index";
+import { usePatchSave } from "@/hooks/use-patch-save";
+import { SaveIndicator } from "@/components/save-indicator";
 import { Plus, Trash2, AlertTriangle, CheckCircle2, ArrowUp, ArrowDown } from "lucide-react";
 import { useState } from "react";
 
