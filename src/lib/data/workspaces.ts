@@ -56,17 +56,20 @@ export interface WorkspaceLeakageReport {
   activeWorkspaceId: string;
 }
 export function detectWorkspaceLeakage(snap: DataSnapshot): WorkspaceLeakageReport {
-  const known = new Set(snap.workspaces.map(w => w.id));
-  const orphanedAuditIds = snap.auditEvents.filter(e => !known.has(e.workspaceId)).map(e => e.id);
-  const orphanedBackupIds = snap.backups.filter(b => !known.has(b.workspaceId)).map(b => b.id);
-  const unscopedEntityKinds = [
-    "concepts","frameworks","knowledgeObjects","publications","clientTools",
-    "clientToolkits","aiPacks","agents","automations","releases",
-  ];
+  const workspaces = snap.workspaces ?? [];
+  const auditEvents = snap.auditEvents ?? [];
+  const backups = snap.backups ?? [];
+  const known = new Set(workspaces.map(w => w.id));
+  const orphanedAuditIds = auditEvents.filter(e => !known.has(e.workspaceId)).map(e => e.id);
+  const orphanedBackupIds = backups.filter(b => !known.has(b.workspaceId)).map(b => b.id);
   return {
     ok: orphanedAuditIds.length === 0 && orphanedBackupIds.length === 0,
-    orphanedAuditIds, orphanedBackupIds, unscopedEntityKinds,
-    activeWorkspaceId: snap.activeWorkspaceId,
+    orphanedAuditIds, orphanedBackupIds,
+    unscopedEntityKinds: [
+      "concepts","frameworks","knowledgeObjects","publications","clientTools",
+      "clientToolkits","aiPacks","agents","automations","releases",
+    ],
+    activeWorkspaceId: snap.activeWorkspaceId ?? "",
   };
 }
 
