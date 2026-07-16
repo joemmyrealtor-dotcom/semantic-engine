@@ -580,7 +580,13 @@ export type EntityType =
   | "deliveryPackages"
   | "deliveryRuns"
   | "eventSubscriptions"
-  | "domainEvents";
+  | "domainEvents"
+  // Workstream 9
+  | "auditEvents"
+  | "backups"
+  | "workspaces"
+  | "featureFlags"
+  | "rateLimitBuckets";
 
 // ===================================================================
 // Workstream 5 — Automation, Orchestration, Operational Governance
