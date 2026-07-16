@@ -35,14 +35,14 @@ function IntegrationsHub() {
         eyebrow="Workstream 8"
         title="Integrations & Delivery"
         description="Governed connectors, event bus, webhooks, imports, and delivery packages. All demo connectors are clearly labeled — no production credentials are stored locally."
-        icon={<Plug className="size-6 text-primary" />}
+        
       />
       <PageBody>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <KpiCard label="Connections" value={String(health.connections.total)} sub={`${health.connections.failing} failing · ${health.connections.degraded} degraded`} />
-          <KpiCard label="Webhook Endpoints" value={String(health.webhooks.endpoints)} sub={`${health.webhooks.failedDeliveries} failed deliveries`} />
-          <KpiCard label="Sync Conflicts" value={String(health.syncConflicts)} sub={`${health.staleMappings.length} stale mappings`} />
-          <KpiCard label="Orphaned Refs" value={String(health.orphanedReferences.length)} sub="External references without canonical target" />
+          <KpiCard label="Connections" value={String(health.connections.total)} hint={`${health.connections.failing} failing · ${health.connections.degraded} degraded`} />
+          <KpiCard label="Webhook Endpoints" value={String(health.webhooks.endpoints)} hint={`${health.webhooks.failedDeliveries} failed deliveries`} />
+          <KpiCard label="Sync Conflicts" value={String(health.syncConflicts)} hint={`${health.staleMappings.length} stale mappings`} />
+          <KpiCard label="Orphaned Refs" value={String(health.orphanedReferences.length)} hint="External references without canonical target" />
         </div>
 
         <Tabs defaultValue="connections" className="mt-6">
@@ -185,7 +185,7 @@ function WebhooksPanel() {
   return (
     <div className="space-y-6">
       <div>
-        <SectionTitle title="Endpoints" />
+        <SectionTitle>Endpoints</SectionTitle>
         <div className="grid gap-3">
           {s.webhookEndpoints.map(w => (
             <Card key={w.id}>
@@ -210,7 +210,7 @@ function WebhooksPanel() {
         </div>
       </div>
       <div>
-        <SectionTitle title="Recent deliveries" />
+        <SectionTitle>Recent deliveries</SectionTitle>
         <div className="grid gap-2">
           {s.webhookDeliveries.map(d => (
             <div key={d.id} className="rounded-md border p-3 text-xs flex items-start justify-between gap-3">
@@ -387,7 +387,7 @@ function ExportsPanel() {
         </CardContent>
       </Card>
       <div>
-        <SectionTitle title="Packages" />
+        <SectionTitle>Packages</SectionTitle>
         <div className="grid gap-2">
           {s.deliveryPackages.map(p => (
             <div key={p.id} className="rounded-md border p-3 text-xs flex items-start justify-between gap-3">
@@ -428,7 +428,7 @@ function MappingsPanel() {
   return (
     <div className="space-y-4">
       <div>
-        <SectionTitle title="Sync mappings" />
+        <SectionTitle>Sync mappings</SectionTitle>
         <div className="grid gap-2">
           {s.syncMappings.map(m => (
             <div key={m.id} className="rounded-md border p-3 text-xs">
@@ -443,7 +443,7 @@ function MappingsPanel() {
         </div>
       </div>
       <div>
-        <SectionTitle title="External references" />
+        <SectionTitle>External references</SectionTitle>
         <div className="grid gap-2">
           {s.externalReferences.map(r => (
             <div key={r.id} className="rounded-md border p-3 text-xs">
