@@ -41,6 +41,7 @@ import { Route as AutomationsNewRouteImport } from './routes/automations.new'
 import { Route as AutomationsIdRouteImport } from './routes/automations.$id'
 import { Route as AiPacksIdRouteImport } from './routes/ai-packs.$id'
 import { Route as AgentsIdRouteImport } from './routes/agents.$id'
+import { Route as AdminWorkspacesRouteImport } from './routes/admin.workspaces'
 import { Route as AdminMonitoringRouteImport } from './routes/admin.monitoring'
 import { Route as AdminBackupsRouteImport } from './routes/admin.backups'
 import { Route as AdminAuditRouteImport } from './routes/admin.audit'
@@ -206,6 +207,11 @@ const AgentsIdRoute = AgentsIdRouteImport.update({
   path: '/agents/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminWorkspacesRoute = AdminWorkspacesRouteImport.update({
+  id: '/admin/workspaces',
+  path: '/admin/workspaces',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminMonitoringRoute = AdminMonitoringRouteImport.update({
   id: '/admin/monitoring',
   path: '/admin/monitoring',
@@ -243,6 +249,7 @@ export interface FileRoutesByFullPath {
   '/admin/audit': typeof AdminAuditRoute
   '/admin/backups': typeof AdminBackupsRoute
   '/admin/monitoring': typeof AdminMonitoringRoute
+  '/admin/workspaces': typeof AdminWorkspacesRoute
   '/agents/$id': typeof AgentsIdRoute
   '/ai-packs/$id': typeof AiPacksIdRoute
   '/automations/$id': typeof AutomationsIdRoute
@@ -281,6 +288,7 @@ export interface FileRoutesByTo {
   '/admin/audit': typeof AdminAuditRoute
   '/admin/backups': typeof AdminBackupsRoute
   '/admin/monitoring': typeof AdminMonitoringRoute
+  '/admin/workspaces': typeof AdminWorkspacesRoute
   '/agents/$id': typeof AgentsIdRoute
   '/ai-packs/$id': typeof AiPacksIdRoute
   '/automations/$id': typeof AutomationsIdRoute
@@ -320,6 +328,7 @@ export interface FileRoutesById {
   '/admin/audit': typeof AdminAuditRoute
   '/admin/backups': typeof AdminBackupsRoute
   '/admin/monitoring': typeof AdminMonitoringRoute
+  '/admin/workspaces': typeof AdminWorkspacesRoute
   '/agents/$id': typeof AgentsIdRoute
   '/ai-packs/$id': typeof AiPacksIdRoute
   '/automations/$id': typeof AutomationsIdRoute
@@ -360,6 +369,7 @@ export interface FileRouteTypes {
     | '/admin/audit'
     | '/admin/backups'
     | '/admin/monitoring'
+    | '/admin/workspaces'
     | '/agents/$id'
     | '/ai-packs/$id'
     | '/automations/$id'
@@ -398,6 +408,7 @@ export interface FileRouteTypes {
     | '/admin/audit'
     | '/admin/backups'
     | '/admin/monitoring'
+    | '/admin/workspaces'
     | '/agents/$id'
     | '/ai-packs/$id'
     | '/automations/$id'
@@ -436,6 +447,7 @@ export interface FileRouteTypes {
     | '/admin/audit'
     | '/admin/backups'
     | '/admin/monitoring'
+    | '/admin/workspaces'
     | '/agents/$id'
     | '/ai-packs/$id'
     | '/automations/$id'
@@ -475,6 +487,7 @@ export interface RootRouteChildren {
   AdminAuditRoute: typeof AdminAuditRoute
   AdminBackupsRoute: typeof AdminBackupsRoute
   AdminMonitoringRoute: typeof AdminMonitoringRoute
+  AdminWorkspacesRoute: typeof AdminWorkspacesRoute
   AgentsIdRoute: typeof AgentsIdRoute
   AiPacksIdRoute: typeof AiPacksIdRoute
   AutomationsIdRoute: typeof AutomationsIdRoute
@@ -722,6 +735,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AgentsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/workspaces': {
+      id: '/admin/workspaces'
+      path: '/admin/workspaces'
+      fullPath: '/admin/workspaces'
+      preLoaderRoute: typeof AdminWorkspacesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/monitoring': {
       id: '/admin/monitoring'
       path: '/admin/monitoring'
@@ -793,6 +813,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminAuditRoute: AdminAuditRoute,
   AdminBackupsRoute: AdminBackupsRoute,
   AdminMonitoringRoute: AdminMonitoringRoute,
+  AdminWorkspacesRoute: AdminWorkspacesRoute,
   AgentsIdRoute: AgentsIdRoute,
   AiPacksIdRoute: AiPacksIdRoute,
   AutomationsIdRoute: AutomationsIdRoute,
