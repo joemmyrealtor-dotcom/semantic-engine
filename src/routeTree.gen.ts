@@ -41,6 +41,7 @@ import { Route as AutomationsNewRouteImport } from './routes/automations.new'
 import { Route as AutomationsIdRouteImport } from './routes/automations.$id'
 import { Route as AiPacksIdRouteImport } from './routes/ai-packs.$id'
 import { Route as AgentsIdRouteImport } from './routes/agents.$id'
+import { Route as ApiPublicV1SplatRouteImport } from './routes/api/public/v1/$'
 
 const RepositoryRoute = RepositoryRouteImport.update({
   id: '/repository',
@@ -202,6 +203,11 @@ const AgentsIdRoute = AgentsIdRouteImport.update({
   path: '/agents/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicV1SplatRoute = ApiPublicV1SplatRouteImport.update({
+  id: '/api/public/v1/$',
+  path: '/api/public/v1/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -236,6 +242,7 @@ export interface FileRoutesByFullPath {
   '/client-toolkits/': typeof ClientToolkitsIndexRoute
   '/concepts/': typeof ConceptsIndexRoute
   '/publications/': typeof PublicationsIndexRoute
+  '/api/public/v1/$': typeof ApiPublicV1SplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -270,6 +277,7 @@ export interface FileRoutesByTo {
   '/client-toolkits': typeof ClientToolkitsIndexRoute
   '/concepts': typeof ConceptsIndexRoute
   '/publications': typeof PublicationsIndexRoute
+  '/api/public/v1/$': typeof ApiPublicV1SplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -305,6 +313,7 @@ export interface FileRoutesById {
   '/client-toolkits/': typeof ClientToolkitsIndexRoute
   '/concepts/': typeof ConceptsIndexRoute
   '/publications/': typeof PublicationsIndexRoute
+  '/api/public/v1/$': typeof ApiPublicV1SplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -341,6 +350,7 @@ export interface FileRouteTypes {
     | '/client-toolkits/'
     | '/concepts/'
     | '/publications/'
+    | '/api/public/v1/$'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -375,6 +385,7 @@ export interface FileRouteTypes {
     | '/client-toolkits'
     | '/concepts'
     | '/publications'
+    | '/api/public/v1/$'
   id:
     | '__root__'
     | '/'
@@ -409,6 +420,7 @@ export interface FileRouteTypes {
     | '/client-toolkits/'
     | '/concepts/'
     | '/publications/'
+    | '/api/public/v1/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -442,6 +454,7 @@ export interface RootRouteChildren {
   ClientToolkitsIndexRoute: typeof ClientToolkitsIndexRoute
   ConceptsIndexRoute: typeof ConceptsIndexRoute
   PublicationsIndexRoute: typeof PublicationsIndexRoute
+  ApiPublicV1SplatRoute: typeof ApiPublicV1SplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -670,6 +683,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AgentsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/v1/$': {
+      id: '/api/public/v1/$'
+      path: '/api/public/v1/$'
+      fullPath: '/api/public/v1/$'
+      preLoaderRoute: typeof ApiPublicV1SplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -728,6 +748,7 @@ const rootRouteChildren: RootRouteChildren = {
   ClientToolkitsIndexRoute: ClientToolkitsIndexRoute,
   ConceptsIndexRoute: ConceptsIndexRoute,
   PublicationsIndexRoute: PublicationsIndexRoute,
+  ApiPublicV1SplatRoute: ApiPublicV1SplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
