@@ -15,6 +15,26 @@ import {
   buildGraph, detectBrokenReferences,
   publicationCoverage, toolkitCoverage, aiPackCoverage, agentCoverage,
 } from "./service";
+import { memoize } from "./performance";
+import { fingerprint } from "./security";
+
+// W9 #7 — Snapshot-fingerprinted memoization for hot derived reads.
+// Cache key is a cheap non-crypto fingerprint of the counts of every
+// entity list; when any count changes, cache misses and recomputes.
+// Snapshot-identity keys (WeakMap) would be stricter but the seed
+// harness/validation suite reuses object identity across mutations.
+function snapKey(s: DataSnapshot): string {
+  return fingerprint([
+    s.schemaVersion, s.activeWorkspaceId,
+    s.domains.length, s.concepts.length, s.frameworks.length,
+    s.knowledgeObjects.length, s.clientTools.length, s.publications.length,
+    s.clientToolkits.length, s.aiPacks.length, s.agents.length,
+    s.automations.length, s.releases.length, s.auditEvents.length,
+  ].join("|"));
+}
+const memoBuildGraph = memoize("intelligence.buildGraph", (_k: string, s: DataSnapshot) => buildGraph(s), 16);
+const cachedBuildGraph = (s: DataSnapshot) => memoBuildGraph(snapKey(s), s);
+
 
 // ============================================================
 // PHASE 1/2 — Universal asset registry & search
