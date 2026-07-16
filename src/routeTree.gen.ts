@@ -32,6 +32,7 @@ import { Route as PublicationsNewRouteImport } from './routes/publications.new'
 import { Route as PublicationsIdRouteImport } from './routes/publications.$id'
 import { Route as KnowledgeIdRouteImport } from './routes/knowledge.$id'
 import { Route as KnowledgeObjectsNewRouteImport } from './routes/knowledge-objects.new'
+import { Route as IntegrationsIdRouteImport } from './routes/integrations.$id'
 import { Route as FrameworksIdRouteImport } from './routes/frameworks.$id'
 import { Route as ConceptsIdRouteImport } from './routes/concepts.$id'
 import { Route as ClientToolsNewRouteImport } from './routes/client-tools.new'
@@ -40,6 +41,7 @@ import { Route as AutomationsNewRouteImport } from './routes/automations.new'
 import { Route as AutomationsIdRouteImport } from './routes/automations.$id'
 import { Route as AiPacksIdRouteImport } from './routes/ai-packs.$id'
 import { Route as AgentsIdRouteImport } from './routes/agents.$id'
+import { Route as ApiPublicV1SplatRouteImport } from './routes/api/public/v1/$'
 
 const RepositoryRoute = RepositoryRouteImport.update({
   id: '/repository',
@@ -156,6 +158,11 @@ const KnowledgeObjectsNewRoute = KnowledgeObjectsNewRouteImport.update({
   path: '/knowledge-objects/new',
   getParentRoute: () => rootRouteImport,
 } as any)
+const IntegrationsIdRoute = IntegrationsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => IntegrationsRoute,
+} as any)
 const FrameworksIdRoute = FrameworksIdRouteImport.update({
   id: '/frameworks/$id',
   path: '/frameworks/$id',
@@ -196,6 +203,11 @@ const AgentsIdRoute = AgentsIdRouteImport.update({
   path: '/agents/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicV1SplatRoute = ApiPublicV1SplatRouteImport.update({
+  id: '/api/public/v1/$',
+  path: '/api/public/v1/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -204,7 +216,7 @@ export interface FileRoutesByFullPath {
   '/executive': typeof ExecutiveRoute
   '/governance': typeof GovernanceRoute
   '/graph': typeof GraphRoute
-  '/integrations': typeof IntegrationsRoute
+  '/integrations': typeof IntegrationsRouteWithChildren
   '/knowledge': typeof KnowledgeRouteWithChildren
   '/operations': typeof OperationsRoute
   '/prompts': typeof PromptsRoute
@@ -218,6 +230,7 @@ export interface FileRoutesByFullPath {
   '/client-tools/new': typeof ClientToolsNewRoute
   '/concepts/$id': typeof ConceptsIdRoute
   '/frameworks/$id': typeof FrameworksIdRoute
+  '/integrations/$id': typeof IntegrationsIdRoute
   '/knowledge-objects/new': typeof KnowledgeObjectsNewRoute
   '/knowledge/$id': typeof KnowledgeIdRoute
   '/publications/$id': typeof PublicationsIdRoute
@@ -229,6 +242,7 @@ export interface FileRoutesByFullPath {
   '/client-toolkits/': typeof ClientToolkitsIndexRoute
   '/concepts/': typeof ConceptsIndexRoute
   '/publications/': typeof PublicationsIndexRoute
+  '/api/public/v1/$': typeof ApiPublicV1SplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -237,7 +251,7 @@ export interface FileRoutesByTo {
   '/executive': typeof ExecutiveRoute
   '/governance': typeof GovernanceRoute
   '/graph': typeof GraphRoute
-  '/integrations': typeof IntegrationsRoute
+  '/integrations': typeof IntegrationsRouteWithChildren
   '/knowledge': typeof KnowledgeRouteWithChildren
   '/operations': typeof OperationsRoute
   '/prompts': typeof PromptsRoute
@@ -251,6 +265,7 @@ export interface FileRoutesByTo {
   '/client-tools/new': typeof ClientToolsNewRoute
   '/concepts/$id': typeof ConceptsIdRoute
   '/frameworks/$id': typeof FrameworksIdRoute
+  '/integrations/$id': typeof IntegrationsIdRoute
   '/knowledge-objects/new': typeof KnowledgeObjectsNewRoute
   '/knowledge/$id': typeof KnowledgeIdRoute
   '/publications/$id': typeof PublicationsIdRoute
@@ -262,6 +277,7 @@ export interface FileRoutesByTo {
   '/client-toolkits': typeof ClientToolkitsIndexRoute
   '/concepts': typeof ConceptsIndexRoute
   '/publications': typeof PublicationsIndexRoute
+  '/api/public/v1/$': typeof ApiPublicV1SplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -271,7 +287,7 @@ export interface FileRoutesById {
   '/executive': typeof ExecutiveRoute
   '/governance': typeof GovernanceRoute
   '/graph': typeof GraphRoute
-  '/integrations': typeof IntegrationsRoute
+  '/integrations': typeof IntegrationsRouteWithChildren
   '/knowledge': typeof KnowledgeRouteWithChildren
   '/operations': typeof OperationsRoute
   '/prompts': typeof PromptsRoute
@@ -285,6 +301,7 @@ export interface FileRoutesById {
   '/client-tools/new': typeof ClientToolsNewRoute
   '/concepts/$id': typeof ConceptsIdRoute
   '/frameworks/$id': typeof FrameworksIdRoute
+  '/integrations/$id': typeof IntegrationsIdRoute
   '/knowledge-objects/new': typeof KnowledgeObjectsNewRoute
   '/knowledge/$id': typeof KnowledgeIdRoute
   '/publications/$id': typeof PublicationsIdRoute
@@ -296,6 +313,7 @@ export interface FileRoutesById {
   '/client-toolkits/': typeof ClientToolkitsIndexRoute
   '/concepts/': typeof ConceptsIndexRoute
   '/publications/': typeof PublicationsIndexRoute
+  '/api/public/v1/$': typeof ApiPublicV1SplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -320,6 +338,7 @@ export interface FileRouteTypes {
     | '/client-tools/new'
     | '/concepts/$id'
     | '/frameworks/$id'
+    | '/integrations/$id'
     | '/knowledge-objects/new'
     | '/knowledge/$id'
     | '/publications/$id'
@@ -331,6 +350,7 @@ export interface FileRouteTypes {
     | '/client-toolkits/'
     | '/concepts/'
     | '/publications/'
+    | '/api/public/v1/$'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -353,6 +373,7 @@ export interface FileRouteTypes {
     | '/client-tools/new'
     | '/concepts/$id'
     | '/frameworks/$id'
+    | '/integrations/$id'
     | '/knowledge-objects/new'
     | '/knowledge/$id'
     | '/publications/$id'
@@ -364,6 +385,7 @@ export interface FileRouteTypes {
     | '/client-toolkits'
     | '/concepts'
     | '/publications'
+    | '/api/public/v1/$'
   id:
     | '__root__'
     | '/'
@@ -386,6 +408,7 @@ export interface FileRouteTypes {
     | '/client-tools/new'
     | '/concepts/$id'
     | '/frameworks/$id'
+    | '/integrations/$id'
     | '/knowledge-objects/new'
     | '/knowledge/$id'
     | '/publications/$id'
@@ -397,6 +420,7 @@ export interface FileRouteTypes {
     | '/client-toolkits/'
     | '/concepts/'
     | '/publications/'
+    | '/api/public/v1/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -406,7 +430,7 @@ export interface RootRouteChildren {
   ExecutiveRoute: typeof ExecutiveRoute
   GovernanceRoute: typeof GovernanceRoute
   GraphRoute: typeof GraphRoute
-  IntegrationsRoute: typeof IntegrationsRoute
+  IntegrationsRoute: typeof IntegrationsRouteWithChildren
   KnowledgeRoute: typeof KnowledgeRouteWithChildren
   OperationsRoute: typeof OperationsRoute
   PromptsRoute: typeof PromptsRoute
@@ -430,6 +454,7 @@ export interface RootRouteChildren {
   ClientToolkitsIndexRoute: typeof ClientToolkitsIndexRoute
   ConceptsIndexRoute: typeof ConceptsIndexRoute
   PublicationsIndexRoute: typeof PublicationsIndexRoute
+  ApiPublicV1SplatRoute: typeof ApiPublicV1SplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -595,6 +620,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof KnowledgeObjectsNewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/integrations/$id': {
+      id: '/integrations/$id'
+      path: '/$id'
+      fullPath: '/integrations/$id'
+      preLoaderRoute: typeof IntegrationsIdRouteImport
+      parentRoute: typeof IntegrationsRoute
+    }
     '/frameworks/$id': {
       id: '/frameworks/$id'
       path: '/frameworks/$id'
@@ -651,8 +683,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AgentsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/v1/$': {
+      id: '/api/public/v1/$'
+      path: '/api/public/v1/$'
+      fullPath: '/api/public/v1/$'
+      preLoaderRoute: typeof ApiPublicV1SplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
+
+interface IntegrationsRouteChildren {
+  IntegrationsIdRoute: typeof IntegrationsIdRoute
+}
+
+const IntegrationsRouteChildren: IntegrationsRouteChildren = {
+  IntegrationsIdRoute: IntegrationsIdRoute,
+}
+
+const IntegrationsRouteWithChildren = IntegrationsRoute._addFileChildren(
+  IntegrationsRouteChildren,
+)
 
 interface KnowledgeRouteChildren {
   KnowledgeIdRoute: typeof KnowledgeIdRoute
@@ -673,7 +724,7 @@ const rootRouteChildren: RootRouteChildren = {
   ExecutiveRoute: ExecutiveRoute,
   GovernanceRoute: GovernanceRoute,
   GraphRoute: GraphRoute,
-  IntegrationsRoute: IntegrationsRoute,
+  IntegrationsRoute: IntegrationsRouteWithChildren,
   KnowledgeRoute: KnowledgeRouteWithChildren,
   OperationsRoute: OperationsRoute,
   PromptsRoute: PromptsRoute,
@@ -697,6 +748,7 @@ const rootRouteChildren: RootRouteChildren = {
   ClientToolkitsIndexRoute: ClientToolkitsIndexRoute,
   ConceptsIndexRoute: ConceptsIndexRoute,
   PublicationsIndexRoute: PublicationsIndexRoute,
+  ApiPublicV1SplatRoute: ApiPublicV1SplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

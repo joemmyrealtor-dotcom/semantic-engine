@@ -18,6 +18,8 @@ import type {
 } from "@/lib/data/schema";
 import { MANUFACTURING_STAGES } from "@/lib/data/schema";
 import { executeRecipe, validateRecipe, nextStepId, nextCheckpointId } from "@/lib/data/automation";
+import { usePatchSave } from "@/hooks/use-patch-save";
+import { SaveIndicator } from "@/components/save-indicator";
 
 export const Route = createFileRoute("/automations/$id")({
   head: () => ({ meta: [{ title: "Automation Studio — Legacy Platform" }] }),
@@ -37,7 +39,9 @@ function AutomationStudio() {
 
   const validation = validateRecipe(recipe);
 
-  const patch = async (p: Partial<AutomationRecipe>) => { await Repo.update("automations", recipe.id, p); };
+  const { patch, state: saveState } = usePatchSave<AutomationRecipe>({
+    save: async (p) => { await Repo.update("automations", recipe.id, p); },
+  });
 
   const addStep = async () => {
     const step: AutomationStep = {
@@ -101,6 +105,7 @@ function AutomationStudio() {
         description={recipe.description}
         actions={
           <div className="flex items-center gap-2">
+            <SaveIndicator saving={saveState.saving} dirty={saveState.dirty} error={saveState.error} lastSavedAt={saveState.lastSavedAt} onRetry={saveState.retry} />
             <div className="flex items-center gap-2 text-xs text-slate-ink mr-2">Dry-run <Switch checked={dryRun} onCheckedChange={setDryRun} /></div>
             <Button variant="outline" onClick={run}>Execute</Button>
             <Button variant="ghost" onClick={archive}>Archive</Button>

@@ -1,0 +1,72 @@
+// Workstream 8 follow-up — real server API endpoints for the documented catalog.
+//
+// Nine read-only endpoints backed by the seed snapshot on the server. Kept under
+// /api/public/* so external callers can hit them without auth on published sites;
+// this route only exposes derived, non-sensitive views and never returns raw
+// credentials or secrets. Same semantics as the local `callLocalAPI` adapter
+// used by the Developer Explorer.
+import { createFileRoute } from "@tanstack/react-router";
+import { buildSeedSnapshot } from "@/lib/data/seed";
+import { callLocalAPI, API_CATALOG, type APIEndpointId } from "@/lib/data/integrations";
+
+// Map incoming `/api/public/v1/<splat>` paths to catalog endpoint ids + params.
+function route(splat: string, search: URLSearchParams): { id: APIEndpointId; params: Record<string, string> } | null {
+  const parts = splat.split("/").filter(Boolean);
+  if (parts.length === 0) return null;
+
+  // /registry/{kind}
+  if (parts[0] === "registry" && parts[1]) {
+    const params: Record<string, string> = { kind: parts[1] };
+    const limit = search.get("limit");
+    if (limit) params.limit = limit;
+    return { id: "registry.list", params };
+  }
+  if (parts[0] === "knowledge" && parts[1]) return { id: "knowledge.detail", params: { id: parts[1] } };
+  if (parts[0] === "releases" && parts[1] && parts[2] === "manifest") return { id: "release.manifest", params: { id: parts[1] } };
+  if (parts[0] === "publications" && parts[1] && parts[2] === "export") return { id: "publication.export", params: { id: parts[1] } };
+  if (parts[0] === "toolkits" && parts[1] && parts[2] === "export") return { id: "toolkit.export", params: { id: parts[1] } };
+  if (parts[0] === "ai-packs" && parts[1] && parts[2] === "export") return { id: "aipack.export", params: { id: parts[1] } };
+  if (parts[0] === "agents" && parts[1] && parts[2] === "export") return { id: "agent.export", params: { id: parts[1] } };
+  if (parts[0] === "automations" && parts[1] === "runs" && parts[2]) return { id: "automation.run.status", params: { id: parts[2] } };
+  if (parts[0] === "imports" && parts[1]) return { id: "import.job.status", params: { id: parts[1] } };
+  return null;
+}
+
+function requestId() { return `req_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`; }
+
+function json(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json", "x-request-id": requestId() },
+  });
+}
+
+export const Route = createFileRoute("/api/public/v1/$")({
+  server: {
+    handlers: {
+      GET: async ({ request, params }) => {
+        const url = new URL(request.url);
+        const splat = (params as { _splat?: string })._splat ?? "";
+
+        if (splat === "" || splat === "catalog") {
+          return json({ catalog: API_CATALOG });
+        }
+
+        const match = route(splat, url.searchParams);
+        if (!match) {
+          return json({ error: { code: "not-found", message: `Unknown endpoint /api/public/v1/${splat}`, requestId: requestId() } }, 404);
+        }
+
+        // Server uses the deterministic seed snapshot — no IndexedDB in Worker runtime.
+        const snapshot = buildSeedSnapshot();
+        const result = callLocalAPI(snapshot, match.id, match.params) as { error?: { code: string } } | unknown;
+        if (result && typeof result === "object" && "error" in (result as Record<string, unknown>)) {
+          const err = (result as { error: { code: string } }).error;
+          const status = err.code === "not-found" ? 404 : err.code === "missing-param" || err.code === "unknown-kind" ? 400 : 500;
+          return json(result, status);
+        }
+        return json(result);
+      },
+    },
+  },
+});

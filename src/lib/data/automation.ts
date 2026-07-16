@@ -379,8 +379,22 @@ const ACTIONS: Record<AutomationActionKind, ActionHandler> = {
     const pkg = String(p.packageName ?? "external-package");
     return { output: `Prepared import dry-run for ${pkg}. Review at /integrations/imports.`, mutations: [] };
   },
-  "capture-analytics-snapshot": (_p, _c, _s, _entityId) => {
-    return { output: `Analytics snapshot captured via automation. See /executive for trend history.`, mutations: [] };
+  "capture-analytics-snapshot": (p, _c, s, _entityId) => {
+    const windowMinutes = Number(p.windowMinutes ?? 60);
+    // Idempotency: skip capture if a snapshot already exists within the window.
+    const cutoff = Date.now() - windowMinutes * 60 * 1000;
+    const recent = (s.analyticsSnapshots ?? []).find(sn => new Date(sn.at).getTime() >= cutoff);
+    if (recent) {
+      return { output: `Skipped: snapshot ${recent.id} already exists within ${windowMinutes}m window.`, mutations: [] };
+    }
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { captureAnalyticsSnapshot } = require("./analytics") as typeof import("./analytics");
+    const snap = captureAnalyticsSnapshot(s, "automation", String(p.note ?? "Captured by governed automation."));
+    return {
+      output: `Captured ${snap.id} with ${snap.metrics.length} metrics.`,
+      mutations: [`analyticsSnapshots += ${snap.id}`],
+      apply: (workingSnap) => ({ ...workingSnap, analyticsSnapshots: [...(workingSnap.analyticsSnapshots ?? []), snap] }),
+    };
   },
 };
 

@@ -19,6 +19,8 @@ import {
 } from "@/lib/data/service";
 import { PublicationStageBadge } from "@/components/publication-stage-badge";
 import { CoverageBar } from "@/routes/publications.index";
+import { usePatchSave } from "@/hooks/use-patch-save";
+import { SaveIndicator } from "@/components/save-indicator";
 import { Plus, Trash2, AlertTriangle, CheckCircle2, ArrowUp, ArrowDown } from "lucide-react";
 import { useState } from "react";
 
@@ -46,9 +48,9 @@ function AIPackStudioPage() {
     </>
   );
 
-  const patch = async (p: Partial<AIPack>) => {
-    await Repo.update("aiPacks", ap.id, { ...p, updatedAt: new Date().toISOString() });
-  };
+  const { patch, state: saveState } = usePatchSave<AIPack>({
+    save: async (p) => { await Repo.update("aiPacks", ap.id, { ...p, updatedAt: new Date().toISOString() }); },
+  });
 
   const promote = async (target: ManufacturingStage) => {
     const check = validateAIPackPromotion(ap, target, s);
@@ -123,6 +125,7 @@ function AIPackStudioPage() {
         description={ap.purpose || "Governed AI Pack workspace"}
         actions={
           <div className="flex items-center gap-2">
+            <SaveIndicator saving={saveState.saving} dirty={saveState.dirty} error={saveState.error} lastSavedAt={saveState.lastSavedAt} onRetry={saveState.retry} />
             <PublicationStageBadge stage={ap.manufacturingStage} />
             <Select value={ap.manufacturingStage} onValueChange={v => promote(v as ManufacturingStage)}>
               <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>

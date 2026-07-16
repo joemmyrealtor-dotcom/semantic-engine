@@ -18,6 +18,8 @@ import {
 } from "@/lib/data/service";
 import { PublicationStageBadge } from "@/components/publication-stage-badge";
 import { CoverageBar } from "@/routes/publications.index";
+import { usePatchSave } from "@/hooks/use-patch-save";
+import { SaveIndicator } from "@/components/save-indicator";
 import {
   Plus, Trash2, ArrowUp, ArrowDown, ChevronRight, ChevronDown,
   AlertTriangle, CheckCircle2, ExternalLink,
@@ -47,9 +49,9 @@ function ClientToolkitStudioPage() {
     </>
   );
 
-  const patchToolkit = async (p: Partial<ClientToolkit>) => {
-    await Repo.update("clientToolkits", tk.id, { ...p, updatedAt: new Date().toISOString() });
-  };
+  const { patch: patchToolkit, state: saveState } = usePatchSave<ClientToolkit>({
+    save: async (p) => { await Repo.update("clientToolkits", tk.id, { ...p, updatedAt: new Date().toISOString() }); },
+  });
 
   const patchSection = async (sid: string, p: Partial<ClientToolkitSection>) => {
     const next = tk.sections.map(sec => sec.id === sid ? { ...sec, ...p } : sec);
@@ -131,6 +133,7 @@ function ClientToolkitStudioPage() {
         description={tk.description || "Toolkit workspace"}
         actions={
           <div className="flex items-center gap-2">
+            <SaveIndicator saving={saveState.saving} dirty={saveState.dirty} error={saveState.error} lastSavedAt={saveState.lastSavedAt} onRetry={saveState.retry} />
             <PublicationStageBadge stage={tk.manufacturingStage} />
             <Select value={tk.manufacturingStage} onValueChange={v => promote(v as ManufacturingStage)}>
               <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
