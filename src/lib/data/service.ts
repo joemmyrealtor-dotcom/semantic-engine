@@ -339,6 +339,18 @@ export function parseImport(json: string): ImportResult {
     executiveAlerts: obj.executiveAlerts ?? [],
     savedExecutiveViews: obj.savedExecutiveViews ?? [],
     reportRuns: obj.reportRuns ?? [],
+    integrationConnections: obj.integrationConnections ?? [],
+    webhookEndpoints: obj.webhookEndpoints ?? [],
+    webhookDeliveries: obj.webhookDeliveries ?? [],
+    apiClients: obj.apiClients ?? [],
+    importJobs: obj.importJobs ?? [],
+    exportJobs: obj.exportJobs ?? [],
+    syncMappings: obj.syncMappings ?? [],
+    externalReferences: obj.externalReferences ?? [],
+    deliveryPackages: obj.deliveryPackages ?? [],
+    deliveryRuns: obj.deliveryRuns ?? [],
+    eventSubscriptions: obj.eventSubscriptions ?? [],
+    domainEvents: obj.domainEvents ?? [],
   };
   return { snapshot: snap, errors, brokenReferences: detectBrokenReferences(snap) };
 }
