@@ -75,7 +75,11 @@ function pushKw(...vals: (string | string[] | undefined | null)[]): string[] {
 }
 
 /** Build a flat, searchable index of every canonical asset. */
+const memoUniversalIndex = memoize("intelligence.universalIndex", (_k: string, s: DataSnapshot) => buildUniversalIndexImpl(s), 8);
 export function buildUniversalIndex(s: DataSnapshot): UniversalAsset[] {
+  return memoUniversalIndex(snapKey(s), s);
+}
+function buildUniversalIndexImpl(s: DataSnapshot): UniversalAsset[] {
   const out: UniversalAsset[] = [];
   const H = (parts: (string | undefined | null)[]) =>
     parts.filter(Boolean).join(" \u2022 ").toLowerCase();
