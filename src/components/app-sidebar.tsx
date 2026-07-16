@@ -19,6 +19,8 @@ const items = [
   { to: "/agents", label: "Agents", icon: Bot },
   { to: "/automations", label: "Automations", icon: Workflow },
   { to: "/operations", label: "Operations", icon: Activity },
+  { to: "/integrations", label: "Integrations", icon: Plug },
+  { to: "/developer", label: "API Explorer", icon: Code2 },
   { to: "/releases/$id", params: { id: "LKR-1.0.001" }, label: "Releases", icon: Package },
   { to: "/governance", label: "Governance", icon: ShieldCheck },
   { to: "/data", label: "Import / Export", icon: Database },
