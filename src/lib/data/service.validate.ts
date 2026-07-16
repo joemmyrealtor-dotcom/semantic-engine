@@ -20,6 +20,13 @@ import {
   nextAgentId,
 } from "./service";
 import type { Agent, AgentEvaluationCase } from "./schema";
+import * as securityMod from "./security";
+import * as auditMod from "./audit";
+import * as backupsMod from "./backups";
+import * as deploymentMod from "./deployment";
+import * as perfMod from "./performance";
+import * as authMod from "./auth";
+import * as wsMod from "./workspaces";
 
 let count = 0;
 function check(name: string, cond: boolean) {
