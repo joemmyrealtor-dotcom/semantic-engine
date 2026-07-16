@@ -74,7 +74,7 @@ export function verifyMigration(snapshot: DataSnapshot): { ok: boolean; issues: 
   }
   const requiredKeys: (keyof DataSnapshot)[] = ["workspaces","auditEvents","featureFlags","rateLimitBuckets","maintenanceMode"];
   for (const k of requiredKeys) {
-    if ((snapshot as Record<string, unknown>)[k] === undefined) issues.push(`missing ${String(k)}`);
+    if ((snapshot as unknown as Record<string, unknown>)[k] === undefined) issues.push(`missing ${String(k)}`);
   }
   return { ok: issues.length === 0, issues };
 }
