@@ -122,10 +122,12 @@ export function contentHash(value: unknown): string {
 }
 
 function stableStringify(v: unknown): string {
-  if (v == null || typeof v !== "object") return JSON.stringify(v);
-  if (Array.isArray(v)) return "[" + v.map(stableStringify).join(",") + "]";
-  const keys = Object.keys(v as Record<string, unknown>).sort();
-  return "{" + keys.map(k => JSON.stringify(k) + ":" + stableStringify((v as Record<string, unknown>)[k])).join(",") + "}";
+  if (v === undefined) return "null";
+  if (v === null || typeof v !== "object") return JSON.stringify(v);
+  if (Array.isArray(v)) return "[" + v.map(x => stableStringify(x === undefined ? null : x)).join(",") + "]";
+  const src = v as Record<string, unknown>;
+  const keys = Object.keys(src).filter(k => src[k] !== undefined).sort();
+  return "{" + keys.map(k => JSON.stringify(k) + ":" + stableStringify(src[k])).join(",") + "}";
 }
 
 /** Never expose raw API keys — display only non-crypto fingerprint + last 4. */
