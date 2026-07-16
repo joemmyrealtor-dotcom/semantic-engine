@@ -33,6 +33,11 @@ type EntityMap = {
   deliveryRuns: DataSnapshot["deliveryRuns"][number];
   eventSubscriptions: DataSnapshot["eventSubscriptions"][number];
   domainEvents: DataSnapshot["domainEvents"][number];
+  auditEvents: DataSnapshot["auditEvents"][number];
+  backups: DataSnapshot["backups"][number];
+  workspaces: DataSnapshot["workspaces"][number];
+  featureFlags: DataSnapshot["featureFlags"][number];
+  rateLimitBuckets: DataSnapshot["rateLimitBuckets"][number];
 };
 
 type Listener = () => void;
