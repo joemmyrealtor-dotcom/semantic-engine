@@ -18,6 +18,8 @@ import {
 } from "@/lib/data/service";
 import { PublicationStageBadge } from "@/components/publication-stage-badge";
 import { CoverageBar } from "@/routes/publications.index";
+import { usePatchSave } from "@/hooks/use-patch-save";
+import { SaveIndicator } from "@/components/save-indicator";
 import {
   Plus, Trash2, ArrowUp, ArrowDown, ChevronRight, ChevronDown,
   AlertTriangle, CheckCircle2, ExternalLink,
