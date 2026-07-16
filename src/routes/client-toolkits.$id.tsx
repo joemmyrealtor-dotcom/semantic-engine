@@ -133,6 +133,7 @@ function ClientToolkitStudioPage() {
         description={tk.description || "Toolkit workspace"}
         actions={
           <div className="flex items-center gap-2">
+            <SaveIndicator saving={saveState.saving} dirty={saveState.dirty} error={saveState.error} lastSavedAt={saveState.lastSavedAt} onRetry={saveState.retry} />
             <PublicationStageBadge stage={tk.manufacturingStage} />
             <Select value={tk.manufacturingStage} onValueChange={v => promote(v as ManufacturingStage)}>
               <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
