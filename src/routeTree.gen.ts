@@ -43,6 +43,7 @@ import { Route as AiPacksIdRouteImport } from './routes/ai-packs.$id'
 import { Route as AgentsIdRouteImport } from './routes/agents.$id'
 import { Route as AdminWorkspacesRouteImport } from './routes/admin.workspaces'
 import { Route as AdminMonitoringRouteImport } from './routes/admin.monitoring'
+import { Route as AdminDeploymentRouteImport } from './routes/admin.deployment'
 import { Route as AdminBackupsRouteImport } from './routes/admin.backups'
 import { Route as AdminAuditRouteImport } from './routes/admin.audit'
 import { Route as ApiPublicV1SplatRouteImport } from './routes/api/public/v1/$'
@@ -217,6 +218,11 @@ const AdminMonitoringRoute = AdminMonitoringRouteImport.update({
   path: '/admin/monitoring',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminDeploymentRoute = AdminDeploymentRouteImport.update({
+  id: '/admin/deployment',
+  path: '/admin/deployment',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminBackupsRoute = AdminBackupsRouteImport.update({
   id: '/admin/backups',
   path: '/admin/backups',
@@ -248,6 +254,7 @@ export interface FileRoutesByFullPath {
   '/repository': typeof RepositoryRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/backups': typeof AdminBackupsRoute
+  '/admin/deployment': typeof AdminDeploymentRoute
   '/admin/monitoring': typeof AdminMonitoringRoute
   '/admin/workspaces': typeof AdminWorkspacesRoute
   '/agents/$id': typeof AgentsIdRoute
@@ -287,6 +294,7 @@ export interface FileRoutesByTo {
   '/repository': typeof RepositoryRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/backups': typeof AdminBackupsRoute
+  '/admin/deployment': typeof AdminDeploymentRoute
   '/admin/monitoring': typeof AdminMonitoringRoute
   '/admin/workspaces': typeof AdminWorkspacesRoute
   '/agents/$id': typeof AgentsIdRoute
@@ -327,6 +335,7 @@ export interface FileRoutesById {
   '/repository': typeof RepositoryRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/backups': typeof AdminBackupsRoute
+  '/admin/deployment': typeof AdminDeploymentRoute
   '/admin/monitoring': typeof AdminMonitoringRoute
   '/admin/workspaces': typeof AdminWorkspacesRoute
   '/agents/$id': typeof AgentsIdRoute
@@ -368,6 +377,7 @@ export interface FileRouteTypes {
     | '/repository'
     | '/admin/audit'
     | '/admin/backups'
+    | '/admin/deployment'
     | '/admin/monitoring'
     | '/admin/workspaces'
     | '/agents/$id'
@@ -407,6 +417,7 @@ export interface FileRouteTypes {
     | '/repository'
     | '/admin/audit'
     | '/admin/backups'
+    | '/admin/deployment'
     | '/admin/monitoring'
     | '/admin/workspaces'
     | '/agents/$id'
@@ -446,6 +457,7 @@ export interface FileRouteTypes {
     | '/repository'
     | '/admin/audit'
     | '/admin/backups'
+    | '/admin/deployment'
     | '/admin/monitoring'
     | '/admin/workspaces'
     | '/agents/$id'
@@ -486,6 +498,7 @@ export interface RootRouteChildren {
   RepositoryRoute: typeof RepositoryRoute
   AdminAuditRoute: typeof AdminAuditRoute
   AdminBackupsRoute: typeof AdminBackupsRoute
+  AdminDeploymentRoute: typeof AdminDeploymentRoute
   AdminMonitoringRoute: typeof AdminMonitoringRoute
   AdminWorkspacesRoute: typeof AdminWorkspacesRoute
   AgentsIdRoute: typeof AgentsIdRoute
@@ -749,6 +762,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminMonitoringRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/deployment': {
+      id: '/admin/deployment'
+      path: '/admin/deployment'
+      fullPath: '/admin/deployment'
+      preLoaderRoute: typeof AdminDeploymentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/backups': {
       id: '/admin/backups'
       path: '/admin/backups'
@@ -812,6 +832,7 @@ const rootRouteChildren: RootRouteChildren = {
   RepositoryRoute: RepositoryRoute,
   AdminAuditRoute: AdminAuditRoute,
   AdminBackupsRoute: AdminBackupsRoute,
+  AdminDeploymentRoute: AdminDeploymentRoute,
   AdminMonitoringRoute: AdminMonitoringRoute,
   AdminWorkspacesRoute: AdminWorkspacesRoute,
   AgentsIdRoute: AgentsIdRoute,

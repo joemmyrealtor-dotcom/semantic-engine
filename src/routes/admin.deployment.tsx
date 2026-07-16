@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { startupDiagnostics, releaseCandidateReadiness, maintenanceGate } from "@/lib/data/deployment";
 import { appendAudit } from "@/lib/data/audit";
-import { getRole, currentCan, ALL_ROLES, setRole, permissionsFor } from "@/lib/data/auth";
+import { getRole, currentCan, setRole, permissionsFor } from "@/lib/data/auth";
+import { ALL_ROLES, type Role } from "@/lib/data/schema";
 
 export const Route = createFileRoute("/admin/deployment")({
   head: () => ({ meta: [{ title: "Deployment Readiness — Legacy Platform" }] }),
