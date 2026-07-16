@@ -14,10 +14,10 @@ const navItems = [
   { to: "/graph", label: "Relationships", icon: Network },
   { to: "/knowledge-objects/new", label: "KO Factory", icon: PenTool },
   { to: "/client-tools/new", label: "Client Tools", icon: Wrench },
-  { to: "/publications/PL-101", label: "Publications", icon: BookOpen },
+  { to: "/publications", label: "Publications", icon: BookOpen },
   { to: "/prompts", label: "Prompts", icon: ScrollText },
   { to: "/agents", label: "Agents", icon: Bot },
-  { to: "/releases/LKR-1.0.001", label: "Releases", icon: Package },
+  { to: "/releases/$id", params: { id: "LKR-1.0.001" }, label: "Releases", icon: Package },
   { to: "/governance", label: "Governance", icon: ShieldCheck },
   { to: "/data", label: "Import / Export", icon: Database },
 ] as const;
@@ -47,7 +47,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   const active = it.to === "/" ? pathname === "/" : pathname.startsWith(it.to.split("/").slice(0, 2).join("/"));
                   const Icon = it.icon;
                   return (
-                    <Link key={it.to} to={it.to} className={cn(
+                    <Link key={it.to} to={it.to as string} params={"params" in it ? (it as { params: Record<string, string> }).params : undefined} className={cn(
                       "flex items-center gap-3 px-3 py-2 rounded-md text-sm",
                       active ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60"
                     )}>

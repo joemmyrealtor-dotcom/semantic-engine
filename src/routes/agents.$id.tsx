@@ -23,6 +23,8 @@ import {
 import { PublicationStageBadge } from "@/components/publication-stage-badge";
 import { CoverageBar } from "@/routes/publications.index";
 import { CheckCircle2, XCircle, AlertTriangle, ArrowRight, Play, Plus, Trash2 } from "lucide-react";
+import { useAutosave } from "@/hooks/use-autosave";
+import { SaveIndicator } from "@/components/save-indicator";
 
 export const Route = createFileRoute("/agents/$id")({
   head: () => ({ meta: [{ title: "Agent Studio — Legacy Platform" }] }),
@@ -36,27 +38,16 @@ function AgentStudio() {
   const stored = s?.agents.find(a => a.id === id);
   const [draft, setDraft] = useState<Agent | null>(null);
   const [dirty, setDirty] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [lastSaveError, setLastSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     if (stored && !draft) setDraft(stored);
   }, [stored, draft]);
 
-  useEffect(() => {
-    if (!draft || !dirty) return;
-    const t = setTimeout(async () => {
-      try {
-        setSaving(true);
-        await Repo.update("agents", draft.id, draft);
-        setDirty(false);
-        setLastSaveError(null);
-      } catch (e) {
-        setLastSaveError(e instanceof Error ? e.message : String(e));
-      } finally { setSaving(false); }
-    }, 700);
-    return () => clearTimeout(t);
-  }, [draft, dirty]);
+  const autosave = useAutosave<Agent>({
+    draft, dirty,
+    save: async v => { await Repo.update("agents", v.id, v); },
+    onSaved: () => setDirty(false),
+  });
 
   if (!s) return <LoadingState />;
   if (!stored || !draft) {
@@ -95,10 +86,7 @@ function AgentStudio() {
         description={draft.description || draft.role}
         actions={
           <div className="flex items-center gap-2 text-xs">
-            {lastSaveError ? <span className="text-destructive">Save failed — retrying</span>
-              : saving ? <span className="text-muted-foreground">Saving…</span>
-              : dirty ? <span className="text-gold">Unsaved…</span>
-              : <span className="text-evergreen">Saved</span>}
+            <SaveIndicator saving={autosave.saving} dirty={dirty} error={autosave.error} lastSavedAt={autosave.lastSavedAt} onRetry={autosave.retry} />
             <Link to="/agents"><Button variant="outline" size="sm">Registry</Button></Link>
           </div>
         }
