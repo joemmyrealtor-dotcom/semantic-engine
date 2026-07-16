@@ -49,9 +49,9 @@ function ClientToolkitStudioPage() {
     </>
   );
 
-  const patchToolkit = async (p: Partial<ClientToolkit>) => {
-    await Repo.update("clientToolkits", tk.id, { ...p, updatedAt: new Date().toISOString() });
-  };
+  const { patch: patchToolkit, state: saveState } = usePatchSave<ClientToolkit>({
+    save: async (p) => { await Repo.update("clientToolkits", tk.id, { ...p, updatedAt: new Date().toISOString() }); },
+  });
 
   const patchSection = async (sid: string, p: Partial<ClientToolkitSection>) => {
     const next = tk.sections.map(sec => sec.id === sid ? { ...sec, ...p } : sec);
