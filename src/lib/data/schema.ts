@@ -1,7 +1,18 @@
 // Legacy Platform v2.0 — Entity Schema
 // All entities share timestamps and lifecycle status.
 
-export type Role = "Owner" | "Editor" | "Reviewer" | "Contributor" | "Viewer";
+// Workstream 9 — expanded RBAC. Legacy roles (Owner/Editor/Reviewer/Contributor/Viewer)
+// remain valid so all prior policies and seeds continue to type-check; the extended
+// roles (Administrator/Publisher/SME/QA/Operations/ReadOnly/APIClient) provide the
+// enterprise governance surface required by Workstream 9.
+export type Role =
+  | "Owner" | "Editor" | "Reviewer" | "Contributor" | "Viewer"
+  | "Administrator" | "Publisher" | "SME" | "QA" | "Operations" | "ReadOnly" | "APIClient";
+
+export const ALL_ROLES: Role[] = [
+  "Administrator","Owner","Publisher","Editor","Reviewer","SME","QA",
+  "Operations","Contributor","Viewer","ReadOnly","APIClient",
+];
 
 export type Status =
   | "Draft"
