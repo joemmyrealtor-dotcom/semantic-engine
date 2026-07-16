@@ -1,7 +1,18 @@
 // Legacy Platform v2.0 — Entity Schema
 // All entities share timestamps and lifecycle status.
 
-export type Role = "Owner" | "Editor" | "Reviewer" | "Contributor" | "Viewer";
+// Workstream 9 — expanded RBAC. Legacy roles (Owner/Editor/Reviewer/Contributor/Viewer)
+// remain valid so all prior policies and seeds continue to type-check; the extended
+// roles (Administrator/Publisher/SME/QA/Operations/ReadOnly/APIClient) provide the
+// enterprise governance surface required by Workstream 9.
+export type Role =
+  | "Owner" | "Editor" | "Reviewer" | "Contributor" | "Viewer"
+  | "Administrator" | "Publisher" | "SME" | "QA" | "Operations" | "ReadOnly" | "APIClient";
+
+export const ALL_ROLES: Role[] = [
+  "Administrator","Owner","Publisher","Editor","Reviewer","SME","QA",
+  "Operations","Contributor","Viewer","ReadOnly","APIClient",
+];
 
 export type Status =
   | "Draft"
@@ -569,7 +580,13 @@ export type EntityType =
   | "deliveryPackages"
   | "deliveryRuns"
   | "eventSubscriptions"
-  | "domainEvents";
+  | "domainEvents"
+  // Workstream 9
+  | "auditEvents"
+  | "backups"
+  | "workspaces"
+  | "featureFlags"
+  | "rateLimitBuckets";
 
 // ===================================================================
 // Workstream 5 — Automation, Orchestration, Operational Governance
@@ -1109,6 +1126,91 @@ export interface EventSubscription extends Timestamped {
 }
 
 // ===================================================================
+// Workstream 9 — Enterprise Hardening
+// ===================================================================
+
+export type AuditAction =
+  | "create" | "update" | "delete" | "stage-transition" | "release"
+  | "approve" | "reject" | "restore" | "backup" | "role-change"
+  | "feature-flag-change" | "maintenance-mode-change" | "api-key-rotate"
+  | "login" | "logout" | "permission-denied" | "workspace-switch";
+
+export const AUDIT_ACTIONS: AuditAction[] = [
+  "create","update","delete","stage-transition","release","approve","reject",
+  "restore","backup","role-change","feature-flag-change","maintenance-mode-change",
+  "api-key-rotate","login","logout","permission-denied","workspace-switch",
+];
+
+export interface AuditEvent {
+  id: string;                            // AUDIT-###
+  at: string;
+  actor: string;
+  actorRole: Role;
+  workspaceId: string;
+  action: AuditAction;
+  entityType: string;
+  entityId: string;
+  reason: string;
+  before: Record<string, unknown> | null; // redacted
+  after: Record<string, unknown> | null;  // redacted
+  approvals: { by: string; role: Role; at: string }[];
+  correlationId: string;
+  hash: string;                          // sha256(prevHash + payload)
+  prevHash: string;
+}
+
+export interface BackupSnapshot extends Timestamped {
+  id: string;                            // BKP-###
+  label: string;
+  reason: string;
+  actor: string;
+  schemaVersion: number;
+  entityCount: number;
+  bytes: number;
+  hash: string;
+  workspaceId: string;
+  payload: string;                       // JSON.stringify of snapshot at backup time
+  restoredAt: string | null;
+}
+
+export interface Workspace extends Timestamped {
+  id: string;                            // WS-###
+  name: string;
+  slug: string;
+  branding: { primary: string; accent: string; logoInitials: string };
+  isolated: boolean;                     // when true, all reads scope to workspaceId
+  settings: { defaultRole: Role; requireHumanReview: boolean; retentionDays: number };
+  metrics: { assets: number; releases: number; runs: number };
+  archived: boolean;
+}
+
+export interface FeatureFlag extends Timestamped {
+  id: string;                            // FF-###
+  key: string;
+  description: string;
+  enabled: boolean;
+  audience: "all" | "administrators" | "operations" | "beta";
+  owner: string;
+}
+
+export interface MaintenanceModeState {
+  enabled: boolean;
+  reason: string;
+  since: string | null;
+  by: string | null;
+  allowRoles: Role[];
+}
+
+export interface APIRateLimitBucket {
+  id: string;                            // RL-###
+  key: string;                           // e.g. "public:/api/public/v1/*"
+  windowSeconds: number;
+  maxRequests: number;
+  currentCount: number;
+  windowStart: string;
+}
+
+// ===================================================================
 // Snapshot
 // ===================================================================
 
@@ -1128,12 +1230,10 @@ export interface DataSnapshot {
   aiPacks: AIPack[];
   automations: AutomationRecipe[];
   automationRuns: AutomationRun[];
-  // Workstream 7 — analytics history & reporting
   analyticsSnapshots: AnalyticsSnapshot[];
   executiveAlerts: ExecutiveAlert[];
   savedExecutiveViews: SavedExecutiveView[];
   reportRuns: ReportRun[];
-  // Workstream 8 — integrations
   integrationConnections: IntegrationConnection[];
   webhookEndpoints: WebhookEndpoint[];
   webhookDeliveries: WebhookDelivery[];
@@ -1146,9 +1246,17 @@ export interface DataSnapshot {
   deliveryRuns: DeliveryRun[];
   eventSubscriptions: EventSubscription[];
   domainEvents: DomainEvent[];
+  // Workstream 9
+  auditEvents: AuditEvent[];
+  backups: BackupSnapshot[];
+  workspaces: Workspace[];
+  featureFlags: FeatureFlag[];
+  rateLimitBuckets: APIRateLimitBucket[];
+  maintenanceMode: MaintenanceModeState;
+  activeWorkspaceId: string;
 }
 
-export const SCHEMA_VERSION = 6;
+export const SCHEMA_VERSION = 7;
 
 export const ID_PATTERNS: Record<string, RegExp> = {
   domain: /^DOM-\d{3}$/,
@@ -1176,7 +1284,6 @@ export const ID_PATTERNS: Record<string, RegExp> = {
   executiveAlert: /^EA-\d{3}$/,
   savedExecutiveView: /^SV-\d{3}$/,
   reportRun: /^RPT-\d{3}$/,
-  // Workstream 8
   integrationConnection: /^IC-\d{3}$/,
   integrationCredentialRef: /^ICR-\d{3}$/,
   webhookEndpoint: /^WH-\d{3}$/,
@@ -1190,6 +1297,13 @@ export const ID_PATTERNS: Record<string, RegExp> = {
   externalReference: /^ER-\d{3}$/,
   eventSubscription: /^ES-\d{3}$/,
   domainEvent: /^EVT-\d{3,}$/,
+  // Workstream 9
+  auditEvent: /^AUDIT-\d{3,}$/,
+  backup: /^BKP-\d{3,}$/,
+  workspace: /^WS-\d{3}$/,
+  featureFlag: /^FF-\d{3}$/,
+  rateLimitBucket: /^RL-\d{3}$/,
 };
+
 
 

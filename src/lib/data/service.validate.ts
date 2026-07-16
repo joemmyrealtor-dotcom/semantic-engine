@@ -20,6 +20,13 @@ import {
   nextAgentId,
 } from "./service";
 import type { Agent, AgentEvaluationCase } from "./schema";
+import * as securityMod from "./security";
+import * as auditMod from "./audit";
+import * as backupsMod from "./backups";
+import * as deploymentMod from "./deployment";
+import * as perfMod from "./performance";
+import * as authMod from "./auth";
+import * as wsMod from "./workspaces";
 
 let count = 0;
 function check(name: string, cond: boolean) {
@@ -406,14 +413,86 @@ export function runValidations(): number {
   check("webhook delivery id pattern", /^WD-\d{3}$/.test("WD-001"));
   check("domain event id pattern", /^EVT-\d{3,}$/.test("EVT-001"));
 
+  // ============================================================
+  // Workstream 9 — Enterprise Hardening
+  // ============================================================
+  // Redaction
+  const redacted = securityMod.redactSecrets({ name: "x", api_key: "secret", nested: { password: "p" } }) as Record<string, unknown>;
+  eq("redact api_key", redacted.api_key, "[REDACTED]");
+  eq("redact nested password", (redacted.nested as Record<string, unknown>).password, "[REDACTED]");
+  check("preserve non-secret field", redacted.name === "x");
 
+  eq("hash deterministic", securityMod.hashString("hello"), securityMod.hashString("hello"));
+  check("content hash key-order independent",
+    securityMod.contentHash({ a: 1, b: 2 }) === securityMod.contentHash({ b: 2, a: 1 }));
+
+  const envOk = securityMod.validateEnvironment({ VITE_SUPABASE_URL: "x", VITE_SUPABASE_PUBLISHABLE_KEY: "y", SUPABASE_URL: "x", SUPABASE_PUBLISHABLE_KEY: "y" });
+  check("env validation ok when all present", envOk.ok);
+  const envBad = securityMod.validateEnvironment({});
+  check("env validation reports missing", envBad.missing.length > 0);
+
+  const nowIso = new Date().toISOString();
+  const rl1 = securityMod.evaluateRateLimit({ currentCount: 0, windowStart: nowIso, windowSeconds: 60, maxRequests: 2 }, nowIso);
+  check("rate limit allows first request", rl1.decision.allowed);
+  const rl2 = securityMod.evaluateRateLimit({ currentCount: 2, windowStart: nowIso, windowSeconds: 60, maxRequests: 2 }, nowIso);
+  check("rate limit blocks at max", !rl2.decision.allowed);
+  check("rate limit retry-after populated", rl2.decision.retryAfterSeconds > 0);
+
+  const fp = securityMod.apiKeyFingerprint("sk_live_abcdef1234");
+  check("fingerprint hides raw key", !fp.fingerprint.includes("sk_live"));
+  check("fingerprint last4 preserved", fp.last4 === "1234");
+
+  const seed = { ...snap7, auditEvents: [] };
+  const a1 = auditMod.appendAudit(seed.auditEvents, { actor: "u", actorRole: "Editor", workspaceId: seed.activeWorkspaceId, action: "create", entityType: "concept", entityId: "CR-001-001" });
+  const a2 = auditMod.appendAudit(a1, { actor: "u", actorRole: "Editor", workspaceId: seed.activeWorkspaceId, action: "update", entityType: "concept", entityId: "CR-001-001", before: { name: "a" }, after: { name: "b" } });
+  const verify = auditMod.verifyAuditChain(a2);
+  check("audit chain verifies", verify.ok);
+  check("audit id pattern", /^AUDIT-\d{3,}$/.test(a2[0].id));
+  const tampered = [...a2]; tampered[1] = { ...tampered[1], after: { name: "MALICIOUS" } };
+  check("audit chain detects tamper", !auditMod.verifyAuditChain(tampered).ok);
+
+  const diffs = auditMod.auditDiff({ name: "a", role: "x" }, { name: "b", role: "x" });
+  eq("audit diff single change", diffs.length, 1);
+  eq("audit diff key", diffs[0]?.key, "name");
+
+  const bk = backupsMod.createBackup({ ...seed, auditEvents: a2 }, { label: "t", reason: "test", actor: "u" });
+  check("backup id pattern", /^BKP-\d{3,}$/.test(bk.id));
+  check("backup integrity ok", backupsMod.verifyBackupIntegrity(bk).ok);
+  const restored = backupsMod.restoreFromBackup(bk);
+  eq("restored schemaVersion matches", restored.schemaVersion, seed.schemaVersion);
+  const bkBad = { ...bk, payload: bk.payload.replace(/./, "X") };
+  check("tampered backup fails integrity", !backupsMod.verifyBackupIntegrity(bkBad).ok);
+
+  const dr = backupsMod.buildDisasterRecoveryPlan({ ...seed, backups: [bk] });
+  check("DR plan has latest backup", !!dr.latestBackup);
+  check("migration verify returns issues array", Array.isArray(backupsMod.verifyMigration(seed).issues));
+
+  check("Administrator has role.assign", authMod.hasPermission("Administrator", "role.assign"));
+  check("Viewer cannot delete", !authMod.hasPermission("Viewer", "content.delete"));
+  check("APIClient can read", authMod.hasPermission("APIClient", "content.read"));
+  check("Operations manages backups", authMod.hasPermission("Operations", "backup.create"));
+  check("ReadOnly has no write", !authMod.hasPermission("ReadOnly", "content.create"));
+
+  const rc = deploymentMod.releaseCandidateReadiness({ VITE_SUPABASE_URL: "x", VITE_SUPABASE_PUBLISHABLE_KEY: "y", SUPABASE_URL: "x", SUPABASE_PUBLISHABLE_KEY: "y" }, { ...seed, backups: [bk, bk, bk] });
+  check("RC readiness score is 0..100", rc.score >= 0 && rc.score <= 100);
+  check("RC state is one of ready/conditional/blocked", ["ready","conditional","blocked"].includes(rc.state));
+  const diags = deploymentMod.startupDiagnostics({}, seed);
+  check("startup diagnostics report missing env", diags.some(d => d.name === "Environment variables" && !d.ok));
+  check("feature flag disabled → false", !deploymentMod.isFeatureEnabled([], "any.key", "Administrator"));
+  check("maintenance gate blocks non-allow", !deploymentMod.maintenanceGate({ ...seed, maintenanceMode: { enabled: true, reason: "x", since: null, by: null, allowRoles: ["Administrator"] } }, "Viewer").allowed);
+
+  perfMod.resetCounters();
+  let calls = 0;
+  const fn = perfMod.memoize("test.memo", (x: number) => { calls++; return x * 2; });
+  fn(2); fn(2); fn(3);
+  eq("memoize deduplicates", calls, 2);
+  const report = perfMod.perfReport();
+  check("perf report tracks counter", report.counters.some(c => c.name === "test.memo"));
+
+  const met = wsMod.workspaceMetrics(seed, seed.activeWorkspaceId);
+  check("workspace metrics numeric", typeof met.assets === "number");
 
   console.log(`OK ${count} checks`);
   return count;
 }
 
-// Run when invoked directly.
-declare const process: { argv: string[] } | undefined;
-if (typeof process !== "undefined" && process.argv[1]?.endsWith("service.validate.ts")) {
-  runValidations();
-}

@@ -103,6 +103,14 @@ export function migrateSnapshot(s: DataSnapshot): DataSnapshot {
     deliveryRuns: s.deliveryRuns ?? [],
     eventSubscriptions: s.eventSubscriptions ?? [],
     domainEvents: s.domainEvents ?? [],
+    // Workstream 9
+    auditEvents: s.auditEvents ?? [],
+    backups: s.backups ?? [],
+    workspaces: s.workspaces ?? [{ id: "WS-001", name: "JM Advisory Press", slug: "jm-primary", branding: { primary: "#0B1F3A", accent: "#C9A24E", logoInitials: "JM" }, isolated: false, settings: { defaultRole: "Viewer" as const, requireHumanReview: true, retentionDays: 365 }, metrics: { assets: 0, releases: 0, runs: 0 }, archived: false, createdAt: s.exportedAt, updatedAt: s.exportedAt }],
+    featureFlags: s.featureFlags ?? [],
+    rateLimitBuckets: s.rateLimitBuckets ?? [],
+    maintenanceMode: s.maintenanceMode ?? { enabled: false, reason: "", since: null, by: null, allowRoles: ["Administrator","Owner"] },
+    activeWorkspaceId: s.activeWorkspaceId ?? "WS-001",
     clientToolkits: (s.clientToolkits ?? []).map(tk => ({
       ...tk,
       sections: (tk.sections ?? []).map(sec => ({ ...sec, presentations: sec.presentations ?? [] })),

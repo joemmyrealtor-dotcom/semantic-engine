@@ -403,6 +403,13 @@ export function parseImport(json: string): ImportResult {
     deliveryRuns: obj.deliveryRuns ?? [],
     eventSubscriptions: obj.eventSubscriptions ?? [],
     domainEvents: obj.domainEvents ?? [],
+    auditEvents: obj.auditEvents ?? [],
+    backups: obj.backups ?? [],
+    workspaces: obj.workspaces ?? [{ id: "WS-001", name: "Default", slug: "default", branding: { primary: "#0B1F3A", accent: "#C9A24E", logoInitials: "JM" }, isolated: false, settings: { defaultRole: "Viewer", requireHumanReview: true, retentionDays: 365 }, metrics: { assets: 0, releases: 0, runs: 0 }, archived: false, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }],
+    featureFlags: obj.featureFlags ?? [],
+    rateLimitBuckets: obj.rateLimitBuckets ?? [],
+    maintenanceMode: obj.maintenanceMode ?? { enabled: false, reason: "", since: null, by: null, allowRoles: ["Administrator","Owner"] },
+    activeWorkspaceId: obj.activeWorkspaceId ?? "WS-001",
   };
   return { snapshot: snap, errors, brokenReferences: detectBrokenReferences(snap) };
 }

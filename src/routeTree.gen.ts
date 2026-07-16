@@ -41,6 +41,11 @@ import { Route as AutomationsNewRouteImport } from './routes/automations.new'
 import { Route as AutomationsIdRouteImport } from './routes/automations.$id'
 import { Route as AiPacksIdRouteImport } from './routes/ai-packs.$id'
 import { Route as AgentsIdRouteImport } from './routes/agents.$id'
+import { Route as AdminWorkspacesRouteImport } from './routes/admin.workspaces'
+import { Route as AdminMonitoringRouteImport } from './routes/admin.monitoring'
+import { Route as AdminDeploymentRouteImport } from './routes/admin.deployment'
+import { Route as AdminBackupsRouteImport } from './routes/admin.backups'
+import { Route as AdminAuditRouteImport } from './routes/admin.audit'
 import { Route as ApiPublicV1SplatRouteImport } from './routes/api/public/v1/$'
 
 const RepositoryRoute = RepositoryRouteImport.update({
@@ -203,6 +208,31 @@ const AgentsIdRoute = AgentsIdRouteImport.update({
   path: '/agents/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminWorkspacesRoute = AdminWorkspacesRouteImport.update({
+  id: '/admin/workspaces',
+  path: '/admin/workspaces',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminMonitoringRoute = AdminMonitoringRouteImport.update({
+  id: '/admin/monitoring',
+  path: '/admin/monitoring',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminDeploymentRoute = AdminDeploymentRouteImport.update({
+  id: '/admin/deployment',
+  path: '/admin/deployment',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminBackupsRoute = AdminBackupsRouteImport.update({
+  id: '/admin/backups',
+  path: '/admin/backups',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminAuditRoute = AdminAuditRouteImport.update({
+  id: '/admin/audit',
+  path: '/admin/audit',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicV1SplatRoute = ApiPublicV1SplatRouteImport.update({
   id: '/api/public/v1/$',
   path: '/api/public/v1/$',
@@ -222,6 +252,11 @@ export interface FileRoutesByFullPath {
   '/prompts': typeof PromptsRoute
   '/reports': typeof ReportsRoute
   '/repository': typeof RepositoryRoute
+  '/admin/audit': typeof AdminAuditRoute
+  '/admin/backups': typeof AdminBackupsRoute
+  '/admin/deployment': typeof AdminDeploymentRoute
+  '/admin/monitoring': typeof AdminMonitoringRoute
+  '/admin/workspaces': typeof AdminWorkspacesRoute
   '/agents/$id': typeof AgentsIdRoute
   '/ai-packs/$id': typeof AiPacksIdRoute
   '/automations/$id': typeof AutomationsIdRoute
@@ -257,6 +292,11 @@ export interface FileRoutesByTo {
   '/prompts': typeof PromptsRoute
   '/reports': typeof ReportsRoute
   '/repository': typeof RepositoryRoute
+  '/admin/audit': typeof AdminAuditRoute
+  '/admin/backups': typeof AdminBackupsRoute
+  '/admin/deployment': typeof AdminDeploymentRoute
+  '/admin/monitoring': typeof AdminMonitoringRoute
+  '/admin/workspaces': typeof AdminWorkspacesRoute
   '/agents/$id': typeof AgentsIdRoute
   '/ai-packs/$id': typeof AiPacksIdRoute
   '/automations/$id': typeof AutomationsIdRoute
@@ -293,6 +333,11 @@ export interface FileRoutesById {
   '/prompts': typeof PromptsRoute
   '/reports': typeof ReportsRoute
   '/repository': typeof RepositoryRoute
+  '/admin/audit': typeof AdminAuditRoute
+  '/admin/backups': typeof AdminBackupsRoute
+  '/admin/deployment': typeof AdminDeploymentRoute
+  '/admin/monitoring': typeof AdminMonitoringRoute
+  '/admin/workspaces': typeof AdminWorkspacesRoute
   '/agents/$id': typeof AgentsIdRoute
   '/ai-packs/$id': typeof AiPacksIdRoute
   '/automations/$id': typeof AutomationsIdRoute
@@ -330,6 +375,11 @@ export interface FileRouteTypes {
     | '/prompts'
     | '/reports'
     | '/repository'
+    | '/admin/audit'
+    | '/admin/backups'
+    | '/admin/deployment'
+    | '/admin/monitoring'
+    | '/admin/workspaces'
     | '/agents/$id'
     | '/ai-packs/$id'
     | '/automations/$id'
@@ -365,6 +415,11 @@ export interface FileRouteTypes {
     | '/prompts'
     | '/reports'
     | '/repository'
+    | '/admin/audit'
+    | '/admin/backups'
+    | '/admin/deployment'
+    | '/admin/monitoring'
+    | '/admin/workspaces'
     | '/agents/$id'
     | '/ai-packs/$id'
     | '/automations/$id'
@@ -400,6 +455,11 @@ export interface FileRouteTypes {
     | '/prompts'
     | '/reports'
     | '/repository'
+    | '/admin/audit'
+    | '/admin/backups'
+    | '/admin/deployment'
+    | '/admin/monitoring'
+    | '/admin/workspaces'
     | '/agents/$id'
     | '/ai-packs/$id'
     | '/automations/$id'
@@ -436,6 +496,11 @@ export interface RootRouteChildren {
   PromptsRoute: typeof PromptsRoute
   ReportsRoute: typeof ReportsRoute
   RepositoryRoute: typeof RepositoryRoute
+  AdminAuditRoute: typeof AdminAuditRoute
+  AdminBackupsRoute: typeof AdminBackupsRoute
+  AdminDeploymentRoute: typeof AdminDeploymentRoute
+  AdminMonitoringRoute: typeof AdminMonitoringRoute
+  AdminWorkspacesRoute: typeof AdminWorkspacesRoute
   AgentsIdRoute: typeof AgentsIdRoute
   AiPacksIdRoute: typeof AiPacksIdRoute
   AutomationsIdRoute: typeof AutomationsIdRoute
@@ -683,6 +748,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AgentsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/workspaces': {
+      id: '/admin/workspaces'
+      path: '/admin/workspaces'
+      fullPath: '/admin/workspaces'
+      preLoaderRoute: typeof AdminWorkspacesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/monitoring': {
+      id: '/admin/monitoring'
+      path: '/admin/monitoring'
+      fullPath: '/admin/monitoring'
+      preLoaderRoute: typeof AdminMonitoringRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/deployment': {
+      id: '/admin/deployment'
+      path: '/admin/deployment'
+      fullPath: '/admin/deployment'
+      preLoaderRoute: typeof AdminDeploymentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/backups': {
+      id: '/admin/backups'
+      path: '/admin/backups'
+      fullPath: '/admin/backups'
+      preLoaderRoute: typeof AdminBackupsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/audit': {
+      id: '/admin/audit'
+      path: '/admin/audit'
+      fullPath: '/admin/audit'
+      preLoaderRoute: typeof AdminAuditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/v1/$': {
       id: '/api/public/v1/$'
       path: '/api/public/v1/$'
@@ -730,6 +830,11 @@ const rootRouteChildren: RootRouteChildren = {
   PromptsRoute: PromptsRoute,
   ReportsRoute: ReportsRoute,
   RepositoryRoute: RepositoryRoute,
+  AdminAuditRoute: AdminAuditRoute,
+  AdminBackupsRoute: AdminBackupsRoute,
+  AdminDeploymentRoute: AdminDeploymentRoute,
+  AdminMonitoringRoute: AdminMonitoringRoute,
+  AdminWorkspacesRoute: AdminWorkspacesRoute,
   AgentsIdRoute: AgentsIdRoute,
   AiPacksIdRoute: AiPacksIdRoute,
   AutomationsIdRoute: AutomationsIdRoute,
@@ -753,13 +858,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
