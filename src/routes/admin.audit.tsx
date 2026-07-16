@@ -23,7 +23,7 @@ function AuditExplorer() {
   if (!s) return <LoadingState />;
   return (
     <>
-      <PageHeader title="Audit Explorer" subtitle="Immutable, hash-chained trail of governed actions." />
+      <PageHeader title="Audit Explorer" description="Immutable, hash-chained trail of governed actions." />
       <PageBody>
         <div className="grid gap-4 md:grid-cols-4 mb-6">
           <KpiCard label="Events" value={s.auditEvents.length} />
