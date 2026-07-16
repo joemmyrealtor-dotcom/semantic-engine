@@ -4,6 +4,12 @@ import type {
   ClientToolkit, AIPack, AutomationRecipe, AutomationRun,
 } from "./schema";
 import { SCHEMA_VERSION } from "./schema";
+import {
+  seedIntegrationConnections, seedWebhookEndpoints, seedWebhookDeliveries,
+  seedApiClients, seedImportJobs, seedExportJobs, seedSyncMappings,
+  seedExternalReferences, seedDeliveryPackages, seedDeliveryRuns,
+  seedEventSubscriptions, seedDomainEvents,
+} from "./seed.integrations";
 
 const now = "2026-01-15T10:00:00.000Z";
 const ts = { createdAt: now, updatedAt: now };
@@ -861,6 +867,18 @@ export function buildSeedSnapshot(): DataSnapshot {
     executiveAlerts: seedExecutiveAlerts,
     savedExecutiveViews: seedSavedExecutiveViews,
     reportRuns: seedReportRuns,
+    integrationConnections: seedIntegrationConnections,
+    webhookEndpoints: seedWebhookEndpoints,
+    webhookDeliveries: seedWebhookDeliveries,
+    apiClients: seedApiClients,
+    importJobs: seedImportJobs,
+    exportJobs: seedExportJobs,
+    syncMappings: seedSyncMappings,
+    externalReferences: seedExternalReferences,
+    deliveryPackages: seedDeliveryPackages,
+    deliveryRuns: seedDeliveryRuns,
+    eventSubscriptions: seedEventSubscriptions,
+    domainEvents: seedDomainEvents,
   };
 }
 

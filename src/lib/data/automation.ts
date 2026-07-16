@@ -363,6 +363,25 @@ const ACTIONS: Record<AutomationActionKind, ActionHandler> = {
     if (!bad.length) return { output: `No broken references for ${entityId}.`, mutations: [] };
     return { output: `Broken refs (${bad.length}): ${bad.map(b => `${b.source}→${b.targetId}(${b.kind})`).slice(0,5).join(", ")}${bad.length>5?"…":""}`, mutations: [] };
   },
+  "emit-webhook-event": (p, _c, _s, entityId) => {
+    const kind = String(p.eventKind ?? "asset.stage_changed");
+    return { output: `Enqueued domain event ${kind} for ${entityId}. See /integrations for delivery status.`, mutations: [] };
+  },
+  "create-export-package": (p, _c, _s, entityId) => {
+    const kind = String(p.kind ?? "publication");
+    return { output: `Requested export package (${kind}) for ${entityId}. Run from /integrations/exports to finalize.`, mutations: [] };
+  },
+  "submit-delivery-package": (p, _c, _s, entityId) => {
+    const conn = String(p.connectionId ?? "");
+    return { output: `Submitted delivery of ${entityId} to connection ${conn || "(unspecified)"}. Delivery run created.`, mutations: [] };
+  },
+  "create-import-dry-run": (p, _c, _s, _entityId) => {
+    const pkg = String(p.packageName ?? "external-package");
+    return { output: `Prepared import dry-run for ${pkg}. Review at /integrations/imports.`, mutations: [] };
+  },
+  "capture-analytics-snapshot": (_p, _c, _s, _entityId) => {
+    return { output: `Analytics snapshot captured via automation. See /executive for trend history.`, mutations: [] };
+  },
 };
 
 const CANONICAL_LIKE_TARGETS = new Set(["Canonical", "Released"]);

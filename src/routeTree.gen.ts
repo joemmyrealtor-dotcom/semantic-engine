@@ -14,9 +14,11 @@ import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as PromptsRouteImport } from './routes/prompts'
 import { Route as OperationsRouteImport } from './routes/operations'
 import { Route as KnowledgeRouteImport } from './routes/knowledge'
+import { Route as IntegrationsRouteImport } from './routes/integrations'
 import { Route as GraphRouteImport } from './routes/graph'
 import { Route as GovernanceRouteImport } from './routes/governance'
 import { Route as ExecutiveRouteImport } from './routes/executive'
+import { Route as DeveloperRouteImport } from './routes/developer'
 import { Route as DataRouteImport } from './routes/data'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PublicationsIndexRouteImport } from './routes/publications.index'
@@ -64,6 +66,11 @@ const KnowledgeRoute = KnowledgeRouteImport.update({
   path: '/knowledge',
   getParentRoute: () => rootRouteImport,
 } as any)
+const IntegrationsRoute = IntegrationsRouteImport.update({
+  id: '/integrations',
+  path: '/integrations',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GraphRoute = GraphRouteImport.update({
   id: '/graph',
   path: '/graph',
@@ -77,6 +84,11 @@ const GovernanceRoute = GovernanceRouteImport.update({
 const ExecutiveRoute = ExecutiveRouteImport.update({
   id: '/executive',
   path: '/executive',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DeveloperRoute = DeveloperRouteImport.update({
+  id: '/developer',
+  path: '/developer',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DataRoute = DataRouteImport.update({
@@ -188,9 +200,11 @@ const AgentsIdRoute = AgentsIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/data': typeof DataRoute
+  '/developer': typeof DeveloperRoute
   '/executive': typeof ExecutiveRoute
   '/governance': typeof GovernanceRoute
   '/graph': typeof GraphRoute
+  '/integrations': typeof IntegrationsRoute
   '/knowledge': typeof KnowledgeRouteWithChildren
   '/operations': typeof OperationsRoute
   '/prompts': typeof PromptsRoute
@@ -219,9 +233,11 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/data': typeof DataRoute
+  '/developer': typeof DeveloperRoute
   '/executive': typeof ExecutiveRoute
   '/governance': typeof GovernanceRoute
   '/graph': typeof GraphRoute
+  '/integrations': typeof IntegrationsRoute
   '/knowledge': typeof KnowledgeRouteWithChildren
   '/operations': typeof OperationsRoute
   '/prompts': typeof PromptsRoute
@@ -251,9 +267,11 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/data': typeof DataRoute
+  '/developer': typeof DeveloperRoute
   '/executive': typeof ExecutiveRoute
   '/governance': typeof GovernanceRoute
   '/graph': typeof GraphRoute
+  '/integrations': typeof IntegrationsRoute
   '/knowledge': typeof KnowledgeRouteWithChildren
   '/operations': typeof OperationsRoute
   '/prompts': typeof PromptsRoute
@@ -284,9 +302,11 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/data'
+    | '/developer'
     | '/executive'
     | '/governance'
     | '/graph'
+    | '/integrations'
     | '/knowledge'
     | '/operations'
     | '/prompts'
@@ -315,9 +335,11 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/data'
+    | '/developer'
     | '/executive'
     | '/governance'
     | '/graph'
+    | '/integrations'
     | '/knowledge'
     | '/operations'
     | '/prompts'
@@ -346,9 +368,11 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/data'
+    | '/developer'
     | '/executive'
     | '/governance'
     | '/graph'
+    | '/integrations'
     | '/knowledge'
     | '/operations'
     | '/prompts'
@@ -378,9 +402,11 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DataRoute: typeof DataRoute
+  DeveloperRoute: typeof DeveloperRoute
   ExecutiveRoute: typeof ExecutiveRoute
   GovernanceRoute: typeof GovernanceRoute
   GraphRoute: typeof GraphRoute
+  IntegrationsRoute: typeof IntegrationsRoute
   KnowledgeRoute: typeof KnowledgeRouteWithChildren
   OperationsRoute: typeof OperationsRoute
   PromptsRoute: typeof PromptsRoute
@@ -443,6 +469,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof KnowledgeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/integrations': {
+      id: '/integrations'
+      path: '/integrations'
+      fullPath: '/integrations'
+      preLoaderRoute: typeof IntegrationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/graph': {
       id: '/graph'
       path: '/graph'
@@ -462,6 +495,13 @@ declare module '@tanstack/react-router' {
       path: '/executive'
       fullPath: '/executive'
       preLoaderRoute: typeof ExecutiveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/developer': {
+      id: '/developer'
+      path: '/developer'
+      fullPath: '/developer'
+      preLoaderRoute: typeof DeveloperRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/data': {
@@ -629,9 +669,11 @@ const KnowledgeRouteWithChildren = KnowledgeRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DataRoute: DataRoute,
+  DeveloperRoute: DeveloperRoute,
   ExecutiveRoute: ExecutiveRoute,
   GovernanceRoute: GovernanceRoute,
   GraphRoute: GraphRoute,
+  IntegrationsRoute: IntegrationsRoute,
   KnowledgeRoute: KnowledgeRouteWithChildren,
   OperationsRoute: OperationsRoute,
   PromptsRoute: PromptsRoute,

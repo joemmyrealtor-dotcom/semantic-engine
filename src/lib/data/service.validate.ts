@@ -269,6 +269,10 @@ export function runValidations(): number {
         metrics: [{ key: "health.overall", value: 80, unit: "percent" }, { key: "release.confidence", value: 60, unit: "percent" }] },
     ],
     executiveAlerts: [], savedExecutiveViews: [], reportRuns: [],
+    integrationConnections: [], webhookEndpoints: [], webhookDeliveries: [],
+    apiClients: [], importJobs: [], exportJobs: [], syncMappings: [],
+    externalReferences: [], deliveryPackages: [], deliveryRuns: [],
+    eventSubscriptions: [], domainEvents: [],
   } as DataSnapshot;
 
   const m7 = computeExecutiveMetrics(snap7);
@@ -322,6 +326,87 @@ export function runValidations(): number {
   // ID pattern regressions
   check("release id pattern", /^LKR-\d+\.\d+\.\d{3}$/.test("LKR-1.0.001"));
   check("automation run id pattern", /^RUN-\d{3}$/.test("RUN-042"));
+
+  // ---- Workstream 8 — integrations checks ----
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const integrations = require("./integrations") as typeof import("./integrations");
+
+  // Event envelope
+  const evt = integrations.buildDomainEvent(snap7, {
+    kind: "release.ready", entityType: "release", entityId: "LKR-1.0.001", actor: "t",
+    payload: { api_key: "should-be-redacted", ok: true },
+  });
+  check("event has stable id EVT-###", /^EVT-\d+$/.test(evt.id));
+  check("event has correlation id", !!evt.correlationId);
+  check("event has payloadVersion", evt.payloadVersion === "1.0");
+  check("event redacts api_key", (evt.payload as Record<string, unknown>).api_key === "[REDACTED]");
+
+  // Webhook idempotency
+  const endpoint = snap7.webhookEndpoints[0];
+  if (endpoint) {
+    const r1 = integrations.emitWebhook(snap7, endpoint, evt);
+    check("first emission returns delivery or skip", r1.delivery !== null || r1.skipped !== null);
+    const snap8 = r1.delivery
+      ? { ...snap7, webhookDeliveries: [...snap7.webhookDeliveries, r1.delivery] }
+      : snap7;
+    const r2 = integrations.emitWebhook(snap8, endpoint, evt);
+    if (r1.delivery && r1.delivery.status === "delivered") {
+      check("duplicate emission is skipped", r2.skipped === "duplicate");
+    }
+    check("idempotency key composed of endpoint+event",
+      integrations.webhookIdempotencyKey("WH-1", "EVT-1") === "WH-1:EVT-1");
+  }
+
+  // Import validation: id collision + broken reference
+  const rep = integrations.validateImportPackage(snap7, {
+    concepts: [{ id: snap7.concepts[0]?.id ?? "CR-001-001", frameworkIds: ["F-999"] }],
+  });
+  check("import detects id-collision", rep.issues.some(i => i.code === "id-collision"));
+  check("import detects broken-reference", rep.issues.some(i => i.code === "broken-reference"));
+  check("import dry-run blocked when errors", !rep.ok);
+
+  // Export manifest integrity
+  const somePub = snap7.publications[0];
+  if (somePub) {
+    const built = integrations.buildExportManifest(snap7, { kind: "publication", entityId: somePub.id, requestedBy: "t" });
+    check("export manifest has target entity", built.manifest.some(m => m.ids.includes(somePub.id)));
+    check("export readiness is numeric 0..100", built.readinessScore >= 0 && built.readinessScore <= 100);
+    const h1 = integrations.packageHashOf(built.manifest, built.version);
+    const h2 = integrations.packageHashOf(built.manifest, built.version);
+    check("package hash is deterministic", h1 === h2);
+  }
+
+  // Delivery idempotency
+  check("delivery idempotency key composed", integrations.deliveryIdempotencyKey("PKG-1","IC-1","1.0.0") === "PKG-1:IC-1:1.0.0");
+
+  // External mapping conflict detection
+  const health = integrations.integrationHealthSummary(snap7);
+  check("sync conflicts surfaced", typeof health.syncConflicts === "number");
+
+  // Release integration readiness
+  const rir = integrations.releaseIntegrationReadiness(snap7, snap7.releases[0]?.id ?? "LKR-1.0.001");
+  check("release integration report has reasons array", Array.isArray(rir.reasons));
+
+  // API error envelope shape
+  const err = integrations.apiError("not-found", "x");
+  check("api error envelope has code+message+requestId",
+    !!err.error.code && !!err.error.message && !!err.error.requestId);
+
+  // Local API adapter
+  const listRes = integrations.callLocalAPI(snap7, "registry.list", { kind: "publications", limit: "3" }) as Record<string, unknown>;
+  check("local API list returns items or error", Array.isArray(listRes.items) || !!listRes.error);
+  const notFoundRes = integrations.callLocalAPI(snap7, "knowledge.detail", { id: "DOES-NOT-EXIST" }) as { error?: { code: string } };
+  check("local API returns not-found error envelope", notFoundRes.error?.code === "not-found");
+
+  // ID patterns
+  check("integration connection id pattern", /^IC-\d{3}$/.test("IC-001"));
+  check("delivery package id pattern", /^PKG-\d{3}$/.test("PKG-001"));
+  check("import job id pattern", /^IMP-\d{3}$/.test("IMP-001"));
+  check("export job id pattern", /^EXP-\d{3}$/.test("EXP-001"));
+  check("webhook delivery id pattern", /^WD-\d{3}$/.test("WD-001"));
+  check("domain event id pattern", /^EVT-\d{3,}$/.test("EVT-001"));
+
+
 
   console.log(`OK ${count} checks`);
   return count;

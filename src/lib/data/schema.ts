@@ -556,7 +556,20 @@ export type EntityType =
   | "analyticsSnapshots"
   | "executiveAlerts"
   | "savedExecutiveViews"
-  | "reportRuns";
+  | "reportRuns"
+  // Workstream 8 — integrations
+  | "integrationConnections"
+  | "webhookEndpoints"
+  | "webhookDeliveries"
+  | "apiClients"
+  | "importJobs"
+  | "exportJobs"
+  | "syncMappings"
+  | "externalReferences"
+  | "deliveryPackages"
+  | "deliveryRuns"
+  | "eventSubscriptions"
+  | "domainEvents";
 
 // ===================================================================
 // Workstream 5 — Automation, Orchestration, Operational Governance
@@ -567,13 +580,20 @@ export type AutomationTriggerKind =
   | "review-due" | "broken-reference" | "coverage-gap" | "canonical-updated" | "scheduled"
   // Workstream 6 — Knowledge Intelligence triggers
   | "duplicate-detected" | "knowledge-health-threshold" | "dependency-change"
-  | "relationship-added" | "relationship-removed" | "coverage-drop";
+  | "relationship-added" | "relationship-removed" | "coverage-drop"
+  // Workstream 8 — Integration triggers
+  | "webhook-received" | "import-completed" | "import-failed"
+  | "export-completed" | "export-failed" | "sync-conflict" | "delivery-failed"
+  | "external-reference-changed";
 
 export const AUTOMATION_TRIGGER_KINDS: AutomationTriggerKind[] = [
   "manual","stage-transition","readiness-threshold","release-gate",
   "review-due","broken-reference","coverage-gap","canonical-updated","scheduled",
   "duplicate-detected","knowledge-health-threshold","dependency-change",
   "relationship-added","relationship-removed","coverage-drop",
+  "webhook-received","import-completed","import-failed",
+  "export-completed","export-failed","sync-conflict","delivery-failed",
+  "external-reference-changed",
 ];
 
 export type AutomationActionKind =
@@ -581,13 +601,18 @@ export type AutomationActionKind =
   | "add-release-candidate" | "remove-release-candidate" | "block-release"
   | "create-draft-asset" | "link-canonical-asset" | "update-metadata"
   | "export-manifest" | "request-promotion" | "escalate-overdue-review"
-  | "flag-broken-references";
+  | "flag-broken-references"
+  // Workstream 8 — Integration actions
+  | "emit-webhook-event" | "create-export-package" | "submit-delivery-package"
+  | "create-import-dry-run" | "capture-analytics-snapshot";
 
 export const AUTOMATION_ACTION_KINDS: AutomationActionKind[] = [
   "generate-readiness-report","assign-review-checkpoint","notify-owner",
   "add-release-candidate","remove-release-candidate","block-release",
   "create-draft-asset","link-canonical-asset","update-metadata",
   "export-manifest","request-promotion","escalate-overdue-review","flag-broken-references",
+  "emit-webhook-event","create-export-package","submit-delivery-package",
+  "create-import-dry-run","capture-analytics-snapshot",
 ];
 
 export type AutomationEntityScope =
@@ -797,6 +822,296 @@ export interface ReportRun extends Timestamped {
   format: "json" | "html";
 }
 
+// ===================================================================
+// Workstream 8 — Enterprise Integrations, APIs, Delivery Infrastructure
+// ===================================================================
+
+export type IntegrationProvider =
+  | "generic-webhook" | "generic-rest" | "document-repository"
+  | "crm" | "cloud-storage" | "email-gateway";
+export const INTEGRATION_PROVIDERS: IntegrationProvider[] = [
+  "generic-webhook","generic-rest","document-repository","crm","cloud-storage","email-gateway",
+];
+
+export type IntegrationEnvironment = "local-demo" | "sandbox" | "production";
+export type IntegrationStatus = "draft" | "active" | "paused" | "failed" | "archived";
+export type IntegrationHealth = "healthy" | "degraded" | "failing" | "unknown";
+
+export interface IntegrationCredentialReference {
+  id: string;                          // ICR-###
+  label: string;
+  kind: "api-key" | "oauth-token" | "webhook-signing-secret" | "basic-auth" | "none";
+  // Never store plaintext. Local demo shows a masked placeholder derived from a checksum only.
+  maskedPreview: string;               // e.g. "sk_live_••••1a2b"
+  storageLocation: "local-demo-placeholder" | "external-secret-manager";
+  rotatedAt: string | null;
+  ownerRole: Role | "Owner";
+  notes: string;
+}
+
+export interface IntegrationConnection extends Timestamped {
+  id: string;                          // IC-###
+  name: string;
+  provider: IntegrationProvider;
+  environment: IntegrationEnvironment;
+  baseUrl: string;                     // metadata only, never fetched in local demo
+  domainScope: string[];               // domain ids or entity kinds this connection may touch
+  owner: string;
+  steward: string;
+  status: IntegrationStatus;
+  health: IntegrationHealth;
+  lastSyncAt: string | null;
+  failureCount: number;
+  successCount: number;
+  subscribedEvents: DomainEventKind[];
+  credentialReferences: IntegrationCredentialReference[];
+  tags: string[];
+  description: string;
+  isDemo: boolean;                     // clearly labels local/demo connectors
+  notes: string;
+}
+
+export type WebhookSignatureAlgorithm = "hmac-sha256" | "hmac-sha512" | "none";
+
+export interface WebhookEndpoint extends Timestamped {
+  id: string;                          // WH-###
+  connectionId: string;
+  url: string;
+  description: string;
+  events: DomainEventKind[];
+  enabled: boolean;
+  signatureAlgorithm: WebhookSignatureAlgorithm;
+  signingSecretRef: string | null;     // reference into IntegrationCredentialReference.id
+  retryPolicy: { maxAttempts: number; backoffSeconds: number };
+  headerAllowlist: string[];           // metadata about outbound headers (never secret values)
+  owner: string;
+  lastDeliveryAt: string | null;
+  failureCount: number;
+  successCount: number;
+}
+
+export type WebhookDeliveryStatus =
+  | "pending" | "delivered" | "failed" | "retrying" | "skipped-duplicate";
+
+export interface WebhookDeliveryAttempt {
+  attempt: number;
+  at: string;
+  status: WebhookDeliveryStatus;
+  httpStatus: number | null;
+  responseSummary: string;             // truncated body preview, never secrets
+  errorMessage: string | null;
+  durationMs: number;
+}
+
+export interface WebhookDelivery extends Timestamped {
+  id: string;                          // WD-###
+  endpointId: string;
+  eventId: string;                     // stable domain event id
+  eventKind: DomainEventKind;
+  correlationId: string;
+  payloadVersion: string;
+  status: WebhookDeliveryStatus;
+  attempts: WebhookDeliveryAttempt[];
+  idempotencyKey: string;
+  redactedPayloadPreview: string;      // redacted preview stored for audit
+  simulated: boolean;                  // true in local/demo mode
+}
+
+export type APIClientScope =
+  | "registry.read" | "knowledge.read" | "release.read" | "publication.read"
+  | "toolkit.read" | "aipack.read" | "agent.read" | "automation.read"
+  | "import.write" | "export.read" | "delivery.write" | "webhook.emit";
+
+export const API_CLIENT_SCOPES: APIClientScope[] = [
+  "registry.read","knowledge.read","release.read","publication.read",
+  "toolkit.read","aipack.read","agent.read","automation.read",
+  "import.write","export.read","delivery.write","webhook.emit",
+];
+
+export interface APIClient extends Timestamped {
+  id: string;                          // APIC-###
+  name: string;
+  description: string;
+  environment: IntegrationEnvironment;
+  owner: string;
+  scopes: APIClientScope[];
+  keyReferenceId: string | null;       // reference to IntegrationCredentialReference
+  keyPrefix: string;                   // masked prefix like "apik_live_••••a1b2"
+  rateLimitPerMinute: number;
+  enabled: boolean;
+  lastUsedAt: string | null;
+  callCount: number;
+  ipAllowlist: string[];
+  auditNotes: string;
+}
+
+export type ImportJobStrategy = "create-only" | "update-only" | "upsert" | "skip-existing";
+export type ImportJobStatus =
+  | "pending" | "validating" | "dry-run-complete" | "awaiting-approval"
+  | "applied" | "failed" | "rolled-back" | "cancelled";
+
+export interface ImportValidationIssue {
+  code: "id-collision" | "broken-reference" | "schema-mismatch"
+        | "governance-block" | "unknown-kind" | "duplicate-payload";
+  entityId: string | null;
+  kind: string;
+  message: string;
+  severity: "error" | "warning";
+}
+
+export interface ImportJob extends Timestamped {
+  id: string;                          // IMP-###
+  submittedBy: string;
+  connectionId: string | null;         // optional: from a connected system
+  packageName: string;
+  packageVersion: string;
+  strategy: ImportJobStrategy;
+  status: ImportJobStatus;
+  dryRun: boolean;
+  packageHash: string;                 // for idempotency
+  payloadPreview: string;              // redacted preview
+  issues: ImportValidationIssue[];
+  mappingPreview: Array<{ kind: string; incomingId: string; targetId: string | null; action: "create" | "update" | "skip" | "block" }>;
+  approvals: { approverRole: Role | "Owner"; approvedBy: string | null; approvedAt: string | null; note: string }[];
+  appliedAt: string | null;
+  rollbackPlan: string;
+  auditLog: { at: string; actor: string; message: string }[];
+}
+
+export type ExportPackageKind =
+  | "publication" | "client-toolkit" | "ai-pack" | "agent" | "release" | "knowledge-subset";
+
+export interface ExportJob extends Timestamped {
+  id: string;                          // EXP-###
+  requestedBy: string;
+  kind: ExportPackageKind;
+  entityId: string;                    // canonical entity id (or subset name)
+  version: string;
+  manifest: { entityType: string; ids: string[] }[];
+  readinessScore: number;
+  provenanceNotes: string;
+  status: "pending" | "generated" | "failed" | "delivered";
+  format: "json" | "html";
+  payloadPreview: string;              // redacted preview
+  packageId: string | null;            // resulting DeliveryPackage id
+  generatedAt: string | null;
+  error: string | null;
+}
+
+export interface DeliveryPackage extends Timestamped {
+  id: string;                          // PKG-###
+  exportJobId: string;
+  title: string;
+  kind: ExportPackageKind;
+  version: string;
+  bytes: number;                       // deterministic byte-count estimate
+  hash: string;                        // content hash for idempotency
+  destinationConnectionIds: string[];
+  requiredForReleaseIds: string[];     // release ids that gate on this package
+  manifest: { entityType: string; ids: string[] }[];
+  dependencies: string[];              // canonical ids relied upon
+  readinessScore: number;
+  validationReport: string;
+  provenanceNotes: string;
+  archived: boolean;
+}
+
+export type DeliveryRunStatus = "pending" | "delivered" | "failed" | "skipped-duplicate";
+
+export interface DeliveryRun extends Timestamped {
+  id: string;                          // DRN-###
+  packageId: string;
+  connectionId: string;
+  attempts: WebhookDeliveryAttempt[];
+  status: DeliveryRunStatus;
+  idempotencyKey: string;
+  actor: string;
+  simulated: boolean;
+  errorSummary: string | null;
+}
+
+export type SyncDirection = "outbound" | "inbound" | "bidirectional";
+export type SyncMappingStatus = "healthy" | "conflict" | "stale" | "unmapped";
+
+export interface SyncMapping extends Timestamped {
+  id: string;                          // SM-###
+  connectionId: string;
+  internalEntityKind: string;          // e.g. "concept", "publication"
+  internalEntityId: string;
+  externalId: string;
+  externalUrl: string;
+  direction: SyncDirection;
+  lastSyncAt: string | null;
+  status: SyncMappingStatus;
+  conflictReason: string;
+  owner: string;
+}
+
+export interface ExternalReference extends Timestamped {
+  id: string;                          // ER-###
+  internalEntityKind: string;
+  internalEntityId: string;
+  provider: IntegrationProvider;
+  externalId: string;
+  externalUrl: string;
+  label: string;
+  createdBy: string;
+  notes: string;
+  orphaned: boolean;
+}
+
+export type DomainEventKind =
+  | "asset.created" | "asset.stage_changed" | "asset.review_due"
+  | "release.candidate_created" | "release.ready" | "release.released"
+  | "release.blocked" | "automation.run_completed"
+  | "knowledge.health_degraded" | "evaluation.failed"
+  | "integration.webhook_received" | "integration.import_completed"
+  | "integration.export_completed" | "integration.delivery_failed"
+  | "integration.sync_conflict";
+
+export const DOMAIN_EVENT_KINDS: DomainEventKind[] = [
+  "asset.created","asset.stage_changed","asset.review_due",
+  "release.candidate_created","release.ready","release.released",
+  "release.blocked","automation.run_completed",
+  "knowledge.health_degraded","evaluation.failed",
+  "integration.webhook_received","integration.import_completed",
+  "integration.export_completed","integration.delivery_failed",
+  "integration.sync_conflict",
+];
+
+export interface DomainEvent {
+  id: string;                          // EVT-###
+  kind: DomainEventKind;
+  occurredAt: string;
+  actor: string;
+  entityType: string;
+  entityId: string;
+  correlationId: string;
+  schemaVersion: number;
+  payloadVersion: string;
+  traceability: {
+    releaseIds: string[];
+    upstreamEventIds: string[];
+    manufacturingStage?: string;
+  };
+  payload: Record<string, unknown>;    // redacted at emit-time
+}
+
+export interface EventSubscription extends Timestamped {
+  id: string;                          // ES-###
+  name: string;
+  connectionId: string;
+  events: DomainEventKind[];
+  filter: { entityKinds?: string[]; owners?: string[] };
+  enabled: boolean;
+  lastMatchedAt: string | null;
+  matchCount: number;
+}
+
+// ===================================================================
+// Snapshot
+// ===================================================================
+
 export interface DataSnapshot {
   schemaVersion: number;
   exportedAt: string;
@@ -818,9 +1133,22 @@ export interface DataSnapshot {
   executiveAlerts: ExecutiveAlert[];
   savedExecutiveViews: SavedExecutiveView[];
   reportRuns: ReportRun[];
+  // Workstream 8 — integrations
+  integrationConnections: IntegrationConnection[];
+  webhookEndpoints: WebhookEndpoint[];
+  webhookDeliveries: WebhookDelivery[];
+  apiClients: APIClient[];
+  importJobs: ImportJob[];
+  exportJobs: ExportJob[];
+  syncMappings: SyncMapping[];
+  externalReferences: ExternalReference[];
+  deliveryPackages: DeliveryPackage[];
+  deliveryRuns: DeliveryRun[];
+  eventSubscriptions: EventSubscription[];
+  domainEvents: DomainEvent[];
 }
 
-export const SCHEMA_VERSION = 5;
+export const SCHEMA_VERSION = 6;
 
 export const ID_PATTERNS: Record<string, RegExp> = {
   domain: /^DOM-\d{3}$/,
@@ -848,5 +1176,20 @@ export const ID_PATTERNS: Record<string, RegExp> = {
   executiveAlert: /^EA-\d{3}$/,
   savedExecutiveView: /^SV-\d{3}$/,
   reportRun: /^RPT-\d{3}$/,
+  // Workstream 8
+  integrationConnection: /^IC-\d{3}$/,
+  integrationCredentialRef: /^ICR-\d{3}$/,
+  webhookEndpoint: /^WH-\d{3}$/,
+  webhookDelivery: /^WD-\d{3}$/,
+  apiClient: /^APIC-\d{3}$/,
+  importJob: /^IMP-\d{3}$/,
+  exportJob: /^EXP-\d{3}$/,
+  deliveryPackage: /^PKG-\d{3}$/,
+  deliveryRun: /^DRN-\d{3}$/,
+  syncMapping: /^SM-\d{3}$/,
+  externalReference: /^ER-\d{3}$/,
+  eventSubscription: /^ES-\d{3}$/,
+  domainEvent: /^EVT-\d{3,}$/,
 };
+
 
