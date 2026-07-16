@@ -128,6 +128,58 @@ export function buildGraph(s: DataSnapshot): { nodes: GraphNode[]; edges: GraphE
     edges.push({ from: r.id, to: r.recipeId, kind: "run-of" });
     for (const eId of r.entityIds) edges.push({ from: r.id, to: eId, kind: "run-affects" });
   }
+  // Workstream 8 — Integration nodes and edges.
+  for (const c of s.integrationConnections ?? []) {
+    nodes.push({ id: c.id, label: c.name, kind: "Integration Connection" });
+    for (const dom of c.domainScope ?? []) edges.push({ from: c.id, to: dom, kind: "connection-scope" });
+  }
+  for (const w of s.webhookEndpoints ?? []) {
+    nodes.push({ id: w.id, label: w.description || w.url, kind: "Webhook Endpoint" });
+    edges.push({ from: w.id, to: w.connectionId, kind: "webhook-of" });
+  }
+  for (const d of s.webhookDeliveries ?? []) {
+    nodes.push({ id: d.id, label: `${d.eventKind} · ${d.status}`, kind: "Webhook Delivery" });
+    edges.push({ from: d.id, to: d.endpointId, kind: "delivery-endpoint" });
+    edges.push({ from: d.id, to: d.eventId, kind: "delivery-event" });
+  }
+  for (const c of s.apiClients ?? []) nodes.push({ id: c.id, label: c.name, kind: "API Client" });
+  for (const j of s.importJobs ?? []) {
+    nodes.push({ id: j.id, label: `${j.packageName} · ${j.status}`, kind: "Import Job" });
+    if (j.connectionId) edges.push({ from: j.id, to: j.connectionId, kind: "import-connection" });
+  }
+  for (const j of s.exportJobs ?? []) {
+    nodes.push({ id: j.id, label: `${j.kind}:${j.entityId} · ${j.status}`, kind: "Export Job" });
+    edges.push({ from: j.id, to: j.entityId, kind: "exports-entity" });
+    if (j.packageId) edges.push({ from: j.id, to: j.packageId, kind: "export-package" });
+  }
+  for (const p of s.deliveryPackages ?? []) {
+    nodes.push({ id: p.id, label: p.title, kind: "Delivery Package" });
+    edges.push({ from: p.id, to: p.exportJobId, kind: "package-of-export" });
+    for (const cn of p.destinationConnectionIds ?? []) edges.push({ from: p.id, to: cn, kind: "package-destination" });
+    for (const rId of p.requiredForReleaseIds ?? []) edges.push({ from: rId, to: p.id, kind: "release-requires-package" });
+  }
+  for (const r of s.deliveryRuns ?? []) {
+    nodes.push({ id: r.id, label: `${r.packageId} → ${r.connectionId} · ${r.status}`, kind: "Delivery Run" });
+    edges.push({ from: r.id, to: r.packageId, kind: "run-package" });
+    edges.push({ from: r.id, to: r.connectionId, kind: "run-connection" });
+  }
+  for (const m of s.syncMappings ?? []) {
+    nodes.push({ id: m.id, label: `${m.internalEntityKind}:${m.internalEntityId} ↔ ${m.externalId}`, kind: "Sync Mapping" });
+    edges.push({ from: m.id, to: m.connectionId, kind: "mapping-connection" });
+    edges.push({ from: m.id, to: m.internalEntityId, kind: "mapping-internal" });
+  }
+  for (const x of s.externalReferences ?? []) {
+    nodes.push({ id: x.id, label: `${x.provider}:${x.externalId}`, kind: "External Reference" });
+    edges.push({ from: x.id, to: x.internalEntityId, kind: "external-refers" });
+  }
+  for (const e of s.eventSubscriptions ?? []) {
+    nodes.push({ id: e.id, label: e.name, kind: "Event Subscription" });
+    edges.push({ from: e.id, to: e.connectionId, kind: "subscription-connection" });
+  }
+  for (const ev of s.domainEvents ?? []) {
+    nodes.push({ id: ev.id, label: `${ev.kind}`, kind: "Domain Event" });
+    edges.push({ from: ev.id, to: ev.entityId, kind: "event-entity" });
+  }
   return { nodes, edges };
 }
 
