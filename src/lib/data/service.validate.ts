@@ -310,6 +310,19 @@ export function runValidations(): number {
   check("capture returns 12 metrics", capSnap.metrics.length === 12);
   check("capture id follows MS-### pattern", /^MS-\d{3}$/.test(capSnap.id));
 
+  // ---- Architecture Stabilization regression checks (W7.5) ----
+  // Autosave stale-conflict helper
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { isStaleConflict } = require("../../hooks/use-autosave") as typeof import("../../hooks/use-autosave");
+  check("stale conflict: original newer than draft while dirty", isStaleConflict("2025-01-02", "2025-01-01", true));
+  check("no stale conflict when clean", !isStaleConflict("2025-01-02", "2025-01-01", false));
+  check("no stale conflict when draft newer", !isStaleConflict("2025-01-01", "2025-01-02", true));
+  check("no stale conflict when timestamps missing", !isStaleConflict(undefined, undefined, true));
+
+  // ID pattern regressions
+  check("release id pattern", /^LKR-\d+\.\d+\.\d{3}$/.test("LKR-1.0.001"));
+  check("automation run id pattern", /^RUN-\d{3}$/.test("RUN-042"));
+
   console.log(`OK ${count} checks`);
   return count;
 }
