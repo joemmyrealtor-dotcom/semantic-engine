@@ -598,6 +598,8 @@ export const AUTOMATION_ACTION_KINDS: AutomationActionKind[] = [
   "add-release-candidate","remove-release-candidate","block-release",
   "create-draft-asset","link-canonical-asset","update-metadata",
   "export-manifest","request-promotion","escalate-overdue-review","flag-broken-references",
+  "emit-webhook-event","create-export-package","submit-delivery-package",
+  "create-import-dry-run","capture-analytics-snapshot",
 ];
 
 export type AutomationEntityScope =
