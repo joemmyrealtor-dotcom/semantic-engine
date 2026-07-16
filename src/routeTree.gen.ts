@@ -32,6 +32,7 @@ import { Route as PublicationsNewRouteImport } from './routes/publications.new'
 import { Route as PublicationsIdRouteImport } from './routes/publications.$id'
 import { Route as KnowledgeIdRouteImport } from './routes/knowledge.$id'
 import { Route as KnowledgeObjectsNewRouteImport } from './routes/knowledge-objects.new'
+import { Route as IntegrationsIdRouteImport } from './routes/integrations.$id'
 import { Route as FrameworksIdRouteImport } from './routes/frameworks.$id'
 import { Route as ConceptsIdRouteImport } from './routes/concepts.$id'
 import { Route as ClientToolsNewRouteImport } from './routes/client-tools.new'
@@ -156,6 +157,11 @@ const KnowledgeObjectsNewRoute = KnowledgeObjectsNewRouteImport.update({
   path: '/knowledge-objects/new',
   getParentRoute: () => rootRouteImport,
 } as any)
+const IntegrationsIdRoute = IntegrationsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => IntegrationsRoute,
+} as any)
 const FrameworksIdRoute = FrameworksIdRouteImport.update({
   id: '/frameworks/$id',
   path: '/frameworks/$id',
@@ -204,7 +210,7 @@ export interface FileRoutesByFullPath {
   '/executive': typeof ExecutiveRoute
   '/governance': typeof GovernanceRoute
   '/graph': typeof GraphRoute
-  '/integrations': typeof IntegrationsRoute
+  '/integrations': typeof IntegrationsRouteWithChildren
   '/knowledge': typeof KnowledgeRouteWithChildren
   '/operations': typeof OperationsRoute
   '/prompts': typeof PromptsRoute
@@ -218,6 +224,7 @@ export interface FileRoutesByFullPath {
   '/client-tools/new': typeof ClientToolsNewRoute
   '/concepts/$id': typeof ConceptsIdRoute
   '/frameworks/$id': typeof FrameworksIdRoute
+  '/integrations/$id': typeof IntegrationsIdRoute
   '/knowledge-objects/new': typeof KnowledgeObjectsNewRoute
   '/knowledge/$id': typeof KnowledgeIdRoute
   '/publications/$id': typeof PublicationsIdRoute
@@ -237,7 +244,7 @@ export interface FileRoutesByTo {
   '/executive': typeof ExecutiveRoute
   '/governance': typeof GovernanceRoute
   '/graph': typeof GraphRoute
-  '/integrations': typeof IntegrationsRoute
+  '/integrations': typeof IntegrationsRouteWithChildren
   '/knowledge': typeof KnowledgeRouteWithChildren
   '/operations': typeof OperationsRoute
   '/prompts': typeof PromptsRoute
@@ -251,6 +258,7 @@ export interface FileRoutesByTo {
   '/client-tools/new': typeof ClientToolsNewRoute
   '/concepts/$id': typeof ConceptsIdRoute
   '/frameworks/$id': typeof FrameworksIdRoute
+  '/integrations/$id': typeof IntegrationsIdRoute
   '/knowledge-objects/new': typeof KnowledgeObjectsNewRoute
   '/knowledge/$id': typeof KnowledgeIdRoute
   '/publications/$id': typeof PublicationsIdRoute
@@ -271,7 +279,7 @@ export interface FileRoutesById {
   '/executive': typeof ExecutiveRoute
   '/governance': typeof GovernanceRoute
   '/graph': typeof GraphRoute
-  '/integrations': typeof IntegrationsRoute
+  '/integrations': typeof IntegrationsRouteWithChildren
   '/knowledge': typeof KnowledgeRouteWithChildren
   '/operations': typeof OperationsRoute
   '/prompts': typeof PromptsRoute
@@ -285,6 +293,7 @@ export interface FileRoutesById {
   '/client-tools/new': typeof ClientToolsNewRoute
   '/concepts/$id': typeof ConceptsIdRoute
   '/frameworks/$id': typeof FrameworksIdRoute
+  '/integrations/$id': typeof IntegrationsIdRoute
   '/knowledge-objects/new': typeof KnowledgeObjectsNewRoute
   '/knowledge/$id': typeof KnowledgeIdRoute
   '/publications/$id': typeof PublicationsIdRoute
@@ -320,6 +329,7 @@ export interface FileRouteTypes {
     | '/client-tools/new'
     | '/concepts/$id'
     | '/frameworks/$id'
+    | '/integrations/$id'
     | '/knowledge-objects/new'
     | '/knowledge/$id'
     | '/publications/$id'
@@ -353,6 +363,7 @@ export interface FileRouteTypes {
     | '/client-tools/new'
     | '/concepts/$id'
     | '/frameworks/$id'
+    | '/integrations/$id'
     | '/knowledge-objects/new'
     | '/knowledge/$id'
     | '/publications/$id'
@@ -386,6 +397,7 @@ export interface FileRouteTypes {
     | '/client-tools/new'
     | '/concepts/$id'
     | '/frameworks/$id'
+    | '/integrations/$id'
     | '/knowledge-objects/new'
     | '/knowledge/$id'
     | '/publications/$id'
@@ -406,7 +418,7 @@ export interface RootRouteChildren {
   ExecutiveRoute: typeof ExecutiveRoute
   GovernanceRoute: typeof GovernanceRoute
   GraphRoute: typeof GraphRoute
-  IntegrationsRoute: typeof IntegrationsRoute
+  IntegrationsRoute: typeof IntegrationsRouteWithChildren
   KnowledgeRoute: typeof KnowledgeRouteWithChildren
   OperationsRoute: typeof OperationsRoute
   PromptsRoute: typeof PromptsRoute
@@ -595,6 +607,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof KnowledgeObjectsNewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/integrations/$id': {
+      id: '/integrations/$id'
+      path: '/$id'
+      fullPath: '/integrations/$id'
+      preLoaderRoute: typeof IntegrationsIdRouteImport
+      parentRoute: typeof IntegrationsRoute
+    }
     '/frameworks/$id': {
       id: '/frameworks/$id'
       path: '/frameworks/$id'
@@ -654,6 +673,18 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface IntegrationsRouteChildren {
+  IntegrationsIdRoute: typeof IntegrationsIdRoute
+}
+
+const IntegrationsRouteChildren: IntegrationsRouteChildren = {
+  IntegrationsIdRoute: IntegrationsIdRoute,
+}
+
+const IntegrationsRouteWithChildren = IntegrationsRoute._addFileChildren(
+  IntegrationsRouteChildren,
+)
+
 interface KnowledgeRouteChildren {
   KnowledgeIdRoute: typeof KnowledgeIdRoute
 }
@@ -673,7 +704,7 @@ const rootRouteChildren: RootRouteChildren = {
   ExecutiveRoute: ExecutiveRoute,
   GovernanceRoute: GovernanceRoute,
   GraphRoute: GraphRoute,
-  IntegrationsRoute: IntegrationsRoute,
+  IntegrationsRoute: IntegrationsRouteWithChildren,
   KnowledgeRoute: KnowledgeRouteWithChildren,
   OperationsRoute: OperationsRoute,
   PromptsRoute: PromptsRoute,
