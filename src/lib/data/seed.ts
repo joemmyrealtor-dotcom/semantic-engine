@@ -861,6 +861,18 @@ export function buildSeedSnapshot(): DataSnapshot {
     executiveAlerts: seedExecutiveAlerts,
     savedExecutiveViews: seedSavedExecutiveViews,
     reportRuns: seedReportRuns,
+    integrationConnections: seedIntegrationConnections,
+    webhookEndpoints: seedWebhookEndpoints,
+    webhookDeliveries: seedWebhookDeliveries,
+    apiClients: seedApiClients,
+    importJobs: seedImportJobs,
+    exportJobs: seedExportJobs,
+    syncMappings: seedSyncMappings,
+    externalReferences: seedExternalReferences,
+    deliveryPackages: seedDeliveryPackages,
+    deliveryRuns: seedDeliveryRuns,
+    eventSubscriptions: seedEventSubscriptions,
+    domainEvents: seedDomainEvents,
   };
 }
 
