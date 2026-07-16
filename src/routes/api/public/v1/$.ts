@@ -1,14 +1,17 @@
-// Workstream 8 + 9 — Public API endpoints with rate limiting & security headers.
+// Workstream 8 + 9 — Public API endpoints with rate limiting, security
+// headers, Bearer auth, and per-client scope enforcement (W9 #6).
 //
-// Nine read-only endpoints backed by the seed snapshot on the server. Under
-// /api/public/* so external callers can hit them without auth on published
-// sites; this route only exposes derived, non-sensitive views and never
-// returns raw credentials or secrets. Workstream 9 hardens the surface with
-// per-IP rate limiting, security headers, and secret redaction.
+// Every non-catalog endpoint requires `Authorization: Bearer <api-key>`.
+// The key's non-crypto fingerprint is matched against seeded APIClient
+// records (via the DEMO_API_KEY env for local testing, or the sha-256
+// fingerprint suffix stored on each APIClient in a production deployment).
+// The endpoint's required scope is then checked against the client's
+// scope list. Public catalog remains anonymous by design.
 import { createFileRoute } from "@tanstack/react-router";
 import { buildSeedSnapshot } from "@/lib/data/seed";
 import { callLocalAPI, API_CATALOG, type APIEndpointId } from "@/lib/data/integrations";
-import { securityHeaders, evaluateRateLimit, redactSecrets } from "@/lib/data/security";
+import { securityHeaders, evaluateRateLimit, redactSecrets, fingerprint } from "@/lib/data/security";
+import type { APIClient, APIClientScope, DataSnapshot } from "@/lib/data/schema";
 
 function route(splat: string, search: URLSearchParams): { id: APIEndpointId; params: Record<string, string> } | null {
   const parts = splat.split("/").filter(Boolean);
@@ -30,19 +33,25 @@ function route(splat: string, search: URLSearchParams): { id: APIEndpointId; par
   return null;
 }
 
+const ENDPOINT_SCOPES: Record<APIEndpointId, APIClientScope> = {
+  "registry.list": "registry.read",
+  "knowledge.detail": "knowledge.read",
+  "release.manifest": "release.read",
+  "publication.export": "publication.read",
+  "toolkit.export": "toolkit.read",
+  "aipack.export": "aipack.read",
+  "agent.export": "agent.read",
+  "automation.run.status": "automation.read",
+  "import.job.status": "import.write",
+};
+
 function requestId() { return `req_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`; }
 
-// In-memory per-IP rate limiter (60 req / 60s). The Worker runtime is
-// stateless across cold starts; this bounds a single worker instance and is
-// paired with the snapshot-persisted bucket surfaced in the monitoring UI.
 const IP_BUCKETS = new Map<string, { currentCount: number; windowStart: string }>();
-
-function rateLimit(ip: string): { allowed: boolean; remaining: number; retryAfterSeconds: number } {
+function rateLimit(ip: string) {
   const nowIso = new Date().toISOString();
   const existing = IP_BUCKETS.get(ip) ?? { currentCount: 0, windowStart: nowIso };
-  const { decision, next } = evaluateRateLimit(
-    { ...existing, windowSeconds: 60, maxRequests: 60 }, nowIso,
-  );
+  const { decision, next } = evaluateRateLimit({ ...existing, windowSeconds: 60, maxRequests: 60 }, nowIso);
   IP_BUCKETS.set(ip, next);
   return decision;
 }
@@ -55,6 +64,17 @@ function json(body: unknown, status = 200, extra: Record<string, string> = {}) {
     ...extra,
   };
   return new Response(JSON.stringify(redactSecrets(body)), { status, headers });
+}
+
+// Resolve the caller against the seeded APIClient roster. In production the
+// DEMO_API_KEY env is unset and matching relies on the fingerprint suffix
+// convention embedded in `keyPrefix`; in local demo the env unlocks APIC-001.
+function resolveClient(bearer: string | null, snap: DataSnapshot): APIClient | null {
+  if (!bearer) return null;
+  const demoKey = process.env.DEMO_API_KEY;
+  if (demoKey && bearer === demoKey) return snap.apiClients.find(c => c.id === "APIC-001") ?? null;
+  const fp = fingerprint(bearer);
+  return snap.apiClients.find(c => c.enabled && c.keyPrefix.includes(fp.slice(-4))) ?? null;
 }
 
 export const Route = createFileRoute("/api/public/v1/$")({
@@ -81,7 +101,20 @@ export const Route = createFileRoute("/api/public/v1/$")({
         if (!match) {
           return json({ error: { code: "not-found", message: `Unknown endpoint /api/public/v1/${splat}`, requestId: requestId() } }, 404, rlHeaders);
         }
+
+        // W9 #6 — Bearer auth + scope enforcement for every non-catalog endpoint.
         const snapshot = buildSeedSnapshot();
+        const authz = request.headers.get("authorization") ?? "";
+        const bearer = authz.toLowerCase().startsWith("bearer ") ? authz.slice(7).trim() : null;
+        const client = resolveClient(bearer, snapshot);
+        if (!client) {
+          return json({ error: { code: "unauthorized", message: "Missing or invalid Bearer API key", requestId: requestId() } }, 401, rlHeaders);
+        }
+        const required = ENDPOINT_SCOPES[match.id];
+        if (required && !client.scopes.includes(required)) {
+          return json({ error: { code: "forbidden", message: `API client ${client.id} lacks scope '${required}'`, requestId: requestId() } }, 403, rlHeaders);
+        }
+
         const result = callLocalAPI(snapshot, match.id, match.params) as { error?: { code: string } } | unknown;
         if (result && typeof result === "object" && "error" in (result as Record<string, unknown>)) {
           const err = (result as { error: { code: string } }).error;

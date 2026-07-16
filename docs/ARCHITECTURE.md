@@ -156,3 +156,25 @@ its capture window.
 bunx tsgo --noEmit                        # TypeScript
 bun run src/lib/data/service.validate.ts  # deterministic domain checks
 ```
+
+## Workstream 9 — Hardening Status (2026-07-16)
+
+### Landed in this pass
+- **SHA-256 integrity** — `sha256Hex()` + `contentHash()` in `security.ts` now use a pure-JS FIPS 180-4 implementation. Audit hash chain (`audit.ts`) and backup integrity (`backups.ts`) rely on cryptographic hashing; validation harness covers the "abc" and empty-string reference vectors.
+- **Governed restore** — `performGovernedRestore()` requires a typed `"RESTORE"` confirmation and a ≥8-char written reason, and automatically snapshots the *current* state to a pre-restore backup before overwriting. The restored snapshot's backup ledger contains both entries.
+- **Workspace isolation surface** — `detectWorkspaceLeakage()` scans audit + backup ledgers for orphaned `workspaceId`s; wired into the Monitoring dashboard as a first-class signal. `scopedAudit()` / `scopedBackups()` provide active-workspace filters.
+- **Public API auth + scopes** — `/api/public/v1/*` now requires `Authorization: Bearer <key>` on every non-catalog endpoint. Bearer fingerprint is matched against seeded `APIClient` records, and each endpoint enforces its required `APIClientScope` (`registry.read`, `knowledge.read`, etc.) → `401` / `403` with structured error envelopes.
+- **Hot-path memoization** — `buildGraph()` and `buildUniversalIndex()` in `intelligence.ts` are wrapped in snapshot-fingerprinted `memoize()`. The validation harness asserts ≥39 hits over 40 iterations and <1s wall clock on a full seed fixture.
+- **Defensive monitoring** — `computeMonitoring()`, `startupDiagnostics()`, `detectWorkspaceLeakage()`, `workspaceMetrics()`, and `nextBackupId()` are now resilient to partial snapshots (mid-migration payloads, prerender fallbacks) rather than throwing.
+- **Validation harness** — 137/137 deterministic checks pass (was 90/90).
+
+### Known blocking limitations — NOT RC-1 READY
+These items are documented as blockers rather than silently implied:
+
+1. **Auth is still demo role-switch, not real Supabase session** — `auth.ts` `getRole()`/`setRole()` operate on an in-memory ambient. Wiring `supabase.auth.onAuthStateChange`, a `_authenticated` gate, and a `user_roles` → `Role` derivation is a follow-up slice. The permission matrix and `requirePermission()` gate are production-quality; they just need to be fed by a real session.
+2. **Per-entity workspace isolation** — domain entities (`concepts`, `publications`, etc.) do not carry `workspaceId`. Isolation is enforced only on audit/backup ledgers. Full per-entity scoping requires a schema migration adding `workspaceId` with a backfill default, plus repository-level filters. `detectWorkspaceLeakage()` explicitly reports the unscoped entity kinds.
+3. **Rate-limit adapter is per-worker in-memory** — `bindRateLimiter()` provides the injection point; a Redis/Durable-Object/Supabase adapter must be supplied before public traffic.
+4. **RBAC is enforced at UI + `requirePermission()` boundaries, not yet at the repository `mutate()` layer** — a repository-wide audited-mutation wrapper that unconditionally logs actor/before/after and calls `requirePermission()` remains a follow-up.
+5. **Accessibility & load-scale QA** — Playwright a11y sweep, virtualization of admin tables, and a 10× seed load test are not covered in this pass.
+
+Do not claim RC-1 readiness while any of items 1–5 remain open.

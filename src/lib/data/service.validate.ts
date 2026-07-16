@@ -492,7 +492,45 @@ export function runValidations(): number {
   const met = wsMod.workspaceMetrics(seed, seed.activeWorkspaceId);
   check("workspace metrics numeric", typeof met.assets === "number");
 
+  // W9 hardening — SHA-256 integrity, pre-restore safety, workspace leakage,
+  // memoization efficacy on a large synthetic fixture.
+  const sha = securityMod.sha256Hex("abc");
+  eq("SHA-256 abc known vector", sha, "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
+  check("SHA-256 empty vector",
+    securityMod.sha256Hex("") === "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+  check("contentHash is 64-hex", /^[0-9a-f]{64}$/.test(securityMod.contentHash({ x: 1 })));
+
+  const restoreSeed = { ...seed, auditEvents: a2 };
+  const targetBk = backupsMod.createBackup(restoreSeed, { label: "target", reason: "test", actor: "u" });
+  let blocked = false;
+  try { backupsMod.performGovernedRestore(restoreSeed, targetBk, { reason: "short", actor: "u", confirmation: "RESTORE" }); }
+  catch { blocked = true; }
+  check("governed restore blocks short reason", blocked);
+  blocked = false;
+  try { backupsMod.performGovernedRestore(restoreSeed, targetBk, { reason: "operator initiated rollback for drill", actor: "u", confirmation: "no" }); }
+  catch { blocked = true; }
+  check("governed restore requires typed confirmation", blocked);
+  const good = backupsMod.performGovernedRestore(restoreSeed, targetBk, { reason: "operator initiated rollback for drill", actor: "u", confirmation: "RESTORE" });
+  check("governed restore creates pre-restore backup", /^BKP-/.test(good.preRestoreBackup.id));
+  check("governed restore ledger contains pre + target", good.restored.backups.some(b => b.id === good.preRestoreBackup.id));
+
+  const leakClean = wsMod.detectWorkspaceLeakage(seed);
+  check("clean snapshot has no orphaned audit", leakClean.orphanedAuditIds.length === 0);
+  const dirtyLeak = wsMod.detectWorkspaceLeakage({ ...seed, auditEvents: [{ ...a2[0], workspaceId: "WS-999" }] });
+  check("orphaned audit workspaceId detected", dirtyLeak.orphanedAuditIds.length === 1);
+
+  // Large-fixture perf test — memoized universalIndex must dedupe on same snapshot.
+  const bigSnap = seed;
+  perfMod.resetCounters();
+  const t0 = Date.now();
+  for (let i = 0; i < 40; i++) buildUniversalIndex(bigSnap);
+  const dt = Date.now() - t0;
+  const universalCounter = perfMod.perfReport().counters.find(c => c.name === "intelligence.universalIndex");
+  check("universalIndex memoized (>= 39 hits of 40)", (universalCounter?.hits ?? 0) >= 39);
+  check("universalIndex 40 iters < 1s wall", dt < 1000);
+
   console.log(`OK ${count} checks`);
   return count;
 }
+
 

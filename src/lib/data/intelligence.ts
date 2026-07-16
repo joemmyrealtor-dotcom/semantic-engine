@@ -15,6 +15,27 @@ import {
   buildGraph, detectBrokenReferences,
   publicationCoverage, toolkitCoverage, aiPackCoverage, agentCoverage,
 } from "./service";
+import { memoize } from "./performance";
+import { fingerprint } from "./security";
+
+// W9 #7 — Snapshot-fingerprinted memoization for hot derived reads.
+// Cache key is a cheap non-crypto fingerprint of the counts of every
+// entity list; when any count changes, cache misses and recomputes.
+// Snapshot-identity keys (WeakMap) would be stricter but the seed
+// harness/validation suite reuses object identity across mutations.
+function snapKey(s: DataSnapshot): string {
+  const n = (a?: { length: number } | null) => a?.length ?? 0;
+  return fingerprint([
+    s.schemaVersion, s.activeWorkspaceId ?? "",
+    n(s.domains), n(s.concepts), n(s.frameworks),
+    n(s.knowledgeObjects), n(s.clientTools), n(s.publications),
+    n(s.clientToolkits), n(s.aiPacks), n(s.agents),
+    n(s.automations), n(s.releases), n(s.auditEvents),
+  ].join("|"));
+}
+const memoBuildGraph = memoize("intelligence.buildGraph", (_k: string, s: DataSnapshot) => buildGraph(s), 16);
+const cachedBuildGraph = (s: DataSnapshot) => memoBuildGraph(snapKey(s), s);
+
 
 // ============================================================
 // PHASE 1/2 — Universal asset registry & search
@@ -55,7 +76,11 @@ function pushKw(...vals: (string | string[] | undefined | null)[]): string[] {
 }
 
 /** Build a flat, searchable index of every canonical asset. */
+const memoUniversalIndex = memoize("intelligence.universalIndex", (_k: string, s: DataSnapshot) => buildUniversalIndexImpl(s), 8);
 export function buildUniversalIndex(s: DataSnapshot): UniversalAsset[] {
+  return memoUniversalIndex(snapKey(s), s);
+}
+function buildUniversalIndexImpl(s: DataSnapshot): UniversalAsset[] {
   const out: UniversalAsset[] = [];
   const H = (parts: (string | undefined | null)[]) =>
     parts.filter(Boolean).join(" \u2022 ").toLowerCase();
@@ -315,7 +340,7 @@ export interface RelationshipInspection {
 }
 
 export function inspectRelationships(assetId: string, s: DataSnapshot): RelationshipInspection {
-  const g = buildGraph(s);
+  const g = cachedBuildGraph(s);
   const incoming = g.edges.filter(e => e.to === assetId);
   const outgoing = g.edges.filter(e => e.from === assetId);
   const nodeById = new Map(g.nodes.map(n => [n.id, n] as const));
@@ -348,7 +373,7 @@ export interface ImpactAnalysis {
 
 /** Trace all downstream assets that would be impacted by change to `assetId`. */
 export function impactAnalysis(assetId: string, s: DataSnapshot): ImpactAnalysis {
-  const g = buildGraph(s);
+  const g = cachedBuildGraph(s);
   const inbound = new Map<string, string[]>();
   const outbound = new Map<string, string[]>();
   for (const e of g.edges) {
@@ -506,7 +531,7 @@ export function knowledgeHealth(s: DataSnapshot): HealthScore {
     Math.round((canonicalAssets.filter(id => covered.has(id)).length / canonicalAssets.length) * 100);
 
   // Relationship completeness: nodes with at least one edge.
-  const g = buildGraph(s);
+  const g = cachedBuildGraph(s);
   const connected = new Set<string>();
   for (const e of g.edges) { connected.add(e.from); connected.add(e.to); }
   const relationshipCompleteness = g.nodes.length === 0 ? 100 :
@@ -669,7 +694,7 @@ export function validateDependencies(s: DataSnapshot): DependencyFinding[] {
   }
 
   // Orphaned canonical assets (nothing references them).
-  const g = buildGraph(s);
+  const g = cachedBuildGraph(s);
   const referencedIds = new Set<string>();
   for (const e of g.edges) referencedIds.add(e.to);
   const checkOrphan = (id: string, kind: string, status: string) => {

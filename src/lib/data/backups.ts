@@ -9,8 +9,9 @@ import type { BackupSnapshot, DataSnapshot } from "./schema";
 import { SCHEMA_VERSION } from "./schema";
 import { contentHash, redactSecrets } from "./security";
 
-export function nextBackupId(existing: BackupSnapshot[]): string {
-  const nums = existing.map(b => Number(b.id.replace(/^BKP-/, ""))).filter(n => !isNaN(n));
+export function nextBackupId(existing: BackupSnapshot[] | undefined): string {
+  const list = existing ?? [];
+  const nums = list.map(b => Number(b.id.replace(/^BKP-/, ""))).filter(n => !isNaN(n));
   return `BKP-${String((nums.length ? Math.max(...nums) : 0) + 1).padStart(3, "0")}`;
 }
 
@@ -59,6 +60,43 @@ export function restoreFromBackup(backup: BackupSnapshot): DataSnapshot {
   return JSON.parse(backup.payload) as DataSnapshot;
 }
 
+/**
+ * Governed restore (W9 #4). Enforces a written reason, a typed confirmation
+ * phrase, and creates a pre-restore backup of the CURRENT snapshot before
+ * overwriting it. Returns both the pre-restore backup (for rollback) and the
+ * restored snapshot with the pre-restore backup appended to its ledger.
+ */
+export interface RestoreOptions {
+  reason: string;
+  actor: string;
+  confirmation: string;    // must equal "RESTORE" (case-sensitive)
+}
+export function performGovernedRestore(
+  current: DataSnapshot,
+  target: BackupSnapshot,
+  opts: RestoreOptions,
+): { preRestoreBackup: BackupSnapshot; restored: DataSnapshot } {
+  if (opts.confirmation !== "RESTORE") {
+    throw new Error("Restore blocked: destructive confirmation phrase 'RESTORE' required.");
+  }
+  if (!opts.reason || opts.reason.trim().length < 8) {
+    throw new Error("Restore blocked: written reason (≥ 8 chars) required for audit.");
+  }
+  const pre = createBackup(current, {
+    label: `pre-restore/${target.id}`,
+    reason: `Pre-restore safety backup for ${target.id}: ${opts.reason}`,
+    actor: opts.actor,
+  });
+  const restored = restoreFromBackup(target);
+  return {
+    preRestoreBackup: pre,
+    restored: {
+      ...restored,
+      backups: [...(restored.backups ?? []), pre, { ...target, restoredAt: new Date().toISOString() }],
+    },
+  };
+}
+
 /** Rollback to the latest backup taken strictly before `beforeIso`. */
 export function findRollbackTarget(backups: BackupSnapshot[], beforeIso: string): BackupSnapshot | null {
   const cutoff = Date.parse(beforeIso);
@@ -93,6 +131,6 @@ export function buildDisasterRecoveryPlan(snapshot: DataSnapshot): DisasterRecov
   if (!latest) recs.push("Create the first backup before enabling production traffic.");
   else if (Date.parse(latest.createdAt) < Date.now() - 7 * 86400_000) recs.push("Latest backup > 7 days old — schedule a fresh backup.");
   if (snapshot.backups.length < 3) recs.push("Maintain at least 3 rolling backups for point-in-time recovery.");
-  if (!snapshot.maintenanceMode.allowRoles.length) recs.push("Configure allow-list roles for maintenance mode.");
+  if (!snapshot.maintenanceMode?.allowRoles?.length) recs.push("Configure allow-list roles for maintenance mode.");
   return { latestBackup: latest, backupCount: snapshot.backups.length, oldestBackupAt: oldest?.createdAt ?? null, recommendedActions: recs };
 }
