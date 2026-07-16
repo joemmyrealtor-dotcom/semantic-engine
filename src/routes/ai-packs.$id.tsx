@@ -48,9 +48,9 @@ function AIPackStudioPage() {
     </>
   );
 
-  const patch = async (p: Partial<AIPack>) => {
-    await Repo.update("aiPacks", ap.id, { ...p, updatedAt: new Date().toISOString() });
-  };
+  const { patch, state: saveState } = usePatchSave<AIPack>({
+    save: async (p) => { await Repo.update("aiPacks", ap.id, { ...p, updatedAt: new Date().toISOString() }); },
+  });
 
   const promote = async (target: ManufacturingStage) => {
     const check = validateAIPackPromotion(ap, target, s);
