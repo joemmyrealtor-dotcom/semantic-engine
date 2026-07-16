@@ -19,7 +19,7 @@ const items = [
   { to: "/agents", label: "Agents", icon: Bot },
   { to: "/automations", label: "Automations", icon: Workflow },
   { to: "/operations", label: "Operations", icon: Activity },
-  { to: "/releases/LKR-1.0.001", label: "Releases", icon: Package },
+  { to: "/releases/$id", params: { id: "LKR-1.0.001" }, label: "Releases", icon: Package },
   { to: "/governance", label: "Governance", icon: ShieldCheck },
   { to: "/data", label: "Import / Export", icon: Database },
 ] as const;
@@ -40,7 +40,8 @@ export function AppSidebar() {
           return (
             <Link
               key={it.to}
-              to={it.to}
+              to={it.to as string}
+              params={"params" in it ? (it as { params: Record<string, string> }).params : undefined}
               className={cn(
                 "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
                 active
