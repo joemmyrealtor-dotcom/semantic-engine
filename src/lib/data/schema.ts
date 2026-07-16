@@ -567,13 +567,20 @@ export type AutomationTriggerKind =
   | "review-due" | "broken-reference" | "coverage-gap" | "canonical-updated" | "scheduled"
   // Workstream 6 — Knowledge Intelligence triggers
   | "duplicate-detected" | "knowledge-health-threshold" | "dependency-change"
-  | "relationship-added" | "relationship-removed" | "coverage-drop";
+  | "relationship-added" | "relationship-removed" | "coverage-drop"
+  // Workstream 8 — Integration triggers
+  | "webhook-received" | "import-completed" | "import-failed"
+  | "export-completed" | "export-failed" | "sync-conflict" | "delivery-failed"
+  | "external-reference-changed";
 
 export const AUTOMATION_TRIGGER_KINDS: AutomationTriggerKind[] = [
   "manual","stage-transition","readiness-threshold","release-gate",
   "review-due","broken-reference","coverage-gap","canonical-updated","scheduled",
   "duplicate-detected","knowledge-health-threshold","dependency-change",
   "relationship-added","relationship-removed","coverage-drop",
+  "webhook-received","import-completed","import-failed",
+  "export-completed","export-failed","sync-conflict","delivery-failed",
+  "external-reference-changed",
 ];
 
 export type AutomationActionKind =
@@ -581,7 +588,10 @@ export type AutomationActionKind =
   | "add-release-candidate" | "remove-release-candidate" | "block-release"
   | "create-draft-asset" | "link-canonical-asset" | "update-metadata"
   | "export-manifest" | "request-promotion" | "escalate-overdue-review"
-  | "flag-broken-references";
+  | "flag-broken-references"
+  // Workstream 8 — Integration actions
+  | "emit-webhook-event" | "create-export-package" | "submit-delivery-package"
+  | "create-import-dry-run" | "capture-analytics-snapshot";
 
 export const AUTOMATION_ACTION_KINDS: AutomationActionKind[] = [
   "generate-readiness-report","assign-review-checkpoint","notify-owner",
