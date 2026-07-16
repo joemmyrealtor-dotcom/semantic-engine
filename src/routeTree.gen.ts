@@ -41,6 +41,7 @@ import { Route as AutomationsNewRouteImport } from './routes/automations.new'
 import { Route as AutomationsIdRouteImport } from './routes/automations.$id'
 import { Route as AiPacksIdRouteImport } from './routes/ai-packs.$id'
 import { Route as AgentsIdRouteImport } from './routes/agents.$id'
+import { Route as AdminMonitoringRouteImport } from './routes/admin.monitoring'
 import { Route as AdminAuditRouteImport } from './routes/admin.audit'
 import { Route as ApiPublicV1SplatRouteImport } from './routes/api/public/v1/$'
 
@@ -204,6 +205,11 @@ const AgentsIdRoute = AgentsIdRouteImport.update({
   path: '/agents/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminMonitoringRoute = AdminMonitoringRouteImport.update({
+  id: '/admin/monitoring',
+  path: '/admin/monitoring',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminAuditRoute = AdminAuditRouteImport.update({
   id: '/admin/audit',
   path: '/admin/audit',
@@ -229,6 +235,7 @@ export interface FileRoutesByFullPath {
   '/reports': typeof ReportsRoute
   '/repository': typeof RepositoryRoute
   '/admin/audit': typeof AdminAuditRoute
+  '/admin/monitoring': typeof AdminMonitoringRoute
   '/agents/$id': typeof AgentsIdRoute
   '/ai-packs/$id': typeof AiPacksIdRoute
   '/automations/$id': typeof AutomationsIdRoute
@@ -265,6 +272,7 @@ export interface FileRoutesByTo {
   '/reports': typeof ReportsRoute
   '/repository': typeof RepositoryRoute
   '/admin/audit': typeof AdminAuditRoute
+  '/admin/monitoring': typeof AdminMonitoringRoute
   '/agents/$id': typeof AgentsIdRoute
   '/ai-packs/$id': typeof AiPacksIdRoute
   '/automations/$id': typeof AutomationsIdRoute
@@ -302,6 +310,7 @@ export interface FileRoutesById {
   '/reports': typeof ReportsRoute
   '/repository': typeof RepositoryRoute
   '/admin/audit': typeof AdminAuditRoute
+  '/admin/monitoring': typeof AdminMonitoringRoute
   '/agents/$id': typeof AgentsIdRoute
   '/ai-packs/$id': typeof AiPacksIdRoute
   '/automations/$id': typeof AutomationsIdRoute
@@ -340,6 +349,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/repository'
     | '/admin/audit'
+    | '/admin/monitoring'
     | '/agents/$id'
     | '/ai-packs/$id'
     | '/automations/$id'
@@ -376,6 +386,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/repository'
     | '/admin/audit'
+    | '/admin/monitoring'
     | '/agents/$id'
     | '/ai-packs/$id'
     | '/automations/$id'
@@ -412,6 +423,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/repository'
     | '/admin/audit'
+    | '/admin/monitoring'
     | '/agents/$id'
     | '/ai-packs/$id'
     | '/automations/$id'
@@ -449,6 +461,7 @@ export interface RootRouteChildren {
   ReportsRoute: typeof ReportsRoute
   RepositoryRoute: typeof RepositoryRoute
   AdminAuditRoute: typeof AdminAuditRoute
+  AdminMonitoringRoute: typeof AdminMonitoringRoute
   AgentsIdRoute: typeof AgentsIdRoute
   AiPacksIdRoute: typeof AiPacksIdRoute
   AutomationsIdRoute: typeof AutomationsIdRoute
@@ -696,6 +709,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AgentsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/monitoring': {
+      id: '/admin/monitoring'
+      path: '/admin/monitoring'
+      fullPath: '/admin/monitoring'
+      preLoaderRoute: typeof AdminMonitoringRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/audit': {
       id: '/admin/audit'
       path: '/admin/audit'
@@ -751,6 +771,7 @@ const rootRouteChildren: RootRouteChildren = {
   ReportsRoute: ReportsRoute,
   RepositoryRoute: RepositoryRoute,
   AdminAuditRoute: AdminAuditRoute,
+  AdminMonitoringRoute: AdminMonitoringRoute,
   AgentsIdRoute: AgentsIdRoute,
   AiPacksIdRoute: AiPacksIdRoute,
   AutomationsIdRoute: AutomationsIdRoute,
