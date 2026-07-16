@@ -131,6 +131,6 @@ export function buildDisasterRecoveryPlan(snapshot: DataSnapshot): DisasterRecov
   if (!latest) recs.push("Create the first backup before enabling production traffic.");
   else if (Date.parse(latest.createdAt) < Date.now() - 7 * 86400_000) recs.push("Latest backup > 7 days old — schedule a fresh backup.");
   if (snapshot.backups.length < 3) recs.push("Maintain at least 3 rolling backups for point-in-time recovery.");
-  if (!snapshot.maintenanceMode.allowRoles.length) recs.push("Configure allow-list roles for maintenance mode.");
+  if (!snapshot.maintenanceMode?.allowRoles?.length) recs.push("Configure allow-list roles for maintenance mode.");
   return { latestBackup: latest, backupCount: snapshot.backups.length, oldestBackupAt: oldest?.createdAt ?? null, recommendedActions: recs };
 }
