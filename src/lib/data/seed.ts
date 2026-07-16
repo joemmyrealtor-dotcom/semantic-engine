@@ -896,6 +896,25 @@ export function buildSeedSnapshot(): DataSnapshot {
     deliveryRuns: seedDeliveryRuns,
     eventSubscriptions: seedEventSubscriptions,
     domainEvents: seedDomainEvents,
+    // Workstream 9 — enterprise hardening defaults
+    auditEvents: [],
+    backups: [],
+    workspaces: [
+      { id: "WS-001", name: "JM Advisory Press", slug: "jm-primary", branding: { primary: "#0B1F3A", accent: "#C9A24E", logoInitials: "JM" }, isolated: false, settings: { defaultRole: "Viewer", requireHumanReview: true, retentionDays: 365 }, metrics: { assets: 0, releases: 0, runs: 0 }, archived: false, createdAt: now, updatedAt: now },
+      { id: "WS-002", name: "Editorial Lab", slug: "editorial-lab", branding: { primary: "#1F3A5F", accent: "#8FB8A2", logoInitials: "EL" }, isolated: true, settings: { defaultRole: "Contributor", requireHumanReview: true, retentionDays: 180 }, metrics: { assets: 0, releases: 0, runs: 0 }, archived: false, createdAt: now, updatedAt: now },
+    ],
+    featureFlags: [
+      { id: "FF-001", key: "audit.explorer", description: "Enable Audit Explorer UI", enabled: true, audience: "administrators", owner: "Platform Ops", createdAt: now, updatedAt: now },
+      { id: "FF-002", key: "backups.autoDaily", description: "Auto-create daily backup snapshot", enabled: true, audience: "all", owner: "Platform Ops", createdAt: now, updatedAt: now },
+      { id: "FF-003", key: "api.rateLimit", description: "Rate limit /api/public/v1/*", enabled: true, audience: "all", owner: "Platform Ops", createdAt: now, updatedAt: now },
+      { id: "FF-004", key: "monitoring.dashboard", description: "Expose Monitoring dashboard", enabled: true, audience: "operations", owner: "Platform Ops", createdAt: now, updatedAt: now },
+      { id: "FF-005", key: "workspaces.multi", description: "Multi-workspace switching", enabled: true, audience: "administrators", owner: "Platform Ops", createdAt: now, updatedAt: now },
+    ],
+    rateLimitBuckets: [
+      { id: "RL-001", key: "public:/api/public/v1/*", windowSeconds: 60, maxRequests: 60, currentCount: 0, windowStart: now },
+    ],
+    maintenanceMode: { enabled: false, reason: "", since: null, by: null, allowRoles: ["Administrator","Owner"] },
+    activeWorkspaceId: "WS-001",
   };
 }
 
