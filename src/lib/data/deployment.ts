@@ -15,13 +15,17 @@ export interface StartupDiagnostic { name: string; ok: boolean; detail: string }
 export function startupDiagnostics(env: Record<string, string | undefined>, snap: DataSnapshot): StartupDiagnostic[] {
   const envRes: EnvValidationResult = validateEnvironment(env);
   const out: StartupDiagnostic[] = [];
+  const workspaces = snap.workspaces ?? [];
+  const auditEvents = snap.auditEvents ?? [];
+  const rateBuckets = snap.rateLimitBuckets ?? [];
+  const maintenance = snap.maintenanceMode ?? { enabled: false, reason: "", allowRoles: [] };
   out.push({ name: "Environment variables", ok: envRes.ok, detail: envRes.ok ? `${envRes.present.length} present` : `missing: ${envRes.missing.join(", ")}` });
   out.push({ name: "Schema version", ok: snap.schemaVersion === SCHEMA_VERSION, detail: `snapshot v${snap.schemaVersion} / runtime v${SCHEMA_VERSION}` });
-  out.push({ name: "Active workspace", ok: !!snap.workspaces.find(w => w.id === snap.activeWorkspaceId), detail: snap.activeWorkspaceId });
-  const chain = verifyAuditChain(snap.auditEvents);
+  out.push({ name: "Active workspace", ok: !!workspaces.find(w => w.id === snap.activeWorkspaceId), detail: snap.activeWorkspaceId ?? "n/a" });
+  const chain = verifyAuditChain(auditEvents);
   out.push({ name: "Audit chain", ok: chain.ok, detail: chain.ok ? `${chain.count} verified` : `broken at ${chain.brokenAt}` });
-  out.push({ name: "Rate-limit bucket", ok: snap.rateLimitBuckets.length > 0, detail: `${snap.rateLimitBuckets.length} bucket(s)` });
-  out.push({ name: "Maintenance mode", ok: !snap.maintenanceMode.enabled, detail: snap.maintenanceMode.enabled ? snap.maintenanceMode.reason : "off" });
+  out.push({ name: "Rate-limit bucket", ok: rateBuckets.length > 0, detail: `${rateBuckets.length} bucket(s)` });
+  out.push({ name: "Maintenance mode", ok: !maintenance.enabled, detail: maintenance.enabled ? maintenance.reason : "off" });
   return out;
 }
 
