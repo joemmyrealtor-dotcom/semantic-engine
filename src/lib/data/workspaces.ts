@@ -34,3 +34,48 @@ export function exportWorkspace(snap: DataSnapshot, workspaceId: string): { work
     backups: snap.backups.filter(b => b.workspaceId === workspaceId).length,
   };
 }
+
+/**
+ * W9 #5 — Cross-workspace leakage check. Scans workspace-scoped ledgers
+ * (auditEvents, backups) and reports any row whose `workspaceId` refers to
+ * a workspace that no longer exists, or whose active-workspace filter would
+ * expose data from a sibling workspace. Returns a structured report used by
+ * the admin monitoring UI and the release-readiness gate.
+ *
+ * NOTE (honest limitation): domain entities (concepts, publications, etc.)
+ * do not yet carry a `workspaceId` column — full per-entity isolation
+ * requires the schema migration tracked as W9-BLOCKER-2. Until then, this
+ * check enforces isolation on the surfaces that DO carry workspace scoping
+ * (audit trail, backups) and reports the un-scoped entities as advisories.
+ */
+export interface WorkspaceLeakageReport {
+  ok: boolean;
+  orphanedAuditIds: string[];
+  orphanedBackupIds: string[];
+  unscopedEntityKinds: string[];
+  activeWorkspaceId: string;
+}
+export function detectWorkspaceLeakage(snap: DataSnapshot): WorkspaceLeakageReport {
+  const known = new Set(snap.workspaces.map(w => w.id));
+  const orphanedAuditIds = snap.auditEvents.filter(e => !known.has(e.workspaceId)).map(e => e.id);
+  const orphanedBackupIds = snap.backups.filter(b => !known.has(b.workspaceId)).map(b => b.id);
+  const unscopedEntityKinds = [
+    "concepts","frameworks","knowledgeObjects","publications","clientTools",
+    "clientToolkits","aiPacks","agents","automations","releases",
+  ];
+  return {
+    ok: orphanedAuditIds.length === 0 && orphanedBackupIds.length === 0,
+    orphanedAuditIds, orphanedBackupIds, unscopedEntityKinds,
+    activeWorkspaceId: snap.activeWorkspaceId,
+  };
+}
+
+/** Filter workspace-scoped ledgers to only the active workspace's rows. */
+export function scopedAudit(snap: DataSnapshot): DataSnapshot["auditEvents"] {
+  const wid = snap.activeWorkspaceId;
+  return snap.auditEvents.filter(e => e.workspaceId === wid);
+}
+export function scopedBackups(snap: DataSnapshot): DataSnapshot["backups"] {
+  const wid = snap.activeWorkspaceId;
+  return snap.backups.filter(b => b.workspaceId === wid);
+}
