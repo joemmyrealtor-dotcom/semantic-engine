@@ -15,14 +15,12 @@ export function activeWorkspace(snap: DataSnapshot): Workspace | null {
 }
 
 export function workspaceMetrics(snap: DataSnapshot, workspaceId: string): { assets: number; releases: number; runs: number; auditEvents: number } {
-  const assets =
-    snap.concepts.length + snap.knowledgeObjects.length + snap.publications.length +
-    snap.clientToolkits.length + snap.aiPacks.length + snap.agents.length;
+  const n = (a?: { length: number } | null) => a?.length ?? 0;
   return {
-    assets,
-    releases: snap.releases.length,
-    runs: snap.automationRuns.length,
-    auditEvents: snap.auditEvents.filter(e => e.workspaceId === workspaceId).length,
+    assets: n(snap.concepts) + n(snap.knowledgeObjects) + n(snap.publications) + n(snap.clientToolkits) + n(snap.aiPacks) + n(snap.agents),
+    releases: n(snap.releases),
+    runs: n(snap.automationRuns),
+    auditEvents: (snap.auditEvents ?? []).filter(e => e.workspaceId === workspaceId).length,
   };
 }
 
