@@ -556,7 +556,20 @@ export type EntityType =
   | "analyticsSnapshots"
   | "executiveAlerts"
   | "savedExecutiveViews"
-  | "reportRuns";
+  | "reportRuns"
+  // Workstream 8 — integrations
+  | "integrationConnections"
+  | "webhookEndpoints"
+  | "webhookDeliveries"
+  | "apiClients"
+  | "importJobs"
+  | "exportJobs"
+  | "syncMappings"
+  | "externalReferences"
+  | "deliveryPackages"
+  | "deliveryRuns"
+  | "eventSubscriptions"
+  | "domainEvents";
 
 // ===================================================================
 // Workstream 5 — Automation, Orchestration, Operational Governance
