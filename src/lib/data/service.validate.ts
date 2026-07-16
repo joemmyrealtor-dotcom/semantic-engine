@@ -521,7 +521,6 @@ export function runValidations(): number {
 
   // Large-fixture perf test — memoized universalIndex must dedupe on same snapshot.
   const bigSnap = seed;
-  const { buildUniversalIndex } = await import("./intelligence");
   perfMod.resetCounters();
   const t0 = Date.now();
   for (let i = 0; i < 40; i++) buildUniversalIndex(bigSnap);
