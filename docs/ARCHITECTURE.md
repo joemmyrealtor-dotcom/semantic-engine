@@ -110,13 +110,35 @@ promotion, and notify — they **cannot** bypass governed approvals.
 
 Use these instead of re-implementing:
 
-- `useAutosave` (`src/hooks/use-autosave.ts`) — debounced save with error/dirty retention.
+- `useAutosave` (`src/hooks/use-autosave.ts`) — debounced draft-shape autosave.
+- `usePatchSave` (`src/hooks/use-patch-save.ts`) — per-keystroke `Repo.update(kind,id,partial)`
+  autosave with in-flight lock, retry, and optional stale-conflict guard.
+  Used by Client Toolkit, AI Pack, Automation, and Integration studios.
 - `<SaveIndicator />` — unified save-state chip.
 - `<KpiCard />` — dashboard/registry metric tile.
 - `<EmptyState />`, `<PageHeader />`, `<PublicationStageBadge />` — existing.
 
-Do **not** create additional generic "framework" abstractions. Keep domain-specific
-logic in services, not in shared UI.
+Do **not** create additional generic "framework" abstractions.
+
+## 11a. Public API (Workstream 8 follow-up)
+
+`src/routes/api/public/v1/$.ts` exposes the documented catalog over real HTTP:
+
+- `GET /api/public/v1/catalog` — endpoint metadata
+- `GET /api/public/v1/registry/{kind}?limit=N`
+- `GET /api/public/v1/knowledge/{id}`
+- `GET /api/public/v1/releases/{id}/manifest`
+- `GET /api/public/v1/publications|toolkits|ai-packs|agents/{id}/export`
+- `GET /api/public/v1/automations/runs/{id}`
+- `GET /api/public/v1/imports/{id}`
+
+Server handlers use the deterministic seed snapshot (no IndexedDB in Workers).
+Never return raw credentials or secrets. The `/integrations/$id` studio surfaces
+credentials only as masked references (`IntegrationCredentialReference`).
+
+Scheduled analytics capture is wired via automation `AUT-005`
+(`scheduled` trigger + `capture-analytics-snapshot` action), idempotent within
+its capture window.
 
 ## 11. Known technical debt (recommended sequence for W8/W9)
 
