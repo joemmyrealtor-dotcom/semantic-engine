@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PageHeader, PageBody } from "@/components/page-header";
 import { LoadingState, StatusBadge, SectionTitle, ErrorState, KpiCard } from "@/components/ui-kit";
 import { useSnapshot, Repo } from "@/lib/use-snapshot";
@@ -22,7 +22,9 @@ import {
 } from "@/lib/data/service";
 import { PublicationStageBadge } from "@/components/publication-stage-badge";
 import { CoverageBar } from "./publications.index";
-import { ArrowDown, ArrowUp, GripVertical, Plus, Trash2, Save, ChevronRight, ExternalLink } from "lucide-react";
+import { ArrowDown, ArrowUp, GripVertical, Plus, Trash2, ChevronRight, ExternalLink } from "lucide-react";
+import { useAutosave, isStaleConflict } from "@/hooks/use-autosave";
+import { SaveIndicator } from "@/components/save-indicator";
 
 export const Route = createFileRoute("/publications/$id")({
   head: ({ params }) => ({ meta: [{ title: `${params.id} — Publication Editor` }] }),
@@ -38,36 +40,22 @@ function PublicationEditorPage() {
   const original = s?.publications.find(p => p.id === id);
   const [draft, setDraft] = useState<PublicationBlueprint | null>(null);
   const [dirty, setDirty] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => { if (original && !draft) setDraft(original); }, [original, draft]);
 
-  // Autosave through Repo — retains dirty state on failure so edits are never silently lost.
-  useEffect(() => {
-    if (!draft || !dirty) return;
-    if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(async () => {
-      setSaving(true);
-      try {
-        await Repo.update("publications", id, draft);
-        setDirty(false);
-      } catch (err) {
-        toast.error(`Autosave failed: ${(err as Error).message}. Changes kept locally — will retry.`);
-      } finally {
-        setSaving(false);
-      }
-    }, AUTOSAVE_MS);
-    return () => { if (timer.current) clearTimeout(timer.current); };
-  }, [draft, dirty, id]);
+  const autosave = useAutosave<PublicationBlueprint>({
+    draft, dirty, delayMs: 800,
+    save: async v => { await Repo.update("publications", id, v); },
+    onSaved: () => setDirty(false),
+    onError: err => toast.error(`Autosave failed: ${(err as Error).message}. Changes kept locally — will retry.`),
+  });
 
   // Warn if the underlying record changed elsewhere while we hold unsaved edits.
   useEffect(() => {
-    if (!draft || !original) return;
-    if (dirty && original.updatedAt && draft.updatedAt && original.updatedAt > draft.updatedAt) {
+    if (isStaleConflict(original?.updatedAt, draft?.updatedAt, dirty)) {
       toast.warning("Publication changed elsewhere. Your local edits are still active — save will overwrite.");
     }
-  }, [original?.updatedAt, dirty, draft, original]);
+  }, [original?.updatedAt, dirty, draft?.updatedAt]);
 
   if (!s) return <LoadingState />;
   if (!original) return <ErrorState message={`Publication ${id} not found.`} />;

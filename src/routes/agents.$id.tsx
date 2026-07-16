@@ -86,10 +86,7 @@ function AgentStudio() {
         description={draft.description || draft.role}
         actions={
           <div className="flex items-center gap-2 text-xs">
-            {lastSaveError ? <span className="text-destructive">Save failed — retrying</span>
-              : saving ? <span className="text-muted-foreground">Saving…</span>
-              : dirty ? <span className="text-gold">Unsaved…</span>
-              : <span className="text-evergreen">Saved</span>}
+            <SaveIndicator saving={autosave.saving} dirty={dirty} error={autosave.error} lastSavedAt={autosave.lastSavedAt} onRetry={autosave.retry} />
             <Link to="/agents"><Button variant="outline" size="sm">Registry</Button></Link>
           </div>
         }
