@@ -406,10 +406,116 @@ export function runValidations(): number {
   check("webhook delivery id pattern", /^WD-\d{3}$/.test("WD-001"));
   check("domain event id pattern", /^EVT-\d{3,}$/.test("EVT-001"));
 
+  // ============================================================
+  // Workstream 9 — Enterprise Hardening
+  // ============================================================
+  const security = await import("./security");
+  const audit = await import("./audit");
+  const backups = await import("./backups");
+  const deployment = await import("./deployment");
+  const perf = await import("./performance");
+  const authMod = await import("./auth");
 
+  // Redaction
+  const redacted = security.redactSecrets({ name: "x", api_key: "secret", nested: { password: "p" } }) as Record<string, unknown>;
+  eq("redact api_key", redacted.api_key, "[REDACTED]");
+  eq("redact nested password", (redacted.nested as Record<string, unknown>).password, "[REDACTED]");
+  check("preserve non-secret field", redacted.name === "x");
+
+  // Deterministic hash
+  eq("hash deterministic", security.hashString("hello"), security.hashString("hello"));
+  check("content hash key-order independent",
+    security.contentHash({ a: 1, b: 2 }) === security.contentHash({ b: 2, a: 1 }));
+
+  // Env validation
+  const envOk = security.validateEnvironment({ VITE_SUPABASE_URL: "x", VITE_SUPABASE_PUBLISHABLE_KEY: "y", SUPABASE_URL: "x", SUPABASE_PUBLISHABLE_KEY: "y" });
+  check("env validation ok when all present", envOk.ok);
+  const envBad = security.validateEnvironment({});
+  check("env validation reports missing", envBad.missing.length > 0);
+
+  // Rate limiter — allows within window
+  const nowIso = new Date().toISOString();
+  const r1 = security.evaluateRateLimit({ currentCount: 0, windowStart: nowIso, windowSeconds: 60, maxRequests: 2 }, nowIso);
+  check("rate limit allows first request", r1.decision.allowed);
+  const r2 = security.evaluateRateLimit({ currentCount: 2, windowStart: nowIso, windowSeconds: 60, maxRequests: 2 }, nowIso);
+  check("rate limit blocks at max", !r2.decision.allowed);
+  check("rate limit retry-after populated", r2.decision.retryAfterSeconds > 0);
+
+  // API key fingerprint never exposes key
+  const fp = security.apiKeyFingerprint("sk_live_abcdef1234");
+  check("fingerprint hides raw key", !fp.fingerprint.includes("sk_live"));
+  check("fingerprint last4 preserved", fp.last4 === "1234");
+
+  // Audit chain
+  const seed = { ...snap7, auditEvents: [] };
+  const a1 = audit.appendAudit(seed.auditEvents, { actor: "u", actorRole: "Editor", workspaceId: seed.activeWorkspaceId, action: "create", entityType: "concept", entityId: "CR-001-001" });
+  const a2 = audit.appendAudit(a1, { actor: "u", actorRole: "Editor", workspaceId: seed.activeWorkspaceId, action: "update", entityType: "concept", entityId: "CR-001-001", before: { name: "a" }, after: { name: "b" } });
+  const verify = audit.verifyAuditChain(a2);
+  check("audit chain verifies", verify.ok);
+  check("audit id pattern", /^AUDIT-\d{3,}$/.test(a2[0].id));
+  // Tamper detection
+  const tampered = [...a2]; tampered[1] = { ...tampered[1], after: { name: "MALICIOUS" } };
+  const verifyBad = audit.verifyAuditChain(tampered);
+  check("audit chain detects tamper", !verifyBad.ok);
+
+  // Audit diff
+  const diffs = audit.auditDiff({ name: "a", role: "x" }, { name: "b", role: "x" });
+  eq("audit diff single change", diffs.length, 1);
+  eq("audit diff key", diffs[0]?.key, "name");
+
+  // Backups
+  const bk = backups.createBackup({ ...seed, auditEvents: a2 }, { label: "t", reason: "test", actor: "u" });
+  check("backup id pattern", /^BKP-\d{3,}$/.test(bk.id));
+  check("backup integrity ok", backups.verifyBackupIntegrity(bk).ok);
+  const restored = backups.restoreFromBackup(bk);
+  eq("restored schemaVersion matches", restored.schemaVersion, seed.schemaVersion);
+  // Tamper backup
+  const bkBad = { ...bk, payload: bk.payload.replace(/./, "X") };
+  check("tampered backup fails integrity", !backups.verifyBackupIntegrity(bkBad).ok);
+
+  const dr = backups.buildDisasterRecoveryPlan({ ...seed, backups: [bk] });
+  check("DR plan has latest backup", !!dr.latestBackup);
+  const migration = backups.verifyMigration(seed);
+  check("migration verify returns issues array", Array.isArray(migration.issues));
+
+  // RBAC matrix
+  check("Administrator has role.assign", authMod.hasPermission("Administrator", "role.assign"));
+  check("Viewer cannot delete", !authMod.hasPermission("Viewer", "content.delete"));
+  check("APIClient can read", authMod.hasPermission("APIClient", "content.read"));
+  check("Operations manages backups", authMod.hasPermission("Operations", "backup.create"));
+  check("ReadOnly has no write", !authMod.hasPermission("ReadOnly", "content.create"));
+
+  // Deployment
+  const rc = deployment.releaseCandidateReadiness({ VITE_SUPABASE_URL: "x", VITE_SUPABASE_PUBLISHABLE_KEY: "y", SUPABASE_URL: "x", SUPABASE_PUBLISHABLE_KEY: "y" }, { ...seed, backups: [bk, bk, bk] });
+  check("RC readiness score is 0..100", rc.score >= 0 && rc.score <= 100);
+  check("RC state is one of ready/conditional/blocked", ["ready","conditional","blocked"].includes(rc.state));
+  const diags = deployment.startupDiagnostics({}, seed);
+  check("startup diagnostics report missing env", diags.some(d => d.name === "Environment variables" && !d.ok));
+  check("feature flag disabled → false", !deployment.isFeatureEnabled([], "any.key", "Administrator"));
+  check("maintenance gate blocks non-allow", !deployment.maintenanceGate({ ...seed, maintenanceMode: { enabled: true, reason: "x", since: null, by: null, allowRoles: ["Administrator"] } }, "Viewer").allowed);
+
+  // Performance memoize
+  perf.resetCounters();
+  let calls = 0;
+  const fn = perf.memoize("test.memo", (x: number) => { calls++; return x * 2; });
+  fn(2); fn(2); fn(3);
+  eq("memoize deduplicates", calls, 2);
+  const report = perf.perfReport();
+  check("perf report tracks counter", report.counters.some(c => c.name === "test.memo"));
+
+  // Workspaces
+  const ws = await import("./workspaces");
+  const met = ws.workspaceMetrics(seed, seed.activeWorkspaceId);
+  check("workspace metrics numeric", typeof met.assets === "number");
 
   console.log(`OK ${count} checks`);
   return count;
+}
+
+// Run when invoked directly.
+declare const process: { argv: string[] } | undefined;
+if (typeof process !== "undefined" && process.argv[1]?.endsWith("service.validate.ts")) {
+  runValidations();
 }
 
 // Run when invoked directly.
