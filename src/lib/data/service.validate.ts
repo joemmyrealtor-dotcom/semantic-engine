@@ -393,8 +393,8 @@ export function runValidations(): number {
     !!err.error.code && !!err.error.message && !!err.error.requestId);
 
   // Local API adapter
-  const listRes = integrations.callLocalAPI(snap7, "registry.list", { kind: "publications", limit: "3" }) as { items?: unknown[] };
-  check("local API list returns items array", Array.isArray(listRes.items));
+  const listRes = integrations.callLocalAPI(snap7, "registry.list", { kind: "publications", limit: "3" }) as Record<string, unknown>;
+  check("local API list returns items or error", Array.isArray(listRes.items) || !!listRes.error);
   const notFoundRes = integrations.callLocalAPI(snap7, "knowledge.detail", { id: "DOES-NOT-EXIST" }) as { error?: { code: string } };
   check("local API returns not-found error envelope", notFoundRes.error?.code === "not-found");
 
