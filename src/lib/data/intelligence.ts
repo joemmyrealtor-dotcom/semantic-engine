@@ -335,7 +335,7 @@ export interface RelationshipInspection {
 }
 
 export function inspectRelationships(assetId: string, s: DataSnapshot): RelationshipInspection {
-  const g = buildGraph(s);
+  const g = cachedBuildGraph(s);
   const incoming = g.edges.filter(e => e.to === assetId);
   const outgoing = g.edges.filter(e => e.from === assetId);
   const nodeById = new Map(g.nodes.map(n => [n.id, n] as const));
@@ -368,7 +368,7 @@ export interface ImpactAnalysis {
 
 /** Trace all downstream assets that would be impacted by change to `assetId`. */
 export function impactAnalysis(assetId: string, s: DataSnapshot): ImpactAnalysis {
-  const g = buildGraph(s);
+  const g = cachedBuildGraph(s);
   const inbound = new Map<string, string[]>();
   const outbound = new Map<string, string[]>();
   for (const e of g.edges) {
@@ -526,7 +526,7 @@ export function knowledgeHealth(s: DataSnapshot): HealthScore {
     Math.round((canonicalAssets.filter(id => covered.has(id)).length / canonicalAssets.length) * 100);
 
   // Relationship completeness: nodes with at least one edge.
-  const g = buildGraph(s);
+  const g = cachedBuildGraph(s);
   const connected = new Set<string>();
   for (const e of g.edges) { connected.add(e.from); connected.add(e.to); }
   const relationshipCompleteness = g.nodes.length === 0 ? 100 :
@@ -689,7 +689,7 @@ export function validateDependencies(s: DataSnapshot): DependencyFinding[] {
   }
 
   // Orphaned canonical assets (nothing references them).
-  const g = buildGraph(s);
+  const g = cachedBuildGraph(s);
   const referencedIds = new Set<string>();
   for (const e of g.edges) referencedIds.add(e.to);
   const checkOrphan = (id: string, kind: string, status: string) => {
