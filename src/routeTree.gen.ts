@@ -14,6 +14,7 @@ import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as PromptsRouteImport } from './routes/prompts'
 import { Route as OperationsRouteImport } from './routes/operations'
 import { Route as KnowledgeRouteImport } from './routes/knowledge'
+import { Route as IntegrationsRouteImport } from './routes/integrations'
 import { Route as GraphRouteImport } from './routes/graph'
 import { Route as GovernanceRouteImport } from './routes/governance'
 import { Route as ExecutiveRouteImport } from './routes/executive'
@@ -62,6 +63,11 @@ const OperationsRoute = OperationsRouteImport.update({
 const KnowledgeRoute = KnowledgeRouteImport.update({
   id: '/knowledge',
   path: '/knowledge',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IntegrationsRoute = IntegrationsRouteImport.update({
+  id: '/integrations',
+  path: '/integrations',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GraphRoute = GraphRouteImport.update({
@@ -191,6 +197,7 @@ export interface FileRoutesByFullPath {
   '/executive': typeof ExecutiveRoute
   '/governance': typeof GovernanceRoute
   '/graph': typeof GraphRoute
+  '/integrations': typeof IntegrationsRoute
   '/knowledge': typeof KnowledgeRouteWithChildren
   '/operations': typeof OperationsRoute
   '/prompts': typeof PromptsRoute
@@ -222,6 +229,7 @@ export interface FileRoutesByTo {
   '/executive': typeof ExecutiveRoute
   '/governance': typeof GovernanceRoute
   '/graph': typeof GraphRoute
+  '/integrations': typeof IntegrationsRoute
   '/knowledge': typeof KnowledgeRouteWithChildren
   '/operations': typeof OperationsRoute
   '/prompts': typeof PromptsRoute
@@ -254,6 +262,7 @@ export interface FileRoutesById {
   '/executive': typeof ExecutiveRoute
   '/governance': typeof GovernanceRoute
   '/graph': typeof GraphRoute
+  '/integrations': typeof IntegrationsRoute
   '/knowledge': typeof KnowledgeRouteWithChildren
   '/operations': typeof OperationsRoute
   '/prompts': typeof PromptsRoute
@@ -287,6 +296,7 @@ export interface FileRouteTypes {
     | '/executive'
     | '/governance'
     | '/graph'
+    | '/integrations'
     | '/knowledge'
     | '/operations'
     | '/prompts'
@@ -318,6 +328,7 @@ export interface FileRouteTypes {
     | '/executive'
     | '/governance'
     | '/graph'
+    | '/integrations'
     | '/knowledge'
     | '/operations'
     | '/prompts'
@@ -349,6 +360,7 @@ export interface FileRouteTypes {
     | '/executive'
     | '/governance'
     | '/graph'
+    | '/integrations'
     | '/knowledge'
     | '/operations'
     | '/prompts'
@@ -381,6 +393,7 @@ export interface RootRouteChildren {
   ExecutiveRoute: typeof ExecutiveRoute
   GovernanceRoute: typeof GovernanceRoute
   GraphRoute: typeof GraphRoute
+  IntegrationsRoute: typeof IntegrationsRoute
   KnowledgeRoute: typeof KnowledgeRouteWithChildren
   OperationsRoute: typeof OperationsRoute
   PromptsRoute: typeof PromptsRoute
@@ -441,6 +454,13 @@ declare module '@tanstack/react-router' {
       path: '/knowledge'
       fullPath: '/knowledge'
       preLoaderRoute: typeof KnowledgeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/integrations': {
+      id: '/integrations'
+      path: '/integrations'
+      fullPath: '/integrations'
+      preLoaderRoute: typeof IntegrationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/graph': {
@@ -632,6 +652,7 @@ const rootRouteChildren: RootRouteChildren = {
   ExecutiveRoute: ExecutiveRoute,
   GovernanceRoute: GovernanceRoute,
   GraphRoute: GraphRoute,
+  IntegrationsRoute: IntegrationsRoute,
   KnowledgeRoute: KnowledgeRouteWithChildren,
   OperationsRoute: OperationsRoute,
   PromptsRoute: PromptsRoute,
