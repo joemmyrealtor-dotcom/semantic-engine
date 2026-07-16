@@ -105,6 +105,7 @@ function AutomationStudio() {
         description={recipe.description}
         actions={
           <div className="flex items-center gap-2">
+            <SaveIndicator saving={saveState.saving} dirty={saveState.dirty} error={saveState.error} lastSavedAt={saveState.lastSavedAt} onRetry={saveState.retry} />
             <div className="flex items-center gap-2 text-xs text-slate-ink mr-2">Dry-run <Switch checked={dryRun} onCheckedChange={setDryRun} /></div>
             <Button variant="outline" onClick={run}>Execute</Button>
             <Button variant="ghost" onClick={archive}>Archive</Button>
