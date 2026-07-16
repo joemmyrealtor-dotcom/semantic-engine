@@ -96,6 +96,15 @@ export function computeMonitoring(snap: DataSnapshot): MonitoringReport {
     value: `${dr.backupCount} backups${dr.latestBackup ? ` · latest ${dr.latestBackup.createdAt.slice(0, 10)}` : ""}`,
   });
 
+  // Workspace isolation (W9 #5)
+  const leak = detectWorkspaceLeakage(snap);
+  signals.push({
+    name: "Workspace isolation",
+    state: leak.ok ? "ok" : "warning",
+    value: leak.ok ? `${snap.workspaces.length} workspaces · no orphans` : `orphaned: ${leak.orphanedAuditIds.length} audit / ${leak.orphanedBackupIds.length} backups`,
+    note: `unscoped: ${leak.unscopedEntityKinds.length} entity kinds`,
+  });
+
   const overall = signals.reduce<HealthState>((acc, s) => worse(acc, s.state), "ok");
   return { overall, signals, perf: perfReport(), generatedAt: new Date().toISOString() };
 }
