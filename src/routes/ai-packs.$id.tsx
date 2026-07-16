@@ -125,6 +125,7 @@ function AIPackStudioPage() {
         description={ap.purpose || "Governed AI Pack workspace"}
         actions={
           <div className="flex items-center gap-2">
+            <SaveIndicator saving={saveState.saving} dirty={saveState.dirty} error={saveState.error} lastSavedAt={saveState.lastSavedAt} onRetry={saveState.retry} />
             <PublicationStageBadge stage={ap.manufacturingStage} />
             <Select value={ap.manufacturingStage} onValueChange={v => promote(v as ManufacturingStage)}>
               <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
