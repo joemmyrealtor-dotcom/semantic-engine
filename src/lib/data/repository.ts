@@ -21,6 +21,18 @@ type EntityMap = {
   executiveAlerts: DataSnapshot["executiveAlerts"][number];
   savedExecutiveViews: DataSnapshot["savedExecutiveViews"][number];
   reportRuns: DataSnapshot["reportRuns"][number];
+  integrationConnections: DataSnapshot["integrationConnections"][number];
+  webhookEndpoints: DataSnapshot["webhookEndpoints"][number];
+  webhookDeliveries: DataSnapshot["webhookDeliveries"][number];
+  apiClients: DataSnapshot["apiClients"][number];
+  importJobs: DataSnapshot["importJobs"][number];
+  exportJobs: DataSnapshot["exportJobs"][number];
+  syncMappings: DataSnapshot["syncMappings"][number];
+  externalReferences: DataSnapshot["externalReferences"][number];
+  deliveryPackages: DataSnapshot["deliveryPackages"][number];
+  deliveryRuns: DataSnapshot["deliveryRuns"][number];
+  eventSubscriptions: DataSnapshot["eventSubscriptions"][number];
+  domainEvents: DataSnapshot["domainEvents"][number];
 };
 
 type Listener = () => void;
