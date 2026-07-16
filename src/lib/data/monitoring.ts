@@ -6,6 +6,7 @@ import { SCHEMA_VERSION } from "./schema";
 import { perfReport } from "./performance";
 import { verifyAuditChain } from "./audit";
 import { buildDisasterRecoveryPlan } from "./backups";
+import { detectWorkspaceLeakage } from "./workspaces";
 
 export type HealthState = "ok" | "warning" | "critical";
 export interface Signal { name: string; state: HealthState; value: string; note?: string }
