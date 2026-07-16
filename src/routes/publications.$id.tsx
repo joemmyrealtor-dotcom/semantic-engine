@@ -106,9 +106,7 @@ function PublicationEditorPage() {
         actions={
           <>
             <PublicationStageBadge stage={draft.manufacturingStage} />
-            <span className="text-xs text-muted-foreground">
-              {saving ? "Saving…" : dirty ? "Unsaved…" : <span className="inline-flex items-center gap-1"><Save className="size-3" /> Saved</span>}
-            </span>
+            <SaveIndicator saving={autosave.saving} dirty={dirty} error={autosave.error} lastSavedAt={autosave.lastSavedAt} onRetry={autosave.retry} />
             <Link to="/publications" className="text-sm underline text-heritage">← Registry</Link>
           </>
         }
