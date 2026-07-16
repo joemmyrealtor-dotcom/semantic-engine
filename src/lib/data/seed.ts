@@ -679,7 +679,7 @@ export const seedAutomations: AutomationRecipe[] = [
     description: "Captures a weekly analytics snapshot for executive dashboards and forecasts. Idempotent — skips duplicate captures inside the window.",
     owner: "Publishing Ops", steward: "Publishing Ops", tags: ["analytics","scheduled"],
     state: "active", version: "1.0.0",
-    trigger: { kind: "scheduled", entityScope: "publication", entityIds: [], cron: "0 6 * * 1" },
+    trigger: { kind: "scheduled", entityScope: "publication", entityIds: [], scheduleLabel: "Weekly · Mondays 06:00 UTC" },
     steps: [
       { id: "AST-040", name: "Capture analytics snapshot", action: "capture-analytics-snapshot",
         parameters: { windowMinutes: 60 * 24 * 6 }, conditions: [], requiresApproval: false, onFailure: "abort" },
