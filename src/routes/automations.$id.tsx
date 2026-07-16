@@ -39,7 +39,9 @@ function AutomationStudio() {
 
   const validation = validateRecipe(recipe);
 
-  const patch = async (p: Partial<AutomationRecipe>) => { await Repo.update("automations", recipe.id, p); };
+  const { patch, state: saveState } = usePatchSave<AutomationRecipe>({
+    save: async (p) => { await Repo.update("automations", recipe.id, p); },
+  });
 
   const addStep = async () => {
     const step: AutomationStep = {
