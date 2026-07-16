@@ -24,12 +24,13 @@ import { fingerprint } from "./security";
 // Snapshot-identity keys (WeakMap) would be stricter but the seed
 // harness/validation suite reuses object identity across mutations.
 function snapKey(s: DataSnapshot): string {
+  const n = (a?: { length: number } | null) => a?.length ?? 0;
   return fingerprint([
-    s.schemaVersion, s.activeWorkspaceId,
-    s.domains.length, s.concepts.length, s.frameworks.length,
-    s.knowledgeObjects.length, s.clientTools.length, s.publications.length,
-    s.clientToolkits.length, s.aiPacks.length, s.agents.length,
-    s.automations.length, s.releases.length, s.auditEvents.length,
+    s.schemaVersion, s.activeWorkspaceId ?? "",
+    n(s.domains), n(s.concepts), n(s.frameworks),
+    n(s.knowledgeObjects), n(s.clientTools), n(s.publications),
+    n(s.clientToolkits), n(s.aiPacks), n(s.agents),
+    n(s.automations), n(s.releases), n(s.auditEvents),
   ].join("|"));
 }
 const memoBuildGraph = memoize("intelligence.buildGraph", (_k: string, s: DataSnapshot) => buildGraph(s), 16);
