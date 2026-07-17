@@ -556,10 +556,11 @@ export async function runValidations(): Promise<number> {
   // ============================================================
   // W9 #5 — Workspace isolation & cross-leakage
   // ============================================================
-  const wsSeed = { ...seed, auditEvents: a2 };
+  const scopingMod = await import("./workspace-scoping");
+  const wsSeed = scopingMod.backfillWorkspaceIds({ ...seed, auditEvents: a2, activeWorkspaceId: seed.activeWorkspaceId ?? "WS-001" });
   const crossReport = wsMod.detectWorkspaceLeakage(wsSeed);
-  check("leakage report lists scoped/unscoped kinds",
-    Array.isArray(crossReport.scopedEntityKinds) && Array.isArray(crossReport.unscopedEntityKinds));
+  check("leakage report lists per-kind coverage + unscoped entities",
+    Array.isArray(crossReport.perKindCoverage) && Array.isArray(crossReport.unscopedEntities));
   check("clean seed reports no cross-workspace entities", crossReport.crossWorkspaceEntities.length === 0);
 
   // Simulate a foreign-workspace row leaking into an entity kind.
@@ -804,6 +805,124 @@ export async function runValidations(): Promise<number> {
     afterAppend.auditEvents.length, beforeAppend.auditEvents.length + 1);
   check("appendAuditEvent event is the login (no re-audit wrapper)",
     afterAppend.auditEvents[afterAppend.auditEvents.length - 1]!.action === "login");
+
+  actorMod.clearTestActor();
+  actorMod._resetActorForTests();
+
+  // ============================================================
+  // W9 Blocker #5b — Per-entity workspace isolation
+  // ============================================================
+  // Registry classification
+  check("classifier: concepts is workspace-owned",
+    scopingMod.isWorkspaceOwned("concepts"));
+  check("classifier: publications is workspace-owned",
+    scopingMod.isWorkspaceOwned("publications"));
+  check("classifier: workspaces is global (not owned)",
+    !scopingMod.isWorkspaceOwned("workspaces"));
+  check("classifier: featureFlags is global",
+    !scopingMod.isWorkspaceOwned("featureFlags"));
+
+  // Backfill is idempotent + stamps unscoped rows.
+  const rawSeed = { ...seed, activeWorkspaceId: seed.activeWorkspaceId ?? "WS-001" } as DataSnapshot;
+  const first = scopingMod.backfillWorkspaceIds(rawSeed);
+  const second = scopingMod.backfillWorkspaceIds(first);
+  check("backfill stamps every workspace-owned row",
+    scopingMod.auditWorkspaceCoverage(first).totalUnscoped === 0);
+  eq("backfill idempotent (2nd pass equal)",
+    JSON.stringify(first), JSON.stringify(second));
+
+  // Existing workspaceId is never re-homed by backfill.
+  const preserved = scopingMod.backfillWorkspaceIds({
+    ...seed,
+    concepts: [{ ...(seed.concepts[0] ?? {}), id: "CR-KEEP", workspaceId: "WS-OTHER" } as (typeof seed.concepts)[number]],
+  } as DataSnapshot);
+  check("backfill preserves foreign workspaceId (does not re-home)",
+    preserved.concepts.find(c => c.id === "CR-KEEP")?.workspaceId === "WS-OTHER");
+
+  // Coverage audit reports foreign rows separately from unscoped.
+  const cov = scopingMod.auditWorkspaceCoverage({
+    ...first,
+    concepts: [...first.concepts, { ...(first.concepts[0]), id: "CR-FGN", workspaceId: "WS-OTHER" } as (typeof first.concepts)[number]],
+  } as DataSnapshot);
+  check("coverage flags foreign row", cov.totalForeign >= 1);
+
+  // Leakage detector: strict unscoped detection.
+  const unscoped = wsMod.detectWorkspaceLeakage({
+    ...first,
+    concepts: [...first.concepts, { ...(first.concepts[0]), id: "CR-UNS", workspaceId: undefined } as (typeof first.concepts)[number]],
+  } as DataSnapshot);
+  check("leakage.ok=false when an owned row is unscoped",
+    unscoped.ok === false && unscoped.unscopedEntities.some(e => e.id === "CR-UNS"));
+
+  // Repository: create stamps active workspace on fresh row.
+  authMod.setRole("Administrator");
+  actorMod.injectTestActor({
+    userId: "u-admin", role: "Administrator",
+    activeWorkspaceId: "WS-001", correlationId: "corr-ws-1",
+  });
+  await repoMod.ensureLoaded();
+  const beforeCreate = repoMod.Repo.snapshot()!;
+  const newFlag = {
+    id: "FF-TEST", key: "test.flag", description: "t",
+    enabled: true, audience: "all" as const, owner: "u-admin",
+    createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+  };
+  await repoMod.Repo.create("featureFlags", newFlag);
+  const afterCreate = repoMod.Repo.snapshot()!;
+  const created = afterCreate.featureFlags.find(f => f.id === "FF-TEST")!;
+  check("global-kind create does not require workspace stamp",
+    created !== undefined);
+
+  // Owned-kind create stamps workspaceId.
+  const anyConceptTemplate = beforeCreate.concepts[0];
+  if (anyConceptTemplate) {
+    const draft = { ...anyConceptTemplate, id: "CR-OWNED-1", workspaceId: undefined as unknown as string };
+    await repoMod.Repo.create("concepts", draft as (typeof beforeCreate.concepts)[number]);
+    const snapAfter = repoMod.Repo.snapshot()!;
+    const created2 = snapAfter.concepts.find(c => c.id === "CR-OWNED-1")!;
+    eq("owned-kind create stamps active workspaceId",
+      created2.workspaceId, snapAfter.activeWorkspaceId);
+  }
+
+  // Owned-kind update refuses cross-workspace re-homing.
+  let rehomeRefused = false;
+  try {
+    await repoMod.Repo.update("concepts", "CR-OWNED-1",
+      { workspaceId: "WS-OTHER" } as Partial<(typeof beforeCreate.concepts)[number]>);
+  } catch { rehomeRefused = true; }
+  check("update refuses cross-workspace re-homing", rehomeRefused);
+
+  // Owned-kind update refuses when existing row belongs to another workspace.
+  await repoMod.Repo.auditedTransaction(
+    { permission: "content.update", action: "update", entityType: "concepts", entityId: "CR-OTHER-WS", reason: "seed foreign row for test" },
+    s0 => ({
+      ...s0,
+      concepts: [...s0.concepts, { ...anyConceptTemplate!, id: "CR-OTHER-WS", workspaceId: "WS-OTHER" }],
+    }),
+  );
+  let updateRefused = false;
+  try {
+    await repoMod.Repo.update("concepts", "CR-OTHER-WS",
+      { canonicalName: "hijack" } as Partial<(typeof beforeCreate.concepts)[number]>);
+  } catch { updateRefused = true; }
+  check("update refuses when existing row is in another workspace", updateRefused);
+
+  // scopedList excludes foreign rows for owned kinds.
+  const listed = repoMod.Repo.scopedList("concepts");
+  check("scopedList excludes foreign-workspace rows",
+    !listed.some(c => c.id === "CR-OTHER-WS"));
+  const globalListed = repoMod.Repo.scopedList("featureFlags");
+  check("scopedList returns raw for global kinds",
+    globalListed.length === repoMod.Repo.list("featureFlags").length);
+
+  // scopedGet refuses cross-tenant lookup.
+  const gotForeign = repoMod.Repo.scopedGet("concepts", "CR-OTHER-WS");
+  check("scopedGet refuses cross-tenant lookup", gotForeign === undefined);
+
+  // remove refuses cross-workspace delete.
+  let deleteRefused = false;
+  try { await repoMod.Repo.remove("concepts", "CR-OTHER-WS"); } catch { deleteRefused = true; }
+  check("remove refuses cross-workspace delete", deleteRefused);
 
   actorMod.clearTestActor();
   actorMod._resetActorForTests();

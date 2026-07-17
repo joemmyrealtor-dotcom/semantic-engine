@@ -1,6 +1,7 @@
 import { openDB, type IDBPDatabase } from "idb";
 import { SCHEMA_VERSION, type DataSnapshot, type EntityType, type PublicationStage } from "./schema";
 import { buildSeedSnapshot } from "./seed";
+import { backfillWorkspaceIds } from "./workspace-scoping";
 
 const DB_NAME = "legacy-platform-v2";
 const STORE = "kv";
@@ -80,7 +81,7 @@ export function migrateSnapshot(s: DataSnapshot): DataSnapshot {
     };
   });
 
-  return {
+  const migrated = {
     ...s,
     concepts,
     publications,
@@ -164,6 +165,7 @@ export function migrateSnapshot(s: DataSnapshot): DataSnapshot {
       };
     }),
   };
+  return backfillWorkspaceIds(migrated);
 }
 
 function mapStatusToStage(status: string | undefined): "Draft"|"Editorial"|"SME Review"|"QA"|"Canonical"|"Released" {

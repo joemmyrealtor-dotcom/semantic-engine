@@ -3,6 +3,7 @@ import { loadSnapshot, saveSnapshot, resetSnapshot } from "./db";
 import { appendAudit } from "./audit";
 import { currentCan, getRole, type Permission } from "./auth";
 import { getActor, resolveMutationActor, isSessionExpired } from "./actor";
+import { isWorkspaceOwned } from "./workspace-scoping";
 
 type EntityKey = Exclude<EntityType, never>;
 
@@ -86,13 +87,20 @@ const ADMIN_KEYS: Partial<Record<EntityKey, { create: Permission; update: Permis
 const DEFAULT_PERMS = { create: "content.create" as Permission, update: "content.update" as Permission, delete: "content.delete" as Permission };
 function permsFor(key: EntityKey) { return ADMIN_KEYS[key] ?? DEFAULT_PERMS; }
 
-// W9 #5 — Workspace stamping. When an entity type carries a `workspaceId`
-// (or we're stamping a fresh row), attach the active workspace.
-function stampWorkspace<T extends object>(item: T, workspaceId: string): T {
-  if (workspaceId && typeof item === "object" && !("workspaceId" in item)) {
-    return { ...item, workspaceId } as T;
-  }
-  return item;
+// W9 #5b — Per-entity workspace isolation.
+// `stampWorkspace` stamps a workspaceId on a fresh row when the kind is
+// workspace-owned. `assertSameWorkspace` guards update/remove from crossing
+// tenants; a mismatch fails closed with a permission-denied audit.
+function stampWorkspace<T extends object>(kind: EntityType, item: T, workspaceId: string): T {
+  if (!isWorkspaceOwned(kind)) return item;
+  const current = (item as { workspaceId?: string }).workspaceId;
+  if (current && current !== workspaceId) return item; // caller-provided id preserved
+  return { ...item, workspaceId } as T;
+}
+function crossWorkspace(kind: EntityType, row: unknown, workspaceId: string): boolean {
+  if (!isWorkspaceOwned(kind)) return false;
+  const w = (row as { workspaceId?: string } | undefined)?.workspaceId;
+  return typeof w === "string" && w !== workspaceId;
 }
 
 /**
@@ -203,24 +211,40 @@ export const Repo = {
   list<K extends EntityKey>(key: K): EntityMap[K][] {
     return (cache ? (cache[key] as EntityMap[K][]) : []) as EntityMap[K][];
   },
-  /** W9 #5 — active-workspace-scoped list. Falls back to full list when entities are unscoped. */
+  /**
+   * W9 #5b — active-workspace-scoped list.
+   * For workspace-owned kinds, rows without a `workspaceId` are excluded
+   * (the load-time backfill in `db.ts` should have stamped them; anything
+   * still unscoped is a bug/legacy artifact and must not leak across tenants).
+   * Global registries (workspaces/featureFlags/rateLimitBuckets) return raw.
+   */
   scopedList<K extends EntityKey>(key: K): EntityMap[K][] {
     const rows = this.list(key);
     const wid = cache?.activeWorkspaceId;
     if (!wid) return rows;
-    return rows.filter(r => {
-      const w = (r as { workspaceId?: string }).workspaceId;
-      return w === undefined || w === wid;
-    });
+    if (!isWorkspaceOwned(key)) return rows;
+    return rows.filter(r => (r as { workspaceId?: string }).workspaceId === wid);
   },
   get<K extends EntityKey>(key: K, id: string): EntityMap[K] | undefined {
     return this.list(key).find(x => (x as { id: string }).id === id);
+  },
+  /** W9 #5b — active-workspace-scoped `get`. Refuses cross-tenant lookups. */
+  scopedGet<K extends EntityKey>(key: K, id: string): EntityMap[K] | undefined {
+    const row = this.get(key, id);
+    if (!row) return undefined;
+    const wid = cache?.activeWorkspaceId;
+    if (!wid || !isWorkspaceOwned(key)) return row;
+    const w = (row as { workspaceId?: string }).workspaceId;
+    return w === undefined || w === wid ? row : undefined;
   },
   async create<K extends EntityKey>(key: K, item: EntityMap[K], ctx?: WriteCtx) {
     const id = (item as { id: string }).id;
     await auditedMutate(key, "create", id, null, item as unknown as Record<string, unknown>,
       s => {
-        const stamped = stampWorkspace(item as object, s.activeWorkspaceId) as EntityMap[K];
+        if (crossWorkspace(key, item, s.activeWorkspaceId)) {
+          throw new Error(`Cross-workspace create refused for ${String(key)}:${id}`);
+        }
+        const stamped = stampWorkspace(key, item as object, s.activeWorkspaceId) as EntityMap[K];
         return { ...s, [key]: [...(s[key] as EntityMap[K][]), stamped] };
       }, ctx);
   },
@@ -229,19 +253,34 @@ export const Repo = {
     await auditedMutate(key, "update", id,
       before ?? null,
       { ...(before ?? {}), ...(patch as Record<string, unknown>) },
-      s => ({
-        ...s,
-        [key]: (s[key] as EntityMap[K][]).map(x =>
-          (x as { id: string }).id === id
-            ? ({ ...x, ...patch, updatedAt: new Date().toISOString() } as EntityMap[K])
-            : x,
-        ),
-      }), ctx);
+      s => {
+        if (before && crossWorkspace(key, before, s.activeWorkspaceId)) {
+          throw new Error(`Cross-workspace update refused for ${String(key)}:${id}`);
+        }
+        // Never allow a patch to re-home a row to another workspace.
+        const patchWid = (patch as { workspaceId?: string }).workspaceId;
+        if (isWorkspaceOwned(key) && patchWid && patchWid !== s.activeWorkspaceId) {
+          throw new Error(`Cross-workspace re-homing refused for ${String(key)}:${id}`);
+        }
+        return {
+          ...s,
+          [key]: (s[key] as EntityMap[K][]).map(x =>
+            (x as { id: string }).id === id
+              ? ({ ...x, ...patch, updatedAt: new Date().toISOString() } as EntityMap[K])
+              : x,
+          ),
+        };
+      }, ctx);
   },
   async remove<K extends EntityKey>(key: K, id: string, ctx?: WriteCtx) {
     const before = this.get(key, id) as unknown as Record<string, unknown> | undefined;
     await auditedMutate(key, "delete", id, before ?? null, null,
-      s => ({ ...s, [key]: (s[key] as EntityMap[K][]).filter(x => (x as { id: string }).id !== id) }),
+      s => {
+        if (before && crossWorkspace(key, before, s.activeWorkspaceId)) {
+          throw new Error(`Cross-workspace delete refused for ${String(key)}:${id}`);
+        }
+        return { ...s, [key]: (s[key] as EntityMap[K][]).filter(x => (x as { id: string }).id !== id) };
+      },
       ctx);
   },
   /**
