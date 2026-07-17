@@ -1267,7 +1267,7 @@ export interface DataSnapshot {
   activeWorkspaceId: string;
 }
 
-export const SCHEMA_VERSION = 7;
+export const SCHEMA_VERSION = 8;
 
 export const ID_PATTERNS: Record<string, RegExp> = {
   domain: /^DOM-\d{3}$/,
