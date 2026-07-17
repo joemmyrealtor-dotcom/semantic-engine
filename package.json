@@ -12,8 +12,11 @@
     "format": "prettier --write .",
     "e2e:install": "PLAYWRIGHT_BROWSERS_PATH=/ playwright install --with-deps chromium",
     "e2e": "PLAYWRIGHT_BROWSERS_PATH=/ playwright test",
-    "e2e:smoke": "PLAYWRIGHT_BROWSERS_PATH=/ playwright test --project=chromium-desktop e2e/smoke.spec.ts e2e/boot.spec.ts",
+    "e2e:desktop": "PLAYWRIGHT_BROWSERS_PATH=/ playwright test --project=chromium-desktop --grep-invert=@a11y e2e/boot.spec.ts e2e/smoke.spec.ts e2e/navigation.spec.ts e2e/roles.spec.ts e2e/api.spec.ts",
     "e2e:a11y": "PLAYWRIGHT_BROWSERS_PATH=/ playwright test --project=chromium-desktop e2e/a11y.spec.ts",
+    "e2e:mobile": "PLAYWRIGHT_BROWSERS_PATH=/ playwright test --project=chromium-mobile",
+    "e2e:tablet": "PLAYWRIGHT_BROWSERS_PATH=/ playwright test --project=chromium-tablet",
+    "e2e:smoke": "PLAYWRIGHT_BROWSERS_PATH=/ playwright test --project=chromium-desktop e2e/smoke.spec.ts e2e/boot.spec.ts",
     "e2e:report": "PLAYWRIGHT_BROWSERS_PATH=/ playwright show-report playwright-report"
   },
   "dependencies": {

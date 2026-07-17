@@ -29,12 +29,17 @@ test.describe("Boot & rendering", () => {
     await asActor({ userId: "e2e:admin", role: "Administrator" });
     await page.goto("/");
     await expect(page.locator("main")).toBeVisible();
-    // Trigger the palette via keyboard shortcut (Cmd/Ctrl+K) which is the
-    // documented, cross-viewport-safe affordance. The header trigger button
-    // is also present and clickable but keyboard is the canonical path.
-    await page.keyboard.press("ControlOrMeta+KeyK");
+    // Wait for the test bridge to install so the initial actor injection
+    // has settled — otherwise a re-render caused by actor notify() can race
+    // the click handler in dev mode.
+    await page.waitForFunction(() => {
+      const w = window as unknown as { __lovableE2E?: { getActor(): { userId: string } } };
+      return w.__lovableE2E?.getActor().userId === "e2e:admin";
+    }, null, { timeout: 10_000 });
+    const trigger = page.getByRole("button", { name: /open command palette/i });
+    await expect(trigger).toBeVisible();
+    await trigger.click();
     await expect(page.getByRole("dialog")).toBeVisible();
-    // The palette exposes a search box.
     await expect(page.getByPlaceholder(/search concepts/i)).toBeVisible();
   });
 });
