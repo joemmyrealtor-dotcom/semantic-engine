@@ -62,7 +62,7 @@ export function AppSidebar() {
           );
         })}
       </nav>
-      <div className="px-4 py-3 text-[11px] text-sidebar-foreground/50 border-t border-sidebar-border">
+      <div className="px-4 py-3 text-[11px] text-sidebar-foreground/80 border-t border-sidebar-border">
         Local demo · IndexedDB persistence
       </div>
     </aside>
