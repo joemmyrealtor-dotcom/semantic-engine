@@ -112,6 +112,7 @@ export function migrateSnapshot(s: DataSnapshot): DataSnapshot {
     rateLimitBuckets: s.rateLimitBuckets ?? [],
     maintenanceMode: s.maintenanceMode ?? { enabled: false, reason: "", since: null, by: null, allowRoles: ["Administrator","Owner"] },
     activeWorkspaceId: s.activeWorkspaceId ?? "WS-001",
+    launchGateEvidence: s.launchGateEvidence ?? [],
     clientToolkits: (s.clientToolkits ?? []).map(tk => ({
       ...tk,
       sections: (tk.sections ?? []).map(sec => ({ ...sec, presentations: sec.presentations ?? [] })),
