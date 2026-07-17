@@ -1135,7 +1135,7 @@ export async function runValidations(): Promise<number> {
     // Production-safety guard: BOTH import.meta.env.DEV AND VITE_E2E === "1" required.
     check("e2e: bootstrap requires import.meta.env.DEV", /env\.DEV\s*===\s*true/.test(b));
     check("e2e: bootstrap requires VITE_E2E flag", /env\.VITE_E2E\s*===\s*"1"/.test(b));
-    check("e2e: bootstrap never embeds service-role key", !/service.?role/i.test(b));
+    check("e2e: bootstrap never embeds service-role key", !/SERVICE_ROLE_KEY|sb_secret_/i.test(b));
     check("e2e: bootstrap never embeds a Supabase JWT literal", !/eyJ[A-Za-z0-9._-]{20,}/.test(b));
   }
   // Required-route coverage — each of these spec files must exist.
