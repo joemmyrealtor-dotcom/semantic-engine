@@ -102,17 +102,58 @@ async function auditedMutate<K extends EntityKey>(
   before: Record<string, unknown> | null,
   after: Record<string, unknown> | null,
   fn: (s: DataSnapshot) => DataSnapshot,
-  ctx?: { actor?: string; reason?: string },
+  ctx?: { actor?: string; reason?: string; correlationId?: string },
 ) {
   const perm = permsFor(key)[action];
-  const actor = ctx?.actor ?? "current-user";
+
+  // W9 Blocker #1 — resolve the real authenticated actor. Production
+  // requires a Supabase session; DEV honours the demo role switch (stamped
+  // as source="dev-demo"); tests may inject explicit actors.
+  const resolved = resolveMutationActor();
+  const fabricatedFallback = !resolved;
+  const actorId = ctx?.actor ?? resolved?.userId ?? getActor().userId ?? "anonymous";
+  const actorRole = resolved?.role ?? getRole();
+  const correlationId = ctx?.correlationId ?? resolved?.correlationId;
+
+  // Fail closed: no session in production → deny mutation and record it.
+  if (fabricatedFallback) {
+    await mutate(s => ({
+      ...s,
+      auditEvents: appendAudit(s.auditEvents ?? [], {
+        actor: "anonymous", actorRole: "ReadOnly",
+        workspaceId: s.activeWorkspaceId,
+        action: "permission-denied", entityType: String(key), entityId,
+        reason: `no authenticated session for ${action}`,
+        correlationId,
+      }),
+    }));
+    const err = new Error("Authentication required");
+    (err as Error & { code?: string }).code = "unauthenticated";
+    throw err;
+  }
+
+  // Session expiry — treat as immediate denial.
+  if (resolved.source === "session" && isSessionExpired(resolved)) {
+    await mutate(s => ({
+      ...s,
+      auditEvents: appendAudit(s.auditEvents ?? [], {
+        actor: actorId, actorRole, workspaceId: s.activeWorkspaceId,
+        action: "permission-denied", entityType: String(key), entityId,
+        reason: `session expired for ${action}`, correlationId,
+      }),
+    }));
+    const err = new Error("Session expired");
+    (err as Error & { code?: string }).code = "session-expired";
+    throw err;
+  }
+
   if (!currentCan(perm)) {
     await mutate(s => ({
       ...s,
       auditEvents: appendAudit(s.auditEvents ?? [], {
-        actor, actorRole: getRole(), workspaceId: s.activeWorkspaceId,
+        actor: actorId, actorRole, workspaceId: s.activeWorkspaceId,
         action: "permission-denied", entityType: String(key), entityId,
-        reason: `${perm} required for ${action}`,
+        reason: `${perm} required for ${action}`, correlationId,
       }),
     }));
     const err = new Error(`Permission denied: ${perm}`);
@@ -124,15 +165,16 @@ async function auditedMutate<K extends EntityKey>(
     return {
       ...next,
       auditEvents: appendAudit(next.auditEvents ?? [], {
-        actor, actorRole: getRole(), workspaceId: next.activeWorkspaceId,
+        actor: actorId, actorRole, workspaceId: next.activeWorkspaceId,
         action, entityType: String(key), entityId,
         reason: ctx?.reason ?? "", before, after,
+        correlationId,
       }),
     };
   });
 }
 
-type WriteCtx = { actor?: string; reason?: string };
+type WriteCtx = { actor?: string; reason?: string; correlationId?: string };
 
 export const Repo = {
   list<K extends EntityKey>(key: K): EntityMap[K][] {
