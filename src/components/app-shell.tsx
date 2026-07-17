@@ -1,12 +1,15 @@
 import type { ReactNode } from "react";
-import { Search, Menu } from "lucide-react";
+import { Search, Menu, LogOut, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AppSidebar } from "./app-sidebar";
 import { CommandPalette, useCommandPalette } from "./command-palette";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { LayoutDashboard, Library, Network, BookOpen, Wrench, ScrollText, Bot, Package, ShieldCheck, Database, PenTool } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuthSessionBridge } from "@/lib/data/session-bridge";
+import { toast } from "sonner";
 
 const navItems = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, exact: true },
