@@ -32,12 +32,12 @@ function AuditExplorer() {
           <KpiCard label="Denied" value={s.auditEvents.filter(e => e.action === "permission-denied").length} tone="gold" />
         </div>
         <div className="flex flex-wrap gap-2 mb-4">
-          <select value={action} onChange={e => setAction((e.target.value || "") as AuditAction | "")} className="border border-border rounded px-2 py-1 text-sm bg-background">
+          <select aria-label="Filter by audit action" value={action} onChange={e => setAction((e.target.value || "") as AuditAction | "")} className="border border-border rounded px-2 py-1 text-sm bg-background">
             <option value="">All actions</option>
             {AUDIT_ACTIONS.map(a => <option key={a} value={a}>{a}</option>)}
           </select>
-          <Input placeholder="Actor" value={actor} onChange={e => setActor(e.target.value)} className="w-40" />
-          <Input placeholder="Entity ID" value={entityId} onChange={e => setEntityId(e.target.value)} className="w-40" />
+          <Input aria-label="Filter by actor" placeholder="Actor" value={actor} onChange={e => setActor(e.target.value)} className="w-40" />
+          <Input aria-label="Filter by entity ID" placeholder="Entity ID" value={entityId} onChange={e => setEntityId(e.target.value)} className="w-40" />
         </div>
         <SectionTitle hint={`${events.length} events`}>Trail</SectionTitle>
         {events.length === 0 ? <EmptyState title="No audit events match" /> : (
