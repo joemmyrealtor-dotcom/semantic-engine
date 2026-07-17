@@ -32,8 +32,9 @@ function DeploymentPage() {
   const toggleMaintenance = async () => {
     if (!currentCan("maintenance.manage")) { toast.error("Permission denied"); return; }
     const next = !s.maintenanceMode.enabled;
-    const mm = { ...s.maintenanceMode, enabled: next, reason: next ? "Manual toggle" : "", since: next ? new Date().toISOString() : null, by: "current-user" };
-    const audit = appendAudit(s.auditEvents, { actor: "current-user", actorRole: getRole(), workspaceId: s.activeWorkspaceId, action: "maintenance-mode-change", entityType: "system", entityId: "maintenance", reason: next ? "enabled" : "disabled", before: { enabled: s.maintenanceMode.enabled }, after: { enabled: next } });
+    const who = getActor();
+    const mm = { ...s.maintenanceMode, enabled: next, reason: next ? "Manual toggle" : "", since: next ? new Date().toISOString() : null, by: who.userId };
+    const audit = appendAudit(s.auditEvents, { actor: who.userId, actorRole: getRole(), workspaceId: s.activeWorkspaceId, action: "maintenance-mode-change", entityType: "system", entityId: "maintenance", reason: next ? "enabled" : "disabled", before: { enabled: s.maintenanceMode.enabled }, after: { enabled: next }, correlationId: who.correlationId });
     await Repo.replaceAll({ ...s, maintenanceMode: mm, auditEvents: audit });
     toast.success(next ? "Maintenance mode ON" : "Maintenance mode OFF");
   };
