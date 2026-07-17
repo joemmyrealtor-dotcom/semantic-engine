@@ -9,10 +9,16 @@ import { startupDiagnostics, releaseCandidateReadiness, maintenanceGate } from "
 import { appendAudit } from "@/lib/data/audit";
 import { getRole, currentCan, setRole, permissionsFor } from "@/lib/data/auth";
 import { ALL_ROLES, type Role } from "@/lib/data/schema";
+import { RequirePermission } from "@/components/require-permission";
+import { isDevRuntime, getActor } from "@/lib/data/actor";
 
 export const Route = createFileRoute("/admin/deployment")({
   head: () => ({ meta: [{ title: "Deployment Readiness — Legacy Platform" }] }),
-  component: DeploymentPage,
+  component: () => (
+    <RequirePermission permission="maintenance.manage" label="Deployment Readiness">
+      <DeploymentPage />
+    </RequirePermission>
+  ),
 });
 
 function DeploymentPage() {
