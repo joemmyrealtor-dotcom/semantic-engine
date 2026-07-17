@@ -410,6 +410,7 @@ export function parseImport(json: string): ImportResult {
     rateLimitBuckets: obj.rateLimitBuckets ?? [],
     maintenanceMode: obj.maintenanceMode ?? { enabled: false, reason: "", since: null, by: null, allowRoles: ["Administrator","Owner"] },
     activeWorkspaceId: obj.activeWorkspaceId ?? "WS-001",
+    launchGateEvidence: obj.launchGateEvidence ?? [],
   };
   return { snapshot: snap, errors, brokenReferences: detectBrokenReferences(snap) };
 }
