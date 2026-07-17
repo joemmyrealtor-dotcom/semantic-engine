@@ -1161,8 +1161,8 @@ export async function runValidations(): Promise<number> {
   check("scale-fixture: deterministic for identical seed",
     JSON.stringify(a.snapshot.concepts.map(c => c.id)) === JSON.stringify(b.snapshot.concepts.map(c => c.id)));
   const cSeed = scaleMod.scaleSnapshot({ tier: "small", seed: 0xC0FFEE + 1 });
-  check("scale-fixture: different seed produces different id order",
-    JSON.stringify(a.snapshot.knowledgeObjects.map(x => x.id)) !== JSON.stringify(cSeed.snapshot.knowledgeObjects.map(x => x.id)));
+  check("scale-fixture: different seed produces different audit distribution",
+    JSON.stringify(a.snapshot.auditEvents.map(x => x.actor)) !== JSON.stringify(cSeed.snapshot.auditEvents.map(x => x.actor)));
 
   // 7b. Fixture integrity: referential + audit chain + ID uniqueness.
   const ver = scaleMod.verifyScaleFixture(a.snapshot);
