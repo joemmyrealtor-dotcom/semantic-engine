@@ -17,6 +17,17 @@ import {
   evaluateReleaseGate, detectBrokenReferences,
 } from "./service";
 import { knowledgeHealth, releaseIntelligence } from "./intelligence";
+import { memoize } from "./performance";
+
+function snapKey(s: DataSnapshot): string {
+  const n = (a?: unknown[]) => (a?.length ?? 0);
+  return [
+    n(s.domains), n(s.concepts), n(s.frameworks), n(s.knowledgeObjects),
+    n(s.publications), n(s.clientToolkits), n(s.aiPacks), n(s.agents),
+    n(s.automations), n(s.automationRuns), n(s.releases), n(s.auditEvents),
+    n(s.analyticsSnapshots),
+  ].join("|");
+}
 
 // ---------- Utilities ----------
 const DAY_MS = 24 * 3600 * 1000;
@@ -57,7 +68,9 @@ export interface ExecutiveMetrics {
   blockedReleases: number;
 }
 
-export function computeExecutiveMetrics(s: DataSnapshot): ExecutiveMetrics {
+const memoExecMetrics = memoize("analytics.computeExecutiveMetrics", (_k: string, s: DataSnapshot) => computeExecutiveMetricsImpl(s), 8);
+export function computeExecutiveMetrics(s: DataSnapshot): ExecutiveMetrics { return memoExecMetrics(snapKey(s), s); }
+function computeExecutiveMetricsImpl(s: DataSnapshot): ExecutiveMetrics {
   const health = knowledgeHealth(s);
   const pubReady = avg(s.publications.filter(p => !p.archived).map(p => publicationCoverage(p, s).readinessScore));
   const tkReady = avg((s.clientToolkits ?? []).filter(t => !t.archived).map(t => toolkitCoverage(t, s).readinessScore));

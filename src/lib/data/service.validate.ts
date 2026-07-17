@@ -1147,6 +1147,87 @@ export async function runValidations(): Promise<number> {
   check("api route: no VITE_E2E backdoor", !/VITE_E2E/.test(apiRoute));
   check("api route: no test-actor bypass", !/__lovableE2E/.test(apiRoute));
 
+  // ============================================================
+  // RC-1 Blocker #7 — Load-scale generator, benchmark, memoization.
+  // ============================================================
+  const scaleMod = await import("./scale-fixture");
+  const intelMod = await import("./intelligence");
+  const analyticsMod = await import("./analytics");
+  void await import("./workspace-scoping");
+
+  // 7a. Determinism: identical seed → identical fixture.
+  const a = scaleMod.scaleSnapshot({ tier: "small", seed: 0xC0FFEE });
+  const b = scaleMod.scaleSnapshot({ tier: "small", seed: 0xC0FFEE });
+  check("scale-fixture: deterministic for identical seed",
+    JSON.stringify(a.snapshot.concepts.map(c => c.id)) === JSON.stringify(b.snapshot.concepts.map(c => c.id)));
+  const cSeed = scaleMod.scaleSnapshot({ tier: "small", seed: 0xC0FFEE + 1 });
+  check("scale-fixture: different seed produces different audit distribution",
+    JSON.stringify(a.snapshot.auditEvents.map(x => x.actor)) !== JSON.stringify(cSeed.snapshot.auditEvents.map(x => x.actor)));
+
+  // 7b. Fixture integrity: referential + audit chain + ID uniqueness.
+  const ver = scaleMod.verifyScaleFixture(a.snapshot);
+  check("scale-fixture: passes verifyScaleFixture (integrity)", ver.ok);
+  check("scale-fixture: no integrity issues reported", ver.issues.length === 0);
+  const chain = auditMod.verifyAuditChain(a.snapshot.auditEvents);
+  check("scale-fixture: audit hash chain verifies clean", chain.ok);
+  check("scale-fixture: audit chain length matches events", chain.count === a.snapshot.auditEvents.length);
+
+  // 7c. Workspace isolation: every workspace-owned row has a workspaceId in {WS-001,WS-002}.
+  const leak = wsMod.detectWorkspaceLeakage(a.snapshot);
+  check("scale-fixture: no orphaned audit events (unknown workspace)", leak.orphanedAuditIds.length === 0);
+  check("scale-fixture: no orphaned backups (unknown workspace)", leak.orphanedBackupIds.length === 0);
+  check("scale-fixture: no unscoped workspace-owned entities", leak.unscopedEntities.length === 0);
+  const medSnap = scaleMod.scaleSnapshot({ tier: "medium", seed: 0xC0FFEE }).snapshot;
+  const wsA = wsMod.scopeEntities(medSnap.concepts as unknown as { id: string; workspaceId?: string }[], "WS-001");
+  const wsB = wsMod.scopeEntities(medSnap.concepts as unknown as { id: string; workspaceId?: string }[], "WS-002");
+  check("scale-fixture: workspace scoping partitions concepts (both non-empty)",
+    wsA.length > 0 && wsB.length > 0 && wsA.length + wsB.length === medSnap.concepts.length);
+  check("scale-fixture: workspace scoping is disjoint",
+    !wsA.some((x: { id: string }) => wsB.find((y: { id: string }) => y.id === x.id)));
+
+  // 7d. Input immutability under read-only calculations.
+  const snapFP = JSON.stringify(a.snapshot).length;
+  const idx1 = intelMod.buildUniversalIndex(a.snapshot);
+  intelMod.knowledgeHealth(a.snapshot);
+  analyticsMod.computeExecutiveMetrics(a.snapshot);
+  check("read-only ops do not mutate snapshot (byte length stable)", JSON.stringify(a.snapshot).length === snapFP);
+  check("buildUniversalIndex returns non-empty for scale fixture", idx1.length > 0);
+
+  // 7e. Memoization efficacy + invalidation.
+  perfMod.resetCounters();
+  const beforeIdxLen = intelMod.buildUniversalIndex(a.snapshot).length;
+  const idx2 = intelMod.buildUniversalIndex(a.snapshot);
+  check("universal index warm call returns identical reference", idx2 === idx1 || idx2.length === beforeIdxLen);
+  const memoCounter = perfMod.getCounters().find(c => c.name === "intelligence.universalIndex");
+  check("universalIndex memo instrumented", !!memoCounter);
+  if (memoCounter) {
+    check("universalIndex warm calls hit cache (hits ≥ 1)", memoCounter.hits >= 1);
+  }
+  // Cache invalidation on structural change:
+  const mutated = { ...a.snapshot, concepts: a.snapshot.concepts.slice(0, -1) };
+  perfMod.resetCounters();
+  intelMod.buildUniversalIndex(a.snapshot); // repopulate hit
+  intelMod.buildUniversalIndex(mutated);    // must miss
+  const invCounter = perfMod.getCounters().find(c => c.name === "intelligence.universalIndex");
+  check("universalIndex invalidates on snapshot change (miss recorded)", !!invCounter && invCounter.misses >= 1);
+
+  // 7f. Benchmark result schema + budget definitions in scripts/bench.ts.
+  const benchSrc = fs.readFileSync(path.resolve(cwd, "scripts/bench.ts"), "utf8");
+  check("bench: BUDGETS block present", /const BUDGETS\s*=/.test(benchSrc));
+  for (const gate of ["buildIndexColdMs","buildIndexWarmMs","buildGraphMs","auditVerifyMs","exportMs","memoHitRatioMin"]) {
+    check(`bench: budget defines ${gate}`, benchSrc.includes(gate));
+  }
+  check("bench: writes machine-readable JSON report", /writeFileSync\([^\n]*JSON\.stringify/.test(benchSrc));
+  check("bench: reports correctness AND budget failures", /correctnessFailures/.test(benchSrc) && /budgetFailures/.test(benchSrc));
+  check("bench: exits non-zero on failure", /process\.exit\(ok \? 0 : 1\)/.test(benchSrc));
+  check("bench: enumerates all required tiers", /small.*medium.*large/s.test(benchSrc) && /stress/.test(benchSrc));
+
+  // 7g. Scale generator file must not seed production data.
+  const seedSrc = fs.readFileSync(path.resolve(cwd, "src/lib/data/seed.ts"), "utf8");
+  check("scale-fixture: not imported by production seed", !/scale-fixture/.test(seedSrc));
+  const dbSrc = fs.readFileSync(path.resolve(cwd, "src/lib/data/db.ts"), "utf8");
+  check("scale-fixture: not imported by db bootstrap", !/scale-fixture/.test(dbSrc));
+
   console.log(`OK ${count} checks`);
   return count;
 }
