@@ -678,6 +678,134 @@ export async function runValidations(): Promise<number> {
     wsActor.activeWorkspaceId === "WS-001");
   actorMod._resetActorForTests();
 
+  // ============================================================
+  // W9 Blocker #3 — Audit coverage & static write-path scan
+  // ============================================================
+  const fs = await import("node:fs");
+  const path = await import("node:path");
+
+  // 3a. AuditAction enum carries the new governed transaction actions.
+  const requiredActions = [
+    "automation-execute","automation-cancel","data-import",
+    "webhook-send","webhook-replay","export-generate",
+  ] as const;
+  for (const a of requiredActions) {
+    check(`AUDIT_ACTIONS includes ${a}`, AUDIT_ACTIONS.includes(a as (typeof AUDIT_ACTIONS)[number]));
+  }
+
+  // 3b. Repository exposes the governed transaction surface.
+  const repoMod = await import("./repository");
+  check("Repo.auditedTransaction exposed", typeof repoMod.Repo.auditedTransaction === "function");
+  check("Repo.auditedReplaceAll exposed", typeof repoMod.Repo.auditedReplaceAll === "function");
+  check("Repo.appendAuditEvent exposed", typeof repoMod.Repo.appendAuditEvent === "function");
+
+  // 3c. Static regression scan — no route file may use `Repo.replaceAll(`.
+  // Legitimate bypasses live only in `src/lib/data/**` (bootstrap/reset) and
+  // must carry an `AUDIT_BYPASS_ALLOWED:` marker on the containing declaration.
+  const rootDir = path.resolve(process.cwd(), "src/routes");
+  function walk(dir: string, acc: string[] = []): string[] {
+    if (!fs.existsSync(dir)) return acc;
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const p = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(p, acc);
+      else if (/\.tsx?$/.test(entry.name)) acc.push(p);
+    }
+    return acc;
+  }
+  const routeFiles = walk(rootDir);
+  const forbiddenPattern = /Repo\.replaceAll\s*\(/;
+  const offenders = routeFiles
+    .filter(f => forbiddenPattern.test(fs.readFileSync(f, "utf8")))
+    .map(f => path.relative(process.cwd(), f));
+  check(`no route file calls Repo.replaceAll (${offenders.length} offender(s): ${offenders.join(", ")})`,
+    offenders.length === 0);
+
+  // The lib-side allowlist file (repository.ts) must document the bypass.
+  const repoSrc = fs.readFileSync(path.resolve(process.cwd(), "src/lib/data/repository.ts"), "utf8");
+  check("repository.ts marks its replaceAll with AUDIT_BYPASS_ALLOWED",
+    /AUDIT_BYPASS_ALLOWED:bootstrap-only/.test(repoSrc));
+  check("repository.ts marks appendAuditEvent with AUDIT_BYPASS_ALLOWED",
+    /AUDIT_BYPASS_ALLOWED:audit-only-append/.test(repoSrc));
+
+  // 3d. Governed transaction — permission-denied path writes an audit event
+  // and refuses to commit the mutation.
+  actorMod.injectTestActor({ userId: "u-viewer", role: "Viewer", activeWorkspaceId: "WS-001" });
+  await repoMod.ensureLoaded();
+  const beforeSnap = repoMod.Repo.snapshot()!;
+  const beforeAuditLen = beforeSnap.auditEvents.length;
+  const beforeFlags = JSON.stringify(beforeSnap.featureFlags);
+  let denied = false;
+  try {
+    await repoMod.Repo.auditedTransaction(
+      { permission: "featureflag.manage", action: "feature-flag-change", entityType: "featureFlag", entityId: "test", reason: "denied test" },
+      s0 => ({ ...s0, featureFlags: [] }),
+    );
+  } catch (e) {
+    denied = ((e as Error & { code?: string }).code === "permission-denied");
+  }
+  check("auditedTransaction throws permission-denied for Viewer", denied);
+  const afterDenySnap = repoMod.Repo.snapshot()!;
+  eq("denied transaction did not mutate feature flags",
+    JSON.stringify(afterDenySnap.featureFlags), beforeFlags);
+  const lastDeny = afterDenySnap.auditEvents[afterDenySnap.auditEvents.length - 1]!;
+  eq("denied transaction wrote permission-denied audit", lastDeny.action, "permission-denied");
+  eq("denied transaction audit carries actor id", lastDeny.actor, "u-viewer");
+  check("denied transaction appended exactly one audit event",
+    afterDenySnap.auditEvents.length === beforeAuditLen + 1);
+
+  // 3e. Governed transaction — success path commits and appends one parent
+  // audit event with the injected correlation id.
+  actorMod.injectTestActor({
+    userId: "u-admin", role: "Administrator", activeWorkspaceId: "WS-001",
+    correlationId: "corr-txn-1",
+  });
+  const beforeOk = repoMod.Repo.snapshot()!;
+  await repoMod.Repo.auditedTransaction(
+    { permission: "maintenance.manage", action: "maintenance-mode-change", entityType: "system", entityId: "maintenance", reason: "enable" },
+    s0 => ({ ...s0, maintenanceMode: { ...s0.maintenanceMode, enabled: !s0.maintenanceMode.enabled } }),
+  );
+  const afterOk = repoMod.Repo.snapshot()!;
+  check("auditedTransaction committed the mutation",
+    afterOk.maintenanceMode.enabled !== beforeOk.maintenanceMode.enabled);
+  const okEvt = afterOk.auditEvents[afterOk.auditEvents.length - 1]!;
+  eq("success audit action", okEvt.action, "maintenance-mode-change");
+  eq("success audit actor propagated", okEvt.actor, "u-admin");
+  eq("success audit correlationId propagated", okEvt.correlationId, "corr-txn-1");
+  check("success audit chain valid",
+    auditMod.verifyAuditChain(afterOk.auditEvents).ok);
+
+  // 3f. Transaction rolls back — a throwing mutation leaves no partial
+  // snapshot and no success audit event.
+  const beforeThrow = repoMod.Repo.snapshot()!;
+  let threw = false;
+  try {
+    await repoMod.Repo.auditedTransaction(
+      { permission: "maintenance.manage", action: "maintenance-mode-change", entityType: "system", entityId: "maintenance", reason: "throw test" },
+      () => { throw new Error("boom"); },
+    );
+  } catch { threw = true; }
+  check("throwing transaction propagates the error", threw);
+  const afterThrow = repoMod.Repo.snapshot()!;
+  eq("throwing transaction left snapshot unchanged",
+    JSON.stringify(afterThrow.maintenanceMode), JSON.stringify(beforeThrow.maintenanceMode));
+  eq("throwing transaction wrote no success audit",
+    afterThrow.auditEvents.length, beforeThrow.auditEvents.length);
+
+  // 3g. appendAuditEvent does not recursively audit itself.
+  const beforeAppend = repoMod.Repo.snapshot()!;
+  await repoMod.Repo.appendAuditEvent({
+    actor: "u-admin", actorRole: "Administrator", workspaceId: beforeAppend.activeWorkspaceId,
+    action: "login", entityType: "session", entityId: "u-admin", reason: "test",
+  });
+  const afterAppend = repoMod.Repo.snapshot()!;
+  eq("appendAuditEvent appends exactly one event",
+    afterAppend.auditEvents.length, beforeAppend.auditEvents.length + 1);
+  check("appendAuditEvent event is the login (no re-audit wrapper)",
+    afterAppend.auditEvents[afterAppend.auditEvents.length - 1]!.action === "login");
+
+  actorMod.clearTestActor();
+  actorMod._resetActorForTests();
+
   console.log(`OK ${count} checks`);
   return count;
 }
