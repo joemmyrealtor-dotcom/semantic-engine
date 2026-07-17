@@ -558,8 +558,8 @@ export async function runValidations(): Promise<number> {
   // ============================================================
   const wsSeed = { ...seed, auditEvents: a2 };
   const crossReport = wsMod.detectWorkspaceLeakage(wsSeed);
-  check("leakage report lists scoped/unscoped kinds",
-    Array.isArray(crossReport.scopedEntityKinds) && Array.isArray(crossReport.unscopedEntityKinds));
+  check("leakage report lists per-kind coverage + unscoped entities",
+    Array.isArray(crossReport.perKindCoverage) && Array.isArray(crossReport.unscopedEntities));
   check("clean seed reports no cross-workspace entities", crossReport.crossWorkspaceEntities.length === 0);
 
   // Simulate a foreign-workspace row leaking into an entity kind.
