@@ -1339,6 +1339,7 @@ export const ID_PATTERNS: Record<string, RegExp> = {
   workspace: /^WS-\d{3}$/,
   featureFlag: /^FF-\d{3}$/,
   rateLimitBucket: /^RL-\d{3}$/,
+  launchGateEvidence: /^LGE-\d{3,}$/,
 };
 
 
