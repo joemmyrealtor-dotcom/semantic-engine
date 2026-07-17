@@ -118,6 +118,12 @@ export const KNOWLEDGE_OBJECT_TYPES: KnowledgeObjectType[] = [
 export interface Timestamped {
   createdAt: string;
   updatedAt: string;
+  // W9 Blocker #5b — every workspace-owned row carries its owning workspace.
+  // Optional at the type level for backward compatibility with legacy
+  // snapshots and global registries (workspaces/featureFlags/rateLimitBuckets);
+  // the repository backfills + enforces this at read/write time via
+  // `workspace-scoping.ts`.
+  workspaceId?: string;
 }
 
 export interface Domain extends Timestamped {
