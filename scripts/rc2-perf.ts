@@ -174,7 +174,7 @@ async function main() {
 
   // -------- 5. Audit append + verify under load --------
   {
-    let events = snapshot.auditEvents.slice(-1);
+    let events = [...snapshot.auditEvents];
     const appendSamples: number[] = [];
     for (let i = 0; i < 500; i++) {
       const s = performance.now();
