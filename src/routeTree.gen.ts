@@ -20,6 +20,7 @@ import { Route as GovernanceRouteImport } from './routes/governance'
 import { Route as ExecutiveRouteImport } from './routes/executive'
 import { Route as DeveloperRouteImport } from './routes/developer'
 import { Route as DataRouteImport } from './routes/data'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PublicationsIndexRouteImport } from './routes/publications.index'
 import { Route as ConceptsIndexRouteImport } from './routes/concepts.index'
@@ -101,6 +102,11 @@ const DeveloperRoute = DeveloperRouteImport.update({
 const DataRoute = DataRouteImport.update({
   id: '/data',
   path: '/data',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -241,6 +247,7 @@ const ApiPublicV1SplatRoute = ApiPublicV1SplatRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/data': typeof DataRoute
   '/developer': typeof DeveloperRoute
   '/executive': typeof ExecutiveRoute
@@ -281,6 +288,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/data': typeof DataRoute
   '/developer': typeof DeveloperRoute
   '/executive': typeof ExecutiveRoute
@@ -322,6 +330,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/data': typeof DataRoute
   '/developer': typeof DeveloperRoute
   '/executive': typeof ExecutiveRoute
@@ -364,6 +373,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/auth'
     | '/data'
     | '/developer'
     | '/executive'
@@ -404,6 +414,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/auth'
     | '/data'
     | '/developer'
     | '/executive'
@@ -444,6 +455,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/auth'
     | '/data'
     | '/developer'
     | '/executive'
@@ -485,6 +497,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthRoute: typeof AuthRoute
   DataRoute: typeof DataRoute
   DeveloperRoute: typeof DeveloperRoute
   ExecutiveRoute: typeof ExecutiveRoute
@@ -599,6 +612,13 @@ declare module '@tanstack/react-router' {
       path: '/data'
       fullPath: '/data'
       preLoaderRoute: typeof DataRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -819,6 +839,7 @@ const KnowledgeRouteWithChildren = KnowledgeRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthRoute: AuthRoute,
   DataRoute: DataRoute,
   DeveloperRoute: DeveloperRoute,
   ExecutiveRoute: ExecutiveRoute,
