@@ -1,15 +1,18 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
 import { PageHeader, PageBody } from "@/components/page-header";
 import { LoadingState, KpiCard, SectionTitle } from "@/components/ui-kit";
 import { useSnapshot, Repo } from "@/lib/use-snapshot";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { startupDiagnostics, releaseCandidateReadiness, maintenanceGate } from "@/lib/data/deployment";
-import { getRole, setRole, permissionsFor } from "@/lib/data/auth";
-import { ALL_ROLES, type Role } from "@/lib/data/schema";
+import { getRole, setRole, permissionsFor, currentCan } from "@/lib/data/auth";
+import { ALL_ROLES, type Role, type DataSnapshot, type LaunchGateId } from "@/lib/data/schema";
 import { RequirePermission } from "@/components/require-permission";
 import { isDevRuntime, getActor } from "@/lib/data/actor";
+import {
+  HARD_GATE_IDS, LAUNCH_GATE_DEFINITIONS, computeGateState, buildAttestation, applyAttestation,
+} from "@/lib/data/launch-gates";
 
 export const Route = createFileRoute("/admin/deployment")({
   head: () => ({ meta: [{ title: "Deployment Readiness — Legacy Platform" }] }),
