@@ -9,6 +9,7 @@ import { validateEnvironment, type EnvValidationResult } from "./security";
 import { computeMonitoring, type HealthState } from "./monitoring";
 import { verifyAuditChain } from "./audit";
 import { buildDisasterRecoveryPlan } from "./backups";
+import { assertRateLimitReadiness } from "./rate-limit";
 
 export interface StartupDiagnostic { name: string; ok: boolean; detail: string }
 
