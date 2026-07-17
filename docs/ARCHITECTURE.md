@@ -177,7 +177,16 @@ These items are documented as blockers rather than silently implied:
    - `repository.ts` — `scopedList` / `scopedGet` filter strictly by active workspace for owned kinds; `create` stamps the active workspace; `update`/`remove` refuse cross-workspace mutations and refuse re-homing via patch;
    - `workspaces.ts` `detectWorkspaceLeakage()` — hard-fails on unscoped rows in owned kinds and reports foreign rows per-kind; `auditWorkspaceCoverage()` gives a per-kind census (total / unscoped / foreign).
    Regression coverage: 17 new deterministic checks in `service.validate.ts` covering the classifier, backfill idempotency, foreign-id preservation, cross-workspace create/update/remove refusal, and `scopedList`/`scopedGet` filtering. Total: 217/217 checks passing.
-3. **Rate-limit adapter is per-worker in-memory** — `bindRateLimiter()` provides the injection point; a Redis/Durable-Object/Supabase adapter must be supplied before public traffic.
+3. ~~**Rate-limit adapter is per-worker in-memory**~~ — **CLOSED (Blocker #4, 2026-07-17).** `src/lib/data/rate-limit.ts` introduces a `RateLimitStore` contract with two adapters:
+   - `InMemoryRateLimitStore` — LRU-bounded, for dev / preview only.
+   - `SupabaseRateLimitStore` — calls the `public.consume_rate_limit(key, window, max)` RPC, backed by `public.rate_limit_buckets` (service-role only, RLS locked, atomic `SELECT ... FOR UPDATE` UPSERT). Distributed and worker-safe.
+
+   Every non-catalog `/api/public/v1/*` endpoint routes through `enforceRateLimit()` with policies in `RATE_LIMIT_POLICIES` (per-endpoint window/max, `failClosed` for mutations, `failOpen` for reads). A pre-auth `unauth` bucket keyed on hashed IP throttles abuse before auth resolution; post-auth buckets are keyed on `sha256(workspace|actorKind|actorId|endpoint|scope)` so raw bearers, JWTs, and PII never appear in bucket keys, headers, or diagnostics. Standard headers emitted: `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`, `X-RateLimit-Adapter`, `X-RateLimit-Policy`, plus `Retry-After` and `X-RateLimit-Degraded` on 429s. Catalog remains exempt.
+
+   `assertRateLimitReadiness()` fails startup when `NODE_ENV=production` runs the in-memory adapter, when the supabase adapter is selected without `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`, or when an unknown adapter is configured; wired into `deployment.ts` `startupDiagnostics()`.
+
+   Regression coverage: 40+ deterministic checks in `service.validate.ts` covering allow/deny/reset semantics, key isolation across workspace/actor/endpoint/scope, PII/bearer-leak checks, 200-way concurrency, LRU eviction, header contract, policy map coverage, readiness matrix, degraded-outage fail-open vs fail-closed, and the migration SQL (RLS lockdown, service-role grants, atomic RPC).
 4. **Accessibility & load-scale QA** — Playwright a11y sweep, virtualization of admin tables, and a 10× seed load test are not covered in this pass.
 
-Do not claim RC-1 readiness while any of items 3–4 remain open.
+Do not claim RC-1 readiness while item 4 remains open.
+
