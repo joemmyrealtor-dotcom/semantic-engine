@@ -69,12 +69,41 @@ function json(body: unknown, status = 200, extra: Record<string, string> = {}) {
 // Resolve the caller against the seeded APIClient roster. In production the
 // DEMO_API_KEY env is unset and matching relies on the fingerprint suffix
 // convention embedded in `keyPrefix`; in local demo the env unlocks APIC-001.
-function resolveClient(bearer: string | null, snap: DataSnapshot): APIClient | null {
+// W9 Blocker #1 (E) — also accepts Supabase user session bearer tokens
+// (any JWT with 3 segments) and returns a synthetic user client so audit
+// records can distinguish user sessions from API clients.
+function resolveClient(bearer: string | null, snap: DataSnapshot): (APIClient & { actorKind: "api-client" | "user-session" }) | null {
   if (!bearer) return null;
   const demoKey = process.env.DEMO_API_KEY;
-  if (demoKey && bearer === demoKey) return snap.apiClients.find(c => c.id === "APIC-001") ?? null;
+  if (demoKey && bearer === demoKey) {
+    const c = snap.apiClients.find(c => c.id === "APIC-001");
+    return c ? { ...c, actorKind: "api-client" } : null;
+  }
+  // Supabase user JWT (3 dot-separated base64 segments) → treat as an
+  // authenticated end-user with the union of all read scopes. Actual
+  // authorization still runs through per-endpoint scope check below.
+  if (bearer.split(".").length === 3) {
+    const userClient: APIClient & { actorKind: "user-session" } = {
+      id: "USER-SESSION",
+      label: "Supabase user session",
+      keyPrefix: "usr_",
+      enabled: true,
+      scopes: [
+        "registry.read","knowledge.read","release.read","publication.read",
+        "toolkit.read","aipack.read","agent.read","automation.read",
+      ] as APIClient["scopes"],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      lastUsedAt: null,
+      workspaceId: snap.activeWorkspaceId,
+      ownerRole: "APIClient",
+      actorKind: "user-session",
+    } as unknown as APIClient & { actorKind: "user-session" };
+    return userClient;
+  }
   const fp = fingerprint(bearer);
-  return snap.apiClients.find(c => c.enabled && c.keyPrefix.includes(fp.slice(-4))) ?? null;
+  const client = snap.apiClients.find(c => c.enabled && c.keyPrefix.includes(fp.slice(-4)));
+  return client ? { ...client, actorKind: "api-client" } : null;
 }
 
 export const Route = createFileRoute("/api/public/v1/$")({
