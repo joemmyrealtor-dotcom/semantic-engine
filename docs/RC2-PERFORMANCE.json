@@ -1,8 +1,33 @@
 {
-  "at": "2026-07-17T22:45:00Z",
+  "at": "2026-07-17T23:30:00Z",
   "release": "RC-2 Performance & Scalability",
-  "decision": "CONDITIONAL GO",
-  "decisionRationale": "All executed hard gates PASS. Conditional pending RC-1 operator gates (rate-limit adapter, Google OAuth, API bearer rotation, baseline backup) and 3 medium/low sequential-scan findings on tables that will grow (audit_events by actor, knowledge_objects by steward, releases by stage). Limitations: browser Real-User-Monitoring runs not executed in this slice (documented in limitations).",
+  "decision": "GO (performance) — release-gated by 4 open RC-1 operator gates",
+  "decisionRationale": "Both RC-2 medium DB findings closed by additive indexes (audit_events(actor, created_at DESC), knowledge_objects(steward)); EXPLAIN evidence shows Bitmap/Index Scan replacing Seq Scan (cost 15.14→3.41 and 12.62→2.36). Full matrix re-ran green: tsgo 0, validate 343/343, Playwright 38/38, rc2-perf PASS all budgets, rc2-db flaggedSeqScans=[], production build PASS. Remaining low-severity seq scans (workspaces.list_for_member helper, releases.by_stage_recent) are structurally acceptable given cardinality and documented for post-GA revisit. Release still gated by the 4 RC-1 operator gates (rate-limit adapter, Google OAuth, API bearer rotation, baseline backup) — GA readiness NOT claimed.",
+  "closedFindings": [
+    {
+      "id": "D-RC2-002",
+      "table": "audit_events",
+      "index": "audit_events_actor_created_at_idx (actor, created_at DESC)",
+      "predicate": "actor = ? ORDER BY created_at DESC LIMIT n",
+      "explainBefore": "Seq Scan on audit_events → Sort → Limit (Total Cost 15.14)",
+      "explainAfter":  "Bitmap Index Scan on audit_events_actor_created_at_idx → Bitmap Heap Scan → Sort → Limit (Total Cost 3.41)"
+    },
+    {
+      "id": "D-RC2-003",
+      "table": "knowledge_objects",
+      "index": "knowledge_objects_steward_idx (steward)",
+      "predicate": "steward = ? LIMIT n",
+      "explainBefore": "Seq Scan on knowledge_objects (Total Cost 12.62)",
+      "explainAfter":  "Index Scan using knowledge_objects_steward_idx (Total Cost 2.36)"
+    }
+  ],
+  "migrationNotes": "Regular CREATE INDEX IF NOT EXISTS (not CONCURRENTLY) — Supabase migration runner executes inside a single transaction which forbids CONCURRENTLY. Tables are small in this project; ACCESS EXCLUSIVE lock is brief. Mitigation for larger deployments: run during a low-write window; both statements are idempotent and fully reversible via DROP INDEX. No RLS policy, column, or trigger touched.",
+  "rc1OperatorGatesOpen": [
+    "RATE_LIMIT_ADAPTER=supabase in RC-1 env",
+    "Google OAuth provider enabled",
+    "APIClient bearer rotation (retire APIC-001)",
+    "pre-rc1-baseline backup created"
+  ],
   "environment": {
     "node": "v24.3.0",
     "runtime": "bun",
