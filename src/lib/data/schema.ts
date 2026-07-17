@@ -592,7 +592,8 @@ export type EntityType =
   | "backups"
   | "workspaces"
   | "featureFlags"
-  | "rateLimitBuckets";
+  | "rateLimitBuckets"
+  | "launchGateEvidence";
 
 // ===================================================================
 // Workstream 5 — Automation, Orchestration, Operational Governance
@@ -1142,7 +1143,8 @@ export type AuditAction =
   | "login" | "logout" | "permission-denied" | "workspace-switch"
   | "automation-execute" | "automation-cancel"
   | "data-import" | "webhook-send" | "webhook-replay" | "export-generate"
-  | "integration-status";
+  | "integration-status"
+  | "launch-gate-attest" | "launch-gate-revoke" | "launch-gate-verify";
 
 export const AUDIT_ACTIONS: AuditAction[] = [
   "create","update","delete","stage-transition","release","approve","reject",
@@ -1150,7 +1152,29 @@ export const AUDIT_ACTIONS: AuditAction[] = [
   "api-key-rotate","login","logout","permission-denied","workspace-switch",
   "automation-execute","automation-cancel","data-import","webhook-send",
   "webhook-replay","export-generate","integration-status",
+  "launch-gate-attest","launch-gate-revoke","launch-gate-verify",
 ];
+
+// Launch-closure — versioned, append-only evidence for hard launch gates.
+export type LaunchGateId = "H1" | "H2" | "H3" | "H4";
+export type LaunchGateStatus = "PASS" | "BLOCKED-OPERATOR" | "FAIL" | "STALE";
+export interface LaunchGateEvidence {
+  id: string;                    // LGE-###
+  gateId: LaunchGateId;
+  workspaceId: string;
+  version: number;               // monotonic per (workspaceId, gateId)
+  status: Exclude<LaunchGateStatus, "STALE">;
+  attestedBy: string;
+  attestedByRole: Role;
+  attestedAt: string;
+  reason: string;                // ≥ 12 chars operator-supplied
+  verifier: string;              // e.g. "assertRateLimitReadiness"
+  verifierPassed: boolean;
+  verifierDetail: string;
+  buildFingerprint: string;      // pins schemaVersion+env hash at attest time
+  supersededBy: string | null;   // set when a newer version replaces this one
+  correlationId: string;
+}
 
 export interface AuditEvent {
   id: string;                            // AUDIT-###
@@ -1265,9 +1289,10 @@ export interface DataSnapshot {
   rateLimitBuckets: APIRateLimitBucket[];
   maintenanceMode: MaintenanceModeState;
   activeWorkspaceId: string;
+  launchGateEvidence: LaunchGateEvidence[];
 }
 
-export const SCHEMA_VERSION = 8;
+export const SCHEMA_VERSION = 9;
 
 export const ID_PATTERNS: Record<string, RegExp> = {
   domain: /^DOM-\d{3}$/,
@@ -1314,6 +1339,7 @@ export const ID_PATTERNS: Record<string, RegExp> = {
   workspace: /^WS-\d{3}$/,
   featureFlag: /^FF-\d{3}$/,
   rateLimitBucket: /^RL-\d{3}$/,
+  launchGateEvidence: /^LGE-\d{3,}$/,
 };
 
 

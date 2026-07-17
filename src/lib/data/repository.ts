@@ -42,6 +42,7 @@ type EntityMap = {
   workspaces: DataSnapshot["workspaces"][number];
   featureFlags: DataSnapshot["featureFlags"][number];
   rateLimitBuckets: DataSnapshot["rateLimitBuckets"][number];
+  launchGateEvidence: DataSnapshot["launchGateEvidence"][number];
 };
 
 type Listener = () => void;

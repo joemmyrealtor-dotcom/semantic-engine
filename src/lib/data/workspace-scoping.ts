@@ -25,7 +25,7 @@ export const WORKSPACE_OWNED_KINDS = [
   "integrationConnections","webhookEndpoints","webhookDeliveries","apiClients",
   "importJobs","exportJobs","syncMappings","externalReferences",
   "deliveryPackages","deliveryRuns","eventSubscriptions","domainEvents",
-  "auditEvents","backups",
+  "auditEvents","backups","launchGateEvidence",
 ] as const satisfies readonly EntityType[];
 
 /** Kinds intentionally global (multi-tenant metadata). */
