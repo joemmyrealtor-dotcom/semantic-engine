@@ -30,9 +30,10 @@ const navItems = [
 export function AppShell({ children }: { children: ReactNode }) {
   const cp = useCommandPalette();
   const pathname = useRouterState({ select: s => s.location.pathname });
+  useEffect(() => { installE2EBridge(); }, []);
   const actor = useAuthSessionBridge();
   const nav = useNavigate();
-  const signedIn = actor.source === "session";
+  const signedIn = actor.source === "session" || actor.source === "test";
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     toast.success("Signed out");
