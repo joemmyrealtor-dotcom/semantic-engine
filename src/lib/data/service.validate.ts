@@ -5,7 +5,7 @@
  * Run via:  bun run src/lib/data/service.validate.ts
  * Any failing invariant throws; a successful run prints "OK <n> checks".
  */
-import type { ChapterBlueprint, PublicationBlueprint, DataSnapshot, PublicationStage } from "./schema";
+import { AUDIT_ACTIONS, type ChapterBlueprint, type PublicationBlueprint, type DataSnapshot, type PublicationStage } from "./schema";
 import {
   isChapterAncestor,
   wouldCreateChapterCycle,
@@ -551,8 +551,7 @@ export function runValidations(): number {
   } finally { authMod.setRole(prevRole); }
 
   // permission-denied is a valid audit action (recorded by repository on refusal)
-  check("permission-denied in AUDIT_ACTIONS",
-    (require("./schema") as { AUDIT_ACTIONS: string[] }).AUDIT_ACTIONS.includes("permission-denied"));
+  check("permission-denied in AUDIT_ACTIONS", AUDIT_ACTIONS.includes("permission-denied"));
 
   // ============================================================
   // W9 #5 — Workspace isolation & cross-leakage
