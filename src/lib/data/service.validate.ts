@@ -1092,7 +1092,7 @@ export async function runValidations(): Promise<number> {
   // 4l. Migration file present and internally consistent.
   const migDir = path.resolve(process.cwd(), "supabase/migrations");
   const migs = fs.existsSync(migDir) ? fs.readdirSync(migDir).map(f => path.join(migDir, f)) : [];
-  const rlMig = migs.find(f => /rate.?limit/i.test(f) && fs.readFileSync(f, "utf8").includes("rate_limit_buckets"));
+  const rlMig = migs.find(f => { try { return fs.readFileSync(f, "utf8").includes("rate_limit_buckets"); } catch { return false; } });
   check("migration: rate_limit_buckets table present", !!rlMig);
   if (rlMig) {
     const sql = fs.readFileSync(rlMig, "utf8");
