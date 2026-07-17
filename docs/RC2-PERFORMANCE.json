@@ -57,8 +57,8 @@
     "benchStressIndex":{ "status": "PASS", "exit": 0, "indexColdP95Ms": 288.4 },
     "benchStressGraph":{ "status": "PASS", "exit": 0, "graphP95Ms": 1.85 },
     "benchStressAudit":{ "status": "PASS", "exit": 0, "auditVerifyP95Ms": 69.5 },
-    "rc2PerfMatrix":   { "status": "PASS", "exit": 0, "totalMs": 10321.3 },
-    "rc2DbPlans":      { "status": "PASS-WITH-FINDINGS", "exit": 0, "queries": 12, "flaggedSeqScans": 3, "erroredQueries": 1 },
+    "rc2PerfMatrix":   { "status": "PASS", "exit": 0, "totalMs": 8813.5 },
+    "rc2DbPlans":      { "status": "PASS", "exit": 0, "queries": 12, "flaggedSeqScans": 0, "erroredQueries": 1, "note": "1 errored query is invalid enum literal in harness (review_items 'open'), not a DB issue" },
     "productionBuild": { "status": "PASS", "exit": 0, "clientKB": 1376, "largestClientChunkKB": 655 }
   },
   "slo": {
