@@ -68,7 +68,9 @@ export interface ExecutiveMetrics {
   blockedReleases: number;
 }
 
-export function computeExecutiveMetrics(s: DataSnapshot): ExecutiveMetrics {
+const memoExecMetrics = memoize("analytics.computeExecutiveMetrics", (_k: string, s: DataSnapshot) => computeExecutiveMetricsImpl(s), 8);
+export function computeExecutiveMetrics(s: DataSnapshot): ExecutiveMetrics { return memoExecMetrics(snapKey(s), s); }
+function computeExecutiveMetricsImpl(s: DataSnapshot): ExecutiveMetrics {
   const health = knowledgeHealth(s);
   const pubReady = avg(s.publications.filter(p => !p.archived).map(p => publicationCoverage(p, s).readinessScore));
   const tkReady = avg((s.clientToolkits ?? []).filter(t => !t.archived).map(t => toolkitCoverage(t, s).readinessScore));
