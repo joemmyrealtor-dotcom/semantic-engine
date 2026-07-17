@@ -81,7 +81,7 @@ export function migrateSnapshot(s: DataSnapshot): DataSnapshot {
     };
   });
 
-  return {
+  const migrated = {
     ...s,
     concepts,
     publications,
