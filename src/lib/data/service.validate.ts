@@ -589,7 +589,5 @@ export function runValidations(): number {
   return count;
 }
 
-  return count;
-}
 
 
