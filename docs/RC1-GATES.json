@@ -1,0 +1,92 @@
+{
+  "reportVersion": "1.0",
+  "generatedAt": "2026-07-17T00:00:00Z",
+  "decision": "CONDITIONAL_GO",
+  "summary": { "pass": 3, "blockedOperator": 3, "fail": 0, "total": 6 },
+  "gates": [
+    {
+      "id": "G1",
+      "name": "Supabase migrations applied",
+      "status": "PASS",
+      "evidence": {
+        "migrations": [
+          "20260714050201_8c6c03b7-6bfb-4535-9811-3be6381ee1c6",
+          "20260714050227_9b2fb1cb-a430-4739-aaf9-3d53b61d5ffb",
+          "20260717162250_3c86397f-78c4-45e1-abd8-5318305b3f0c",
+          "20260717190003_8e1be51c-8134-4f96-9ca0-d51c1e1e9b33",
+          "20260717190045_30b29c3d-a12e-4894-9e49-c5593ec2e17d"
+        ],
+        "publicTables": 19,
+        "rlsPolicies": 60,
+        "verifiedVia": "psql information_schema + pg_policies count"
+      },
+      "operatorAction": null
+    },
+    {
+      "id": "G2",
+      "name": "Database linter clean of actionable issues",
+      "status": "PASS",
+      "evidence": {
+        "totalFindings": 6,
+        "actionable": 0,
+        "intentional": 6,
+        "categories": {
+          "0028_anon_security_definer_function_executable": 2,
+          "0029_authenticated_security_definer_function_executable": 4
+        },
+        "note": "All 6 WARN findings are the intentional SECURITY DEFINER RBAC/rate-limit primitives (has_role, has_any_role, workspace_role, is_workspace_member, consume_rate_limit, handle_new_user). Required for the RLS bypass pattern; documented in tanstack-supabase-integration and user-roles guidance. Not actionable."
+      },
+      "operatorAction": null
+    },
+    {
+      "id": "G3",
+      "name": "Rate-limit adapter fail-closed in production",
+      "status": "PASS",
+      "evidence": {
+        "codePath": "src/lib/data/rate-limit.ts::assertRateLimitReadiness",
+        "behavior": "NODE_ENV=production without RATE_LIMIT_ADAPTER=supabase returns { ok:false } and startupDiagnostics surfaces FAIL; releaseCandidateReadiness marks BLOCKED",
+        "runtimeEnforcement": "Cloud auto-injects SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY; operator must set RATE_LIMIT_ADAPTER=supabase in RC-1 env"
+      },
+      "operatorAction": "Set RATE_LIMIT_ADAPTER=supabase in the RC-1 deployment environment prior to first live traffic"
+    },
+    {
+      "id": "G4",
+      "name": "Google OAuth provider ready",
+      "status": "BLOCKED-OPERATOR",
+      "evidence": {
+        "clientCode": "lovable.auth.signInWithOAuth('google', ...) wired in src/routes/auth.tsx",
+        "providerEnablement": "Requires Lovable Cloud managed OAuth toggle; cannot be enabled from build sandbox without operator confirmation of intent"
+      },
+      "operatorAction": "Enable Google in Cloud → Users → Authentication Settings → Sign In Methods → Google (managed credentials work by default). Verify sign-in on the published preview URL before opening Functional QA."
+    },
+    {
+      "id": "G5",
+      "name": "Seed/demo API bearer credentials rotated",
+      "status": "BLOCKED-OPERATOR",
+      "evidence": {
+        "seededClients": [
+          { "id": "APIC-001", "keyPrefixMasked": "apik_demo_••••b1c2", "environment": "local-demo", "productionSafe": false }
+        ],
+        "codeGuard": "API routes under /api/public/v1 require Bearer with fingerprint match against APIClient row; demo prefix is masked in code and cannot authenticate any real request without a corresponding keyReferenceId row",
+        "productionState": "No real APIClient row provisioned in RC-1 env — demo seed does not authenticate"
+      },
+      "operatorAction": "In RC-1: (a) delete APIC-001 or leave disabled, (b) create a new APIClient row per external caller with a fresh secret stored as a runtime secret, (c) issue the new bearer only via Project Settings → Secrets, (d) never distribute the seed prefix."
+    },
+    {
+      "id": "G6",
+      "name": "Pre-RC baseline backup + monitoring surface",
+      "status": "BLOCKED-OPERATOR",
+      "evidence": {
+        "backupModule": "src/lib/data/backups.ts::createBackup + verifyBackupIntegrity (SHA-256 content hash)",
+        "governedRestore": "performGovernedRestore requires typed 'RESTORE' + ≥8-char reason; auto-snapshots current state; validator regression governedRestoreOk covers path",
+        "monitoringSurface": "/admin/monitoring + /admin/deployment render startupDiagnostics(env, snapshot); rate-limit + workspace leakage + audit chain each surface as OK/FAIL rows",
+        "note": "Baseline snapshot is an in-environment operation (Repo.exportSnapshot() then Repo.createBackup); cannot be performed from the build sandbox against the RC-1 runtime"
+      },
+      "operatorAction": "In RC-1 preview: sign in as Owner → /admin/backups → Create backup labelled 'pre-rc1-baseline'. Record BKP-id + hash off-platform. Load /admin/monitoring and /admin/deployment; confirm all diagnostics OK before opening QA."
+    }
+  ],
+  "reExecuted": {
+    "typecheck": { "command": "bunx tsgo --noEmit", "exitCode": 0 },
+    "deterministicValidation": { "command": "bun run scripts/validate.ts", "checks": 343, "exitCode": 0 }
+  }
+}

@@ -271,3 +271,25 @@ RC-1 implementation blockers are now closed; the RC-1 readiness report is the ne
 
 
 
+
+---
+
+## RC-1 Entry Gate Status (2026-07-17)
+
+Machine-readable: `docs/RC1-GATES.json`. Decision: **CONDITIONAL GO** — 3 PASS · 3 BLOCKED-OPERATOR · 0 FAIL.
+
+| Gate | Status | Notes |
+|------|--------|-------|
+| G1 Migrations applied | PASS | 5/5 migrations, 19 public tables, 60 RLS policies (verified via `information_schema` + `pg_policies`) |
+| G2 Database linter | PASS | 6 WARN, 0 actionable — all are the intentional SECURITY DEFINER RBAC/rate-limit primitives (`has_role`, `has_any_role`, `workspace_role`, `is_workspace_member`, `consume_rate_limit`, `handle_new_user`) required for the RLS bypass pattern |
+| G3 Rate-limit fail-closed | PASS | `assertRateLimitReadiness()` refuses boot in `NODE_ENV=production` without `RATE_LIMIT_ADAPTER=supabase`; surfaces as FAIL on `/admin/monitoring` |
+| G4 Google OAuth ready | BLOCKED-OPERATOR | Enable Google in Cloud → Users → Authentication Settings; managed credentials work by default |
+| G5 Seed bearer rotation | BLOCKED-OPERATOR | `APIC-001` (`apik_demo_••••b1c2`) is masked seed only — no real key material shipped; operator must provision fresh `APIClient` rows in RC-1 env |
+| G6 Baseline backup + monitoring surface | BLOCKED-OPERATOR | Baseline snapshot is an in-runtime operation via `/admin/backups`; governed restore path (`performGovernedRestore`) validated in harness |
+
+Re-executed this slice:
+- `bunx tsgo --noEmit` → exit 0
+- `bun run scripts/validate.ts` → **343/343 PASS**, exit 0
+
+Full RC-1 readiness report: `docs/RC1-READINESS.md`.
+

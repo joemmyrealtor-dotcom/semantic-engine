@@ -158,6 +158,23 @@ function DeploymentPage() {
           )}
           {rc.state === "ready" && <div className="text-evergreen mt-2">✓ Recommended for RC1 promotion.</div>}
         </div>
+
+        <SectionTitle hint="docs/RC1-GATES.json">RC-1 entry gates</SectionTitle>
+        <div className="editorial-card divide-y divide-border text-sm">
+          {[
+            { id: "G1", name: "Migrations applied (5/5, 19 tables, 60 policies)", status: "PASS" },
+            { id: "G2", name: "Database linter — 0 actionable (6 intentional SECURITY DEFINER)", status: "PASS" },
+            { id: "G3", name: "Rate-limit adapter fail-closed", status: "PASS" },
+            { id: "G4", name: "Google OAuth provider enabled", status: "BLOCKED-OPERATOR" },
+            { id: "G5", name: "Seed/demo API bearer rotation", status: "BLOCKED-OPERATOR" },
+            { id: "G6", name: "Pre-RC baseline backup + monitoring green", status: "BLOCKED-OPERATOR" },
+          ].map(g => (
+            <div key={g.id} className="p-3 flex items-center justify-between">
+              <div><span className="font-mono text-xs text-muted-foreground mr-2">{g.id}</span>{g.name}</div>
+              <span className={`text-xs uppercase tracking-widest ${g.status === "PASS" ? "text-evergreen" : "text-gold"}`}>{g.status}</span>
+            </div>
+          ))}
+        </div>
       </PageBody>
     </>
   );
