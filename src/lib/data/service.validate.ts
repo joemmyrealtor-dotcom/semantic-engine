@@ -927,9 +927,192 @@ export async function runValidations(): Promise<number> {
   actorMod.clearTestActor();
   actorMod._resetActorForTests();
 
+  // ============================================================
+  // RC-1 Blocker #4 — Distributed rate-limit adapter
+  // ============================================================
+  const rlMod = await import("./rate-limit");
+
+  // 4a. In-memory adapter: allow → block → retry-after → reset on new window.
+  const mem = new rlMod.InMemoryRateLimitStore({ maxEntries: 128 });
+  const policy = { windowSeconds: 60, maxRequests: 3, failClosed: false };
+  const nowA = "2026-07-17T12:00:00.000Z";
+  const d1 = await mem.consume("K1", policy, nowA);
+  const d2 = await mem.consume("K1", policy, nowA);
+  const d3 = await mem.consume("K1", policy, nowA);
+  const d4 = await mem.consume("K1", policy, nowA);
+  check("in-memory: first 3 allowed", d1.allowed && d2.allowed && d3.allowed);
+  check("in-memory: 4th denied", !d4.allowed);
+  check("in-memory: retry-after populated", d4.retryAfterSeconds > 0 && d4.retryAfterSeconds <= 60);
+  eq("in-memory: remaining tracks limit", d3.remaining, 0);
+  eq("in-memory: reset ISO present", typeof d4.resetAt, "string");
+  const nowB = "2026-07-17T12:01:30.000Z"; // > 60s later
+  const d5 = await mem.consume("K1", policy, nowB);
+  check("in-memory: allowed after window reset", d5.allowed);
+
+  // 4b. Distinct keys/dimensions get isolated buckets.
+  const kA = rlMod.composeRateLimitKey({ workspaceId: "WS-1", actorKind: "api-client", actorId: "APIC-A", endpointId: "registry.list", scope: "registry.read", ipHash: "ip1" });
+  const kB = rlMod.composeRateLimitKey({ workspaceId: "WS-2", actorKind: "api-client", actorId: "APIC-A", endpointId: "registry.list", scope: "registry.read", ipHash: "ip1" });
+  const kC = rlMod.composeRateLimitKey({ workspaceId: "WS-1", actorKind: "user-session", actorId: "USER-A", endpointId: "registry.list", scope: "registry.read", ipHash: "ip1" });
+  const kD = rlMod.composeRateLimitKey({ workspaceId: "WS-1", actorKind: "api-client", actorId: "APIC-A", endpointId: "knowledge.detail", scope: "knowledge.read", ipHash: "ip1" });
+  check("key isolation: workspace", kA !== kB);
+  check("key isolation: actor kind/id", kA !== kC);
+  check("key isolation: endpoint/scope", kA !== kD);
+  check("key format: rl_ prefix", kA.startsWith("rl_"));
+  check("key format: sha-derived (no raw tokens)",
+    !kA.includes("APIC-A") && !kA.includes("registry.read") && !kA.includes("WS-1"));
+
+  // 4c. Raw credentials never appear in composed keys, diagnostics, or ip hashes.
+  const secretBearer = "sb_secret_supersensitive_XYZ";
+  const secretEmail = "user@example.com";
+  const kSecret = rlMod.composeRateLimitKey({ actorKind: "api-client", actorId: secretBearer, endpointId: "registry.list", scope: null, ipHash: rlMod.ipFingerprint(secretEmail) });
+  check("no raw bearer in key", !kSecret.includes("sb_secret") && !kSecret.includes("supersensitive"));
+  check("no raw email in ip fingerprint", !rlMod.ipFingerprint(secretEmail).includes("user@example.com"));
+  const decisionForDiag = { ...d4, policyKey: "registry.list", degraded: false };
+  const diag = rlMod.decisionToDiagnostic(decisionForDiag, kSecret);
+  check("diagnostic omits raw key (only 8-char digest)", diag.keyDigest.length === 8 && !diag.keyDigest.includes("secret"));
+
+  // 4d. Concurrency: many parallel consumers on one key never exceed max.
+  const memConc = new rlMod.InMemoryRateLimitStore();
+  const concPolicy = { windowSeconds: 60, maxRequests: 50, failClosed: false };
+  const CONCURRENT = 200;
+  const results = await Promise.all(
+    Array.from({ length: CONCURRENT }, () => memConc.consume("KCONC", concPolicy, "2026-07-17T13:00:00.000Z")),
+  );
+  const allowedCount = results.filter(r => r.allowed).length;
+  eq(`concurrency: exactly maxRequests allowed under ${CONCURRENT} contenders`, allowedCount, 50);
+  check("concurrency: rest denied", results.filter(r => !r.allowed).length === CONCURRENT - 50);
+
+  // 4e. Eviction: bounded map does not grow without limit.
+  const memEvict = new rlMod.InMemoryRateLimitStore({ maxEntries: 100 });
+  for (let i = 0; i < 500; i++) {
+    await memEvict.consume(`E${i}`, policy, new Date(Date.parse(nowA) + i).toISOString());
+  }
+  check(`eviction: bounded to <= maxEntries (got ${memEvict.size()})`, memEvict.size() <= 100);
+
+  // 4f. enforceRateLimit produces standards headers.
+  rlMod._bindRateLimitStoreForTests(new rlMod.InMemoryRateLimitStore());
+  const ok = await rlMod.enforceRateLimit(rlMod.currentRateLimitStore(), "registry.list", {
+    actorKind: "api-client", actorId: "APIC-A", endpointId: "registry.list", scope: "registry.read", ipHash: "iph", workspaceId: "WS-1",
+  });
+  check("enforce: X-RateLimit-Limit header", !!ok.headers["X-RateLimit-Limit"]);
+  check("enforce: X-RateLimit-Remaining header", ok.headers["X-RateLimit-Remaining"] !== undefined);
+  check("enforce: X-RateLimit-Reset ISO header", typeof ok.headers["X-RateLimit-Reset"] === "string");
+  check("enforce: X-RateLimit-Adapter header", ok.headers["X-RateLimit-Adapter"] === "memory");
+  check("enforce: X-RateLimit-Policy header", ok.headers["X-RateLimit-Policy"] === "registry.list");
+  check("enforce: no Retry-After on allowed", ok.headers["Retry-After"] === undefined);
+
+  // Force denial to check 429 headers.
+  const denyPolicy = rlMod.RATE_LIMIT_POLICIES["import.job.status"];
+  const memDeny = new rlMod.InMemoryRateLimitStore();
+  const denyDims = { actorKind: "api-client" as const, actorId: "APIC-D", endpointId: "import.job.status", scope: "import.write", ipHash: "ip", workspaceId: "WS-1" };
+  let last: Awaited<ReturnType<typeof rlMod.enforceRateLimit>> | null = null;
+  for (let i = 0; i < denyPolicy.maxRequests + 1; i++) {
+    last = await rlMod.enforceRateLimit(memDeny, "import.job.status", denyDims);
+  }
+  check("enforce: denial sets Retry-After", !!last && last.headers["Retry-After"] !== undefined);
+  check("enforce: denial decision !allowed", !!last && last.decision.allowed === false);
+
+  // 4g. Policy map covers every non-catalog endpoint (static inventory).
+  const publicEndpoints: PolicyKey_[] = [
+    "registry.list","knowledge.detail","release.manifest","publication.export",
+    "toolkit.export","aipack.export","agent.export","automation.run.status","import.job.status",
+  ];
+  for (const e of publicEndpoints) {
+    check(`policy map has ${e}`, !!rlMod.RATE_LIMIT_POLICIES[e]);
+    check(`policy ${e} has positive window/max`,
+      rlMod.RATE_LIMIT_POLICIES[e].windowSeconds > 0 && rlMod.RATE_LIMIT_POLICIES[e].maxRequests > 0);
+  }
+  check("policy: unauth bucket present", !!rlMod.RATE_LIMIT_POLICIES.unauth);
+  check("policy: import.job.status is fail-closed", rlMod.RATE_LIMIT_POLICIES["import.job.status"].failClosed === true);
+  check("policy: read endpoints are fail-open",
+    rlMod.RATE_LIMIT_POLICIES["registry.list"].failClosed === false);
+
+  // 4h. Startup readiness — production refuses in-memory adapter.
+  const rProdMem = rlMod.assertRateLimitReadiness({ NODE_ENV: "production", RATE_LIMIT_ADAPTER: "memory" });
+  check("readiness: production+memory rejected", !rProdMem.ok);
+  const rProdSb = rlMod.assertRateLimitReadiness({ NODE_ENV: "production", RATE_LIMIT_ADAPTER: "supabase", SUPABASE_URL: "x", SUPABASE_SERVICE_ROLE_KEY: "y" });
+  check("readiness: production+supabase accepted", rProdSb.ok && rProdSb.adapter === "supabase");
+  const rProdSbMissing = rlMod.assertRateLimitReadiness({ NODE_ENV: "production", RATE_LIMIT_ADAPTER: "supabase" });
+  check("readiness: production+supabase w/o env rejected", !rProdSbMissing.ok);
+  const rDevMem = rlMod.assertRateLimitReadiness({ NODE_ENV: "development" });
+  check("readiness: dev defaults to memory OK", rDevMem.ok && rDevMem.adapter === "memory");
+  const rBad = rlMod.assertRateLimitReadiness({ RATE_LIMIT_ADAPTER: "redis-fantasy" });
+  check("readiness: invalid adapter rejected", !rBad.ok);
+
+  // 4i. Distributed-store outage: fail-open for reads, fail-closed for mutations.
+  const broken = {
+    kind: "supabase" as const,
+    async consume(_k: string, p: { windowSeconds: number; maxRequests: number; failClosed: boolean }) {
+      return {
+        allowed: !p.failClosed, limit: p.maxRequests,
+        remaining: p.failClosed ? 0 : p.maxRequests,
+        retryAfterSeconds: p.failClosed ? p.windowSeconds : 0,
+        resetAt: new Date(Date.now() + p.windowSeconds * 1000).toISOString(),
+        adapter: "supabase" as const, storeHealthy: false, latencyMs: 0,
+      };
+    },
+    async healthCheck() { return { ok: false, detail: "simulated outage" }; },
+  };
+  const outageRead = await rlMod.enforceRateLimit(broken, "registry.list", {
+    actorKind: "api-client", actorId: "APIC-X", endpointId: "registry.list", ipHash: "ip",
+  });
+  check("outage: read endpoint fails open (allowed)", outageRead.decision.allowed);
+  check("outage: read carries degraded marker", outageRead.decision.degraded);
+  check("outage: X-RateLimit-Degraded header on read", outageRead.headers["X-RateLimit-Degraded"] === "1");
+  const outageWrite = await rlMod.enforceRateLimit(broken, "import.job.status", {
+    actorKind: "api-client", actorId: "APIC-X", endpointId: "import.job.status", ipHash: "ip",
+  });
+  check("outage: mutation endpoint fails closed (denied)", !outageWrite.decision.allowed);
+  check("outage: mutation Retry-After present", !!outageWrite.headers["Retry-After"]);
+
+  // 4j. Deployment diagnostic surfaces the rate-limit adapter.
+  const diagsRL = deploymentMod.startupDiagnostics(
+    { VITE_SUPABASE_URL: "x", VITE_SUPABASE_PUBLISHABLE_KEY: "y", SUPABASE_URL: "x", SUPABASE_PUBLISHABLE_KEY: "y", RATE_LIMIT_ADAPTER: "memory" },
+    seed,
+  );
+  check("startup diagnostic includes Rate-limit adapter",
+    diagsRL.some(d => d.name === "Rate-limit adapter"));
+  const diagsProdBad = deploymentMod.startupDiagnostics(
+    { NODE_ENV: "production", RATE_LIMIT_ADAPTER: "memory", SUPABASE_URL: "x", SUPABASE_PUBLISHABLE_KEY: "y", VITE_SUPABASE_URL: "x", VITE_SUPABASE_PUBLISHABLE_KEY: "y" },
+    seed,
+  );
+  check("startup: production+memory adapter fails diagnostic",
+    diagsProdBad.some(d => d.name === "Rate-limit adapter" && !d.ok));
+
+  // 4k. Static route inventory — every non-catalog endpoint id has a policy,
+  // and the public API route file wires the centralized enforcer.
+  const routeSrc = fs.readFileSync(path.resolve(process.cwd(), "src/routes/api/public/v1/$.ts"), "utf8");
+  check("route uses enforceRateLimit", /enforceRateLimit\(/.test(routeSrc));
+  check("route uses pre-auth 'unauth' policy", /"unauth"/.test(routeSrc));
+  check("route does not use legacy IP_BUCKETS map", !/IP_BUCKETS/.test(routeSrc));
+  check("route no longer calls evaluateRateLimit directly", !/evaluateRateLimit\(/.test(routeSrc));
+  const catalogExempt = /splat === ""[^\n]*\|\|[^\n]*"catalog"/.test(routeSrc);
+  check("route: catalog exemption preserved", catalogExempt);
+
+  // 4l. Migration file present and internally consistent.
+  const migDir = path.resolve(process.cwd(), "supabase/migrations");
+  const migs = fs.existsSync(migDir) ? fs.readdirSync(migDir).map(f => path.join(migDir, f)) : [];
+  const rlMig = migs.find(f => /rate.?limit/i.test(f) && fs.readFileSync(f, "utf8").includes("rate_limit_buckets"));
+  check("migration: rate_limit_buckets table present", !!rlMig);
+  if (rlMig) {
+    const sql = fs.readFileSync(rlMig, "utf8");
+    check("migration: consume_rate_limit function present", /consume_rate_limit/.test(sql));
+    check("migration: RLS enabled on rate_limit_buckets", /ALTER TABLE .*rate_limit_buckets.* ENABLE ROW LEVEL SECURITY/i.test(sql));
+    check("migration: grants restricted to service_role", /GRANT .* ON .*rate_limit_buckets.* TO service_role/i.test(sql));
+    check("migration: index on key", /INDEX .* ON .*rate_limit_buckets/i.test(sql));
+    check("migration: cleanup/expiry present", /(cleanup|expires_at|DELETE FROM public\.rate_limit_buckets)/i.test(sql));
+  }
+
   console.log(`OK ${count} checks`);
   return count;
 }
+
+// Local alias to keep the check block readable without a wider import shuffle.
+type PolicyKey_ =
+  | "registry.list" | "knowledge.detail" | "release.manifest"
+  | "publication.export" | "toolkit.export" | "aipack.export"
+  | "agent.export" | "automation.run.status" | "import.job.status";
+
 
 
 

@@ -526,6 +526,30 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limit_buckets: {
+        Row: {
+          current_count: number
+          key: string
+          reset_at: string
+          updated_at: string
+          window_start: string
+        }
+        Insert: {
+          current_count?: number
+          key: string
+          reset_at?: string
+          updated_at?: string
+          window_start?: string
+        }
+        Update: {
+          current_count?: number
+          key?: string
+          reset_at?: string
+          updated_at?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       relationships: {
         Row: {
           created_at: string
@@ -782,6 +806,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_rate_limit_buckets: { Args: never; Returns: number }
+      consume_rate_limit: {
+        Args: { p_key: string; p_max: number; p_window_seconds: number }
+        Returns: {
+          allowed: boolean
+          current_count: number
+          reset_at: string
+          window_start: string
+        }[]
+      }
       has_any_role: {
         Args: {
           _roles: Database["public"]["Enums"]["app_role"][]

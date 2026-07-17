@@ -9,6 +9,7 @@ import { validateEnvironment, type EnvValidationResult } from "./security";
 import { computeMonitoring, type HealthState } from "./monitoring";
 import { verifyAuditChain } from "./audit";
 import { buildDisasterRecoveryPlan } from "./backups";
+import { assertRateLimitReadiness } from "./rate-limit";
 
 export interface StartupDiagnostic { name: string; ok: boolean; detail: string }
 
@@ -25,6 +26,8 @@ export function startupDiagnostics(env: Record<string, string | undefined>, snap
   const chain = verifyAuditChain(auditEvents);
   out.push({ name: "Audit chain", ok: chain.ok, detail: chain.ok ? `${chain.count} verified` : `broken at ${chain.brokenAt}` });
   out.push({ name: "Rate-limit bucket", ok: rateBuckets.length > 0, detail: `${rateBuckets.length} bucket(s)` });
+  const rl = assertRateLimitReadiness(env);
+  out.push({ name: "Rate-limit adapter", ok: rl.ok, detail: `${rl.adapter}: ${rl.detail}` });
   out.push({ name: "Maintenance mode", ok: !maintenance.enabled, detail: maintenance.enabled ? maintenance.reason : "off" });
   return out;
 }
