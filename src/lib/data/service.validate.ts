@@ -1103,6 +1103,50 @@ export async function runValidations(): Promise<number> {
     check("migration: cleanup/expiry present", /(cleanup|expires_at|DELETE FROM public\.rate_limit_buckets)/i.test(sql));
   }
 
+  // ============================================================
+  // RC-1 Blocker #6 — Playwright QA suite (static configuration checks).
+  // ============================================================
+  const cwd = process.cwd();
+  const pwCfg = path.resolve(cwd, "playwright.config.ts");
+  check("playwright config present", fs.existsSync(pwCfg));
+  if (fs.existsSync(pwCfg)) {
+    const cfg = fs.readFileSync(pwCfg, "utf8");
+    check("playwright: webServer defined", /webServer\s*:/.test(cfg));
+    check("playwright: activates VITE_E2E for dev server", /VITE_E2E=1|VITE_E2E:\s*"1"/.test(cfg));
+    check("playwright: chromium project defined", /name:\s*"chromium-desktop"/.test(cfg));
+    check("playwright: junit reporter configured", /junit/.test(cfg));
+    check("playwright: html reporter configured", /html/.test(cfg));
+    check("playwright: artifacts only on failure", /retain-on-failure/.test(cfg));
+    check("playwright: local retries default 0", /retries:\s*CI\s*\?\s*1\s*:\s*0/.test(cfg));
+  }
+  const fixtures = path.resolve(cwd, "e2e/fixtures.ts");
+  check("e2e: shared fixtures module present", fs.existsSync(fixtures));
+  if (fs.existsSync(fixtures)) {
+    const fx = fs.readFileSync(fixtures, "utf8");
+    check("e2e: fails on uncaught pageerror", /pageerror/.test(fx) && /toHaveLength\(0\)/.test(fx));
+    check("e2e: console-error allowlist is narrow and documented", /CONSOLE_ALLOWLIST/.test(fx));
+    check("e2e: signed-out fixture present", /asSignedOut/.test(fx));
+    check("e2e: expired-session fixture present", /asExpiredSession/.test(fx));
+  }
+  const bootstrap = path.resolve(cwd, "src/lib/data/e2e-bootstrap.ts");
+  check("e2e: test-actor bootstrap present", fs.existsSync(bootstrap));
+  if (fs.existsSync(bootstrap)) {
+    const b = fs.readFileSync(bootstrap, "utf8");
+    // Production-safety guard: BOTH import.meta.env.DEV AND VITE_E2E === "1" required.
+    check("e2e: bootstrap requires import.meta.env.DEV", /env\.DEV\s*===\s*true/.test(b));
+    check("e2e: bootstrap requires VITE_E2E flag", /env\.VITE_E2E\s*===\s*"1"/.test(b));
+    check("e2e: bootstrap never embeds service-role key", !/service.?role/i.test(b));
+    check("e2e: bootstrap never embeds a Supabase JWT literal", !/eyJ[A-Za-z0-9._-]{20,}/.test(b));
+  }
+  // Required-route coverage — each of these spec files must exist.
+  for (const spec of ["boot", "navigation", "api", "a11y", "mobile", "roles", "smoke"]) {
+    check(`e2e: ${spec}.spec.ts present`, fs.existsSync(path.resolve(cwd, `e2e/${spec}.spec.ts`)));
+  }
+  // The API route file must NOT include a test-only backdoor.
+  const apiRoute = fs.readFileSync(path.resolve(cwd, "src/routes/api/public/v1/$.ts"), "utf8");
+  check("api route: no VITE_E2E backdoor", !/VITE_E2E/.test(apiRoute));
+  check("api route: no test-actor bypass", !/__lovableE2E/.test(apiRoute));
+
   console.log(`OK ${count} checks`);
   return count;
 }
