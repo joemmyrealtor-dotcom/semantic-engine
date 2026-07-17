@@ -86,15 +86,24 @@ function AutomationStudio() {
 
   const run = async () => {
     if (!validation.ok) { toast.error(`Cannot run: ${validation.errors[0]}`); return; }
-    const { run, nextSnapshot, blocked } = executeRecipe({
-      recipe, snapshot: s, entityIds: recipe.trigger.entityIds, actor: "current-user",
-      dryRun, triggerEventId: `manual-${Date.now()}`,
-    });
-    if (blocked) { toast.warning(`Blocked by ${blocked}. See run ${run.id}.`); }
-    else if (run.status === "failed") { toast.error(`Run ${run.id} failed.`); }
-    else if (run.status === "waiting-approval") { toast.info(`Run ${run.id} awaiting approval.`); }
-    else { toast.success(`Run ${run.id} ${run.status}${dryRun ? " (dry-run)" : ""}.`); }
-    await Repo.replaceAll(nextSnapshot);
+    try {
+      let runId = ""; let status: string = ""; let blockedLabel: string | null = null;
+      await Repo.auditedTransaction(
+        { permission: "automation.run", action: "automation-execute", entityType: "automation", entityId: recipe.id, reason: dryRun ? "dry-run" : "execute" },
+        s0 => {
+          const { run: r, nextSnapshot, blocked } = executeRecipe({
+            recipe, snapshot: s0, entityIds: recipe.trigger.entityIds, actor: "current-user",
+            dryRun, triggerEventId: `manual-${Date.now()}`,
+          });
+          runId = r.id; status = r.status; blockedLabel = blocked ?? null;
+          return nextSnapshot;
+        },
+      );
+      if (blockedLabel) toast.warning(`Blocked by ${blockedLabel}. See run ${runId}.`);
+      else if (status === "failed") toast.error(`Run ${runId} failed.`);
+      else if (status === "waiting-approval") toast.info(`Run ${runId} awaiting approval.`);
+      else toast.success(`Run ${runId} ${status}${dryRun ? " (dry-run)" : ""}.`);
+    } catch (e) { toast.error((e as Error).message); }
   };
 
   const archive = async () => { await patch({ state: "archived" }); toast.success("Archived."); navigate({ to: "/automations" }); };
