@@ -1,6 +1,7 @@
 import { openDB, type IDBPDatabase } from "idb";
 import { SCHEMA_VERSION, type DataSnapshot, type EntityType, type PublicationStage } from "./schema";
 import { buildSeedSnapshot } from "./seed";
+import { backfillWorkspaceIds } from "./workspace-scoping";
 
 const DB_NAME = "legacy-platform-v2";
 const STORE = "kv";
