@@ -1,9 +1,15 @@
 // Workstream 9 — Multi-workspace registry.
 //
-// Workspaces enable soft isolation, branding, and per-tenant settings.
-// When `isolated` is true, list-scope helpers filter to the workspaceId.
+// Workspaces enable per-tenant isolation, branding, and settings. Blocker
+// #5b (real per-entity isolation) is closed: every workspace-owned entity
+// carries `workspaceId`, backfilled on load and enforced at the repository
+// mutation boundary. `detectWorkspaceLeakage` now uses the classification
+// registry to hard-fail on unscoped rows in owned kinds.
 
 import type { DataSnapshot, Workspace } from "./schema";
+import {
+  WORKSPACE_OWNED_KINDS, auditWorkspaceCoverage,
+} from "./workspace-scoping";
 
 export function nextWorkspaceId(existing: Workspace[]): string {
   const nums = existing.map(w => Number(w.id.replace(/^WS-/, ""))).filter(n => !isNaN(n));
@@ -15,11 +21,14 @@ export function activeWorkspace(snap: DataSnapshot): Workspace | null {
 }
 
 export function workspaceMetrics(snap: DataSnapshot, workspaceId: string): { assets: number; releases: number; runs: number; auditEvents: number } {
-  const n = (a?: { length: number } | null) => a?.length ?? 0;
+  const inWs = <T extends { workspaceId?: string }>(rows: T[] | undefined) =>
+    (rows ?? []).filter(r => r.workspaceId === undefined || r.workspaceId === workspaceId);
   return {
-    assets: n(snap.concepts) + n(snap.knowledgeObjects) + n(snap.publications) + n(snap.clientToolkits) + n(snap.aiPacks) + n(snap.agents),
-    releases: n(snap.releases),
-    runs: n(snap.automationRuns),
+    assets: inWs(snap.concepts).length + inWs(snap.knowledgeObjects).length
+      + inWs(snap.publications).length + inWs(snap.clientToolkits).length
+      + inWs(snap.aiPacks).length + inWs(snap.agents).length,
+    releases: inWs(snap.releases).length,
+    runs: inWs(snap.automationRuns).length,
     auditEvents: (snap.auditEvents ?? []).filter(e => e.workspaceId === workspaceId).length,
   };
 }
@@ -34,32 +43,22 @@ export function exportWorkspace(snap: DataSnapshot, workspaceId: string): { work
 }
 
 /**
- * W9 #5 — Cross-workspace leakage check. Scans workspace-scoped ledgers
- * (auditEvents, backups) and reports any row whose `workspaceId` refers to
- * a workspace that no longer exists, or whose active-workspace filter would
- * expose data from a sibling workspace. Returns a structured report used by
- * the admin monitoring UI and the release-readiness gate.
- *
- * NOTE (honest limitation): domain entities (concepts, publications, etc.)
- * do not yet carry a `workspaceId` column — full per-entity isolation
- * requires the schema migration tracked as W9-BLOCKER-2. Until then, this
- * check enforces isolation on the surfaces that DO carry workspace scoping
- * (audit trail, backups) and reports the un-scoped entities as advisories.
+ * W9 #5b — Real per-entity leakage detector. Reports:
+ *   - orphaned audit/backup rows (workspaceId → unknown workspace)
+ *   - foreign-workspace rows visible under the active workspace
+ *   - unscoped rows in workspace-owned kinds (a schema migration gap)
+ * Backed by the classification registry in `workspace-scoping.ts` so new
+ * entity kinds are covered as soon as they're added to `WORKSPACE_OWNED_KINDS`.
  */
 export interface WorkspaceLeakageReport {
   ok: boolean;
   orphanedAuditIds: string[];
   orphanedBackupIds: string[];
   crossWorkspaceEntities: { kind: string; id: string; workspaceId: string }[];
-  unscopedEntityKinds: string[];
-  scopedEntityKinds: string[];
+  unscopedEntities: { kind: string; id: string }[];
+  perKindCoverage: Array<{ kind: string; total: number; unscoped: number; foreign: number }>;
   activeWorkspaceId: string;
 }
-
-const SCOPABLE_KINDS = [
-  "concepts","frameworks","knowledgeObjects","publications","clientTools",
-  "clientToolkits","aiPacks","agents","automations","releases",
-] as const;
 
 export function detectWorkspaceLeakage(snap: DataSnapshot): WorkspaceLeakageReport {
   const workspaces = snap.workspaces ?? [];
@@ -71,23 +70,25 @@ export function detectWorkspaceLeakage(snap: DataSnapshot): WorkspaceLeakageRepo
   const orphanedBackupIds = backups.filter(b => !known.has(b.workspaceId)).map(b => b.id);
 
   const crossWorkspaceEntities: { kind: string; id: string; workspaceId: string }[] = [];
-  const scoped: string[] = [];
-  const unscoped: string[] = [];
-  for (const kind of SCOPABLE_KINDS) {
-    const rows = (snap as unknown as Record<string, { id: string; workspaceId?: string }[]>)[kind] ?? [];
-    const hasScope = rows.some(r => typeof r.workspaceId === "string");
-    (hasScope ? scoped : unscoped).push(kind);
+  const unscopedEntities: { kind: string; id: string }[] = [];
+  for (const kind of WORKSPACE_OWNED_KINDS) {
+    const rows = ((snap as unknown as Record<string, { id?: string; workspaceId?: string }[]>)[kind] ?? []);
     for (const r of rows) {
-      if (r.workspaceId && r.workspaceId !== active) {
-        crossWorkspaceEntities.push({ kind, id: r.id, workspaceId: r.workspaceId });
+      if (!r || typeof r !== "object") continue;
+      const id = r.id ?? "";
+      if (r.workspaceId === undefined) unscopedEntities.push({ kind, id });
+      else if (active && r.workspaceId !== active) {
+        crossWorkspaceEntities.push({ kind, id, workspaceId: r.workspaceId });
       }
     }
   }
 
+  const coverage = auditWorkspaceCoverage(snap);
   return {
-    ok: orphanedAuditIds.length === 0 && orphanedBackupIds.length === 0,
-    orphanedAuditIds, orphanedBackupIds, crossWorkspaceEntities,
-    scopedEntityKinds: scoped, unscopedEntityKinds: unscoped,
+    ok: orphanedAuditIds.length === 0 && orphanedBackupIds.length === 0 && unscopedEntities.length === 0,
+    orphanedAuditIds, orphanedBackupIds,
+    crossWorkspaceEntities, unscopedEntities,
+    perKindCoverage: coverage.perKind,
     activeWorkspaceId: active,
   };
 }
