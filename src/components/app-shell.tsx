@@ -9,7 +9,9 @@ import { LayoutDashboard, Library, Network, BookOpen, Wrench, ScrollText, Bot, P
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthSessionBridge } from "@/lib/data/session-bridge";
+import { installE2EBridge } from "@/lib/data/e2e-bootstrap";
 import { toast } from "sonner";
+import { useEffect } from "react";
 
 const navItems = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, exact: true },
@@ -28,9 +30,10 @@ const navItems = [
 export function AppShell({ children }: { children: ReactNode }) {
   const cp = useCommandPalette();
   const pathname = useRouterState({ select: s => s.location.pathname });
+  useEffect(() => { installE2EBridge(); }, []);
   const actor = useAuthSessionBridge();
   const nav = useNavigate();
-  const signedIn = actor.source === "session";
+  const signedIn = actor.source === "session" || actor.source === "test";
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     toast.success("Signed out");

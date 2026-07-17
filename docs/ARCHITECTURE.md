@@ -186,7 +186,16 @@ These items are documented as blockers rather than silently implied:
    `assertRateLimitReadiness()` fails startup when `NODE_ENV=production` runs the in-memory adapter, when the supabase adapter is selected without `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`, or when an unknown adapter is configured; wired into `deployment.ts` `startupDiagnostics()`.
 
    Regression coverage: 40+ deterministic checks in `service.validate.ts` covering allow/deny/reset semantics, key isolation across workspace/actor/endpoint/scope, PII/bearer-leak checks, 200-way concurrency, LRU eviction, header contract, policy map coverage, readiness matrix, degraded-outage fail-open vs fail-closed, and the migration SQL (RLS lockdown, service-role grants, atomic RPC).
-4. **Accessibility & load-scale QA** — Playwright a11y sweep, virtualization of admin tables, and a 10× seed load test are not covered in this pass.
+4. ~~**Accessibility & Playwright QA**~~ — **CLOSED (Blocker #6, 2026-07-17).** Playwright 1.56 + `@axe-core/playwright` land under `e2e/`:
+   - `playwright.config.ts` boots the dev server with `VITE_E2E=1`, projects for desktop / mobile / tablet, HTML + JUnit reporters, artifacts retained only on failure, and 0 local retries (1 in CI).
+   - `src/lib/data/e2e-bootstrap.ts` exposes `window.__lovableE2E` **only** when both `import.meta.env.DEV === true` and `VITE_E2E === "1"`. It never embeds a service-role key or JWT and is not shipped to production builds. The API route at `src/routes/api/public/v1/$.ts` has no `VITE_E2E` branch or test-actor bypass — auth and rate limiting behave identically in tests.
+   - `e2e/fixtures.ts` provides `asActor` / `asSignedOut` / `asExpiredSession` helpers and an `errorSink` that fails tests on uncaught `pageerror` events; the console-error allowlist is narrow and documented.
+   - Suites: `boot`, `smoke`, `navigation` (13 routes render clean under an Admin actor), `roles` (signed-out / expired-session / viewer), `api` (catalog is public, non-catalog requires bearer, rate-limit 429 with `Retry-After` after a 150-request burst), `mobile` (no horizontal overflow, tap targets ≥ 36px), and `a11y` (axe-core WCAG 2.1 AA sweep on 10 surfaces — serious/critical violations are a hard fail-gate; exceptions must be listed with an owner in `EXCLUDED_RULES`).
+   - 40 tests discoverable via `bun run e2e`; `bun run e2e:a11y` runs the accessibility sweep alone.
+   - Static regression: `service.validate.ts` gained 25+ checks ensuring the config, fixtures, bootstrap safety, spec inventory, and API route are preserved. Baseline is now **313/313**.
 
-Do not claim RC-1 readiness while item 4 remains open.
+5. **Load-scale verification** — 10× seed load test and admin-table virtualization remain the final RC-1 slice.
+
+Do not claim RC-1 readiness while item 5 remains open.
+
 
