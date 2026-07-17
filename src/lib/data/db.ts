@@ -165,6 +165,7 @@ export function migrateSnapshot(s: DataSnapshot): DataSnapshot {
       };
     }),
   };
+  return backfillWorkspaceIds(migrated);
 }
 
 function mapStatusToStage(status: string | undefined): "Draft"|"Editorial"|"SME Review"|"QA"|"Canonical"|"Released" {
