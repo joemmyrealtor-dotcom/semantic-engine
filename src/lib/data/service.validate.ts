@@ -584,6 +584,100 @@ export function runValidations(): number {
   check("orphaned audit detected", orphan.orphanedAuditIds.length === 1);
   check("orphan report ok=false", orphan.ok === false);
 
+  // ============================================================
+  // W9 Blocker #1 — Real Supabase session actor + propagation
+  // ============================================================
+  const actorMod = await import("./actor");
+  actorMod._resetActorForTests();
+
+  // Anonymous by default; production fallback must NOT resolve.
+  const anon = actorMod.getActor();
+  eq("boot actor is anonymous", anon.source, "anonymous");
+  // In this validator context import.meta.env.DEV may be true (bun script);
+  // resolveMutationActor still must never fabricate a fake "current-user".
+  const resolved = actorMod.resolveMutationActor();
+  check("resolveMutationActor never returns 'current-user'",
+    resolved === null || resolved.userId !== "current-user");
+
+  // Session → actor mapping.
+  actorMod.setActorFromSession({
+    userId: "user-uuid-1", email: "ops@jmadv.press",
+    displayLabel: "Ops Lead", role: "Editor",
+    activeWorkspaceId: "WS-001",
+    expiresAt: Math.floor(Date.now() / 1000) + 3600,
+  });
+  const sessActor = actorMod.getActor();
+  eq("session actor source = session", sessActor.source, "session");
+  eq("session actor id propagated", sessActor.userId, "user-uuid-1");
+  eq("session actor email propagated", sessActor.email, "ops@jmadv.press");
+  check("session actor correlationId present", !!sessActor.correlationId);
+
+  // Expired session detection.
+  const expired = { ...sessActor, sessionExpiresAt: Math.floor(Date.now() / 1000) - 60 };
+  check("expired session detected", actorMod.isSessionExpired(expired));
+  check("valid session not expired", !actorMod.isSessionExpired(sessActor));
+
+  // API-client actor is distinguishable from user session.
+  const apiA = actorMod.apiClientActor("APIC-001", "WS-001");
+  eq("api-client actor.clientKind", apiA.clientKind, "api-client");
+  eq("api-client actor.role", apiA.role, "APIClient");
+  check("api-client and user actor distinguishable", apiA.clientKind !== sessActor.clientKind);
+
+  // Test-injected actor overrides.
+  const tActor = actorMod.injectTestActor({ userId: "test-user", role: "Administrator", activeWorkspaceId: "WS-001" });
+  eq("injected test actor visible via getActor", actorMod.getActor().userId, tActor.userId);
+  actorMod.clearTestActor();
+
+  // Redaction covers session-like keys — access_token and refresh_token
+  // MUST never appear in audit before/after payloads.
+  const redactSession = securityMod.redactSecrets({
+    userId: "u1", access_token: "eyJraWQ.leak", refresh_token: "rt_leak",
+    session: { access_token: "nested_leak" },
+  }) as Record<string, unknown>;
+  eq("access_token redacted", redactSession.access_token, "[REDACTED]");
+  eq("refresh_token redacted", redactSession.refresh_token, "[REDACTED]");
+  eq("nested access_token redacted",
+    (redactSession.session as Record<string, unknown>).access_token, "[REDACTED]");
+
+  // Actor propagation into audit events (success path).
+  const propSeed = { ...seed, auditEvents: [] as typeof seed.auditEvents };
+  const propAudit = auditMod.appendAudit(propSeed.auditEvents, {
+    actor: sessActor.userId, actorRole: sessActor.role,
+    workspaceId: propSeed.activeWorkspaceId, action: "update",
+    entityType: "concept", entityId: "CR-001-001",
+    correlationId: sessActor.correlationId,
+  });
+  eq("audit event carries session actor userId", propAudit[0].actor, "user-uuid-1");
+  eq("audit event carries correlationId", propAudit[0].correlationId, sessActor.correlationId);
+
+  // Actor propagation into permission-denied audit events.
+  const deniedAudit = auditMod.appendAudit(propSeed.auditEvents, {
+    actor: sessActor.userId, actorRole: "Viewer",
+    workspaceId: propSeed.activeWorkspaceId, action: "permission-denied",
+    entityType: "concept", entityId: "CR-001-002",
+    reason: "content.delete required",
+    correlationId: sessActor.correlationId,
+  });
+  eq("permission-denied audit carries actor", deniedAudit[0].actor, "user-uuid-1");
+  eq("permission-denied action", deniedAudit[0].action, "permission-denied");
+
+  // Sign-out clears identity to anonymous.
+  actorMod.clearActor("signed-out");
+  eq("sign-out clears actor", actorMod.getActor().source, "anonymous");
+  eq("sign-out reverts userId", actorMod.getActor().userId, "anonymous");
+
+  // Active-workspace membership enforcement — actor without membership
+  // must not carry an unrelated activeWorkspaceId in production.
+  actorMod.setActorFromSession({
+    userId: "u2", email: "e@x", role: "Editor",
+    activeWorkspaceId: "WS-001",
+    expiresAt: Math.floor(Date.now()/1000)+3600,
+  });
+  const wsActor = actorMod.getActor();
+  check("actor activeWorkspaceId must be provided by membership",
+    wsActor.activeWorkspaceId === "WS-001");
+  actorMod._resetActorForTests();
+
   console.log(`OK ${count} checks`);
   return count;
 }
