@@ -50,24 +50,45 @@ export interface WorkspaceLeakageReport {
   ok: boolean;
   orphanedAuditIds: string[];
   orphanedBackupIds: string[];
+  crossWorkspaceEntities: { kind: string; id: string; workspaceId: string }[];
   unscopedEntityKinds: string[];
+  scopedEntityKinds: string[];
   activeWorkspaceId: string;
 }
+
+const SCOPABLE_KINDS = [
+  "concepts","frameworks","knowledgeObjects","publications","clientTools",
+  "clientToolkits","aiPacks","agents","automations","releases",
+] as const;
+
 export function detectWorkspaceLeakage(snap: DataSnapshot): WorkspaceLeakageReport {
   const workspaces = snap.workspaces ?? [];
   const auditEvents = snap.auditEvents ?? [];
   const backups = snap.backups ?? [];
   const known = new Set(workspaces.map(w => w.id));
+  const active = snap.activeWorkspaceId ?? "";
   const orphanedAuditIds = auditEvents.filter(e => !known.has(e.workspaceId)).map(e => e.id);
   const orphanedBackupIds = backups.filter(b => !known.has(b.workspaceId)).map(b => b.id);
+
+  const crossWorkspaceEntities: { kind: string; id: string; workspaceId: string }[] = [];
+  const scoped: string[] = [];
+  const unscoped: string[] = [];
+  for (const kind of SCOPABLE_KINDS) {
+    const rows = (snap as unknown as Record<string, { id: string; workspaceId?: string }[]>)[kind] ?? [];
+    const hasScope = rows.some(r => typeof r.workspaceId === "string");
+    (hasScope ? scoped : unscoped).push(kind);
+    for (const r of rows) {
+      if (r.workspaceId && r.workspaceId !== active) {
+        crossWorkspaceEntities.push({ kind, id: r.id, workspaceId: r.workspaceId });
+      }
+    }
+  }
+
   return {
     ok: orphanedAuditIds.length === 0 && orphanedBackupIds.length === 0,
-    orphanedAuditIds, orphanedBackupIds,
-    unscopedEntityKinds: [
-      "concepts","frameworks","knowledgeObjects","publications","clientTools",
-      "clientToolkits","aiPacks","agents","automations","releases",
-    ],
-    activeWorkspaceId: snap.activeWorkspaceId ?? "",
+    orphanedAuditIds, orphanedBackupIds, crossWorkspaceEntities,
+    scopedEntityKinds: scoped, unscopedEntityKinds: unscoped,
+    activeWorkspaceId: active,
   };
 }
 
@@ -79,4 +100,14 @@ export function scopedAudit(snap: DataSnapshot): DataSnapshot["auditEvents"] {
 export function scopedBackups(snap: DataSnapshot): DataSnapshot["backups"] {
   const wid = snap.activeWorkspaceId;
   return snap.backups.filter(b => b.workspaceId === wid);
+}
+
+/**
+ * Filter any entity array to the active workspace. Rows without a
+ * `workspaceId` are treated as legacy/global and included (this preserves
+ * behaviour for entity kinds that have not yet been migrated to per-row
+ * scoping — the report above tracks that gap explicitly).
+ */
+export function scopeEntities<T extends { workspaceId?: string }>(rows: T[], activeWorkspaceId: string): T[] {
+  return rows.filter(r => r.workspaceId === undefined || r.workspaceId === activeWorkspaceId);
 }

@@ -1,5 +1,7 @@
-import type { DataSnapshot, EntityType } from "./schema";
+import type { AuditAction, DataSnapshot, EntityType } from "./schema";
 import { loadSnapshot, saveSnapshot, resetSnapshot } from "./db";
+import { appendAudit } from "./audit";
+import { currentCan, getRole, type Permission } from "./auth";
 
 type EntityKey = Exclude<EntityType, never>;
 
@@ -69,31 +71,112 @@ async function mutate(fn: (s: DataSnapshot) => DataSnapshot) {
   return next;
 }
 
+// W9 #2 — RBAC + audit boundary. Content-write is default; admin surfaces
+// map to their governance permission. Any change without permission throws
+// and is written as a `permission-denied` audit event.
+const ADMIN_KEYS: Partial<Record<EntityKey, { create: Permission; update: Permission; delete: Permission }>> = {
+  workspaces: { create: "workspace.manage", update: "workspace.manage", delete: "workspace.manage" },
+  featureFlags: { create: "featureflag.manage", update: "featureflag.manage", delete: "featureflag.manage" },
+  apiClients: { create: "api.manage", update: "api.manage", delete: "api.manage" },
+  backups: { create: "backup.create", update: "backup.create", delete: "backup.create" },
+  integrationConnections: { create: "integration.manage", update: "integration.manage", delete: "integration.manage" },
+  webhookEndpoints: { create: "integration.manage", update: "integration.manage", delete: "integration.manage" },
+};
+const DEFAULT_PERMS = { create: "content.create" as Permission, update: "content.update" as Permission, delete: "content.delete" as Permission };
+function permsFor(key: EntityKey) { return ADMIN_KEYS[key] ?? DEFAULT_PERMS; }
+
+// W9 #5 — Workspace stamping. When an entity type carries a `workspaceId`
+// (or we're stamping a fresh row), attach the active workspace.
+function stampWorkspace<T extends object>(item: T, workspaceId: string): T {
+  if (workspaceId && typeof item === "object" && !("workspaceId" in item)) {
+    return { ...item, workspaceId } as T;
+  }
+  return item;
+}
+
+async function auditedMutate<K extends EntityKey>(
+  key: K,
+  action: Extract<AuditAction, "create" | "update" | "delete">,
+  entityId: string,
+  before: Record<string, unknown> | null,
+  after: Record<string, unknown> | null,
+  fn: (s: DataSnapshot) => DataSnapshot,
+  ctx?: { actor?: string; reason?: string },
+) {
+  const perm = permsFor(key)[action];
+  const actor = ctx?.actor ?? "current-user";
+  if (!currentCan(perm)) {
+    await mutate(s => ({
+      ...s,
+      auditEvents: appendAudit(s.auditEvents ?? [], {
+        actor, actorRole: getRole(), workspaceId: s.activeWorkspaceId,
+        action: "permission-denied", entityType: String(key), entityId,
+        reason: `${perm} required for ${action}`,
+      }),
+    }));
+    const err = new Error(`Permission denied: ${perm}`);
+    (err as Error & { code?: string }).code = "permission-denied";
+    throw err;
+  }
+  await mutate(s => {
+    const next = fn(s);
+    return {
+      ...next,
+      auditEvents: appendAudit(next.auditEvents ?? [], {
+        actor, actorRole: getRole(), workspaceId: next.activeWorkspaceId,
+        action, entityType: String(key), entityId,
+        reason: ctx?.reason ?? "", before, after,
+      }),
+    };
+  });
+}
+
+type WriteCtx = { actor?: string; reason?: string };
+
 export const Repo = {
   list<K extends EntityKey>(key: K): EntityMap[K][] {
     return (cache ? (cache[key] as EntityMap[K][]) : []) as EntityMap[K][];
   },
+  /** W9 #5 — active-workspace-scoped list. Falls back to full list when entities are unscoped. */
+  scopedList<K extends EntityKey>(key: K): EntityMap[K][] {
+    const rows = this.list(key);
+    const wid = cache?.activeWorkspaceId;
+    if (!wid) return rows;
+    return rows.filter(r => {
+      const w = (r as { workspaceId?: string }).workspaceId;
+      return w === undefined || w === wid;
+    });
+  },
   get<K extends EntityKey>(key: K, id: string): EntityMap[K] | undefined {
     return this.list(key).find(x => (x as { id: string }).id === id);
   },
-  async create<K extends EntityKey>(key: K, item: EntityMap[K]) {
-    await mutate(s => ({ ...s, [key]: [...(s[key] as EntityMap[K][]), item] }));
+  async create<K extends EntityKey>(key: K, item: EntityMap[K], ctx?: WriteCtx) {
+    const id = (item as { id: string }).id;
+    await auditedMutate(key, "create", id, null, item as unknown as Record<string, unknown>,
+      s => {
+        const stamped = stampWorkspace(item as object, s.activeWorkspaceId) as EntityMap[K];
+        return { ...s, [key]: [...(s[key] as EntityMap[K][]), stamped] };
+      }, ctx);
   },
-  async update<K extends EntityKey>(key: K, id: string, patch: Partial<EntityMap[K]>) {
-    await mutate(s => ({
-      ...s,
-      [key]: (s[key] as EntityMap[K][]).map(x =>
-        (x as { id: string }).id === id
-          ? ({ ...x, ...patch, updatedAt: new Date().toISOString() } as EntityMap[K])
-          : x,
-      ),
-    }));
+  async update<K extends EntityKey>(key: K, id: string, patch: Partial<EntityMap[K]>, ctx?: WriteCtx) {
+    const before = this.get(key, id) as unknown as Record<string, unknown> | undefined;
+    await auditedMutate(key, "update", id,
+      before ?? null,
+      { ...(before ?? {}), ...(patch as Record<string, unknown>) },
+      s => ({
+        ...s,
+        [key]: (s[key] as EntityMap[K][]).map(x =>
+          (x as { id: string }).id === id
+            ? ({ ...x, ...patch, updatedAt: new Date().toISOString() } as EntityMap[K])
+            : x,
+        ),
+      }), ctx);
   },
-  async remove<K extends EntityKey>(key: K, id: string) {
-    await mutate(s => ({
-      ...s,
-      [key]: (s[key] as EntityMap[K][]).filter(x => (x as { id: string }).id !== id),
-    }));
+  async remove<K extends EntityKey>(key: K, id: string, ctx?: WriteCtx) {
+    const before = this.get(key, id) as unknown as Record<string, unknown> | undefined;
+    await auditedMutate(key, "delete", id, before ?? null, null,
+      s => ({ ...s, [key]: (s[key] as EntityMap[K][]).filter(x => (x as { id: string }).id !== id) }),
+      ctx);
   },
   async replaceAll(snapshot: DataSnapshot) {
     cache = snapshot;
