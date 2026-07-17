@@ -529,7 +529,66 @@ export function runValidations(): number {
   check("universalIndex memoized (>= 39 hits of 40)", (universalCounter?.hits ?? 0) >= 39);
   check("universalIndex 40 iters < 1s wall", dt < 1000);
 
+  // ============================================================
+  // W9 #2 — RBAC + audit boundary at mutation surface
+  // ============================================================
+  const prevRole = authMod.getRole();
+  try {
+    authMod.setRole("Viewer");
+    check("Viewer denied content.create", !authMod.currentCan("content.create"));
+    check("Viewer denied content.delete", !authMod.currentCan("content.delete"));
+    check("Viewer denied workspace.manage", !authMod.currentCan("workspace.manage"));
+    authMod.setRole("Administrator");
+    check("Administrator allowed workspace.manage", authMod.currentCan("workspace.manage"));
+    check("Administrator allowed backup.create", authMod.currentCan("backup.create"));
+    let threw = false;
+    try { authMod.requirePermission("content.create"); } catch { threw = true; }
+    check("Administrator requirePermission passes", !threw);
+    authMod.setRole("ReadOnly");
+    threw = false;
+    try { authMod.requirePermission("content.create"); } catch (e) { threw = (e as { code?: string }).code === "permission-denied"; }
+    check("ReadOnly requirePermission throws permission-denied", threw);
+  } finally { authMod.setRole(prevRole); }
+
+  // permission-denied is a valid audit action (recorded by repository on refusal)
+  check("permission-denied in AUDIT_ACTIONS",
+    (require("./schema") as { AUDIT_ACTIONS: string[] }).AUDIT_ACTIONS.includes("permission-denied"));
+
+  // ============================================================
+  // W9 #5 — Workspace isolation & cross-leakage
+  // ============================================================
+  const wsSeed = { ...seed, auditEvents: a2 };
+  const crossReport = wsMod.detectWorkspaceLeakage(wsSeed);
+  check("leakage report lists scoped/unscoped kinds",
+    Array.isArray(crossReport.scopedEntityKinds) && Array.isArray(crossReport.unscopedEntityKinds));
+  check("clean seed reports no cross-workspace entities", crossReport.crossWorkspaceEntities.length === 0);
+
+  // Simulate a foreign-workspace row leaking into an entity kind.
+  const dirty = {
+    ...wsSeed,
+    concepts: [...wsSeed.concepts, { ...(wsSeed.concepts[0] ?? {}), id: "CR-X-999", workspaceId: "WS-999" } as typeof wsSeed.concepts[number]],
+  };
+  const dirtyReport = wsMod.detectWorkspaceLeakage(dirty);
+  check("leakage detects foreign-workspace entity",
+    dirtyReport.crossWorkspaceEntities.some(e => e.id === "CR-X-999" && e.workspaceId === "WS-999"));
+
+  // scopeEntities filters correctly, keeps unscoped rows.
+  const mixed = [{ id: "a" }, { id: "b", workspaceId: wsSeed.activeWorkspaceId }, { id: "c", workspaceId: "WS-999" }];
+  const filtered = wsMod.scopeEntities(mixed, wsSeed.activeWorkspaceId);
+  eq("scopeEntities keeps active + unscoped", filtered.map(x => x.id), ["a", "b"]);
+
+  // Orphaned audit (workspaceId points to unknown workspace) still detected.
+  const orphan = wsMod.detectWorkspaceLeakage({
+    ...wsSeed,
+    auditEvents: [{ ...a2[0], workspaceId: "WS-DELETED" }],
+  });
+  check("orphaned audit detected", orphan.orphanedAuditIds.length === 1);
+  check("orphan report ok=false", orphan.ok === false);
+
   console.log(`OK ${count} checks`);
+  return count;
+}
+
   return count;
 }
 
