@@ -356,8 +356,10 @@ function ExportsPanel() {
   const run = async () => {
     try {
       const { job, pkg } = newExportJob(s, { kind: "publication", entityId, requestedBy: "operator" });
-      const next = { ...s, exportJobs: [...s.exportJobs, job], deliveryPackages: [...s.deliveryPackages, pkg] };
-      await Repo.replaceAll(next);
+      await Repo.auditedTransaction(
+        { permission: "integration.manage", action: "export-generate", entityType: "deliveryPackage", entityId: pkg.id, reason: `export ${job.id}` },
+        s0 => ({ ...s0, exportJobs: [...s0.exportJobs, job], deliveryPackages: [...s0.deliveryPackages, pkg] }),
+      );
       toast.success(`Export package ${pkg.id} generated`);
     } catch (e) {
       toast.error((e as Error).message);
