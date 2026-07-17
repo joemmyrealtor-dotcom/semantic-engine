@@ -1177,10 +1177,11 @@ export async function runValidations(): Promise<number> {
   check("scale-fixture: no orphaned audit events (unknown workspace)", leak.orphanedAuditIds.length === 0);
   check("scale-fixture: no orphaned backups (unknown workspace)", leak.orphanedBackupIds.length === 0);
   check("scale-fixture: no unscoped workspace-owned entities", leak.unscopedEntities.length === 0);
-  const wsA = wsMod.scopeEntities(a.snapshot.concepts as unknown as { id: string; workspaceId?: string }[], "WS-001");
-  const wsB = wsMod.scopeEntities(a.snapshot.concepts as unknown as { id: string; workspaceId?: string }[], "WS-002");
+  const medSnap = scaleMod.scaleSnapshot({ tier: "medium", seed: 0xC0FFEE }).snapshot;
+  const wsA = wsMod.scopeEntities(medSnap.concepts as unknown as { id: string; workspaceId?: string }[], "WS-001");
+  const wsB = wsMod.scopeEntities(medSnap.concepts as unknown as { id: string; workspaceId?: string }[], "WS-002");
   check("scale-fixture: workspace scoping partitions concepts (both non-empty)",
-    wsA.length > 0 && wsB.length > 0 && wsA.length + wsB.length === a.snapshot.concepts.length);
+    wsA.length > 0 && wsB.length > 0 && wsA.length + wsB.length === medSnap.concepts.length);
   check("scale-fixture: workspace scoping is disjoint",
     !wsA.some((x: { id: string }) => wsB.find((y: { id: string }) => y.id === x.id)));
 
