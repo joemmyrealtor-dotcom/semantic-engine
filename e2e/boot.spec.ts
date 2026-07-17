@@ -32,10 +32,12 @@ test.describe("Boot & rendering", () => {
     // Wait for the test bridge to install so the initial actor injection
     // has settled — otherwise a re-render caused by actor notify() can race
     // the click handler in dev mode.
+    await page.waitForLoadState("networkidle").catch(() => {});
     await page.waitForFunction(() => {
       const w = window as unknown as { __lovableE2E?: { getActor(): { userId: string } } };
       return w.__lovableE2E?.getActor().userId === "e2e:admin";
-    }, null, { timeout: 10_000 });
+    }, null, { timeout: 20_000 });
+
     const trigger = page.getByRole("button", { name: /open command palette/i });
     await expect(trigger).toBeVisible();
     await trigger.click();

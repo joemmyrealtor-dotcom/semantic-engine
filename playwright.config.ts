@@ -20,7 +20,7 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: CI,
   retries: CI ? 1 : 0,
-  workers: CI ? 2 : undefined,
+  workers: CI ? 2 : Number(process.env.E2E_WORKERS ?? 2),
   timeout: 60_000,
   expect: { timeout: 15_000 },
   reporter: [
