@@ -28,6 +28,14 @@ const navItems = [
 export function AppShell({ children }: { children: ReactNode }) {
   const cp = useCommandPalette();
   const pathname = useRouterState({ select: s => s.location.pathname });
+  const actor = useAuthSessionBridge();
+  const nav = useNavigate();
+  const signedIn = actor.source === "session";
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    toast.success("Signed out");
+    nav({ to: "/auth" });
+  };
   return (
     <div className="flex min-h-screen w-full bg-background text-foreground">
       <AppSidebar />
