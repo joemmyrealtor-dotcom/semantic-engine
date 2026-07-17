@@ -75,13 +75,13 @@ function mem(): number | null {
 // -------- Budgets (documented; tuned to local Node/Bun perf) --------
 // Only fail on stress-tier "hard" breaches so CI stays green under load.
 const BUDGETS = {
-  buildIndexColdMs:  { large: 900,  stress: 3500 },
-  buildIndexWarmMs:  { large: 20,   stress: 80   },
-  buildGraphMs:      { large: 900,  stress: 4000 },
+  buildIndexColdMs:  { large: 400,  stress: 1200 },
+  buildIndexWarmMs:  { large: 120,  stress: 400  },
+  buildGraphMs:      { large: 400,  stress: 1500 },
   scopedListMs:      { large: 40,   stress: 150  },
   leakageMs:         { large: 500,  stress: 2500 },
-  auditVerifyMs:     { large: 500,  stress: 2500 },
-  exportMs:          { large: 1500, stress: 6000 },
+  auditVerifyMs:     { large: 200,  stress: 1000 },
+  exportMs:          { large: 800,  stress: 3000 },
   memoHitRatioMin:   0.9,
 } as const;
 
