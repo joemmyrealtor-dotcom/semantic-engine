@@ -116,9 +116,11 @@
     ],
     "sequentialScans": [
       { "name": "workspaces.list_for_member", "cost": 179, "severity": "low", "reason": "helper-function predicate; workspaces table is tiny by design; acceptable" },
-      { "name": "audit_events.by_actor_recent", "cost": 15.14, "severity": "medium", "recommendation": "CREATE INDEX audit_events_actor_created_at_idx ON public.audit_events (actor, created_at DESC)" },
-      { "name": "knowledge_objects.by_steward", "cost": 12.62, "severity": "medium", "recommendation": "CREATE INDEX knowledge_objects_steward_idx ON public.knowledge_objects (steward)" },
-      { "name": "releases.by_stage_recent", "cost": 12.02, "severity": "low", "reason": "small cardinality; recommend index only if stage-filtered lists become hot: CREATE INDEX releases_stage_created_idx ON public.releases (stage, created_at DESC)" }
+      { "name": "releases.by_stage_recent", "cost": 12.02, "severity": "low", "reason": "small cardinality; index only if stage-filtered lists become hot: CREATE INDEX releases_stage_created_idx ON public.releases (stage, created_at DESC)" }
+    ],
+    "resolvedInSlice": [
+      { "name": "audit_events.by_actor_recent", "prevCost": 15.14, "newCost": 3.41, "plan": "Bitmap Index Scan on audit_events_actor_created_at_idx" },
+      { "name": "knowledge_objects.by_steward", "prevCost": 12.62, "newCost": 2.36, "plan": "Index Scan using knowledge_objects_steward_idx" }
     ],
     "note": "Tables are near-empty in the current environment; costs reflect planner defaults, not production row counts. Findings identify structural risk, not current latency."
   },
@@ -138,13 +140,13 @@
     ]
   },
   "defects": [
-    { "id": "D-RC2-001", "severity": "medium", "component": "db", "title": "Sequential scan on audit_events.by_actor", "status": "open", "recommendation": "Add index audit_events (actor, created_at DESC) before audit volume grows past ~10k rows" },
-    { "id": "D-RC2-002", "severity": "medium", "component": "db", "title": "Sequential scan on knowledge_objects.by_steward", "status": "open", "recommendation": "Add index knowledge_objects (steward) for steward dashboards at scale" },
+    { "id": "D-RC2-001", "severity": "medium", "component": "db", "title": "Sequential scan on audit_events.by_actor", "status": "resolved", "resolution": "Added audit_events_actor_created_at_idx (actor, created_at DESC); EXPLAIN cost 15.14 → 3.41 via Bitmap Index Scan" },
+    { "id": "D-RC2-002", "severity": "medium", "component": "db", "title": "Sequential scan on knowledge_objects.by_steward", "status": "resolved", "resolution": "Added knowledge_objects_steward_idx (steward); EXPLAIN cost 12.62 → 2.36 via Index Scan" },
     { "id": "D-RC2-003", "severity": "low", "component": "harness", "title": "review_items.state EXPLAIN failed on enum literal 'open'", "status": "open", "recommendation": "Query the actual review_state enum literals when re-running rc2-db.ts" }
   ],
   "fixesInSlice": [
-    { "id": "F-RC2-001", "note": "Fixed rc2-perf audit chain seed to pass full auditEvents (previously started from slice(-1) and reported false chain break)." },
-    { "id": "F-RC2-002", "note": "Fixed protectedSearch benchmark to cache per-workspace indexes (production shape); confirmed p95 24.5 ms under 16 concurrent workers." }
+    { "id": "F-RC2-003", "note": "Added CREATE INDEX IF NOT EXISTS audit_events_actor_created_at_idx ON public.audit_events (actor, created_at DESC). Reversible via DROP INDEX. Regular (non-CONCURRENT) CREATE INDEX because the Supabase migration runner uses a single transaction." },
+    { "id": "F-RC2-004", "note": "Added CREATE INDEX IF NOT EXISTS knowledge_objects_steward_idx ON public.knowledge_objects (steward). Reversible via DROP INDEX. Same deployment-lock guidance as F-RC2-003." }
   ],
   "limitations": [
     "Browser Real-User-Monitoring runs (desktop/mobile cold/warm nav via Playwright with long-task + Resource Timing capture) were not executed in this slice. Playwright regression (38/38) was rerun and remained green; RUM harness is scheduled as an RC-2 follow-up.",
