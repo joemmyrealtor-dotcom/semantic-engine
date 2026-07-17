@@ -89,6 +89,8 @@ export function installE2EBridge(): void {
         source: "session",
       });
     },
+    isSessionExpired() { return isSessionExpired(); },
+    getActor() { return getActor(); },
   };
   window.__lovableE2E = bridge;
   // Loud, honest signal in the console so it is impossible to miss.
