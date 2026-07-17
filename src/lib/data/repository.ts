@@ -3,6 +3,7 @@ import { loadSnapshot, saveSnapshot, resetSnapshot } from "./db";
 import { appendAudit } from "./audit";
 import { currentCan, getRole, type Permission } from "./auth";
 import { getActor, resolveMutationActor, isSessionExpired } from "./actor";
+import { isWorkspaceOwned } from "./workspace-scoping";
 
 type EntityKey = Exclude<EntityType, never>;
 
