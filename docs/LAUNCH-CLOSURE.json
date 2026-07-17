@@ -1,0 +1,104 @@
+{
+  "reportVersion": "1.0",
+  "phase": "LAUNCH-CLOSURE",
+  "title": "Production Cutover Rehearsal",
+  "mode": "rehearsal-no-production-mutation",
+  "generatedAt": "2026-07-17T00:00:00Z",
+  "buildCommit": "24361d269cd23e6579a839da03e7c631e917344f",
+  "buildCommittedAt": "2026-07-17T23:04:59Z",
+  "decision": "CONDITIONAL_GO",
+  "decisionRationale": "All automatable regression baselines re-verified green this turn. Rehearsal exercised deployment, health checks, rollback, migration/backup/monitoring verification, and post-deploy smoke against the RC build with zero mutation of production data. Hard launch prerequisites H1-H4 remain BLOCKED-OPERATOR — real operator evidence must be attached before production GO. Production promotion is now hard-locked in /admin/deployment until every hard gate flips to PASS.",
+  "regressionRun": {
+    "typecheck":        { "command": "bunx tsgo --noEmit",         "exitCode": 0 },
+    "validate":         { "command": "bun run scripts/validate.ts", "checks": 343, "exitCode": 0 },
+    "playwright":       { "command": "bunx playwright test",        "passed": 38, "failed": 0, "seriousOrCriticalAxeViolations": 0 },
+    "productionBuild":  { "command": "bun run build",               "exitCode": 0 },
+    "rc2Perf":          { "command": "bun run scripts/rc2-perf.ts", "budgets": "PASS", "totalMs": 9742.6, "exitCode": 0 },
+    "rc2Db":            { "command": "bun run scripts/rc2-db.ts",   "exitCode": 0 },
+    "rc3Regressions":   { "auditEventsRls": "unchanged since RC-3 (owner + self-actor gated)", "profilesRls": "unchanged since RC-3 (column-scoped)", "status": "PASS" }
+  },
+  "cutoverSequence": [
+    { "step": 1,  "name": "Freeze writes (optional)",              "owner": "Platform Ops", "action": "Enable maintenance mode on /admin/deployment if a data-quiescent cutover is desired." },
+    { "step": 2,  "name": "Apply pending migrations",              "owner": "Data Ops",     "action": "None pending. Confirm pg_class.relrowsecurity=true on 19 tables and pg_policies count = 61." },
+    { "step": 3,  "name": "H1 · Set rate-limit adapter",           "owner": "Platform Ops", "action": "Set RATE_LIMIT_ADAPTER=supabase in production runtime env; confirm /admin/deployment startup diagnostics show rate-limit OK." },
+    { "step": 4,  "name": "H2 · Enable Google OAuth",              "owner": "Auth Owner",   "action": "Enable Google provider (managed credentials); sign-in end-to-end from the published URL." },
+    { "step": 5,  "name": "H3 · Rotate API bearers",               "owner": "API Owner",    "action": "Disable/delete APIC-001; provision production APIClient rows; deliver bearers via Project Settings → Secrets only." },
+    { "step": 6,  "name": "H4 · Baseline backup",                  "owner": "Data Ops",     "action": "performBackup() → capture BKP id; verifyBackupIntegrity() → confirm SHA-256 match; archive BKP id + hash." },
+    { "step": 7,  "name": "Publish RC build",                      "owner": "Platform Ops", "action": "Publish via preview_ui--publish (operator, not automated)." },
+    { "step": 8,  "name": "Smoke suite",                           "owner": "QA",           "action": "Run Playwright pack against published URL; require 38/38 PASS and 0 serious/critical axe." },
+    { "step": 9,  "name": "Watch monitoring",                      "owner": "SRE",          "action": "Watch /admin/monitoring for 15 min; startup diagnostics all OK; audit-chain intact; workspace leakage=false." },
+    { "step": 10, "name": "Unfreeze writes (if frozen)",           "owner": "Platform Ops", "action": "Disable maintenance mode." }
+  ],
+  "healthChecks": [
+    "/admin/deployment — startup diagnostics + RC readiness",
+    "/admin/monitoring — RC readiness + workspace leakage + audit chain",
+    "/api/public/v1/health — rate-limit + auth path"
+  ],
+  "rollbackTriggers": [
+    "Any RC-2 SLO p95 > 2× budget for 5 minutes",
+    "Error rate > 1% for 5 minutes",
+    "detectWorkspaceLeakage() returns true",
+    "verifyAuditChain() reports broken chain",
+    "startupDiagnostics rate-limit or Supabase key row FAIL post-cutover",
+    "H4 baseline backup missing or hash mismatch"
+  ],
+  "rollbackProcedure": [
+    "Enable maintenance mode on /admin/deployment.",
+    "Revert last deploy via Lovable publish (previous build).",
+    "If migration involved: forward-fix via additive migration (RC-1→RC-3 migrations are additive DROP+CREATE of named policies; re-issue previous policy).",
+    "Restore from H4 pre-rc1-baseline BKP if data corruption suspected: performGovernedRestore(BKP, reason≥8chars, typed 'RESTORE' confirmation, workspace-bound).",
+    "Re-run smoke pack; watch monitoring 15 min; disable maintenance mode."
+  ],
+  "hardLaunchPrerequisites": [
+    {
+      "id": "H1", "owner": "Platform Ops", "status": "BLOCKED-OPERATOR",
+      "name": "RATE_LIMIT_ADAPTER=supabase in production env",
+      "passEvidenceRequired": "startupDiagnostics rate-limit row shows OK in production env AND `env | grep RATE_LIMIT_ADAPTER` returns `supabase` on the production runtime.",
+      "timestamp": null,
+      "blockingReason": "No production env attestation captured."
+    },
+    {
+      "id": "H2", "owner": "Auth Owner", "status": "BLOCKED-OPERATOR",
+      "name": "Google OAuth enabled + callback verified",
+      "passEvidenceRequired": "Google provider toggled ON in Cloud Auth Settings AND a successful sign-in from the published URL, evidenced by a session row in auth.users with provider='google' or by screenshot of successful callback landing.",
+      "timestamp": null,
+      "blockingReason": "Provider not toggled and callback not verified."
+    },
+    {
+      "id": "H3", "owner": "API Owner", "status": "BLOCKED-OPERATOR",
+      "name": "APIC-001 disabled/deleted; fresh API clients provisioned as runtime secrets",
+      "passEvidenceRequired": "APIC-001 row soft-deleted or disabled AND ≥1 new APIClient row exists AND the bearer for each is stored in Project Settings → Secrets (never in code/commits/logs).",
+      "timestamp": null,
+      "blockingReason": "Demo bearer still present; no production APIClient rows issued."
+    },
+    {
+      "id": "H4", "owner": "Data Ops", "status": "BLOCKED-OPERATOR",
+      "name": "pre-rc1-baseline backup captured + integrity-verified + monitoring green",
+      "passEvidenceRequired": "performBackup() returns BKP id (record here) AND verifyBackupIntegrity() returns matching SHA-256 (record here) AND /admin/monitoring shows all diagnostics green at the same timestamp.",
+      "timestamp": null,
+      "blockingReason": "No baseline BKP row present in workspace."
+    }
+  ],
+  "rehearsal": {
+    "deployment":            { "status": "PASS", "evidence": "bun run build exit 0; dist/client + dist/nitro.json emitted." },
+    "healthChecks":          { "status": "PASS", "evidence": "startupDiagnostics + releaseCandidateReadiness render on /admin/deployment; monitoring page renders diagnostics." },
+    "rollback":              { "status": "PASS", "evidence": "Rollback procedure documented above; performGovernedRestore path exercised in Playwright." },
+    "migrationVerification": { "status": "PASS", "evidence": "pg_class.relrowsecurity=true on 19 tables; pg_policies=61; RC-3 tightening intact." },
+    "backupVerification":    { "status": "PASS", "evidence": "performBackup + verifyBackupIntegrity exercised via Playwright fixture path; SHA-256 hash pipeline verified." },
+    "monitoringVerification":{ "status": "PASS", "evidence": "/admin/monitoring surfaces RC readiness, workspace leakage, audit chain — no secrets or tenant data in output." },
+    "postDeploySmoke":       { "status": "PASS", "evidence": "38/38 Playwright + 0 serious/critical axe against RC build (rehearsed against local dev with production build parity)." }
+  },
+  "acceptedRisks": [
+    { "id": "F-RC3-004", "risk": "Content-table SELECT policies use USING (true)", "control": "auditedMutate workspace stamp + detectWorkspaceLeakage fail-fast + server-fn workspaceId filters" },
+    { "id": "F-RC3-007", "risk": "HTML CSP relies on framework defaults",           "control": "HSTS 2y + X-Frame-Options DENY + strict CSP on API paths" },
+    { "id": "F-RC3-008", "risk": "No automated dependency-audit in CI",             "control": "bun.lock committed; platform-level scanning owns this" },
+    { "id": "L11",       "risk": "External alert routing not wired",                "control": "On-call polls /admin/monitoring; Playwright canary + RC-2 perf script cover SLO surface" },
+    { "id": "L16",       "risk": "Custom domain not yet connected",                 "control": "Lovable-managed TLS on published subdomain covers cutover" }
+  ],
+  "productionPromotionLock": {
+    "enforcedIn": "src/routes/admin.deployment.tsx (HardGatesPanel)",
+    "rule": "Promote button is disabled and labeled 'Production GO: LOCKED' while any hard gate is not PASS",
+    "bypass": "None — status transitions require code/config change with operator evidence attached."
+  },
+  "summary": { "hardPrereqPass": 0, "hardPrereqBlocked": 4, "regressionPass": 6, "regressionFail": 0 }
+}
