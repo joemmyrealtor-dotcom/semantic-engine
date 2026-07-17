@@ -17,7 +17,7 @@ import { useState } from "react";
 
 export function useAuthSessionBridge() {
   const [, force] = useState(0);
-  useEffect(() => subscribeActor(() => force(x => x + 1)), []);
+  useEffect(() => { const un = subscribeActor(() => force(x => x + 1)); return () => { un(); }; }, []);
 
   useEffect(() => {
     let mounted = true;
