@@ -156,15 +156,16 @@ function WebhooksPanel() {
         payload: { test: true },
       });
       const r = emitWebhook(s, endpoint, event);
-      if (r.skipped) {
-        toast.warning(`Skipped: ${r.skipped}`);
-        return;
-      }
+      if (r.skipped) { toast.warning(`Skipped: ${r.skipped}`); return; }
       if (!r.delivery) return;
-      const next = { ...s, domainEvents: [...s.domainEvents, event], webhookDeliveries: [...s.webhookDeliveries, r.delivery] };
-      await Repo.replaceAll(next);
-      toast.success(`Test delivery ${r.delivery.status}`);
-    } finally { setSending(false); }
+      const delivery = r.delivery;
+      await Repo.auditedTransaction(
+        { permission: "integration.manage", action: "webhook-send", entityType: "webhookEndpoint", entityId: endpoint.id, reason: "manual test" },
+        s0 => ({ ...s0, domainEvents: [...s0.domainEvents, event], webhookDeliveries: [...s0.webhookDeliveries, delivery] }),
+      );
+      toast.success(`Test delivery ${delivery.status}`);
+    } catch (e) { toast.error((e as Error).message); }
+    finally { setSending(false); }
   };
 
   const replay = async (deliveryId: string) => {
@@ -355,8 +356,10 @@ function ExportsPanel() {
   const run = async () => {
     try {
       const { job, pkg } = newExportJob(s, { kind: "publication", entityId, requestedBy: "operator" });
-      const next = { ...s, exportJobs: [...s.exportJobs, job], deliveryPackages: [...s.deliveryPackages, pkg] };
-      await Repo.replaceAll(next);
+      await Repo.auditedTransaction(
+        { permission: "integration.manage", action: "export-generate", entityType: "deliveryPackage", entityId: pkg.id, reason: `export ${job.id}` },
+        s0 => ({ ...s0, exportJobs: [...s0.exportJobs, job], deliveryPackages: [...s0.deliveryPackages, pkg] }),
+      );
       toast.success(`Export package ${pkg.id} generated`);
     } catch (e) {
       toast.error((e as Error).message);

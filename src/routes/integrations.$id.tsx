@@ -77,8 +77,13 @@ function IntegrationDetail() {
     });
     const { delivery } = emitWebhook(s, endpoint, evt);
     if (delivery) {
-      await Repo.replaceAll({ ...s, webhookDeliveries: [...s.webhookDeliveries, delivery] });
-      toast.success(`Replayed as ${delivery.id} (${delivery.status}).`);
+      try {
+        await Repo.auditedTransaction(
+          { permission: "integration.manage", action: "webhook-replay", entityType: "webhookDelivery", entityId: delivery.id, reason: `replay of ${failed.id}` },
+          s0 => ({ ...s0, webhookDeliveries: [...s0.webhookDeliveries, delivery] }),
+        );
+        toast.success(`Replayed as ${delivery.id} (${delivery.status}).`);
+      } catch (e) { toast.error((e as Error).message); }
     }
   };
 

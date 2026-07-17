@@ -10,7 +10,6 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   setActorFromSession, clearActor, subscribeActor, getActor,
 } from "@/lib/data/actor";
-import { appendAudit } from "@/lib/data/audit";
 import { Repo } from "@/lib/data/repository";
 import { getRole } from "@/lib/data/auth";
 import { useState } from "react";
@@ -46,31 +45,25 @@ export function useAuthSessionBridge() {
             expiresAt: session.expires_at ?? null,
           });
           // Best-effort login audit (safe — no tokens included).
-          const snap = Repo.snapshot();
-          if (snap && event === "SIGNED_IN") {
-            Repo.replaceAll({
-              ...snap,
-              auditEvents: appendAudit(snap.auditEvents ?? [], {
-                actor: session.user.id, actorRole: getRole(),
-                workspaceId: snap.activeWorkspaceId, action: "login",
-                entityType: "session", entityId: session.user.id,
-                reason: "Supabase session established",
-              }),
+          if (event === "SIGNED_IN") {
+            Repo.appendAuditEvent({
+              actor: session.user.id, actorRole: getRole(),
+              workspaceId: Repo.snapshot()?.activeWorkspaceId ?? "",
+              action: "login",
+              entityType: "session", entityId: session.user.id,
+              reason: "Supabase session established",
             }).catch(() => { /* best effort */ });
           }
         }
       } else if (event === "SIGNED_OUT") {
         const prev = getActor();
-        const snap = Repo.snapshot();
-        if (snap && prev.source === "session") {
-          Repo.replaceAll({
-            ...snap,
-            auditEvents: appendAudit(snap.auditEvents ?? [], {
-              actor: prev.userId, actorRole: prev.role,
-              workspaceId: snap.activeWorkspaceId, action: "logout",
-              entityType: "session", entityId: prev.userId,
-              reason: "Supabase sign-out",
-            }),
+        if (prev.source === "session") {
+          Repo.appendAuditEvent({
+            actor: prev.userId, actorRole: prev.role,
+            workspaceId: Repo.snapshot()?.activeWorkspaceId ?? "",
+            action: "logout",
+            entityType: "session", entityId: prev.userId,
+            reason: "Supabase sign-out",
           }).catch(() => { /* best effort */ });
         }
         clearActor("signed-out");

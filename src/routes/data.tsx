@@ -34,8 +34,11 @@ function DataPage() {
     const result = parseImport(text);
     setErrors(result.errors); setBroken(result.brokenReferences);
     if (!result.snapshot) return toast.error("Import failed. See errors below.");
-    await Repo.replaceAll(result.snapshot);
-    toast.success("Repository replaced from import.");
+    try {
+      await Repo.auditedReplaceAll(result.snapshot,
+        { permission: "content.create", action: "data-import", entityType: "dataSnapshot", entityId: "import", reason: "JSON import replace-all" });
+      toast.success("Repository replaced from import.");
+    } catch (e) { toast.error((e as Error).message); }
   };
 
   const doReset = async () => {

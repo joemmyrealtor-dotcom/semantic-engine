@@ -27,42 +27,65 @@ function OperationsDashboard() {
   if (!s) return <LoadingState />;
 
   const doApprove = async (runId: string, cpId: string) => {
-    const { nextSnapshot } = approveRun(s, runId, cpId, "current-user");
-    await Repo.replaceAll(nextSnapshot);
-    toast.success("Checkpoint approved. Resuming run…");
-    // resume: re-execute the recipe with same triggerEventId to short-circuit approved steps
-    const run = nextSnapshot.automationRuns.find(r => r.id === runId);
-    const recipe = nextSnapshot.automations.find(a => a.id === run?.recipeId);
-    if (run && recipe) {
-      const { nextSnapshot: s2 } = executeRecipe({
-        recipe, snapshot: nextSnapshot, entityIds: run.entityIds,
-        actor: "current-user", dryRun: run.dryRun,
-        triggerEventId: `${run.triggerEventId}-resume`,
-        ignoreConcurrency: true,
-      });
-      await Repo.replaceAll(s2);
-    }
+    try {
+      await Repo.auditedTransaction(
+        { permission: "automation.approve", action: "approve", entityType: "automationRun", entityId: runId, reason: `checkpoint ${cpId} approved` },
+        s0 => approveRun(s0, runId, cpId, "current-user").nextSnapshot,
+      );
+      toast.success("Checkpoint approved. Resuming run…");
+      const snap = Repo.snapshot();
+      const run = snap?.automationRuns.find(r => r.id === runId);
+      const recipe = snap?.automations.find(a => a.id === run?.recipeId);
+      if (snap && run && recipe) {
+        await Repo.auditedTransaction(
+          { permission: "automation.run", action: "automation-execute", entityType: "automationRun", entityId: runId, reason: "resume after approval" },
+          s0 => executeRecipe({
+            recipe, snapshot: s0, entityIds: run.entityIds,
+            actor: "current-user", dryRun: run.dryRun,
+            triggerEventId: `${run.triggerEventId}-resume`,
+            ignoreConcurrency: true,
+          }).nextSnapshot,
+        );
+      }
+    } catch (e) { toast.error((e as Error).message); }
   };
   const doReject = async (runId: string, cpId: string) => {
-    const { nextSnapshot } = rejectRun(s, runId, cpId, "current-user", "Rejected by operator.");
-    await Repo.replaceAll(nextSnapshot);
-    toast.warning("Checkpoint rejected. Run cancelled.");
+    try {
+      await Repo.auditedTransaction(
+        { permission: "automation.approve", action: "reject", entityType: "automationRun", entityId: runId, reason: `checkpoint ${cpId} rejected` },
+        s0 => rejectRun(s0, runId, cpId, "current-user", "Rejected by operator.").nextSnapshot,
+      );
+      toast.warning("Checkpoint rejected. Run cancelled.");
+    } catch (e) { toast.error((e as Error).message); }
   };
   const doCancel = async (runId: string) => {
-    const { nextSnapshot } = cancelRun(s, runId, "current-user");
-    await Repo.replaceAll(nextSnapshot);
-    toast.info("Run cancelled.");
+    try {
+      await Repo.auditedTransaction(
+        { permission: "automation.approve", action: "automation-cancel", entityType: "automationRun", entityId: runId, reason: "operator cancel" },
+        s0 => cancelRun(s0, runId, "current-user").nextSnapshot,
+      );
+      toast.info("Run cancelled.");
+    } catch (e) { toast.error((e as Error).message); }
   };
   const doRetry = async (runId: string) => {
     const run = s.automationRuns.find(r => r.id === runId);
     const recipe = run ? s.automations.find(a => a.id === run.recipeId) : null;
     if (!run || !recipe) return;
-    const { nextSnapshot, run: newRun } = executeRecipe({
-      recipe, snapshot: s, entityIds: run.entityIds, actor: "current-user",
-      dryRun: false, triggerEventId: `${run.triggerEventId}-retry-${Date.now()}`,
-    });
-    await Repo.replaceAll(nextSnapshot);
-    toast.success(`Retried as ${newRun.id} — ${newRun.status}.`);
+    try {
+      let newRunId = "";
+      await Repo.auditedTransaction(
+        { permission: "automation.run", action: "automation-execute", entityType: "automationRun", entityId: runId, reason: "retry" },
+        s0 => {
+          const { nextSnapshot, run: nr } = executeRecipe({
+            recipe, snapshot: s0, entityIds: run.entityIds, actor: "current-user",
+            dryRun: false, triggerEventId: `${run.triggerEventId}-retry-${Date.now()}`,
+          });
+          newRunId = nr.id;
+          return nextSnapshot;
+        },
+      );
+      toast.success(`Retried as ${newRunId}.`);
+    } catch (e) { toast.error((e as Error).message); }
   };
 
   return (

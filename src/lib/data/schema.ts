@@ -1133,12 +1133,17 @@ export type AuditAction =
   | "create" | "update" | "delete" | "stage-transition" | "release"
   | "approve" | "reject" | "restore" | "backup" | "role-change"
   | "feature-flag-change" | "maintenance-mode-change" | "api-key-rotate"
-  | "login" | "logout" | "permission-denied" | "workspace-switch";
+  | "login" | "logout" | "permission-denied" | "workspace-switch"
+  | "automation-execute" | "automation-cancel"
+  | "data-import" | "webhook-send" | "webhook-replay" | "export-generate"
+  | "integration-status";
 
 export const AUDIT_ACTIONS: AuditAction[] = [
   "create","update","delete","stage-transition","release","approve","reject",
   "restore","backup","role-change","feature-flag-change","maintenance-mode-change",
   "api-key-rotate","login","logout","permission-denied","workspace-switch",
+  "automation-execute","automation-cancel","data-import","webhook-send",
+  "webhook-replay","export-generate","integration-status",
 ];
 
 export interface AuditEvent {

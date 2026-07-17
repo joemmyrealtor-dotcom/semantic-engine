@@ -95,6 +95,92 @@ function stampWorkspace<T extends object>(item: T, workspaceId: string): T {
   return item;
 }
 
+/**
+ * W9 Blocker #3 — Shared authorization + audit envelope.
+ * Every governed write flows through this function. It resolves the real
+ * authenticated actor, fails closed on missing/expired session, checks the
+ * required permission, appends a hash-chained audit event, and only then
+ * commits the mutation. Deterministic tests inject actors via
+ * `injectTestActor()`.
+ */
+async function withAuditedWrite<T>(args: {
+  permission: Permission;
+  action: AuditAction;
+  entityType: string;
+  entityId: string;
+  before?: Record<string, unknown> | null;
+  after?: Record<string, unknown> | null;
+  reason?: string;
+  actor?: string;
+  correlationId?: string;
+  fn: (s: DataSnapshot) => DataSnapshot;
+}): Promise<T | void> {
+  const {
+    permission, action, entityType, entityId,
+    before = null, after = null, reason, actor, correlationId: cid, fn,
+  } = args;
+
+  const resolved = resolveMutationActor();
+  const actorId = actor ?? resolved?.userId ?? getActor().userId ?? "anonymous";
+  const actorRole = resolved?.role ?? getRole();
+  const correlationId = cid ?? resolved?.correlationId;
+
+  if (!resolved) {
+    await mutate(s => ({
+      ...s,
+      auditEvents: appendAudit(s.auditEvents ?? [], {
+        actor: "anonymous", actorRole: "ReadOnly",
+        workspaceId: s.activeWorkspaceId,
+        action: "permission-denied", entityType, entityId,
+        reason: `no authenticated session for ${action}`,
+        correlationId,
+      }),
+    }));
+    const err = new Error("Authentication required");
+    (err as Error & { code?: string }).code = "unauthenticated";
+    throw err;
+  }
+  if (resolved.source === "session" && isSessionExpired(resolved)) {
+    await mutate(s => ({
+      ...s,
+      auditEvents: appendAudit(s.auditEvents ?? [], {
+        actor: actorId, actorRole, workspaceId: s.activeWorkspaceId,
+        action: "permission-denied", entityType, entityId,
+        reason: `session expired for ${action}`, correlationId,
+      }),
+    }));
+    const err = new Error("Session expired");
+    (err as Error & { code?: string }).code = "session-expired";
+    throw err;
+  }
+  if (!currentCan(permission)) {
+    await mutate(s => ({
+      ...s,
+      auditEvents: appendAudit(s.auditEvents ?? [], {
+        actor: actorId, actorRole, workspaceId: s.activeWorkspaceId,
+        action: "permission-denied", entityType, entityId,
+        reason: `${permission} required for ${action}`, correlationId,
+      }),
+    }));
+    const err = new Error(`Permission denied: ${permission}`);
+    (err as Error & { code?: string }).code = "permission-denied";
+    throw err;
+  }
+
+  await mutate(s => {
+    // Atomic: if fn throws, snapshot is not persisted and no audit is written.
+    const next = fn(s);
+    return {
+      ...next,
+      auditEvents: appendAudit(next.auditEvents ?? [], {
+        actor: actorId, actorRole, workspaceId: next.activeWorkspaceId,
+        action, entityType, entityId,
+        reason: reason ?? "", before, after, correlationId,
+      }),
+    };
+  });
+}
+
 async function auditedMutate<K extends EntityKey>(
   key: K,
   action: Extract<AuditAction, "create" | "update" | "delete">,
@@ -104,73 +190,10 @@ async function auditedMutate<K extends EntityKey>(
   fn: (s: DataSnapshot) => DataSnapshot,
   ctx?: { actor?: string; reason?: string; correlationId?: string },
 ) {
-  const perm = permsFor(key)[action];
-
-  // W9 Blocker #1 — resolve the real authenticated actor. Production
-  // requires a Supabase session; DEV honours the demo role switch (stamped
-  // as source="dev-demo"); tests may inject explicit actors.
-  const resolved = resolveMutationActor();
-  const fabricatedFallback = !resolved;
-  const actorId = ctx?.actor ?? resolved?.userId ?? getActor().userId ?? "anonymous";
-  const actorRole = resolved?.role ?? getRole();
-  const correlationId = ctx?.correlationId ?? resolved?.correlationId;
-
-  // Fail closed: no session in production → deny mutation and record it.
-  if (fabricatedFallback) {
-    await mutate(s => ({
-      ...s,
-      auditEvents: appendAudit(s.auditEvents ?? [], {
-        actor: "anonymous", actorRole: "ReadOnly",
-        workspaceId: s.activeWorkspaceId,
-        action: "permission-denied", entityType: String(key), entityId,
-        reason: `no authenticated session for ${action}`,
-        correlationId,
-      }),
-    }));
-    const err = new Error("Authentication required");
-    (err as Error & { code?: string }).code = "unauthenticated";
-    throw err;
-  }
-
-  // Session expiry — treat as immediate denial.
-  if (resolved.source === "session" && isSessionExpired(resolved)) {
-    await mutate(s => ({
-      ...s,
-      auditEvents: appendAudit(s.auditEvents ?? [], {
-        actor: actorId, actorRole, workspaceId: s.activeWorkspaceId,
-        action: "permission-denied", entityType: String(key), entityId,
-        reason: `session expired for ${action}`, correlationId,
-      }),
-    }));
-    const err = new Error("Session expired");
-    (err as Error & { code?: string }).code = "session-expired";
-    throw err;
-  }
-
-  if (!currentCan(perm)) {
-    await mutate(s => ({
-      ...s,
-      auditEvents: appendAudit(s.auditEvents ?? [], {
-        actor: actorId, actorRole, workspaceId: s.activeWorkspaceId,
-        action: "permission-denied", entityType: String(key), entityId,
-        reason: `${perm} required for ${action}`, correlationId,
-      }),
-    }));
-    const err = new Error(`Permission denied: ${perm}`);
-    (err as Error & { code?: string }).code = "permission-denied";
-    throw err;
-  }
-  await mutate(s => {
-    const next = fn(s);
-    return {
-      ...next,
-      auditEvents: appendAudit(next.auditEvents ?? [], {
-        actor: actorId, actorRole, workspaceId: next.activeWorkspaceId,
-        action, entityType: String(key), entityId,
-        reason: ctx?.reason ?? "", before, after,
-        correlationId,
-      }),
-    };
+  await withAuditedWrite({
+    permission: permsFor(key)[action], action, entityType: String(key), entityId,
+    before, after, reason: ctx?.reason, actor: ctx?.actor,
+    correlationId: ctx?.correlationId, fn,
   });
 }
 
@@ -221,6 +244,62 @@ export const Repo = {
       s => ({ ...s, [key]: (s[key] as EntityMap[K][]).filter(x => (x as { id: string }).id !== id) }),
       ctx);
   },
+  /**
+   * W9 Blocker #3 — governed multi-entity transaction. Prefer this over
+   * `replaceAll` for any UI/service that must write more than one row.
+   * Fails closed on missing session, expired session, or missing permission.
+   */
+  async auditedTransaction(
+    ctx: {
+      permission: Permission;
+      action: AuditAction;
+      entityType: string;
+      entityId: string;
+      reason?: string;
+      actor?: string;
+      correlationId?: string;
+      before?: Record<string, unknown> | null;
+      after?: Record<string, unknown> | null;
+    },
+    fn: (s: DataSnapshot) => DataSnapshot,
+  ) {
+    await withAuditedWrite({ ...ctx, fn });
+  },
+  /**
+   * W9 Blocker #3 — governed full-snapshot replacement (imports/restores).
+   * Wraps `withAuditedWrite`; do not use for routine writes.
+   */
+  async auditedReplaceAll(
+    snapshot: DataSnapshot,
+    ctx: {
+      permission: Permission;
+      action: AuditAction;
+      entityType: string;
+      entityId: string;
+      reason?: string;
+      actor?: string;
+      correlationId?: string;
+    },
+  ) {
+    await withAuditedWrite({ ...ctx, fn: () => snapshot });
+  },
+  /**
+   * W9 Blocker #3 — safe audit-only append (never re-audits itself).
+   * Used by the session bridge for login/logout events; do NOT use for
+   * data mutation. This is the ONLY sanctioned path that bypasses the
+   * governed write envelope, because the payload is already an audit event.
+   * AUDIT_BYPASS_ALLOWED:audit-only-append
+   */
+  async appendAuditEvent(input: Parameters<typeof appendAudit>[1]) {
+    await mutate(s => ({ ...s, auditEvents: appendAudit(s.auditEvents ?? [], input) }));
+  },
+  /**
+   * AUDIT_BYPASS_ALLOWED:bootstrap-only
+   * Direct snapshot swap. Reserved for repository/database bootstrap, the
+   * reset utility, and internal migrations. Every route/component must use
+   * `auditedTransaction` or `auditedReplaceAll` instead — the static scan
+   * in `service.validate.ts` enforces this.
+   */
   async replaceAll(snapshot: DataSnapshot) {
     cache = snapshot;
     await saveSnapshot(snapshot);

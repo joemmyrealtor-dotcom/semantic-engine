@@ -6,8 +6,7 @@ import { useSnapshot, Repo } from "@/lib/use-snapshot";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { startupDiagnostics, releaseCandidateReadiness, maintenanceGate } from "@/lib/data/deployment";
-import { appendAudit } from "@/lib/data/audit";
-import { getRole, currentCan, setRole, permissionsFor } from "@/lib/data/auth";
+import { getRole, setRole, permissionsFor } from "@/lib/data/auth";
 import { ALL_ROLES, type Role } from "@/lib/data/schema";
 import { RequirePermission } from "@/components/require-permission";
 import { isDevRuntime, getActor } from "@/lib/data/actor";
@@ -30,21 +29,30 @@ function DeploymentPage() {
   if (!s || !rc) return <LoadingState />;
 
   const toggleMaintenance = async () => {
-    if (!currentCan("maintenance.manage")) { toast.error("Permission denied"); return; }
     const next = !s.maintenanceMode.enabled;
     const who = getActor();
-    const mm = { ...s.maintenanceMode, enabled: next, reason: next ? "Manual toggle" : "", since: next ? new Date().toISOString() : null, by: who.userId };
-    const audit = appendAudit(s.auditEvents, { actor: who.userId, actorRole: getRole(), workspaceId: s.activeWorkspaceId, action: "maintenance-mode-change", entityType: "system", entityId: "maintenance", reason: next ? "enabled" : "disabled", before: { enabled: s.maintenanceMode.enabled }, after: { enabled: next }, correlationId: who.correlationId });
-    await Repo.replaceAll({ ...s, maintenanceMode: mm, auditEvents: audit });
-    toast.success(next ? "Maintenance mode ON" : "Maintenance mode OFF");
+    try {
+      await Repo.auditedTransaction(
+        {
+          permission: "maintenance.manage", action: "maintenance-mode-change",
+          entityType: "system", entityId: "maintenance",
+          reason: next ? "enabled" : "disabled",
+          before: { enabled: s.maintenanceMode.enabled },
+          after: { enabled: next },
+        },
+        s0 => ({ ...s0, maintenanceMode: { ...s0.maintenanceMode, enabled: next, reason: next ? "Manual toggle" : "", since: next ? new Date().toISOString() : null, by: who.userId } }),
+      );
+      toast.success(next ? "Maintenance mode ON" : "Maintenance mode OFF");
+    } catch (e) { toast.error((e as Error).message); }
   };
 
   const toggleFlag = async (key: string) => {
-    if (!currentCan("featureflag.manage")) { toast.error("Permission denied"); return; }
-    const flags = s.featureFlags.map(f => f.key === key ? { ...f, enabled: !f.enabled, updatedAt: new Date().toISOString() } : f);
-    const who = getActor();
-    const audit = appendAudit(s.auditEvents, { actor: who.userId, actorRole: getRole(), workspaceId: s.activeWorkspaceId, action: "feature-flag-change", entityType: "featureFlag", entityId: key, reason: "toggle", correlationId: who.correlationId });
-    await Repo.replaceAll({ ...s, featureFlags: flags, auditEvents: audit });
+    try {
+      await Repo.auditedTransaction(
+        { permission: "featureflag.manage", action: "feature-flag-change", entityType: "featureFlag", entityId: key, reason: "toggle" },
+        s0 => ({ ...s0, featureFlags: s0.featureFlags.map(f => f.key === key ? { ...f, enabled: !f.enabled, updatedAt: new Date().toISOString() } : f) }),
+      );
+    } catch (e) { toast.error((e as Error).message); }
   };
 
   const rcTone = rc.state === "ready" ? "evergreen" : rc.state === "conditional" ? "gold" : "warn";

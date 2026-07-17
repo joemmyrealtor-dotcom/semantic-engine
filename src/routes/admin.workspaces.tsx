@@ -6,8 +6,6 @@ import { useSnapshot, Repo } from "@/lib/use-snapshot";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { workspaceMetrics, exportWorkspace } from "@/lib/data/workspaces";
-import { appendAudit } from "@/lib/data/audit";
-import { getRole, currentCan } from "@/lib/data/auth";
 
 export const Route = createFileRoute("/admin/workspaces")({
   head: () => ({ meta: [{ title: "Workspaces — Legacy Platform" }] }),
@@ -20,10 +18,13 @@ function WorkspacesPage() {
   if (!s || !active) return <LoadingState />;
 
   const switchTo = async (id: string) => {
-    if (!currentCan("workspace.switch")) { toast.error("Permission denied"); return; }
-    const next = { ...s, activeWorkspaceId: id, auditEvents: appendAudit(s.auditEvents, { actor: "current-user", actorRole: getRole(), workspaceId: id, action: "workspace-switch", entityType: "workspace", entityId: id, reason: `switched from ${s.activeWorkspaceId}` }) };
-    await Repo.replaceAll(next);
-    toast.success(`Switched to ${id}`);
+    try {
+      await Repo.auditedTransaction(
+        { permission: "workspace.switch", action: "workspace-switch", entityType: "workspace", entityId: id, reason: `switched from ${s.activeWorkspaceId}` },
+        s0 => ({ ...s0, activeWorkspaceId: id }),
+      );
+      toast.success(`Switched to ${id}`);
+    } catch (e) { toast.error((e as Error).message); }
   };
 
   const downloadExport = (id: string) => {
