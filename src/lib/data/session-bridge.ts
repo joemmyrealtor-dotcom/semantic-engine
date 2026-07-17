@@ -10,7 +10,6 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   setActorFromSession, clearActor, subscribeActor, getActor,
 } from "@/lib/data/actor";
-import { appendAudit } from "@/lib/data/audit";
 import { Repo } from "@/lib/data/repository";
 import { getRole } from "@/lib/data/auth";
 import { useState } from "react";
