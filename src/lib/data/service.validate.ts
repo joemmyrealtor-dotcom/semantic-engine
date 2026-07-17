@@ -557,7 +557,7 @@ export async function runValidations(): Promise<number> {
   // W9 #5 — Workspace isolation & cross-leakage
   // ============================================================
   const scopingMod = await import("./workspace-scoping");
-  const wsSeed = scopingMod.backfillWorkspaceIds({ ...seed, auditEvents: a2 });
+  const wsSeed = scopingMod.backfillWorkspaceIds({ ...seed, auditEvents: a2, activeWorkspaceId: seed.activeWorkspaceId ?? "WS-001" });
   const crossReport = wsMod.detectWorkspaceLeakage(wsSeed);
   check("leakage report lists per-kind coverage + unscoped entities",
     Array.isArray(crossReport.perKindCoverage) && Array.isArray(crossReport.unscopedEntities));
