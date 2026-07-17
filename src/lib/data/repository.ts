@@ -244,6 +244,62 @@ export const Repo = {
       s => ({ ...s, [key]: (s[key] as EntityMap[K][]).filter(x => (x as { id: string }).id !== id) }),
       ctx);
   },
+  /**
+   * W9 Blocker #3 — governed multi-entity transaction. Prefer this over
+   * `replaceAll` for any UI/service that must write more than one row.
+   * Fails closed on missing session, expired session, or missing permission.
+   */
+  async auditedTransaction(
+    ctx: {
+      permission: Permission;
+      action: AuditAction;
+      entityType: string;
+      entityId: string;
+      reason?: string;
+      actor?: string;
+      correlationId?: string;
+      before?: Record<string, unknown> | null;
+      after?: Record<string, unknown> | null;
+    },
+    fn: (s: DataSnapshot) => DataSnapshot,
+  ) {
+    await withAuditedWrite({ ...ctx, fn });
+  },
+  /**
+   * W9 Blocker #3 — governed full-snapshot replacement (imports/restores).
+   * Wraps `withAuditedWrite`; do not use for routine writes.
+   */
+  async auditedReplaceAll(
+    snapshot: DataSnapshot,
+    ctx: {
+      permission: Permission;
+      action: AuditAction;
+      entityType: string;
+      entityId: string;
+      reason?: string;
+      actor?: string;
+      correlationId?: string;
+    },
+  ) {
+    await withAuditedWrite({ ...ctx, fn: () => snapshot });
+  },
+  /**
+   * W9 Blocker #3 — safe audit-only append (never re-audits itself).
+   * Used by the session bridge for login/logout events; do NOT use for
+   * data mutation. This is the ONLY sanctioned path that bypasses the
+   * governed write envelope, because the payload is already an audit event.
+   * AUDIT_BYPASS_ALLOWED:audit-only-append
+   */
+  async appendAuditEvent(input: Parameters<typeof appendAudit>[1]) {
+    await mutate(s => ({ ...s, auditEvents: appendAudit(s.auditEvents ?? [], input) }));
+  },
+  /**
+   * AUDIT_BYPASS_ALLOWED:bootstrap-only
+   * Direct snapshot swap. Reserved for repository/database bootstrap, the
+   * reset utility, and internal migrations. Every route/component must use
+   * `auditedTransaction` or `auditedReplaceAll` instead — the static scan
+   * in `service.validate.ts` enforces this.
+   */
   async replaceAll(snapshot: DataSnapshot) {
     cache = snapshot;
     await saveSnapshot(snapshot);
