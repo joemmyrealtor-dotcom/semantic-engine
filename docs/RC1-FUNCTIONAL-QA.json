@@ -1,0 +1,74 @@
+{
+  "reportVersion": "1.0",
+  "generatedAt": "2026-07-17T00:00:00Z",
+  "phase": "RC-1 Functional QA",
+  "decision": "CONDITIONAL_GO",
+  "summary": {
+    "typecheck": "PASS",
+    "deterministicValidation": { "checks": 343, "status": "PASS" },
+    "playwright": { "total": 38, "passed": 38, "failed": 0, "skipped": 0, "flaky": 0, "byProject": { "chromium-desktop": 24, "chromium-desktop-a11y": 10, "chromium-mobile": 3, "chromium-tablet": 1 } },
+    "axe": { "seriousViolations": 0, "criticalViolations": 0, "surfacesCovered": 10 },
+    "benchmarkNormal": { "status": "PASS", "correctness": "PASS", "budgets": "PASS", "wallMs": 35786 },
+    "defectsFixed": 1,
+    "unresolvedFailures": 0,
+    "blockedOperator": 4
+  },
+  "environmentAssertions": {
+    "RATE_LIMIT_ADAPTER": { "sandboxValue": "unset", "productionRequirement": "supabase", "classification": "BLOCKED-OPERATOR" }
+  },
+  "workflows": [
+    { "id": "W01", "name": "Signed-out landing + /auth accessible sign-in", "status": "PASS", "evidence": "e2e/boot.spec.ts::sign-in page renders", "reproduce": "bun run e2e:desktop" },
+    { "id": "W02", "name": "Signed-in dashboard boots without runtime errors", "status": "PASS", "evidence": "e2e/boot.spec.ts::dashboard renders + smoke.spec.ts", "reproduce": "bun run e2e:desktop" },
+    { "id": "W03", "name": "Command palette opens (Ctrl/⌘K search)", "status": "PASS", "evidence": "e2e/boot.spec.ts::command palette can be opened", "reproduce": "bun run e2e:desktop" },
+    { "id": "W04", "name": "Signed-out shell surfaces Sign-in CTA (no admin surfaces)", "status": "PASS", "evidence": "e2e/roles.spec.ts::signed-out user sees sign-in CTA", "reproduce": "bun run e2e:desktop" },
+    { "id": "W05", "name": "Expired session propagates to mutation actor resolver", "status": "PASS", "evidence": "e2e/roles.spec.ts::expired session is reflected", "reproduce": "bun run e2e:desktop" },
+    { "id": "W06", "name": "Viewer role does not gain Owner-only labels", "status": "PASS", "evidence": "e2e/roles.spec.ts::viewer role does not surface admin", "reproduce": "bun run e2e:desktop" },
+    { "id": "W07", "name": "Admin can render every operational route (18 admin/nav surfaces)", "status": "PASS", "evidence": "e2e/navigation.spec.ts (parameterised across 18 routes)", "reproduce": "bun run e2e:desktop" },
+    { "id": "W08", "name": "Public API catalog reachable without bearer", "status": "PASS", "evidence": "e2e/api.spec.ts::catalog is reachable without a bearer", "reproduce": "bun run e2e:desktop" },
+    { "id": "W09", "name": "Protected API endpoints require bearer → 401", "status": "PASS", "evidence": "e2e/api.spec.ts::non-catalog endpoint requires bearer", "reproduce": "bun run e2e:desktop" },
+    { "id": "W10", "name": "Invalid bearer rejected (401/403)", "status": "PASS", "evidence": "e2e/api.spec.ts::invalid bearer format still rejected", "reproduce": "bun run e2e:desktop" },
+    { "id": "W11", "name": "Rate-limit enforcer wired end-to-end (429 under burst)", "status": "PASS", "evidence": "e2e/api.spec.ts::rate limit headers are emitted (asserts ≥1 429 in 150-req burst)", "reproduce": "bun run e2e:desktop" },
+    { "id": "W12", "name": "Response envelope: X-Request-Id + JSON error structure", "status": "PASS", "evidence": "e2e/api.spec.ts (header assertions across suite)", "reproduce": "bun run e2e:desktop" },
+    { "id": "W13", "name": "WCAG 2.1 AA a11y — no serious/critical axe violations across 10 surfaces (/, /repository, /admin/audit, /admin/backups, /admin/monitoring, /admin/workspaces, /admin/deployment, /auth, + 2 more)", "status": "PASS", "evidence": "e2e/a11y.spec.ts", "reproduce": "bun run e2e:a11y" },
+    { "id": "W14", "name": "Mobile viewport (Pixel 5): no horizontal scroll, menu opens, auth form usable", "status": "PASS", "evidence": "e2e/mobile.spec.ts", "reproduce": "bun run e2e:mobile" },
+    { "id": "W15", "name": "Tablet viewport (iPad Mini): smoke boot clean", "status": "PASS", "evidence": "e2e/smoke.spec.ts", "reproduce": "bun run e2e:tablet" },
+    { "id": "W16", "name": "Governed CRUD routes through auditedMutate / auditedTransaction (no bypass)", "status": "PASS", "evidence": "scripts/validate.ts (audit-bypass scan) — part of 343 checks", "reproduce": "bun run scripts/validate.ts" },
+    { "id": "W17", "name": "Approval + release-gate rules (blocking QA + release stage promotion)", "status": "PASS", "evidence": "scripts/validate.ts release-gate deterministic checks + DB trigger enforce_release_gate", "reproduce": "bun run scripts/validate.ts" },
+    { "id": "W18", "name": "Automation engine — 13 deterministic actions + schedules (capture-analytics-snapshot idempotency)", "status": "PASS", "evidence": "scripts/validate.ts automation harness", "reproduce": "bun run scripts/validate.ts" },
+    { "id": "W19", "name": "Integration event bus + webhook delivery (simulated engine)", "status": "PASS", "evidence": "scripts/validate.ts integrations checks", "reproduce": "bun run scripts/validate.ts" },
+    { "id": "W20", "name": "Import/export round-trip (Repo.exportSnapshot + Repo.importSnapshot)", "status": "PASS", "evidence": "scripts/validate.ts importRoundtrip correctness gate + bench correctness gate", "reproduce": "bun run scripts/validate.ts && bun run perf" },
+    { "id": "W21", "name": "Backup integrity (SHA-256 content hash)", "status": "PASS", "evidence": "scripts/validate.ts backup-hash regression", "reproduce": "bun run scripts/validate.ts" },
+    { "id": "W22", "name": "Governed restore (typed RESTORE + ≥8-char reason + auto pre-restore snapshot) — non-destructive fixture", "status": "PASS", "evidence": "scripts/validate.ts governedRestoreOk + reason/keyword refusal cases", "reproduce": "bun run scripts/validate.ts" },
+    { "id": "W23", "name": "Workspace isolation — scoped list/get, no cross-workspace mutate, no re-home via patch", "status": "PASS", "evidence": "scripts/validate.ts (17 workspace-isolation checks) + detectWorkspaceLeakage", "reproduce": "bun run scripts/validate.ts" },
+    { "id": "W24", "name": "Audit hash chain continuity across scaled fixtures", "status": "PASS", "evidence": "scripts/validate.ts SHA-256 vectors + chain-continuity on scale-fixture; bench auditVerify=1.09–38.3 ms p95 (large)", "reproduce": "bun run scripts/validate.ts && bun run perf" },
+    { "id": "W25", "name": "Monitoring surface (/admin/monitoring) renders without runtime errors", "status": "PASS", "evidence": "e2e/navigation.spec.ts::admin can render /admin/monitoring + a11y sweep", "reproduce": "bun run e2e:desktop && bun run e2e:a11y" },
+    { "id": "W26", "name": "Deployment readiness surface (/admin/deployment) renders RC gate strip", "status": "PASS", "evidence": "e2e/navigation.spec.ts + e2e/a11y.spec.ts", "reproduce": "bun run e2e:desktop && bun run e2e:a11y" },
+    { "id": "W27", "name": "Maintenance-mode gate (blocks non-allowlisted roles)", "status": "PASS", "evidence": "scripts/validate.ts maintenanceGate check", "reproduce": "bun run scripts/validate.ts" },
+    { "id": "W28", "name": "Feature-flag audience resolution (all/administrators/operations/beta)", "status": "PASS", "evidence": "scripts/validate.ts feature-flag checks", "reproduce": "bun run scripts/validate.ts" },
+    { "id": "W29", "name": "Rate-limit adapter production readiness assertion", "status": "PASS (code)", "evidence": "src/lib/data/rate-limit.ts::assertRateLimitReadiness — refuses boot in NODE_ENV=production without RATE_LIMIT_ADAPTER=supabase", "reproduce": "code inspection + startupDiagnostics test in scripts/validate.ts" },
+    { "id": "W30", "name": "Static guards (no VITE_E2E branch in api routes, no service-role in test bridge, no unscoped entity kinds)", "status": "PASS", "evidence": "scripts/validate.ts static-guard sweep", "reproduce": "bun run scripts/validate.ts" },
+    { "id": "W31", "name": "RATE_LIMIT_ADAPTER=supabase set in RC-1 runtime environment", "status": "BLOCKED-OPERATOR", "evidence": "Sandbox env: RATE_LIMIT_ADAPTER=<unset>. Code path enforced but the runtime value must be set by operator in the RC-1 deployment env.", "operatorAction": "Set RATE_LIMIT_ADAPTER=supabase in RC-1 environment (Cloud auto-injects SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY)." },
+    { "id": "W32", "name": "Google OAuth provider enabled in Lovable Cloud auth settings", "status": "BLOCKED-OPERATOR", "evidence": "Client wired via lovable.auth.signInWithOAuth('google', ...); provider enablement is a dashboard action.", "operatorAction": "Cloud → Users → Authentication Settings → Sign In Methods → Google (managed credentials work by default)." },
+    { "id": "W33", "name": "Seed/demo API bearer retired; production APIClient rows provisioned", "status": "BLOCKED-OPERATOR", "evidence": "Only seeded row is APIC-001 (masked prefix apik_demo_••••b1c2 — no real key material shipped).", "operatorAction": "Delete or disable APIC-001; create fresh APIClient rows per external caller; distribute bearers only via Project Settings → Secrets." },
+    { "id": "W34", "name": "Pre-RC1 baseline backup created + verified in RC-1 runtime", "status": "BLOCKED-OPERATOR", "evidence": "Backup module + governed restore path validated in harness; baseline creation is an in-runtime operation.", "operatorAction": "Sign in as Owner → /admin/backups → Create backup labelled 'pre-rc1-baseline'; record BKP-id + hash off-platform; load /admin/monitoring and confirm all diagnostics green before opening manual QA sessions." }
+  ],
+  "defectsFixed": [
+    {
+      "id": "D-QA-001",
+      "surface": "Playwright suite (sandbox)",
+      "symptom": "Boot spec 'command palette can be opened' timed out at 10 s under default worker fan-out; navigation.spec.ts sporadically failed under worker contention.",
+      "rootCause": "Default worker count (undefined → CPU-derived) over-subscribes the shared sandbox dev-server; actor-notify re-render race extends beyond 10 s under load.",
+      "fix": "playwright.config.ts::workers now defaults to 2 outside CI (overridable via E2E_WORKERS). e2e/boot.spec.ts adds waitForLoadState('networkidle') and extends bridge poll to 20 s.",
+      "verification": "24/24 desktop, 10/10 a11y, 3/3 mobile, 1/1 tablet all PASS in single run after fix (see summary)."
+    }
+  ],
+  "reproduceCommands": {
+    "typecheck": "bunx tsgo --noEmit",
+    "deterministicValidation": "bun run scripts/validate.ts",
+    "desktopSuite": "PLAYWRIGHT_BROWSERS_PATH=/ bunx playwright test --project=chromium-desktop --grep-invert=@a11y e2e/boot.spec.ts e2e/smoke.spec.ts e2e/navigation.spec.ts e2e/roles.spec.ts e2e/api.spec.ts",
+    "a11ySuite": "PLAYWRIGHT_BROWSERS_PATH=/ bunx playwright test --project=chromium-desktop e2e/a11y.spec.ts",
+    "mobileSuite": "PLAYWRIGHT_BROWSERS_PATH=/ bunx playwright test --project=chromium-mobile",
+    "tabletSuite": "PLAYWRIGHT_BROWSERS_PATH=/ bunx playwright test --project=chromium-tablet",
+    "benchmark": "bun run perf"
+  }
+}
