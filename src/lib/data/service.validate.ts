@@ -1040,8 +1040,8 @@ export async function runValidations(): Promise<number> {
   check("readiness: invalid adapter rejected", !rBad.ok);
 
   // 4i. Distributed-store outage: fail-open for reads, fail-closed for mutations.
-  class BrokenStore implements InstanceType<typeof rlMod.SupabaseRateLimitStore> {
-    readonly kind = "supabase" as const;
+  const broken = {
+    kind: "supabase" as const,
     async consume(_k: string, p: { windowSeconds: number; maxRequests: number; failClosed: boolean }) {
       return {
         allowed: !p.failClosed, limit: p.maxRequests,
@@ -1050,12 +1050,9 @@ export async function runValidations(): Promise<number> {
         resetAt: new Date(Date.now() + p.windowSeconds * 1000).toISOString(),
         adapter: "supabase" as const, storeHealthy: false, latencyMs: 0,
       };
-    }
-    async healthCheck() { return { ok: false, detail: "simulated outage" }; }
-    get healthy() { return false; }
-    get lastErrorMessage() { return "simulated"; }
-  }
-  const broken = new BrokenStore() as unknown as InstanceType<typeof rlMod.SupabaseRateLimitStore>;
+    },
+    async healthCheck() { return { ok: false, detail: "simulated outage" }; },
+  };
   const outageRead = await rlMod.enforceRateLimit(broken, "registry.list", {
     actorKind: "api-client", actorId: "APIC-X", endpointId: "registry.list", ipHash: "ip",
   });
