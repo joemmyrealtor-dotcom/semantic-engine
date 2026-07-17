@@ -1228,9 +1228,68 @@ export async function runValidations(): Promise<number> {
   const dbSrc = fs.readFileSync(path.resolve(cwd, "src/lib/data/db.ts"), "utf8");
   check("scale-fixture: not imported by db bootstrap", !/scale-fixture/.test(dbSrc));
 
+  // ============================================================
+  // Launch-Closure — LaunchGateEvidence integrity (append-only, versioned).
+  // ============================================================
+  const gates = await import("./launch-gates");
+  const emptySnap = seedMod.buildSeedSnapshot();
+  check("launch-gates: seed initializes empty evidence array", Array.isArray(emptySnap.launchGateEvidence) && emptySnap.launchGateEvidence.length === 0);
+  const env0: Record<string, string | undefined> = { NODE_ENV: "development" };
+  const wsId = emptySnap.activeWorkspaceId;
+  const st0 = gates.computeGateState(emptySnap, env0, "H1", wsId);
+  check("launch-gates: uninitialized gate defaults to BLOCKED-OPERATOR", st0.status === "BLOCKED-OPERATOR");
+  // Attest builds a monotonic row.
+  const attest1 = gates.buildAttestation(emptySnap, {
+    gateId: "H1", workspaceId: wsId, status: "BLOCKED-OPERATOR",
+    reason: "operator pending adapter switch", actor: "USR-001", actorRole: "Owner",
+    correlationId: "cor-1", env: env0,
+  });
+  check("launch-gates: first attestation has version=1", attest1.row.version === 1);
+  check("launch-gates: first attestation supersedes nothing", attest1.previous === null);
+  const snap1 = gates.applyAttestation(emptySnap, attest1.row, attest1.previous);
+  const attest2 = gates.buildAttestation(snap1, {
+    gateId: "H1", workspaceId: wsId, status: "BLOCKED-OPERATOR",
+    reason: "still awaiting supabase adapter env", actor: "USR-001", actorRole: "Owner",
+    correlationId: "cor-2", env: env0,
+  });
+  check("launch-gates: second attestation increments version", attest2.row.version === 2);
+  check("launch-gates: second attestation supersedes v1", attest2.previous?.id === attest1.row.id);
+  const snap2 = gates.applyAttestation(snap1, attest2.row, attest2.previous);
+  check("launch-gates: prior row marked supersededBy new row",
+    snap2.launchGateEvidence.find(e => e.id === attest1.row.id)?.supersededBy === attest2.row.id);
+  // Short reason rejected.
+  let shortRejected = false;
+  try { gates.buildAttestation(snap2, { gateId: "H2", workspaceId: wsId, status: "PASS", reason: "too short", actor: "USR-001", actorRole: "Owner", correlationId: "c", env: env0 }); }
+  catch { shortRejected = true; }
+  check("launch-gates: reason under 12 chars rejected", shortRejected);
+  // Cannot attest PASS while verifier fails.
+  let passBlocked = false;
+  try { gates.buildAttestation(snap2, { gateId: "H1", workspaceId: wsId, status: "PASS", reason: "attempting premature pass", actor: "USR-001", actorRole: "Owner", correlationId: "c", env: env0 }); }
+  catch { passBlocked = true; }
+  check("launch-gates: PASS rejected when verifier fails", passBlocked);
+  // Role gating.
+  let roleBlocked = false;
+  try { gates.buildAttestation(snap2, { gateId: "H1", workspaceId: wsId, status: "BLOCKED-OPERATOR", reason: "unauthorized attempt example", actor: "USR-XYZ", actorRole: "Reviewer", correlationId: "c", env: env0 }); }
+  catch { roleBlocked = true; }
+  check("launch-gates: role without permission cannot attest", roleBlocked);
+  // Staleness detection when fingerprint changes.
+  const envA: Record<string, string | undefined> = { NODE_ENV: "development", RATE_LIMIT_ADAPTER: "memory" };
+  const envB: Record<string, string | undefined> = { NODE_ENV: "production", RATE_LIMIT_ADAPTER: "supabase", SUPABASE_URL: "u", SUPABASE_SERVICE_ROLE_KEY: "k" };
+  const okAttest = gates.buildAttestation(emptySnap, { gateId: "H1", workspaceId: wsId, status: "PASS", reason: "adapter verified for launch", actor: "USR-001", actorRole: "Owner", correlationId: "c", env: envB });
+  const snapOk = gates.applyAttestation(emptySnap, okAttest.row, okAttest.previous);
+  const stStale = gates.computeGateState(snapOk, envA, "H1", wsId);
+  check("launch-gates: fingerprint change flips status to STALE", stStale.status === "STALE" && stStale.stale);
+  // Integrity harness.
+  const issues = gates.evidenceIntegrityIssues(snap2);
+  check("launch-gates: integrity issues empty for well-formed ledger", issues.length === 0);
+  // Cutover readiness locks when any gate not PASS.
+  const readiness = gates.computeCutoverReadiness(snap2, env0, wsId);
+  check("launch-gates: cutover locked when any hard gate not PASS", !readiness.ready && readiness.blockingGateIds.length > 0);
+
   console.log(`OK ${count} checks`);
   return count;
 }
+
 
 // Local alias to keep the check block readable without a wider import shuffle.
 type PolicyKey_ =
