@@ -1,0 +1,56 @@
+{
+  "reportVersion": "1.0",
+  "phase": "RC-4",
+  "title": "Production Launch Readiness",
+  "generatedAt": "2026-07-17T00:00:00Z",
+  "buildCommit": "bef2a30d82b30b737845a85e00ba6d8640d37263",
+  "buildCommittedAt": "2026-07-17T22:57:14Z",
+  "decision": "CONDITIONAL_GO",
+  "decisionRationale": "All automatable regression baselines are green (typecheck, 343 validations, 38/38 Playwright + 0 serious/critical axe, production build, RC-2 perf budgets, RC-2 DB analysis). All critical/high security findings from RC-3 are fixed. The four operator-only launch prerequisites (Google OAuth, distributed rate-limit adapter env, API bearer rotation, pre-launch baseline backup) remain BLOCKED-OPERATOR by design. GA readiness is NOT claimed.",
+  "hardLaunchPrerequisites": [
+    { "id": "H1", "name": "RATE_LIMIT_ADAPTER=supabase in production env",           "status": "BLOCKED-OPERATOR", "owner": "Platform Ops",   "evidence": "src/lib/data/rate-limit.ts::assertRateLimitReadiness fail-closes in production without this env; verified in startupDiagnostics." },
+    { "id": "H2", "name": "Google OAuth provider enabled in Cloud",                   "status": "BLOCKED-OPERATOR", "owner": "Auth Owner",     "evidence": "Not enabled via configure_social_auth in this environment; sign-in path requires provider before first user OAuth." },
+    { "id": "H3", "name": "APIC-001 demo bearer retired; production APIClient rows created", "status": "BLOCKED-OPERATOR", "owner": "API Owner",      "evidence": "resolveClient() in src/routes/api/public/v1/$.ts only trusts APIC-001 when DEMO_API_KEY env matches (unset in prod)." },
+    { "id": "H4", "name": "pre-launch-baseline backup created + verified",            "status": "BLOCKED-OPERATOR", "owner": "Data Ops",       "evidence": "performBackup + verifyBackupIntegrity in src/lib/data/backups.ts; no baseline row in workspace yet." }
+  ],
+  "launchGates": [
+    { "id": "L1",  "area": "1-release-manifest",   "name": "Immutable build/commit identity in artifact",                                    "status": "PASS",                     "owner": "Build",       "evidence": "commit bef2a30d, artifact dist/client + dist/server (nitro.json)." },
+    { "id": "L2",  "area": "2-env-config",         "name": "Env inventory + fail-fast startup checks",                                       "status": "PASS",                     "owner": "Platform Ops","evidence": "startupDiagnostics() covers Supabase URL/publishable key, rate-limit adapter, workspace leakage, audit-chain integrity." },
+    { "id": "L3",  "area": "3-migrations",         "name": "Ordered, idempotent migrations with additive semantics",                        "status": "PASS",                     "owner": "Data Ops",    "evidence": "7 migrations under supabase/migrations/ apply in filename order; RC-3 tightening (20260717225352) is additive DROP+CREATE of RLS policies; rollback = revert policy to prior definitions." },
+    { "id": "L4",  "area": "3-migrations",         "name": "Post-apply schema/policy verification",                                          "status": "PASS",                     "owner": "Data Ops",    "evidence": "19 tables RLS-enabled; 61 policies present; audit_events + profiles RLS matches RC-3 remediation shape." },
+    { "id": "L5",  "area": "4-deployment-runbook", "name": "Health checks + smoke suite defined",                                            "status": "PASS",                     "owner": "Platform Ops","evidence": "Playwright suite 38/38 covers login, RBAC, mutation, release, admin, API. Serves as smoke pack." },
+    { "id": "L6",  "area": "4-deployment-runbook", "name": "Rollback triggers + escalation ownership",                                       "status": "PASS",                     "owner": "Platform Ops","evidence": "Runbook section in docs/RC4-PRODUCTION-LAUNCH.md#deployment-runbook." },
+    { "id": "L7",  "area": "5-backup-restore",     "name": "Restore rehearsal from non-prod fixture",                                        "status": "PASS",                     "owner": "Data Ops",    "evidence": "src/lib/data/scale-fixture.ts + performGovernedRestore path exercised in Playwright." },
+    { "id": "L8",  "area": "5-backup-restore",     "name": "Baseline backup captured in production",                                         "status": "BLOCKED-OPERATOR",         "owner": "Data Ops",    "evidence": "See H4." },
+    { "id": "L9",  "area": "6-monitoring",         "name": "SLOs + budgets published (RC-2)",                                                "status": "PASS",                     "owner": "SRE",         "evidence": "scripts/rc2-perf.ts budgets: PASS (rerun this turn, total 8.77s exit 0)." },
+    { "id": "L10", "area": "6-monitoring",         "name": "Log redaction + correlation IDs",                                                "status": "PASS",                     "owner": "SRE",         "evidence": "redactSecrets() applied to API responses; correlation IDs stamped in audit_events.correlation_id." },
+    { "id": "L11", "area": "6-monitoring",         "name": "Alert routing configured",                                                       "status": "ACCEPTED-RISK",            "owner": "SRE",         "evidence": "In-app /admin/monitoring surfaces diagnostics; external alerting integration deferred (accepted; on-call polls monitoring page + Playwright canary)." },
+    { "id": "L12", "area": "7-auth-secrets-dns",   "name": "Auth provider config",                                                           "status": "BLOCKED-OPERATOR",         "owner": "Auth Owner",  "evidence": "See H2." },
+    { "id": "L13", "area": "7-auth-secrets-dns",   "name": "API-client rotation ready",                                                      "status": "BLOCKED-OPERATOR",         "owner": "API Owner",   "evidence": "See H3." },
+    { "id": "L14", "area": "7-auth-secrets-dns",   "name": "Rate-limit adapter",                                                             "status": "BLOCKED-OPERATOR",         "owner": "Platform Ops","evidence": "See H1." },
+    { "id": "L15", "area": "7-auth-secrets-dns",   "name": "Secrets inventory (no plaintext in bundle)",                                     "status": "PASS",                     "owner": "Sec",         "evidence": "RC-3 F-RC3-011: dist/client scan → 0 real secrets (2 hits are @supabase/auth-js string constants)." },
+    { "id": "L16", "area": "7-auth-secrets-dns",   "name": "DNS/TLS/domain",                                                                 "status": "ACCEPTED-RISK",            "owner": "Platform Ops","evidence": "Lovable-managed TLS on *.lovable.app; custom domain deferred to launch cutover." },
+    { "id": "L17", "area": "8-risk-register",      "name": "RC-3 medium findings accepted with compensating controls",                       "status": "ACCEPTED-RISK",            "owner": "Sec",         "evidence": "docs/RC3-SECURITY-GOVERNANCE.md — F-RC3-004 (content-table workspace scoping), F-RC3-007 (HTML CSP), F-RC3-008 (dep-audit CI)." },
+    { "id": "L18", "area": "9-capacity",           "name": "Perf evidence + rollback thresholds",                                            "status": "PASS",                     "owner": "SRE",         "evidence": "RC-2 budgets PASS this turn; rollback trigger = any p95 > 2x budget for 5m or error rate > 1% for 5m." },
+    { "id": "L19", "area": "10-final-regression",  "name": "Typecheck",                                                                      "status": "PASS",                     "owner": "Build",       "evidence": "bunx tsgo --noEmit exit 0." },
+    { "id": "L20", "area": "10-final-regression",  "name": "Deterministic validations",                                                      "status": "PASS",                     "owner": "QA",          "evidence": "scripts/validate.ts → OK 343 checks / TOTAL 343." },
+    { "id": "L21", "area": "10-final-regression",  "name": "Playwright + axe",                                                               "status": "PASS",                     "owner": "QA",          "evidence": "38 passed (1.0m); 0 serious/critical axe." },
+    { "id": "L22", "area": "10-final-regression",  "name": "Production build",                                                               "status": "PASS",                     "owner": "Build",       "evidence": "bun run build → dist/client + dist/nitro.json." },
+    { "id": "L23", "area": "10-final-regression",  "name": "RC-2 perf + DB rerun",                                                           "status": "PASS",                     "owner": "SRE",         "evidence": "scripts/rc2-perf.ts budgets: PASS; scripts/rc2-db.ts exit 0." },
+    { "id": "L24", "area": "10-final-regression",  "name": "Targeted RC-3 checks (audit RLS, profiles RLS)",                                 "status": "PASS",                     "owner": "Sec",         "evidence": "pg_policies confirmed: audit_events read gated by owner/actor; profiles email column-scoped; unchanged since RC-3." }
+  ],
+  "regressionRun": {
+    "typecheck":       { "command": "bunx tsgo --noEmit",             "exitCode": 0 },
+    "validate":        { "command": "bun run scripts/validate.ts",     "checks": 343, "exitCode": 0 },
+    "playwright":      { "command": "bunx playwright test",            "passed": 38, "failed": 0, "seriousOrCriticalAxeViolations": 0 },
+    "productionBuild": { "command": "bun run build",                   "exitCode": 0 },
+    "rc2Perf":         { "command": "bun run scripts/rc2-perf.ts",     "budgets": "PASS", "totalMs": 8771.4, "exitCode": 0 },
+    "rc2Db":           { "command": "bun run scripts/rc2-db.ts",       "exitCode": 0 }
+  },
+  "summary": {
+    "PASS": 16,
+    "BLOCKED-OPERATOR": 4,
+    "ACCEPTED-RISK": 3,
+    "FAIL": 0
+  }
+}
