@@ -38,7 +38,9 @@
 
   --color-heritage: var(--heritage);
   --color-heritage-foreground: var(--heritage-foreground);
-  --color-gold: var(--gold);
+  /* Note: --color-gold is intentionally NOT exposed to Tailwind's automatic
+     utility generator. `text-gold` uses the accessible --gold-ink shade
+     (see @utility below); `bg-gold` / `border-gold` reference --gold directly. */
   --color-gold-foreground: var(--gold-foreground);
   --color-ivory: var(--ivory);
   --color-slate: var(--slate);
@@ -149,7 +151,7 @@
 }
 
 @utility gold-rule {
-  border-top: 1px solid var(--color-gold);
+  border-top: 1px solid var(--gold);
 }
 
 @utility text-heritage {
@@ -159,12 +161,18 @@
   background-color: var(--color-heritage);
   color: var(--color-heritage-foreground);
 }
+/* Editorial gold utilities. `text-gold` uses the darker ink shade to keep
+   ≥4.5:1 contrast on ivory backgrounds; `bg-gold` / `border-gold` use the
+   brand surface shade. */
 @utility text-gold {
   color: var(--gold-ink);
 }
 @utility bg-gold {
-  background-color: var(--color-gold);
-  color: var(--color-gold-foreground);
+  background-color: var(--gold);
+  color: var(--gold-foreground);
+}
+@utility border-gold {
+  border-color: var(--gold);
 }
 @utility text-slate-ink {
   color: var(--color-slate);

@@ -74,12 +74,15 @@ export function AppShell({ children }: { children: ReactNode }) {
             </SheetContent>
           </Sheet>
           <button
+            type="button"
             onClick={() => cp.setOpen(true)}
+            aria-label="Open command palette"
+            aria-keyshortcuts="Control+K Meta+K"
             className="flex-1 max-w-md flex items-center gap-2 h-9 px-3 rounded-md border border-input bg-background hover:bg-accent transition-colors text-sm text-muted-foreground"
           >
-            <Search className="size-4" />
+            <Search className="size-4" aria-hidden="true" />
             <span className="flex-1 text-left">Search or jump to…</span>
-            <kbd className="text-[10px] px-1.5 py-0.5 rounded border border-border bg-muted font-mono">⌘K</kbd>
+            <kbd className="text-[10px] px-1.5 py-0.5 rounded border border-border bg-muted font-mono" aria-hidden="true">⌘K</kbd>
           </button>
           <div className="ml-auto hidden sm:flex items-center gap-3 text-xs text-muted-foreground">
             <span className="inline-block size-2 rounded-full bg-evergreen" />

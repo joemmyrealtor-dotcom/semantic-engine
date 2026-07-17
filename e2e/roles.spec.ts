@@ -14,9 +14,11 @@ test.describe("Role & session gates", () => {
     await page.goto("/");
     // Page still renders — expiry is a mutation-boundary concern, not a UI crash.
     await expect(page.locator("main")).toBeVisible();
-    // Expose actor state through the bridge for assertion (bridge and app
-    // share the same actor module instance; a dynamic import from the test
-    // would evaluate a fresh module copy in Vite dev).
+    // Wait for the bridge to install and the injected expired actor to land.
+    await page.waitForFunction(() => {
+      const w = window as unknown as { __lovableE2E?: { isSessionExpired(): boolean; getActor(): { source: string } } };
+      return !!w.__lovableE2E && w.__lovableE2E.getActor().source === "session";
+    }, null, { timeout: 10_000 });
     const isExpired = await page.evaluate(() => {
       const w = window as unknown as { __lovableE2E?: { isSessionExpired(): boolean } };
       return !!w.__lovableE2E?.isSessionExpired();
