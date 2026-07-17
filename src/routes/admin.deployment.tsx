@@ -42,7 +42,8 @@ function DeploymentPage() {
   const toggleFlag = async (key: string) => {
     if (!currentCan("featureflag.manage")) { toast.error("Permission denied"); return; }
     const flags = s.featureFlags.map(f => f.key === key ? { ...f, enabled: !f.enabled, updatedAt: new Date().toISOString() } : f);
-    const audit = appendAudit(s.auditEvents, { actor: "current-user", actorRole: getRole(), workspaceId: s.activeWorkspaceId, action: "feature-flag-change", entityType: "featureFlag", entityId: key, reason: "toggle" });
+    const who = getActor();
+    const audit = appendAudit(s.auditEvents, { actor: who.userId, actorRole: getRole(), workspaceId: s.activeWorkspaceId, action: "feature-flag-change", entityType: "featureFlag", entityId: key, reason: "toggle", correlationId: who.correlationId });
     await Repo.replaceAll({ ...s, featureFlags: flags, auditEvents: audit });
   };
 
