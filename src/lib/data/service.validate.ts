@@ -45,7 +45,7 @@ function ch(id: string, parent: string | null, order: number): ChapterBlueprint 
   };
 }
 
-export function runValidations(): number {
+export async function runValidations(): Promise<number> {
   count = 0;
 
   // Fixture: A(root) -> B -> C ; D(root)
