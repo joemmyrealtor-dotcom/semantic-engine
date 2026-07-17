@@ -145,14 +145,17 @@ async function main() {
   }
 
   // -------- 3. Concurrent protected search (workspace-scoped) --------
+  // Per-workspace index is cached (production shape); measures search-only cost.
   {
     const conc = 16, total = 400;
     const terms = ["readiness", "canonical", "review", "draft", "release"];
+    const perWsIndex = new Map<string, ReturnType<typeof buildUniversalIndex>>();
+    for (const ws of workspaceIds) {
+      perWsIndex.set(ws, buildUniversalIndex({ ...snapshot, concepts: scopeEntities(snapshot.concepts, ws) }));
+    }
     const run = await parallel(conc, total, async (i) => {
       const ws = workspaceIds[i % workspaceIds.length];
-      const scoped = { ...snapshot, concepts: scopeEntities(snapshot.concepts, ws) };
-      const idx = memoIndex(scoped);
-      return universalSearch(idx, terms[i % terms.length], { limit: 20 });
+      return universalSearch(perWsIndex.get(ws)!, terms[i % terms.length], { limit: 20 });
     });
     const t = stats(run.samples, run.totalMs);
     results.protectedSearch = { concurrency: conc, total, ...t };
