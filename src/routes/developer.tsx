@@ -72,8 +72,8 @@ function DeveloperExplorer() {
             <Card>
               <CardHeader className="pb-2"><CardTitle className="text-base">Test console (local adapter)</CardTitle></CardHeader>
               <CardContent className="space-y-2">
-                <div className="text-xs text-muted-foreground">Params (JSON)</div>
-                <Input value={paramsText} onChange={e => setParamsText(e.target.value)} className="font-mono text-xs" />
+                <div className="text-xs text-muted-foreground" id="developer-params-label">Params (JSON)</div>
+                <Input aria-labelledby="developer-params-label" value={paramsText} onChange={e => setParamsText(e.target.value)} className="font-mono text-xs" />
                 <Button size="sm" onClick={run}>Send</Button>
                 <div className="text-xs text-muted-foreground mt-2">Response</div>
                 <pre className="bg-muted/40 p-3 rounded font-mono text-[11px] overflow-auto max-h-96">
