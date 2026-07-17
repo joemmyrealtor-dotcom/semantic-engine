@@ -175,6 +175,31 @@ function DeploymentPage() {
             </div>
           ))}
         </div>
+
+        <SectionTitle hint="docs/RC4-PRODUCTION-LAUNCH.md">RC-4 launch — operator checklist</SectionTitle>
+        <div className="editorial-card p-4 text-sm mb-4">
+          <div className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Decision: <span className="text-gold">CONDITIONAL GO</span> · commit <span className="font-mono">bef2a30d</span> · GA not claimed until all four hard prerequisites are PASS.</div>
+          <div className="text-xs text-muted-foreground">PASS 16 · BLOCKED-OPERATOR 4 · ACCEPTED-RISK 3 · FAIL 0</div>
+        </div>
+        <div className="editorial-card divide-y divide-border text-sm">
+          {[
+            { id: "H1", owner: "Platform Ops", name: "Set RATE_LIMIT_ADAPTER=supabase in production env", status: "BLOCKED-OPERATOR" },
+            { id: "H2", owner: "Auth Owner",   name: "Enable Google OAuth provider in Cloud",              status: "BLOCKED-OPERATOR" },
+            { id: "H3", owner: "API Owner",    name: "Retire APIC-001 demo bearer; issue production APIClient rows", status: "BLOCKED-OPERATOR" },
+            { id: "H4", owner: "Data Ops",     name: "Capture pre-launch-baseline backup + verify integrity", status: "BLOCKED-OPERATOR" },
+            { id: "C1", owner: "Platform Ops", name: "Cutover: publish → run smoke suite → watch /admin/monitoring 15 min", status: "PENDING" },
+            { id: "C2", owner: "SRE",          name: "Post-launch: wire external alert routing + F-RC3-004 tenant hardening", status: "PENDING" },
+          ].map(g => (
+            <div key={g.id} className="p-3 flex items-center justify-between">
+              <div>
+                <span className="font-mono text-xs text-muted-foreground mr-2">{g.id}</span>
+                {g.name}
+                <span className="text-xs text-muted-foreground ml-2">· {g.owner}</span>
+              </div>
+              <span className={`text-xs uppercase tracking-widest ${g.status === "PASS" ? "text-evergreen" : g.status === "PENDING" ? "text-muted-foreground" : "text-gold"}`}>{g.status}</span>
+            </div>
+          ))}
+        </div>
       </PageBody>
     </>
   );
