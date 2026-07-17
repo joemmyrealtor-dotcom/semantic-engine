@@ -38,7 +38,7 @@ export function AppSidebar() {
       <div className="px-5 py-5 border-b border-sidebar-border">
         <div className="text-[11px] tracking-[0.2em] uppercase text-sidebar-primary font-medium">JM Advisory Press</div>
         <div className="font-serif text-lg leading-tight mt-1">Legacy Platform</div>
-        <div className="text-xs text-sidebar-foreground/60">v2.0 · Local Demo</div>
+        <div className="text-xs text-sidebar-foreground/80">v2.0 · Local Demo</div>
       </div>
       <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
         {items.map(it => {
