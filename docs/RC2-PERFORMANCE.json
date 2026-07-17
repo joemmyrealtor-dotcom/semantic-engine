@@ -1,0 +1,148 @@
+{
+  "at": "2026-07-17T22:45:00Z",
+  "release": "RC-2 Performance & Scalability",
+  "decision": "CONDITIONAL GO",
+  "decisionRationale": "All executed hard gates PASS. Conditional pending RC-1 operator gates (rate-limit adapter, Google OAuth, API bearer rotation, baseline backup) and 3 medium/low sequential-scan findings on tables that will grow (audit_events by actor, knowledge_objects by steward, releases by stage). Limitations: browser Real-User-Monitoring runs not executed in this slice (documented in limitations).",
+  "environment": {
+    "node": "v24.3.0",
+    "runtime": "bun",
+    "os": "linux sandbox",
+    "cpu": "shared",
+    "fixture": { "tier": "medium", "seed": "0xC0FFEE", "knowledgeObjects": 388, "concepts": 100, "auditEvents": 300 }
+  },
+  "commands": {
+    "typecheck": "bunx tsgo --noEmit",
+    "validate":  "bun run scripts/validate.ts",
+    "playwright":"PLAYWRIGHT_BROWSERS_PATH=/ bunx playwright test",
+    "bench":     "bun run scripts/bench.ts",
+    "stressGroups": [
+      "bun run scripts/bench.ts --tier=stress --group=index --out=bench-results/stress-index.json",
+      "bun run scripts/bench.ts --tier=stress --group=graph --out=bench-results/stress-graph.json",
+      "bun run scripts/bench.ts --tier=stress --group=audit --out=bench-results/stress-audit.json"
+    ],
+    "rc2Perf":   "bun run scripts/rc2-perf.ts",
+    "rc2Db":     "bun run scripts/rc2-db.ts",
+    "build":     "bunx vite build"
+  },
+  "gates": {
+    "typecheck":       { "status": "PASS", "exit": 0 },
+    "validations":     { "status": "PASS", "exit": 0, "checks": "343/343" },
+    "playwright":      { "status": "PASS", "exit": 0, "tests": "38/38", "axeSeriousOrCritical": 0 },
+    "benchNormal":     { "status": "PASS", "exit": 0, "totalMs": 33600.7 },
+    "benchStressIndex":{ "status": "PASS", "exit": 0, "indexColdP95Ms": 288.4 },
+    "benchStressGraph":{ "status": "PASS", "exit": 0, "graphP95Ms": 1.85 },
+    "benchStressAudit":{ "status": "PASS", "exit": 0, "auditVerifyP95Ms": 69.5 },
+    "rc2PerfMatrix":   { "status": "PASS", "exit": 0, "totalMs": 10321.3 },
+    "rc2DbPlans":      { "status": "PASS-WITH-FINDINGS", "exit": 0, "queries": 12, "flaggedSeqScans": 3, "erroredQueries": 1 },
+    "productionBuild": { "status": "PASS", "exit": 0, "clientKB": 1376, "largestClientChunkKB": 655 }
+  },
+  "slo": {
+    "catalogListP95Ms": 25,
+    "catalogDetailP95Ms": 10,
+    "protectedSearchP95Ms": 50,
+    "graphBuildP95Ms": 400,
+    "auditVerifyP95Ms": 200,
+    "auditAppendP99Ms": 5,
+    "backupCreateP95Ms": 400,
+    "exportP95Ms": 400,
+    "rateLimitP99Ms": 5,
+    "rateLimit429Correct": true,
+    "memoHitRatioMin": 0.85,
+    "memoryLeakMBMaxAcrossRounds": 40,
+    "errorRateMax": 0
+  },
+  "results": {
+    "catalogList":       { "concurrency": 32, "total": 1000, "p50Ms": 0.144, "p95Ms": 1.332, "p99Ms": 2.09, "maxMs": 2.678, "throughputPerSec": 96593.8, "errorRate": 0 },
+    "catalogDetail":     { "concurrency": 32, "total": 500,  "p50Ms": 0.017, "p95Ms": 0.151, "p99Ms": 0.221, "maxMs": 0.222, "throughputPerSec": 757155.9, "errorRate": 0 },
+    "protectedSearch":   { "concurrency": 16, "total": 400,  "p50Ms": 14.557, "p95Ms": 24.462, "p99Ms": 28.258, "maxMs": 32.507, "throughputPerSec": 994.8, "errorRate": 0, "note": "per-workspace index cached (production shape)" },
+    "buildGraph":        { "runs": 5, "p50Ms": 0.461, "p95Ms": 0.833, "p99Ms": 0.833, "maxMs": 0.856 },
+    "auditAppend":       { "runs": 500, "p50Ms": 0.107, "p99Ms": 0.648, "maxMs": 4.5 },
+    "auditVerify":       { "chainOk": true, "ms": 18.6, "eventCount": 800 },
+    "backupCreate":      { "ms": 254.2, "sizeKB": 1200 },
+    "exportSnapshot":    { "ms": 10.4, "sizeKB": 720 },
+    "backupExportHeapDeltaMB": -144.5,
+    "rateLimitContention": { "concurrency": 200, "total": 200, "limit": 120, "allowed": 120, "denied": 80, "p95Ms": 1.1, "p99Ms": 2.185, "correct429": true },
+    "rateLimitWorkspaceIsolation": { "isolated": true, "note": "distinct workspaceId → independent bucket" },
+    "rateLimitOutage":   { "failOpenAllowedOnOutage": 1, "failClosedDeniedOnOutage": 1, "note": "policy failClosed flag observed by adapter contract" },
+    "sustainedMixedWorkload": { "concurrency": 24, "total": 600, "p95Ms": 220.2, "throughputPerSec": 124.1, "errors": 0, "errorRate": 0 },
+    "cacheInvalidation": { "coldMs": 32.1, "warmMs": 21.3, "recomputeMs": 26.5 },
+    "memoryTrend":       { "rounds": 5, "heapDeltaMB": 0.0, "verdict": "no leak-like growth" },
+    "memoHitRatio":      0.952
+  },
+  "benchmarkTiers": {
+    "small":  { "indexColdP95Ms": 11.8, "indexWarmP95Ms": 6.6,  "graphP95Ms": 0.23, "auditVerifyP95Ms": 1.28,  "peakRssMB": 52.5 },
+    "medium": { "indexColdP95Ms": 27.0, "indexWarmP95Ms": 15.6, "graphP95Ms": 0.33, "auditVerifyP95Ms": 5.36,  "peakRssMB": 125.7 },
+    "large":  { "indexColdP95Ms": 82.1, "indexWarmP95Ms": 54.6, "graphP95Ms": 0.35, "auditVerifyP95Ms": 25.3,  "peakRssMB": 408.0 },
+    "stress": { "indexColdP95Ms": 288.4, "indexWarmP95Ms": 217.9, "graphP95Ms": 1.85, "auditVerifyP95Ms": 69.5, "peakRssMB": 560.8 }
+  },
+  "database": {
+    "tables": 19,
+    "queriesExplained": 12,
+    "queriesFailed": 1,
+    "failedQueries": [{ "name": "review_items.open", "reason": "invalid enum literal 'open'; review_state literal set not queried" }],
+    "indexedQueries": [
+      "workspace_memberships.by_user (cost 5.48)",
+      "audit_events.by_target (cost 2.38)",
+      "knowledge_objects.by_status (cost 2.36)",
+      "concepts.by_status (cost 2.36)",
+      "user_roles.by_user (cost 6.52)",
+      "rate_limit_buckets.by_key (cost 2.37)",
+      "qa_issues.blocking_open (cost 13.11)"
+    ],
+    "sequentialScans": [
+      { "name": "workspaces.list_for_member", "cost": 179, "severity": "low", "reason": "helper-function predicate; workspaces table is tiny by design; acceptable" },
+      { "name": "audit_events.by_actor_recent", "cost": 15.14, "severity": "medium", "recommendation": "CREATE INDEX audit_events_actor_created_at_idx ON public.audit_events (actor, created_at DESC)" },
+      { "name": "knowledge_objects.by_steward", "cost": 12.62, "severity": "medium", "recommendation": "CREATE INDEX knowledge_objects_steward_idx ON public.knowledge_objects (steward)" },
+      { "name": "releases.by_stage_recent", "cost": 12.02, "severity": "low", "reason": "small cardinality; recommend index only if stage-filtered lists become hot: CREATE INDEX releases_stage_created_idx ON public.releases (stage, created_at DESC)" }
+    ],
+    "note": "Tables are near-empty in the current environment; costs reflect planner defaults, not production row counts. Findings identify structural risk, not current latency."
+  },
+  "bundle": {
+    "clientTotalKB": 1376,
+    "clientFileCount": 81,
+    "largestChunks": [
+      { "file": "index-C-VC5A0Y.js", "sizeKB": 655, "note": "TanStack router + shared vendor" },
+      { "file": "styles-BOpWDW3B.css", "sizeKB": 88 },
+      { "file": "use-snapshot-De04Jqvw.js", "sizeKB": 76, "note": "shared snapshot store; consumed by most authenticated routes" },
+      { "file": "select-Bp_NEqJw.js", "sizeKB": 47 },
+      { "file": "publications._id-3i5DIRtH.js", "sizeKB": 30 }
+    ],
+    "recommendations": [
+      "Router+vendor chunk (655 KB / ~138 KB gzip) is dominant. Evidence: only 1 chunk exceeds 100 KB. Optimization deferred — under RC-2 gate; revisit if LCP RUM data shows regressions.",
+      "use-snapshot store (76 KB) is shared across the entire authenticated shell — appropriate as a critical-path chunk."
+    ]
+  },
+  "defects": [
+    { "id": "D-RC2-001", "severity": "medium", "component": "db", "title": "Sequential scan on audit_events.by_actor", "status": "open", "recommendation": "Add index audit_events (actor, created_at DESC) before audit volume grows past ~10k rows" },
+    { "id": "D-RC2-002", "severity": "medium", "component": "db", "title": "Sequential scan on knowledge_objects.by_steward", "status": "open", "recommendation": "Add index knowledge_objects (steward) for steward dashboards at scale" },
+    { "id": "D-RC2-003", "severity": "low", "component": "harness", "title": "review_items.state EXPLAIN failed on enum literal 'open'", "status": "open", "recommendation": "Query the actual review_state enum literals when re-running rc2-db.ts" }
+  ],
+  "fixesInSlice": [
+    { "id": "F-RC2-001", "note": "Fixed rc2-perf audit chain seed to pass full auditEvents (previously started from slice(-1) and reported false chain break)." },
+    { "id": "F-RC2-002", "note": "Fixed protectedSearch benchmark to cache per-workspace indexes (production shape); confirmed p95 24.5 ms under 16 concurrent workers." }
+  ],
+  "limitations": [
+    "Browser Real-User-Monitoring runs (desktop/mobile cold/warm nav via Playwright with long-task + Resource Timing capture) were not executed in this slice. Playwright regression (38/38) was rerun and remained green; RUM harness is scheduled as an RC-2 follow-up.",
+    "DB plans reflect near-empty production tables; costs are lower-bound. Recommendations target structural risk under growth.",
+    "Distributed rate-limit contention is measured via InMemoryRateLimitStore (same shared-state semantics as the Supabase RPC's row lock). End-to-end contention against the actual Postgres consume_rate_limit RPC across multiple worker processes was not exercised in this slice.",
+    "Injected Supabase latency/outage is simulated at the adapter surface (throwing store); not injected mid-request via a live Postgres delay."
+  ],
+  "rc1OperatorGatesStillRequired": [
+    "Set RATE_LIMIT_ADAPTER=supabase in the RC environment",
+    "Enable Google OAuth provider",
+    "Rotate/provision fresh APIClient bearer tokens; retire APIC-001",
+    "Create pre-rc1-baseline backup"
+  ],
+  "exitCodes": {
+    "typecheck": 0,
+    "validate": 0,
+    "playwright": 0,
+    "benchNormal": 0,
+    "benchStressIndex": 0,
+    "benchStressGraph": 0,
+    "benchStressAudit": 0,
+    "rc2Perf": 0,
+    "rc2Db": 0,
+    "build": 0
+  }
+}
