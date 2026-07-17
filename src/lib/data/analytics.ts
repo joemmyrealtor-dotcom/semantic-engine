@@ -17,6 +17,17 @@ import {
   evaluateReleaseGate, detectBrokenReferences,
 } from "./service";
 import { knowledgeHealth, releaseIntelligence } from "./intelligence";
+import { memoize } from "./performance";
+
+function snapKey(s: DataSnapshot): string {
+  const n = (a?: unknown[]) => (a?.length ?? 0);
+  return [
+    n(s.domains), n(s.concepts), n(s.frameworks), n(s.knowledgeObjects),
+    n(s.publications), n(s.clientToolkits), n(s.aiPacks), n(s.agents),
+    n(s.automations), n(s.automationRuns), n(s.releases), n(s.auditEvents),
+    n(s.analyticsSnapshots),
+  ].join("|");
+}
 
 // ---------- Utilities ----------
 const DAY_MS = 24 * 3600 * 1000;
