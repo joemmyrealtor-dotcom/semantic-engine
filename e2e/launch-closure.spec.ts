@@ -6,7 +6,15 @@ async function waitForActor(page: Page, role: string) {
     const w = window as unknown as { __lovableE2E?: { getActor(): { role: string } } };
     return !!w.__lovableE2E && w.__lovableE2E.getActor().role === r;
   }, role, { timeout: 10_000 });
+  // Re-inject once after DOM has settled so any React subtree that subscribed
+  // AFTER the initial injection also receives the notification.
+  await page.evaluate((r) => {
+    const w = window as unknown as { __lovableE2E?: { injectActor: (p: unknown) => void; getActor(): unknown } };
+    const cur = w.__lovableE2E?.getActor() as { userId: string; displayLabel?: string } | undefined;
+    if (w.__lovableE2E && cur) w.__lovableE2E.injectActor({ userId: cur.userId, role: r, displayLabel: cur.displayLabel });
+  }, role);
 }
+
 
 test.describe("Launch closure — hard gates", () => {
   test("viewer sees Forbidden on deployment; cannot reach promote", async ({ page, asActor }) => {
