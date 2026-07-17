@@ -1153,7 +1153,7 @@ export async function runValidations(): Promise<number> {
   const scaleMod = await import("./scale-fixture");
   const intelMod = await import("./intelligence");
   const analyticsMod = await import("./analytics");
-  const wsScopeMod = await import("./workspace-scoping");
+  void await import("./workspace-scoping");
 
   // 7a. Determinism: identical seed → identical fixture.
   const a = scaleMod.scaleSnapshot({ tier: "small", seed: 0xC0FFEE });
