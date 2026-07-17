@@ -189,7 +189,12 @@ export class SupabaseRateLimitStore implements RateLimitStore {
     const startedAt = Date.now();
     try {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const { data, error } = await supabaseAdmin.rpc("consume_rate_limit", {
+      // RPC not yet in generated types (added in the same migration slice);
+      // cast the client to loosen the RPC name generic without losing runtime typing.
+      const client = supabaseAdmin as unknown as {
+        rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }>;
+      };
+      const { data, error } = await client.rpc("consume_rate_limit", {
         p_key: key,
         p_window_seconds: policy.windowSeconds,
         p_max: policy.maxRequests,
