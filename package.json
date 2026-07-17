@@ -9,7 +9,12 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "e2e:install": "PLAYWRIGHT_BROWSERS_PATH=/ playwright install --with-deps chromium",
+    "e2e": "PLAYWRIGHT_BROWSERS_PATH=/ playwright test",
+    "e2e:smoke": "PLAYWRIGHT_BROWSERS_PATH=/ playwright test --project=chromium-desktop e2e/smoke.spec.ts e2e/boot.spec.ts",
+    "e2e:a11y": "PLAYWRIGHT_BROWSERS_PATH=/ playwright test --project=chromium-desktop e2e/a11y.spec.ts",
+    "e2e:report": "PLAYWRIGHT_BROWSERS_PATH=/ playwright show-report playwright-report"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
