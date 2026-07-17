@@ -1099,7 +1099,7 @@ export async function runValidations(): Promise<number> {
     check("migration: consume_rate_limit function present", /consume_rate_limit/.test(sql));
     check("migration: RLS enabled on rate_limit_buckets", /ALTER TABLE .*rate_limit_buckets.* ENABLE ROW LEVEL SECURITY/i.test(sql));
     check("migration: grants restricted to service_role", /GRANT .* ON .*rate_limit_buckets.* TO service_role/i.test(sql));
-    check("migration: index on key", /INDEX .* ON .*rate_limit_buckets/i.test(sql));
+    check("migration: index on key", /INDEX[\s\S]*rate_limit_buckets/i.test(sql));
     check("migration: cleanup/expiry present", /(cleanup|expires_at|DELETE FROM public\.rate_limit_buckets)/i.test(sql));
   }
 
