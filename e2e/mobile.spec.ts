@@ -6,6 +6,12 @@ test.describe("Mobile smoke", () => {
     await asActor({ userId: "e2e:admin", role: "Administrator" });
     await page.goto("/");
     await expect(page.locator("main")).toBeVisible();
+    // Wait for the test bridge injection to settle to avoid a re-render
+    // racing the click handler in dev mode.
+    await page.waitForFunction(() => {
+      const w = window as unknown as { __lovableE2E?: { getActor(): { userId: string } } };
+      return w.__lovableE2E?.getActor().userId === "e2e:admin";
+    }, null, { timeout: 10_000 });
     // No horizontal overflow.
     const { scrollWidth, clientWidth } = await page.evaluate(() => ({
       scrollWidth: document.documentElement.scrollWidth,
