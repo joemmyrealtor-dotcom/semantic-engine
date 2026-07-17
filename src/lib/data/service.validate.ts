@@ -985,7 +985,7 @@ export async function runValidations(): Promise<number> {
   // 4e. Eviction: bounded map does not grow without limit.
   const memEvict = new rlMod.InMemoryRateLimitStore({ maxEntries: 100 });
   for (let i = 0; i < 500; i++) {
-    await memEvict.consume(`E${i}`, policy, new Date(Date.parse(t0) + i).toISOString());
+    await memEvict.consume(`E${i}`, policy, new Date(Date.parse(nowA) + i).toISOString());
   }
   check(`eviction: bounded to <= maxEntries (got ${memEvict.size()})`, memEvict.size() <= 100);
 
