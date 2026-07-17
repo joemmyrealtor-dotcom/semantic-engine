@@ -160,7 +160,7 @@
   color: var(--color-heritage-foreground);
 }
 @utility text-gold {
-  color: var(--color-gold);
+  color: var(--gold-ink);
 }
 @utility bg-gold {
   background-color: var(--color-gold);
