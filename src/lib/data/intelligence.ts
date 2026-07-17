@@ -473,7 +473,9 @@ export interface HealthScore {
   breakdown: Record<string, number>;
 }
 
-export function knowledgeHealth(s: DataSnapshot): HealthScore {
+const memoKnowledgeHealth = memoize("intelligence.knowledgeHealth", (_k: string, s: DataSnapshot) => knowledgeHealthImpl(s), 8);
+export function knowledgeHealth(s: DataSnapshot): HealthScore { return memoKnowledgeHealth(snapKey(s), s); }
+function knowledgeHealthImpl(s: DataSnapshot): HealthScore {
   const broken = detectBrokenReferences(s);
   const brokenReferences = broken.length;
 
