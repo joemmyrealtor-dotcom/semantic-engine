@@ -54,7 +54,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <div className="px-5 py-5 border-b border-sidebar-border">
                 <div className="text-[11px] tracking-[0.2em] uppercase text-sidebar-primary font-medium">JM Advisory Press</div>
                 <div className="font-serif text-lg mt-1">Legacy Platform</div>
-                <div className="text-xs text-sidebar-foreground/60">v2.0 · Local Demo</div>
+                <div className="text-xs text-sidebar-foreground/80">v2.0 · Local Demo</div>
               </div>
               <nav className="p-2 space-y-0.5">
                 {navItems.map(it => {
