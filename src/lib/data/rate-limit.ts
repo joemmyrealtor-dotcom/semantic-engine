@@ -239,7 +239,10 @@ export class SupabaseRateLimitStore implements RateLimitStore {
   async healthCheck() {
     try {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const { error } = await supabaseAdmin.rpc("consume_rate_limit", {
+      const client = supabaseAdmin as unknown as {
+        rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }>;
+      };
+      const { error } = await client.rpc("consume_rate_limit", {
         p_key: "rl_healthcheck", p_window_seconds: 60, p_max: 1_000_000,
       });
       if (error) throw error;
