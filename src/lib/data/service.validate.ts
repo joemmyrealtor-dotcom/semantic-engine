@@ -823,7 +823,7 @@ export async function runValidations(): Promise<number> {
     !scopingMod.isWorkspaceOwned("featureFlags"));
 
   // Backfill is idempotent + stamps unscoped rows.
-  const rawSeed = { ...seed } as DataSnapshot;
+  const rawSeed = { ...seed, activeWorkspaceId: seed.activeWorkspaceId ?? "WS-001" } as DataSnapshot;
   const first = scopingMod.backfillWorkspaceIds(rawSeed);
   const second = scopingMod.backfillWorkspaceIds(first);
   check("backfill stamps every workspace-owned row",
