@@ -915,6 +915,7 @@ export function buildSeedSnapshot(): DataSnapshot {
     ],
     maintenanceMode: { enabled: false, reason: "", since: null, by: null, allowRoles: ["Administrator","Owner"] },
     activeWorkspaceId: "WS-001",
+    launchGateEvidence: [],
   };
 }
 
