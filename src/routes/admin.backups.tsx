@@ -6,8 +6,7 @@ import { useSnapshot, Repo } from "@/lib/use-snapshot";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { createBackup, restoreFromBackup, verifyBackupIntegrity, buildDisasterRecoveryPlan, findRollbackTarget } from "@/lib/data/backups";
-import { appendAudit } from "@/lib/data/audit";
-import { getRole, currentCan } from "@/lib/data/auth";
+import { getActor } from "@/lib/data/actor";
 
 export const Route = createFileRoute("/admin/backups")({
   head: () => ({ meta: [{ title: "Backups — Legacy Platform" }] }),
@@ -20,21 +19,26 @@ function BackupsPage() {
   if (!s || !dr) return <LoadingState />;
 
   const doBackup = async () => {
-    if (!currentCan("backup.create")) { toast.error("Permission denied: backup.create"); return; }
-    const bk = createBackup(s, { label: `Manual ${new Date().toISOString().slice(0, 10)}`, reason: "Admin-triggered", actor: "current-user" });
-    const nextAudit = appendAudit(s.auditEvents, { actor: "current-user", actorRole: getRole(), workspaceId: s.activeWorkspaceId, action: "backup", entityType: "backup", entityId: bk.id, reason: "Manual backup" });
-    await Repo.replaceAll({ ...s, backups: [...s.backups, bk], auditEvents: nextAudit });
-    toast.success(`Backup ${bk.id} created (${(bk.bytes / 1024).toFixed(1)} KB)`);
+    try {
+      const who = getActor();
+      const bk = createBackup(s, { label: `Manual ${new Date().toISOString().slice(0, 10)}`, reason: "Admin-triggered", actor: who.userId });
+      await Repo.auditedTransaction(
+        { permission: "backup.create", action: "backup", entityType: "backup", entityId: bk.id, reason: "Manual backup" },
+        s0 => ({ ...s0, backups: [...s0.backups, bk] }),
+      );
+      toast.success(`Backup ${bk.id} created (${(bk.bytes / 1024).toFixed(1)} KB)`);
+    } catch (e) { toast.error((e as Error).message); }
   };
 
   const doRestore = async (id: string) => {
-    if (!currentCan("backup.restore")) { toast.error("Permission denied: backup.restore"); return; }
     const bk = s.backups.find(b => b.id === id);
     if (!bk) return;
     try {
       const restored = restoreFromBackup(bk);
-      const nextAudit = appendAudit(restored.auditEvents ?? [], { actor: "current-user", actorRole: getRole(), workspaceId: restored.activeWorkspaceId, action: "restore", entityType: "backup", entityId: bk.id, reason: "Manual restore" });
-      await Repo.replaceAll({ ...restored, backups: [...restored.backups.map(b => b.id === bk.id ? { ...b, restoredAt: new Date().toISOString() } : b)], auditEvents: nextAudit });
+      await Repo.auditedReplaceAll(
+        { ...restored, backups: restored.backups.map(b => b.id === bk.id ? { ...b, restoredAt: new Date().toISOString() } : b) },
+        { permission: "backup.restore", action: "restore", entityType: "backup", entityId: bk.id, reason: "Manual restore" },
+      );
       toast.success(`Restored from ${bk.id}`);
     } catch (e) { toast.error(String((e as Error).message)); }
   };
