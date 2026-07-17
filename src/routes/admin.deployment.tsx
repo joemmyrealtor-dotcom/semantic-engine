@@ -105,17 +105,29 @@ function DeploymentPage() {
                 </div>
                 <Button size="sm" onClick={toggleMaintenance}>{s.maintenanceMode.enabled ? "Disable" : "Enable"}</Button>
               </div>
-              <div className="pt-3 border-t border-border">
-                <div className="text-sm font-medium mb-2">Current role (demo)</div>
-                <select
-                  value={getRole()}
-                  onChange={e => { setRole(e.target.value as Role); toast.success(`Role set to ${e.target.value}`); }}
-                  className="border border-border rounded px-2 py-1 text-sm bg-background w-full"
-                >
-                  {ALL_ROLES.map((r: Role) => <option key={r} value={r}>{r}</option>)}
-                </select>
-                <div className="text-xs text-muted-foreground mt-2">Permissions: {permissionsFor(getRole()).length}</div>
-              </div>
+              {isDevRuntime() ? (
+                <div className="pt-3 border-t border-border">
+                  <div className="text-sm font-medium mb-2 flex items-center gap-2">
+                    Current role
+                    <span className="text-[10px] uppercase tracking-widest rounded bg-gold/20 text-gold px-1.5 py-0.5">Dev only</span>
+                  </div>
+                  <select
+                    value={getRole()}
+                    onChange={e => { setRole(e.target.value as Role); toast.success(`Role set to ${e.target.value}`); }}
+                    className="border border-border rounded px-2 py-1 text-sm bg-background w-full"
+                    aria-label="Development role selector"
+                  >
+                    {ALL_ROLES.map((r: Role) => <option key={r} value={r}>{r}</option>)}
+                  </select>
+                  <div className="text-xs text-muted-foreground mt-2">Permissions: {permissionsFor(getRole()).length} · shown only in development builds.</div>
+                </div>
+              ) : (
+                <div className="pt-3 border-t border-border">
+                  <div className="text-sm font-medium">Current role</div>
+                  <div className="text-xs text-muted-foreground mt-1">{getActor().displayLabel} · <span className="font-mono">{getRole()}</span> · {permissionsFor(getRole()).length} permissions</div>
+                  <div className="text-xs text-muted-foreground mt-1">Role assignment is managed through workspace memberships.</div>
+                </div>
+              )}
             </div>
           </div>
         </div>
