@@ -77,7 +77,7 @@ export function computeMonitoring(snap: DataSnapshot): MonitoringReport {
     name: "Workspace isolation",
     state: leak.ok ? "ok" : "warning",
     value: leak.ok ? `${snap.workspaces.length} workspaces · no orphans` : `orphaned: ${leak.orphanedAuditIds.length} audit / ${leak.orphanedBackupIds.length} backups`,
-    note: `unscoped: ${leak.unscopedEntityKinds.length} entity kinds`,
+    note: `unscoped rows: ${leak.unscopedEntities.length} · foreign: ${leak.crossWorkspaceEntities.length}`,
   });
 
   const overall = signals.reduce<HealthState>((acc, s) => worse(acc, s.state), "ok");
