@@ -64,8 +64,10 @@
   /* Editorial palette (oklch conversions) */
   --heritage: oklch(0.24 0.05 260);        /* #0B1F3A */
   --heritage-foreground: oklch(0.97 0.01 90);
-  --gold: oklch(0.74 0.11 80);             /* #C8A052 */
+  --gold: oklch(0.74 0.11 80);             /* #C8A052 — surface / accent */
   --gold-foreground: oklch(0.24 0.05 260);
+  /* Text-safe gold darkened for AA contrast on ivory backgrounds. */
+  --gold-ink: oklch(0.55 0.11 78);
   --ivory: oklch(0.97 0.012 90);           /* #F8F5EC */
   --slate: oklch(0.48 0.02 250);           /* #4E5A66 */
   --evergreen: oklch(0.48 0.08 155);       /* #2F6B4F */
@@ -158,7 +160,7 @@
   color: var(--color-heritage-foreground);
 }
 @utility text-gold {
-  color: var(--color-gold);
+  color: var(--gold-ink);
 }
 @utility bg-gold {
   background-color: var(--color-gold);

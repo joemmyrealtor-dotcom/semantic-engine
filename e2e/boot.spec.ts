@@ -28,9 +28,13 @@ test.describe("Boot & rendering", () => {
   test("command palette can be opened", async ({ page, asActor }) => {
     await asActor({ userId: "e2e:admin", role: "Administrator" });
     await page.goto("/");
-    // The trigger says "Search or jump to…" and is a button.
-    await page.getByRole("button", { name: /search or jump to/i }).click();
-    // Command palette uses cmdk under a dialog.
+    await expect(page.locator("main")).toBeVisible();
+    // Trigger the palette via keyboard shortcut (Cmd/Ctrl+K) which is the
+    // documented, cross-viewport-safe affordance. The header trigger button
+    // is also present and clickable but keyboard is the canonical path.
+    await page.keyboard.press("ControlOrMeta+KeyK");
     await expect(page.getByRole("dialog")).toBeVisible();
+    // The palette exposes a search box.
+    await expect(page.getByPlaceholder(/search concepts/i)).toBeVisible();
   });
 });

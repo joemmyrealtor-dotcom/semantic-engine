@@ -132,21 +132,21 @@ function PublicationRegistryPage() {
         <div className="editorial-card p-4 mb-4 grid md:grid-cols-5 gap-3">
           <Input placeholder="Search title, audience, tag, ID…" value={q} onChange={e => { setQ(e.target.value); setPage(0); }} />
           <Select value={stage} onValueChange={v => { setStage(v); setPage(0); }}>
-            <SelectTrigger><SelectValue placeholder="Stage" /></SelectTrigger>
+            <SelectTrigger aria-label="Filter by manufacturing stage"><SelectValue placeholder="Stage" /></SelectTrigger>
             <SelectContent>
               <SelectItem value={ALL}>All stages</SelectItem>
               {PUBLICATION_STAGES.map(st => <SelectItem key={st} value={st}>{st}</SelectItem>)}
             </SelectContent>
           </Select>
           <Select value={status} onValueChange={v => { setStatus(v); setPage(0); }}>
-            <SelectTrigger><SelectValue placeholder="Lifecycle" /></SelectTrigger>
+            <SelectTrigger aria-label="Filter by lifecycle status"><SelectValue placeholder="Lifecycle" /></SelectTrigger>
             <SelectContent>
               <SelectItem value={ALL}>All lifecycle</SelectItem>
               {["Draft","In Review","Approved","Canonical","Deprecated","Archived"].map(x => <SelectItem key={x} value={x}>{x}</SelectItem>)}
             </SelectContent>
           </Select>
           <Select value={String(showArchived)} onValueChange={v => setShowArchived(v === "true")}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectTrigger aria-label="Toggle archived visibility"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="false">Hide archived</SelectItem>
               <SelectItem value="true">Show archived</SelectItem>
@@ -193,10 +193,10 @@ function PublicationRegistryPage() {
                         <td className="px-3 py-2 text-xs text-muted-foreground">{p.updatedAt.slice(0, 10)}</td>
                         <td className="px-3 py-2 text-right">
                           <div className="inline-flex items-center gap-1">
-                            <Link to="/publications/$id" params={{ id: p.id }}><Button size="icon" variant="ghost" title="Open"><ExternalLink className="size-4" /></Button></Link>
-                            <Button size="icon" variant="ghost" title="Duplicate" onClick={() => duplicate(p)}><Copy className="size-4" /></Button>
-                            <Button size="icon" variant="ghost" title={p.archived ? "Unarchive" : "Archive"} onClick={() => archive(p)}><Archive className="size-4" /></Button>
-                            <Button size="icon" variant="ghost" title="Delete" onClick={() => remove(p)}><Trash2 className="size-4 text-destructive" /></Button>
+                            <Link to="/publications/$id" params={{ id: p.id }}><Button size="icon" variant="ghost" aria-label={`Open publication ${p.id}`} title="Open"><ExternalLink className="size-4" /></Button></Link>
+                            <Button size="icon" variant="ghost" aria-label={`Duplicate publication ${p.id}`} title="Duplicate" onClick={() => duplicate(p)}><Copy className="size-4" /></Button>
+                            <Button size="icon" variant="ghost" aria-label={`${p.archived ? "Unarchive" : "Archive"} publication ${p.id}`} title={p.archived ? "Unarchive" : "Archive"} onClick={() => archive(p)}><Archive className="size-4" /></Button>
+                            <Button size="icon" variant="ghost" aria-label={`Delete publication ${p.id}`} title="Delete" onClick={() => remove(p)}><Trash2 className="size-4 text-destructive" /></Button>
                           </div>
                         </td>
                       </tr>
