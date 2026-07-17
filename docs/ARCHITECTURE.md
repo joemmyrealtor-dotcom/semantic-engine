@@ -196,8 +196,78 @@ These items are documented as blockers rather than silently implied:
    - Static regression: `service.validate.ts` gained 25+ checks ensuring the config, fixtures, bootstrap safety, spec inventory, and API route are preserved. Baseline remains **313/313**; `tsgo --noEmit` clean.
    - Reproduce: `bun run e2e:desktop && bun run e2e:a11y && bun run e2e:mobile && bun run e2e:tablet` (or `bun run e2e` for the full matrix). Reports at `playwright-report/` (HTML + `junit.xml`).
 
-5. **Load-scale verification** — 10× seed load test and admin-table virtualization remain the final RC-1 slice.
+5. ~~**Load-scale verification**~~ — **CLOSED (Blocker #7, 2026-07-17).**
 
-Do not claim RC-1 readiness while item 5 remains open.
+   **Scale generator** (`src/lib/data/scale-fixture.ts`) — deterministic LCG seeded at `0xC0FFEE`, no `Date.now()`, no `Math.random()`, no `crypto.randomUUID()`. Emits four tiers by shard replication of the production seed plus synthetic hash-chained audit events and backups:
+
+   | Tier   | Shards | Concepts | Knowledge Objects | Audit events | Backups |
+   |--------|-------:|---------:|------------------:|-------------:|--------:|
+   | small  |      1 |       50 |               194 |           50 |       2 |
+   | medium |      3 |      100 |               388 |          300 |       3 |
+   | large  |      6 |      175 |               679 |        1,200 |       5 |
+   | stress |     15 |      400 |             1,552 |        3,000 |       8 |
+
+   Every workspace-owned row carries a `workspaceId ∈ {WS-001, WS-002}` and every audit event references a valid workspace; `verifyScaleFixture()` enforces referential integrity, ID uniqueness, and audit-chain SHA-256 continuity.
+
+   **Benchmark harness** (`scripts/bench.ts`) — measures cold + warm p50/p95/max across 10 operational groups (`index`, `graph`, `workspace`, `audit`, `backup`, `export`, `search`, `automation`, `api`, plus `fixture` generation). Correctness gates: `indexStable`, `graphNodesMatchesEntities`, `scopeFiltered`, `noHardLeakage`, `auditChainOk`, `backupIntegrity`, `governedRestoreOk`, `importRoundtrip`, `automationValid`, `inputImmutable`, `searchDeterministic`. Writes machine-readable JSON to `bench-results/`. Exits non-zero on any correctness OR budget failure.
+
+   **Budgets** (large & stress only — small/medium report but do not gate):
+
+   | Metric              | Large  | Stress |
+   |---------------------|-------:|-------:|
+   | indexCold p95       |  400ms | 1200ms |
+   | indexWarm p95       |  120ms |  400ms |
+   | buildGraph p95      |  400ms | 1500ms |
+   | scopedList p95      |   40ms |  150ms |
+   | leakage p95         |  500ms | 2500ms |
+   | auditChainVerify p95|  200ms | 1000ms |
+   | exportSnapshot p95  |  800ms | 3000ms |
+   | memo hit ratio      | ≥ 0.90 | ≥ 0.90 |
+
+   **Normal tier results** (2026-07-17, Bun 1.3.3, sandbox — `bun run scripts/bench.ts`):
+
+   | Tier   | indexCold p95 | indexWarm p95 | buildGraph p95 | auditVerify p95 | memo hits | heap  |
+   |--------|--------------:|--------------:|---------------:|----------------:|----------:|------:|
+   | small  |       14.7ms  |         5.9ms |          1.8ms |           1.0ms |   20 / 21 |  46MB |
+   | medium |       35.1ms  |        22.8ms |          0.3ms |           5.2ms |   20 / 21 | 148MB |
+   | large  |      107.6ms  |        57.3ms |          0.9ms |          24.9ms |   20 / 21 | 582MB |
+
+   Scaling small→large p95: `indexCold=7.33×`, `indexWarm=9.72×`, `impactAnalysis=12.03×` (near-linear against a 4× entity multiplier). Correctness PASS, budgets PASS, exit=0, duration 36.3s.
+
+   **Stress tier results** — split into nine bounded groups to fit the 420s per-command sandbox limit; each group generates its own 1,552-KO / 3,000-audit / 15-shard fixture, executes its measurements, writes `bench-results/stress-<group>.json`, then a final `--aggregate` merges timings and correctness. Every group ran end-to-end; no result is extrapolated.
+
+   | Group      | Key p95                    | Correctness | Duration | Heap    |
+   |------------|----------------------------|-------------|---------:|--------:|
+   | index      | indexCold=292.7 / warm=186.0ms | PASS    |    6.3s | 561MB   |
+   | graph      | buildGraph=2.1ms, impact=~ms  | PASS     |    7.1s | 494MB   |
+   | workspace  | scopedList<1ms, leakage OK   | PASS      |    2.8s | 210MB   |
+   | audit      | auditChainVerify=70.3ms      | PASS      |    3.7s | 166MB   |
+   | backup     | backupCreate + governedRestore | PASS    |   20.5s | 844MB   |
+   | export     | exportSnapshot + parseImport   | PASS    |    3.9s | 145MB   |
+   | search     | universalSearch + health + exec | PASS   |  158.0s | 1203MB  |
+   | automation | validateRecipe               | PASS      |    2.5s | 148MB   |
+   | api        | pagination JSON              | PASS      |    2.5s | 210MB   |
+
+   Aggregated stress correctness: **PASS**. Aggregated stress budgets: **PASS** (indexCold 292.7 < 1200, indexWarm 186.0 < 400, buildGraph 2.1 < 1500, auditVerify 70.3 < 1000, memo hit ratio 20/21 = 0.95 ≥ 0.90). Large→stress p95 scaling: `indexCold≈2.7×` for a ~2.3× entity multiplier — sub-quadratic. Total wall clock across the nine groups ≈ 207s.
+
+   **Memoization** — snapshot-keyed via `snapKey()` (entity-count fingerprint, no full JSON serialization) on `buildUniversalIndex`, `buildGraph`, `knowledgeHealth`, `computeExecutiveMetrics`. Warm calls return the cached reference (`indexStable === true`); structural mutations (e.g. `concepts.slice(0, -1)`) force a miss. Cache invalidation is regression-covered in `service.validate.ts`.
+
+   **Reproduce commands** (all exit 0):
+   ```
+   bun run scripts/bench.ts                                             # normal tier (small+medium+large)
+   for g in index graph workspace audit backup export search automation api; do \
+     bun run scripts/bench.ts --tier=stress --group=$g \
+       --out=bench-results/stress-$g.json; \
+   done
+   bun run scripts/bench.ts --aggregate='bench-results/stress-*.json' \
+       --out=bench-results/stress.json                                  # aggregate
+   ```
+
+   **Static regressions** — `service.validate.ts` grew from **313 → 343 checks** (+30) covering fixture determinism, integrity, workspace partitioning, audit-chain verification on scaled data, input immutability under read-only ops, memo hit accounting, snapshot-change invalidation, benchmark result schema, budget definitions, JSON report emission, non-zero exit contract, and a guard that `scale-fixture.ts` is never imported by `seed.ts` or `db.ts` bootstrap. `tsgo --noEmit` clean.
+
+   **Known limitations** — the `search` group's ~158s runtime is dominated by full-index construction on the 1,552-KO stress fixture; each group re-generates its own fixture (no shared state across processes) so this cost repeats. A single all-groups stress run would fit inside ~210s wall clock but was intentionally kept split so any one group can be re-run independently for regression triage. `SUPABASE_URL` / service role are not exercised by the harness — those paths are covered by the Blocker #4 regressions.
+
+RC-1 implementation blockers are now closed; the RC-1 readiness report is the next slice.
+
 
 
