@@ -729,6 +729,7 @@ export async function runValidations(): Promise<number> {
 
   // 3d. Governed transaction — permission-denied path writes an audit event
   // and refuses to commit the mutation.
+  authMod.setRole("Viewer");
   actorMod.injectTestActor({ userId: "u-viewer", role: "Viewer", activeWorkspaceId: "WS-001" });
   await repoMod.ensureLoaded();
   const beforeSnap = repoMod.Repo.snapshot()!;
