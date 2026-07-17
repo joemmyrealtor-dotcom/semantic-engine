@@ -1,16 +1,24 @@
-// Workstream 8 + 9 — Public API endpoints with rate limiting, security
-// headers, Bearer auth, and per-client scope enforcement (W9 #6).
+// Workstream 8 + 9 — Public API endpoints.
 //
-// Every non-catalog endpoint requires `Authorization: Bearer <api-key>`.
-// The key's non-crypto fingerprint is matched against seeded APIClient
-// records (via the DEMO_API_KEY env for local testing, or the sha-256
-// fingerprint suffix stored on each APIClient in a production deployment).
-// The endpoint's required scope is then checked against the client's
-// scope list. Public catalog remains anonymous by design.
+// Rate limiting (RC-1 Blocker #4): every non-catalog endpoint routes through
+// the centralized `enforceRateLimit()` in `src/lib/data/rate-limit.ts`. The
+// adapter is chosen from env at request time — in-memory for dev, Supabase
+// (Postgres RPC + `public.rate_limit_buckets`) for production. Invalid or
+// missing credentials still consume the pre-auth abuse bucket (IP-derived),
+// so credential-guessing cannot bypass abuse protection. Successful
+// requests carry `X-RateLimit-*` headers; 429s carry `Retry-After`.
+//
+// Auth: Bearer API key (matched against seeded APIClient records) OR a
+// Supabase user JWT. Scope enforcement is per-endpoint via ENDPOINT_SCOPES.
 import { createFileRoute } from "@tanstack/react-router";
 import { buildSeedSnapshot } from "@/lib/data/seed";
 import { callLocalAPI, API_CATALOG, type APIEndpointId } from "@/lib/data/integrations";
-import { securityHeaders, evaluateRateLimit, redactSecrets, fingerprint } from "@/lib/data/security";
+import { securityHeaders, redactSecrets, fingerprint } from "@/lib/data/security";
+import {
+  selectRateLimitStore, enforceRateLimit, ipFingerprint,
+  currentRateLimitAdapterKind, decisionToDiagnostic, composeRateLimitKey,
+  type PolicyKey, type RateLimitDimensions,
+} from "@/lib/data/rate-limit";
 import type { APIClient, APIClientScope, DataSnapshot } from "@/lib/data/schema";
 
 function route(splat: string, search: URLSearchParams): { id: APIEndpointId; params: Record<string, string> } | null {
@@ -47,31 +55,16 @@ const ENDPOINT_SCOPES: Record<APIEndpointId, APIClientScope> = {
 
 function requestId() { return `req_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`; }
 
-const IP_BUCKETS = new Map<string, { currentCount: number; windowStart: string }>();
-function rateLimit(ip: string) {
-  const nowIso = new Date().toISOString();
-  const existing = IP_BUCKETS.get(ip) ?? { currentCount: 0, windowStart: nowIso };
-  const { decision, next } = evaluateRateLimit({ ...existing, windowSeconds: 60, maxRequests: 60 }, nowIso);
-  IP_BUCKETS.set(ip, next);
-  return decision;
-}
-
-function json(body: unknown, status = 200, extra: Record<string, string> = {}) {
+function json(body: unknown, status = 200, extra: Record<string, string> = {}, reqId?: string) {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    "x-request-id": requestId(),
+    "x-request-id": reqId ?? requestId(),
     ...securityHeaders(),
     ...extra,
   };
   return new Response(JSON.stringify(redactSecrets(body)), { status, headers });
 }
 
-// Resolve the caller against the seeded APIClient roster. In production the
-// DEMO_API_KEY env is unset and matching relies on the fingerprint suffix
-// convention embedded in `keyPrefix`; in local demo the env unlocks APIC-001.
-// W9 Blocker #1 (E) — also accepts Supabase user session bearer tokens
-// (any JWT with 3 segments) and returns a synthetic user client so audit
-// records can distinguish user sessions from API clients.
 function resolveClient(bearer: string | null, snap: DataSnapshot): (APIClient & { actorKind: "api-client" | "user-session" }) | null {
   if (!bearer) return null;
   const demoKey = process.env.DEMO_API_KEY;
@@ -79,9 +72,6 @@ function resolveClient(bearer: string | null, snap: DataSnapshot): (APIClient & 
     const c = snap.apiClients.find(c => c.id === "APIC-001");
     return c ? { ...c, actorKind: "api-client" } : null;
   }
-  // Supabase user JWT (3 dot-separated base64 segments) → treat as an
-  // authenticated end-user with the union of all read scopes. Actual
-  // authorization still runs through per-endpoint scope check below.
   if (bearer.split(".").length === 3) {
     const userClient: APIClient & { actorKind: "user-session" } = {
       id: "USER-SESSION",
@@ -106,51 +96,106 @@ function resolveClient(bearer: string | null, snap: DataSnapshot): (APIClient & 
   return client ? { ...client, actorKind: "api-client" } : null;
 }
 
+// Lazy-bind the store based on runtime env (workers evaluate module top-level per isolate).
+let STORE_INIT = false;
+function ensureStore() {
+  if (STORE_INIT) return;
+  try { selectRateLimitStore(process.env as Record<string, string | undefined>); } catch { /* falls back to memory */ }
+  STORE_INIT = true;
+}
+
 export const Route = createFileRoute("/api/public/v1/$")({
   server: {
     handlers: {
       GET: async ({ request, params }) => {
+        ensureStore();
         const url = new URL(request.url);
         const splat = (params as { _splat?: string })._splat ?? "";
+        const rid = requestId();
 
-        const ip = request.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
-        const rl = rateLimit(ip);
-        const rlHeaders = {
-          "X-RateLimit-Limit": "60",
-          "X-RateLimit-Remaining": String(rl.remaining),
-          "X-RateLimit-Retry-After": String(rl.retryAfterSeconds),
-        };
-        if (!rl.allowed) {
-          return json({ error: { code: "rate-limited", message: "Too many requests", requestId: requestId() } }, 429, rlHeaders);
+        // Catalog is intentionally exempt from enforcement.
+        if (splat === "" || splat === "catalog") {
+          return json({ catalog: API_CATALOG }, 200, {
+            "X-RateLimit-Adapter": currentRateLimitAdapterKind(),
+            "X-RateLimit-Policy": "catalog",
+          }, rid);
         }
 
-        if (splat === "" || splat === "catalog") return json({ catalog: API_CATALOG }, 200, rlHeaders);
+        const ip = request.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
+        const ipHash = ipFingerprint(ip);
+        const store = (await import("@/lib/data/rate-limit")).currentRateLimitStore();
+
+        // Pre-auth abuse bucket — IP-derived, before any credential inspection,
+        // so credential-guessing cannot bypass abuse protection.
+        const preAuthDims: RateLimitDimensions = {
+          actorKind: "anonymous", actorId: "anonymous",
+          endpointId: "unauth", ipHash, scope: null, workspaceId: null,
+        };
+        const preAuth = await enforceRateLimit(store, "unauth", preAuthDims);
+        if (!preAuth.decision.allowed) {
+          return json(
+            { error: { code: "rate-limited", message: "Too many unauthenticated requests", requestId: rid } },
+            429, preAuth.headers, rid,
+          );
+        }
 
         const match = route(splat, url.searchParams);
         if (!match) {
-          return json({ error: { code: "not-found", message: `Unknown endpoint /api/public/v1/${splat}`, requestId: requestId() } }, 404, rlHeaders);
+          return json(
+            { error: { code: "not-found", message: `Unknown endpoint /api/public/v1/${splat}`, requestId: rid } },
+            404, preAuth.headers, rid,
+          );
         }
 
-        // W9 #6 — Bearer auth + scope enforcement for every non-catalog endpoint.
         const snapshot = buildSeedSnapshot();
         const authz = request.headers.get("authorization") ?? "";
         const bearer = authz.toLowerCase().startsWith("bearer ") ? authz.slice(7).trim() : null;
         const client = resolveClient(bearer, snapshot);
         if (!client) {
-          return json({ error: { code: "unauthorized", message: "Missing or invalid Bearer API key", requestId: requestId() } }, 401, rlHeaders);
+          // Invalid credentials still consumed pre-auth bucket above.
+          return json(
+            { error: { code: "unauthorized", message: "Missing or invalid Bearer credential", requestId: rid } },
+            401, preAuth.headers, rid,
+          );
         }
         const required = ENDPOINT_SCOPES[match.id];
         if (required && !client.scopes.includes(required)) {
-          return json({ error: { code: "forbidden", message: `API client ${client.id} lacks scope '${required}'`, requestId: requestId() } }, 403, rlHeaders);
+          return json(
+            { error: { code: "forbidden", message: `Client ${client.id} lacks scope '${required}'`, requestId: rid } },
+            403, preAuth.headers, rid,
+          );
+        }
+
+        // Post-auth per-(client,endpoint,scope,workspace) bucket.
+        const postDims: RateLimitDimensions = {
+          workspaceId: client.workspaceId ?? snapshot.activeWorkspaceId ?? null,
+          actorKind: client.actorKind,
+          actorId: client.id,
+          endpointId: match.id,
+          scope: required ?? null,
+          ipHash,
+        };
+        const postAuth = await enforceRateLimit(store, match.id as PolicyKey, postDims);
+
+        // Structured, redacted diagnostic (never logs raw creds/keys).
+        const diag = decisionToDiagnostic(postAuth.decision, composeRateLimitKey({ ...postDims, endpointId: match.id as PolicyKey }));
+        // eslint-disable-next-line no-console
+        console.info("[rate-limit]", { requestId: rid, path: `/api/public/v1/${splat}`, ...diag });
+
+        if (!postAuth.decision.allowed) {
+          return json(
+            { error: { code: "rate-limited", message: "Rate limit exceeded", requestId: rid, degraded: postAuth.decision.degraded } },
+            429, postAuth.headers, rid,
+          );
         }
 
         const result = callLocalAPI(snapshot, match.id, match.params) as { error?: { code: string } } | unknown;
         if (result && typeof result === "object" && "error" in (result as Record<string, unknown>)) {
           const err = (result as { error: { code: string } }).error;
           const status = err.code === "not-found" ? 404 : err.code === "missing-param" || err.code === "unknown-kind" ? 400 : 500;
-          return json(result, status, rlHeaders);
+          return json(result, status, postAuth.headers, rid);
         }
-        return json(result, 200, rlHeaders);
+        return json(result, 200, postAuth.headers, rid);
       },
     },
   },
