@@ -176,30 +176,101 @@ function DeploymentPage() {
           ))}
         </div>
 
-        <SectionTitle hint="docs/RC4-PRODUCTION-LAUNCH.md">RC-4 launch — operator checklist</SectionTitle>
-        <div className="editorial-card p-4 text-sm mb-4">
-          <div className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Decision: <span className="text-gold">CONDITIONAL GO</span> · commit <span className="font-mono">bef2a30d</span> · GA not claimed until all four hard prerequisites are PASS.</div>
-          <div className="text-xs text-muted-foreground">PASS 16 · BLOCKED-OPERATOR 4 · ACCEPTED-RISK 3 · FAIL 0</div>
+        <SectionTitle hint="docs/LAUNCH-CLOSURE.md">Launch-closure — hard gates</SectionTitle>
+        <HardGatesPanel />
+      </PageBody>
+    </>
+  );
+}
+
+type HardGateStatus = "PASS" | "BLOCKED-OPERATOR" | "FAIL";
+interface HardGate {
+  id: string; owner: string; name: string; status: HardGateStatus;
+  evidence: string; timestamp: string | null; blockingReason: string | null;
+}
+
+const HARD_GATES: HardGate[] = [
+  {
+    id: "H1", owner: "Platform Ops",
+    name: "RATE_LIMIT_ADAPTER=supabase set in production env",
+    status: "BLOCKED-OPERATOR",
+    evidence: "PASS requires: startupDiagnostics rate-limit row shows OK in prod env AND `env | grep RATE_LIMIT_ADAPTER` returns `supabase` on the production runtime.",
+    timestamp: null,
+    blockingReason: "No production env attestation captured. Rehearsal only — set env var and re-attest at cutover.",
+  },
+  {
+    id: "H2", owner: "Auth Owner",
+    name: "Google OAuth enabled + callback verified",
+    status: "BLOCKED-OPERATOR",
+    evidence: "PASS requires: Google provider toggled ON in Cloud Auth Settings AND a successful end-to-end sign-in from the published URL (screenshot or session row in auth.users with provider='google').",
+    timestamp: null,
+    blockingReason: "Provider not toggled and callback not verified in this environment.",
+  },
+  {
+    id: "H3", owner: "API Owner",
+    name: "APIC-001 disabled/deleted + fresh API clients provisioned as runtime secrets",
+    status: "BLOCKED-OPERATOR",
+    evidence: "PASS requires: APIC-001 row soft-deleted or disabled AND ≥1 new APIClient row exists AND its bearer stored in Project Settings → Secrets (never in code/commits).",
+    timestamp: null,
+    blockingReason: "Demo bearer still present; no production APIClient rows issued.",
+  },
+  {
+    id: "H4", owner: "Data Ops",
+    name: "pre-rc1-baseline backup captured + integrity verified + monitoring green",
+    status: "BLOCKED-OPERATOR",
+    evidence: "PASS requires: performBackup() returns BKP id AND verifyBackupIntegrity() returns matching SHA-256 hash AND /admin/monitoring shows all diagnostics green at the same timestamp.",
+    timestamp: null,
+    blockingReason: "No baseline BKP row present in workspace.",
+  },
+];
+
+function HardGatesPanel() {
+  const allPass = HARD_GATES.every(g => g.status === "PASS");
+  return (
+    <>
+      <div className="editorial-card p-4 text-sm mb-4">
+        <div className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
+          Production GO:{" "}
+          <span className={allPass ? "text-evergreen" : "text-destructive"}>
+            {allPass ? "UNLOCKED" : "LOCKED — hard gates open"}
+          </span>
         </div>
-        <div className="editorial-card divide-y divide-border text-sm">
-          {[
-            { id: "H1", owner: "Platform Ops", name: "Set RATE_LIMIT_ADAPTER=supabase in production env", status: "BLOCKED-OPERATOR" },
-            { id: "H2", owner: "Auth Owner",   name: "Enable Google OAuth provider in Cloud",              status: "BLOCKED-OPERATOR" },
-            { id: "H3", owner: "API Owner",    name: "Retire APIC-001 demo bearer; issue production APIClient rows", status: "BLOCKED-OPERATOR" },
-            { id: "H4", owner: "Data Ops",     name: "Capture pre-launch-baseline backup + verify integrity", status: "BLOCKED-OPERATOR" },
-            { id: "C1", owner: "Platform Ops", name: "Cutover: publish → run smoke suite → watch /admin/monitoring 15 min", status: "PENDING" },
-            { id: "C2", owner: "SRE",          name: "Post-launch: wire external alert routing + F-RC3-004 tenant hardening", status: "PENDING" },
-          ].map(g => (
-            <div key={g.id} className="p-3 flex items-center justify-between">
+        <div className="text-xs text-muted-foreground">
+          Production cutover is blocked while any hard gate below is not PASS. This is enforced by policy, not by a togglable flag.
+        </div>
+      </div>
+      <div className="editorial-card divide-y divide-border text-sm">
+        {HARD_GATES.map(g => (
+          <div key={g.id} className="p-3">
+            <div className="flex items-center justify-between mb-1">
               <div>
                 <span className="font-mono text-xs text-muted-foreground mr-2">{g.id}</span>
-                {g.name}
+                <span className="font-medium">{g.name}</span>
                 <span className="text-xs text-muted-foreground ml-2">· {g.owner}</span>
               </div>
-              <span className={`text-xs uppercase tracking-widest ${g.status === "PASS" ? "text-evergreen" : g.status === "PENDING" ? "text-muted-foreground" : "text-gold"}`}>{g.status}</span>
+              <span
+                className={`text-xs uppercase tracking-widest ${
+                  g.status === "PASS" ? "text-evergreen" : g.status === "FAIL" ? "text-destructive" : "text-gold"
+                }`}
+              >
+                {g.status}
+              </span>
             </div>
-          ))}
+            <div className="text-xs text-muted-foreground pl-6">
+              <div><span className="uppercase tracking-widest text-[10px] mr-1">Evidence:</span>{g.evidence}</div>
+              <div className="mt-1"><span className="uppercase tracking-widest text-[10px] mr-1">Timestamp:</span>{g.timestamp ?? "—"}</div>
+              {g.blockingReason && (
+                <div className="mt-1 text-destructive/80"><span className="uppercase tracking-widest text-[10px] mr-1">Blocking:</span>{g.blockingReason}</div>
+              )}
+            </div>
+          </div>
+        ))}
+        <div className="p-3">
+          <Button size="sm" variant="outline" disabled aria-disabled title="Locked while any hard gate is not PASS">
+            Promote to production {allPass ? "" : "(locked)"}
+          </Button>
         </div>
+      </div>
       </PageBody>
     </>
   );
