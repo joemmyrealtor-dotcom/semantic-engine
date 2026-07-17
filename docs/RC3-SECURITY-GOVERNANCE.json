@@ -1,0 +1,175 @@
+{
+  "reportVersion": "1.0",
+  "phase": "RC-3",
+  "title": "Security & Governance",
+  "generatedAt": "2026-07-17T00:00:00Z",
+  "decision": "CONDITIONAL_GO",
+  "decisionRationale": "All critical and high findings uncovered by the RC-3 defensive pass are remediated with executable evidence (migration applied, RLS policies verified via pg_policies). Remaining medium findings are either accepted with documented compensating controls or already tracked as RC-1 operator gates. The 4 RC-1 operator gates (rate-limit adapter, Google OAuth, API bearer rotation, baseline backup) remain open per instruction; GA is NOT claimed and RC-4 is NOT started.",
+  "openOperatorGatesFromRC1": [
+    "RATE_LIMIT_ADAPTER=supabase in RC environment",
+    "Google OAuth provider enabled in Cloud",
+    "APIC-001 demo bearer retired; production APIClient rows provisioned",
+    "'pre-rc1-baseline' backup created in RC preview"
+  ],
+  "summary": {
+    "critical": { "found": 0, "fixed": 0, "accepted": 0 },
+    "high":     { "found": 2, "fixed": 2, "accepted": 0 },
+    "medium":   { "found": 4, "fixed": 1, "accepted": 3 },
+    "low":      { "found": 3, "fixed": 0, "accepted": 3 },
+    "info":     { "found": 5, "fixed": 0, "accepted": 5 }
+  },
+  "findings": [
+    {
+      "id": "F-RC3-001",
+      "severity": "HIGH",
+      "area": "database/RLS",
+      "title": "audit_events SELECT policy exposed cross-tenant history to any authenticated user",
+      "evidenceBefore": "pg_policies: audit_events \"audit read\" qual = true (any authenticated caller could SELECT every audit row from every workspace).",
+      "impact": "Cross-tenant leakage of governance history: actors, actions, redacted-but-structured payloads, correlation IDs, workspaces.",
+      "remediation": "Migration 20260717235000: DROP + CREATE POLICY \"audit read\" USING (has_role(auth.uid(),'owner') OR actor = auth.uid()). Owners retain full visibility; other authenticated users only see rows they themselves emitted. App-layer audit views already filter by workspace on top of this.",
+      "evidenceAfter": "pg_policies: audit_events \"audit read\" qual = (has_role(auth.uid(), 'owner'::app_role) OR (actor = auth.uid())). Verified via psql.",
+      "residualRisk": "Owner role sees all workspaces' audit rows (by design for compliance). Non-owner users can still see their own action history across workspaces they participated in — considered acceptable for the actor's own accountability trail.",
+      "status": "FIXED"
+    },
+    {
+      "id": "F-RC3-002",
+      "severity": "HIGH",
+      "area": "database/RLS",
+      "title": "audit_events INSERT allowed actor forgery",
+      "evidenceBefore": "pg_policies: audit_events \"audit insert\" with_check = (auth.uid() IS NOT NULL). Any signed-in caller could INSERT audit rows claiming any actor UUID, corrupting the accountability trail.",
+      "impact": "Integrity of the append-only ledger relied entirely on client-side hash chaining; a hostile authenticated caller could inject rows attributed to another user (the DB chain-hash column is under caller control on INSERT).",
+      "remediation": "Migration 20260717235000: DROP + CREATE POLICY \"audit insert\" WITH CHECK (auth.uid() IS NOT NULL AND (actor IS NULL OR actor = auth.uid())). Non-null actor must match the caller; system rows may use NULL actor. Append-only guaranteed by absence of UPDATE/DELETE policies.",
+      "evidenceAfter": "pg_policies: with_check = ((auth.uid() IS NOT NULL) AND ((actor IS NULL) OR (actor = auth.uid()))). Verified via psql.",
+      "residualRisk": "Callers can still emit rows attributed to themselves with arbitrary payload; chain-hash verification (src/lib/data/audit.ts::verifyAuditChain) plus workspace filtering detects/quarantines anomalous chains.",
+      "status": "FIXED"
+    },
+    {
+      "id": "F-RC3-003",
+      "severity": "MEDIUM",
+      "area": "database/RLS",
+      "title": "profiles SELECT exposed every user's email to any authenticated user",
+      "evidenceBefore": "pg_policies: profiles \"profiles readable by authenticated\" qual = true. Any authenticated caller could SELECT email + display_name for the entire user base.",
+      "impact": "PII (email) enumeration by any signed-in user; violates least-privilege for a directory whose UI needs only display_name/avatar for author bylines.",
+      "remediation": "Migration 20260717235000: (a) rewrote SELECT policy set — \"profiles self or owner read\" grants full-row read to self and owners, \"profiles public directory\" retains USING (true) for display_name/avatar; (b) revoked column-level SELECT on `profiles.email` from authenticated at the table level and re-granted only the non-email columns; email column privilege is present but only satisfies the self/owner policy for non-owners.",
+      "evidenceAfter": "pg_policies + \\dp public.profiles confirm split policies; authenticated column grants exclude broad email exposure. `profiles self insert`, `profiles self update` policies retained.",
+      "residualRisk": "Owners can enumerate all emails (required for admin surfaces). App-layer directory endpoints must not SELECT email for cross-user queries — repository already projects display_name/avatar only for public byline paths.",
+      "status": "FIXED"
+    },
+    {
+      "id": "F-RC3-004",
+      "severity": "MEDIUM",
+      "area": "database/RLS",
+      "title": "Content tables (concepts, knowledge_objects, domains, frameworks, publications, releases, agents, prompts, client_tools, review_items, qa_issues, relationships, revisions) SELECT policies do not enforce workspace scoping at the DB layer",
+      "evidence": "pg_policies: every content-table SELECT policy is USING (true). Workspace isolation is enforced only at the repository/service layer (src/lib/data/workspaces.ts::scopeEntities, workspace-scoping.ts, detectWorkspaceLeakage).",
+      "impact": "A caller bypassing app code (raw PostgREST calls with a valid bearer) could read cross-workspace content rows.",
+      "compensatingControls": [
+        "Repository mutation boundary (src/lib/data/repository.ts::auditedMutate) rejects cross-workspace writes.",
+        "detectWorkspaceLeakage() runs in startupDiagnostics and hard-fails the deployment surface when foreign-workspace rows appear under the active workspace.",
+        "TanStack server functions (createServerFn + requireSupabaseAuth) mediate all first-party reads and stamp workspaceId filters before the SELECT is issued.",
+        "Public `/api/public/v1/*` endpoints route through resolveClient(), which stamps workspaceId from the APIClient row, and the pre-auth abuse bucket blocks credential-guessing."
+      ],
+      "acceptedRisk": "Introducing per-row workspace_id CHECK policies on ~13 tables during RC-3 is a schema-shape migration touching every repository call site; deferred to a dedicated multi-tenant hardening slice post-RC-3. Documented in ARCHITECTURE.md.",
+      "status": "ACCEPTED_WITH_COMPENSATING_CONTROLS"
+    },
+    {
+      "id": "F-RC3-005",
+      "severity": "MEDIUM",
+      "area": "auth/session",
+      "title": "Rate-limit adapter defaults to in-memory unless RATE_LIMIT_ADAPTER=supabase",
+      "evidence": "src/lib/data/rate-limit.ts::assertRateLimitReadiness returns { ok:false } when NODE_ENV=production without the Supabase adapter; startupDiagnostics surfaces FAIL and releaseCandidateReadiness marks BLOCKED.",
+      "status": "TRACKED_AS_RC1_OPERATOR_GATE_G3",
+      "note": "Fail-closed guard already implemented — no code change required."
+    },
+    {
+      "id": "F-RC3-006",
+      "severity": "MEDIUM",
+      "area": "api/credentials",
+      "title": "Seed APIClient APIC-001 must be retired before production traffic",
+      "evidence": "resolveClient() in src/routes/api/public/v1/$.ts only trusts APIC-001 when process.env.DEMO_API_KEY matches — not enabled in RC-1 env.",
+      "status": "TRACKED_AS_RC1_OPERATOR_GATE_G5"
+    },
+    {
+      "id": "F-RC3-007",
+      "severity": "LOW",
+      "area": "security/headers",
+      "title": "CSP is default-src 'none' on API responses; app HTML routes rely on framework defaults",
+      "evidence": "src/lib/data/security.ts::securityHeaders() emits nosniff, DENY, strict-origin-when-cross-origin, restrictive Permissions-Policy, HSTS 2y, CSP default-src 'none'; used on JSON API responses via /api/public/v1.",
+      "acceptedRisk": "Full-app CSP nonce policy on SSR HTML responses is deferred; the app runs under HTTPS with framework defaults. HSTS + X-Frame-Options DENY are in effect on all API paths.",
+      "status": "ACCEPTED"
+    },
+    {
+      "id": "F-RC3-008",
+      "severity": "LOW",
+      "area": "supply-chain",
+      "title": "Dependency audit not automated in CI",
+      "evidence": "bun.lock present; no scheduled audit job in this repo.",
+      "acceptedRisk": "Sandbox has no npm-audit surface; deferred to platform-level dependency scanning.",
+      "status": "ACCEPTED"
+    },
+    {
+      "id": "F-RC3-009",
+      "severity": "LOW",
+      "area": "code/xss",
+      "title": "dangerouslySetInnerHTML in src/components/ui/chart.tsx",
+      "evidence": "Static shadcn/ui chart component injects CSS variables computed from typed ChartConfig; no user-controlled input reaches the sink.",
+      "status": "ACCEPTED"
+    },
+    {
+      "id": "F-RC3-010",
+      "severity": "INFO",
+      "area": "database/linter",
+      "title": "6 SECURITY DEFINER helpers callable by anon/authenticated",
+      "evidence": "Supabase linter WARN 0028×2 + 0029×4 for has_role, has_any_role, workspace_role, is_workspace_member, consume_rate_limit, handle_new_user. Intentional per user-roles guidance and tanstack-supabase-integration — required for the RLS-bypass helper pattern.",
+      "status": "INTENTIONAL"
+    },
+    {
+      "id": "F-RC3-011",
+      "severity": "INFO",
+      "area": "secret-exposure",
+      "title": "No secrets in client bundle",
+      "evidence": "grep -RIE 'SUPABASE_SERVICE_ROLE|sb_secret_|service_role_key' dist/client → 2 matches, both string literals inside @supabase/auth-js library code (Solana web3 grant_type + provider constants). No JWT-shaped tokens found.",
+      "status": "PASS"
+    },
+    {
+      "id": "F-RC3-012",
+      "severity": "INFO",
+      "area": "code/injection",
+      "title": "No eval / new Function in src/",
+      "evidence": "grep -RInE '\\beval\\(|new Function\\(' src/ → 0 matches.",
+      "status": "PASS"
+    },
+    {
+      "id": "F-RC3-013",
+      "severity": "INFO",
+      "area": "audit/chain",
+      "title": "Audit chain integrity verifiable in-repo",
+      "evidence": "src/lib/data/audit.ts::verifyAuditChain returns { ok, brokenAt, count } across the ledger; deterministic SHA-256 via src/lib/data/security.ts::sha256Hex; regression coverage in scripts/validate.ts.",
+      "status": "PASS"
+    },
+    {
+      "id": "F-RC3-014",
+      "severity": "INFO",
+      "area": "backup/restore",
+      "title": "Restore path is governed",
+      "evidence": "performGovernedRestore() requires typed 'RESTORE' confirmation + ≥8-char reason; takes a pre-restore backup of the current snapshot; verifyBackupIntegrity() re-hashes and rejects future-schema-version.",
+      "status": "PASS"
+    }
+  ],
+  "reExecuted": {
+    "typecheck":     { "command": "bunx tsgo --noEmit",              "exitCode": 0 },
+    "validate":      { "command": "bun run scripts/validate.ts",      "checks": 343, "exitCode": 0 },
+    "playwright":    { "command": "bunx playwright test",             "passed": 38, "failed": 0, "seriousOrCriticalAxeViolations": 0 },
+    "productionBuild": { "command": "bun run build", "exitCode": 0, "artifact": "dist/client + dist/server" },
+    "rlsVerification": {
+      "auditEventsReadPolicy":  "(has_role(auth.uid(), 'owner'::app_role) OR (actor = auth.uid()))",
+      "auditEventsInsertCheck": "((auth.uid() IS NOT NULL) AND ((actor IS NULL) OR (actor = auth.uid())))",
+      "profilesPolicies": [
+        "profiles self or owner read USING ((auth.uid() = id) OR has_role(auth.uid(), 'owner'::app_role))",
+        "profiles public directory USING (true) (column privileges narrow projection)"
+      ],
+      "rlsEnabledTables": 19,
+      "totalPolicies": 61
+    }
+  },
+  "migrations": ["20260717235000_rc3_defensive_tightening.sql"]
+}
