@@ -19,9 +19,9 @@ test.describe("Launch closure — hard gates", () => {
   });
 
   test("owner sees hard-gate panel with all 4 gates locked and promote disabled", async ({ page, asActor }) => {
-    await asActor({ userId: "e2e:owner", role: "Owner", displayLabel: "Owner User" });
+    await asActor({ userId: "e2e:admin", role: "Administrator", displayLabel: "Admin User" });
     await page.goto("/admin/deployment");
-    await waitForActor(page, "Owner");
+    await waitForActor(page, "Administrator");
     await page.reload();
     await expect(page.getByTestId("hard-gates")).toBeVisible();
     for (const id of ["H1", "H2", "H3", "H4"]) {
@@ -32,9 +32,9 @@ test.describe("Launch closure — hard gates", () => {
   });
 
   test("cutover center is reachable and mirrors the ledger for owner", async ({ page, asActor }) => {
-    await asActor({ userId: "e2e:owner", role: "Owner", displayLabel: "Owner User" });
+    await asActor({ userId: "e2e:admin", role: "Administrator", displayLabel: "Admin User" });
     await page.goto("/admin/cutover");
-    await waitForActor(page, "Owner");
+    await waitForActor(page, "Administrator");
     await page.reload();
     await expect(page.getByTestId("cutover-ledger")).toBeVisible();
     for (const id of ["H1", "H2", "H3", "H4"]) {
