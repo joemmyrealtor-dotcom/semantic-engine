@@ -132,21 +132,21 @@ function PublicationRegistryPage() {
         <div className="editorial-card p-4 mb-4 grid md:grid-cols-5 gap-3">
           <Input placeholder="Search title, audience, tag, ID…" value={q} onChange={e => { setQ(e.target.value); setPage(0); }} />
           <Select value={stage} onValueChange={v => { setStage(v); setPage(0); }}>
-            <SelectTrigger><SelectValue placeholder="Stage" /></SelectTrigger>
+            <SelectTrigger aria-label="Filter by manufacturing stage"><SelectValue placeholder="Stage" /></SelectTrigger>
             <SelectContent>
               <SelectItem value={ALL}>All stages</SelectItem>
               {PUBLICATION_STAGES.map(st => <SelectItem key={st} value={st}>{st}</SelectItem>)}
             </SelectContent>
           </Select>
           <Select value={status} onValueChange={v => { setStatus(v); setPage(0); }}>
-            <SelectTrigger><SelectValue placeholder="Lifecycle" /></SelectTrigger>
+            <SelectTrigger aria-label="Filter by lifecycle status"><SelectValue placeholder="Lifecycle" /></SelectTrigger>
             <SelectContent>
               <SelectItem value={ALL}>All lifecycle</SelectItem>
               {["Draft","In Review","Approved","Canonical","Deprecated","Archived"].map(x => <SelectItem key={x} value={x}>{x}</SelectItem>)}
             </SelectContent>
           </Select>
           <Select value={String(showArchived)} onValueChange={v => setShowArchived(v === "true")}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectTrigger aria-label="Toggle archived visibility"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="false">Hide archived</SelectItem>
               <SelectItem value="true">Show archived</SelectItem>
