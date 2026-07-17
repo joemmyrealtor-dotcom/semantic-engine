@@ -592,7 +592,8 @@ export type EntityType =
   | "backups"
   | "workspaces"
   | "featureFlags"
-  | "rateLimitBuckets";
+  | "rateLimitBuckets"
+  | "launchGateEvidence";
 
 // ===================================================================
 // Workstream 5 — Automation, Orchestration, Operational Governance
