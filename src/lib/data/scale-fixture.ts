@@ -52,10 +52,10 @@ export interface ScaleReport {
 }
 
 const TIER_DEFAULTS: Record<ScaleTier, { shards: number; auditEvents: number; backups: number }> = {
-  small:  { shards: 1,  auditEvents: 50,   backups: 2  },
-  medium: { shards: 4,  auditEvents: 500,  backups: 5  },
-  large:  { shards: 15, auditEvents: 2000, backups: 10 },
-  stress: { shards: 40, auditEvents: 5000, backups: 20 },
+  small:  { shards: 1, auditEvents: 50,   backups: 2 },
+  medium: { shards: 3, auditEvents: 300,  backups: 3 },
+  large:  { shards: 6, auditEvents: 1200, backups: 5 },
+  stress: { shards: 15, auditEvents: 3000, backups: 8 },
 };
 
 // -------- deterministic LCG (no crypto, no Math.random) --------
