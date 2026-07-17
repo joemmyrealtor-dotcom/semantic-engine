@@ -756,8 +756,9 @@ export async function runValidations(): Promise<number> {
 
   // 3e. Governed transaction — success path commits and appends one parent
   // audit event with the injected correlation id.
+  authMod.setRole("Administrator");
   actorMod.injectTestActor({
-    userId: "u-owner", role: "Owner", activeWorkspaceId: "WS-001",
+    userId: "u-admin", role: "Administrator", activeWorkspaceId: "WS-001",
     correlationId: "corr-txn-1",
   });
   const beforeOk = repoMod.Repo.snapshot()!;
