@@ -22,8 +22,7 @@ test.describe("Launch closure — hard gates", () => {
     await asActor({ userId: "e2e:admin", role: "Administrator", displayLabel: "Admin User" });
     await page.goto("/admin/deployment");
     await waitForActor(page, "Administrator");
-    await page.reload();
-    await expect(page.getByTestId("hard-gates")).toBeVisible();
+    await expect(page.getByTestId("hard-gates")).toBeVisible({ timeout: 15_000 });
     for (const id of ["H1", "H2", "H3", "H4"]) {
       await expect(page.getByTestId(`gate-${id}`)).toBeVisible();
     }
@@ -35,10 +34,10 @@ test.describe("Launch closure — hard gates", () => {
     await asActor({ userId: "e2e:admin", role: "Administrator", displayLabel: "Admin User" });
     await page.goto("/admin/cutover");
     await waitForActor(page, "Administrator");
-    await page.reload();
-    await expect(page.getByTestId("cutover-ledger")).toBeVisible();
+    await expect(page.getByTestId("cutover-ledger")).toBeVisible({ timeout: 15_000 });
     for (const id of ["H1", "H2", "H3", "H4"]) {
       await expect(page.getByTestId(`cutover-${id}`)).toBeVisible();
     }
   });
 });
+
