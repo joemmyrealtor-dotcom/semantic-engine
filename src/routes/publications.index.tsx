@@ -193,10 +193,10 @@ function PublicationRegistryPage() {
                         <td className="px-3 py-2 text-xs text-muted-foreground">{p.updatedAt.slice(0, 10)}</td>
                         <td className="px-3 py-2 text-right">
                           <div className="inline-flex items-center gap-1">
-                            <Link to="/publications/$id" params={{ id: p.id }}><Button size="icon" variant="ghost" title="Open"><ExternalLink className="size-4" /></Button></Link>
-                            <Button size="icon" variant="ghost" title="Duplicate" onClick={() => duplicate(p)}><Copy className="size-4" /></Button>
-                            <Button size="icon" variant="ghost" title={p.archived ? "Unarchive" : "Archive"} onClick={() => archive(p)}><Archive className="size-4" /></Button>
-                            <Button size="icon" variant="ghost" title="Delete" onClick={() => remove(p)}><Trash2 className="size-4 text-destructive" /></Button>
+                            <Link to="/publications/$id" params={{ id: p.id }}><Button size="icon" variant="ghost" aria-label={`Open publication ${p.id}`} title="Open"><ExternalLink className="size-4" /></Button></Link>
+                            <Button size="icon" variant="ghost" aria-label={`Duplicate publication ${p.id}`} title="Duplicate" onClick={() => duplicate(p)}><Copy className="size-4" /></Button>
+                            <Button size="icon" variant="ghost" aria-label={`${p.archived ? "Unarchive" : "Archive"} publication ${p.id}`} title={p.archived ? "Unarchive" : "Archive"} onClick={() => archive(p)}><Archive className="size-4" /></Button>
+                            <Button size="icon" variant="ghost" aria-label={`Delete publication ${p.id}`} title="Delete" onClick={() => remove(p)}><Trash2 className="size-4 text-destructive" /></Button>
                           </div>
                         </td>
                       </tr>
