@@ -78,9 +78,20 @@ export function AppShell({ children }: { children: ReactNode }) {
             <span className="flex-1 text-left">Search or jump to…</span>
             <kbd className="text-[10px] px-1.5 py-0.5 rounded border border-border bg-muted font-mono">⌘K</kbd>
           </button>
-          <div className="ml-auto hidden sm:flex items-center gap-2 text-xs text-muted-foreground">
+          <div className="ml-auto hidden sm:flex items-center gap-3 text-xs text-muted-foreground">
             <span className="inline-block size-2 rounded-full bg-evergreen" />
-            Local demo · IndexedDB
+            {signedIn ? (
+              <>
+                <span className="max-w-[16ch] truncate" title={actor.displayLabel}>{actor.displayLabel}</span>
+                <Button variant="ghost" size="sm" onClick={handleSignOut} aria-label="Sign out">
+                  <LogOut className="size-3.5" /> Sign out
+                </Button>
+              </>
+            ) : (
+              <Link to="/auth" className="inline-flex items-center gap-1 hover:text-foreground">
+                <LogIn className="size-3.5" /> Sign in
+              </Link>
+            )}
           </div>
         </header>
         <main className="flex-1 min-w-0">{children}</main>
