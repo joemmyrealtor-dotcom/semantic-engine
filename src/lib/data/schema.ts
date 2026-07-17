@@ -1266,9 +1266,10 @@ export interface DataSnapshot {
   rateLimitBuckets: APIRateLimitBucket[];
   maintenanceMode: MaintenanceModeState;
   activeWorkspaceId: string;
+  launchGateEvidence: LaunchGateEvidence[];
 }
 
-export const SCHEMA_VERSION = 8;
+export const SCHEMA_VERSION = 9;
 
 export const ID_PATTERNS: Record<string, RegExp> = {
   domain: /^DOM-\d{3}$/,
