@@ -171,10 +171,13 @@ bun run src/lib/data/service.validate.ts  # deterministic domain checks
 ### Known blocking limitations — NOT RC-1 READY
 These items are documented as blockers rather than silently implied:
 
-1. **Auth is still demo role-switch, not real Supabase session** — `auth.ts` `getRole()`/`setRole()` operate on an in-memory ambient. Wiring `supabase.auth.onAuthStateChange`, a `_authenticated` gate, and a `user_roles` → `Role` derivation is a follow-up slice. The permission matrix and `requirePermission()` gate are production-quality; they just need to be fed by a real session.
-2. **Per-entity workspace isolation** — domain entities (`concepts`, `publications`, etc.) do not carry `workspaceId`. Isolation is enforced only on audit/backup ledgers. Full per-entity scoping requires a schema migration adding `workspaceId` with a backfill default, plus repository-level filters. `detectWorkspaceLeakage()` explicitly reports the unscoped entity kinds.
+1. **Auth is still demo role-switch, not real Supabase session** — resolved in the Blocker #1 slice (session bridge + `_authenticated` gate + actor propagation).
+2. ~~**Per-entity workspace isolation**~~ — **CLOSED (Blocker #5b, 2026-07-17).** Every workspace-owned entity now carries `workspaceId` (schema v8, additive on `Timestamped`). A classification registry in `src/lib/data/workspace-scoping.ts` (`WORKSPACE_OWNED_KINDS` vs `GLOBAL_KINDS`) drives:
+   - `db.ts` load-time `backfillWorkspaceIds()` — idempotent, preserves foreign ids;
+   - `repository.ts` — `scopedList` / `scopedGet` filter strictly by active workspace for owned kinds; `create` stamps the active workspace; `update`/`remove` refuse cross-workspace mutations and refuse re-homing via patch;
+   - `workspaces.ts` `detectWorkspaceLeakage()` — hard-fails on unscoped rows in owned kinds and reports foreign rows per-kind; `auditWorkspaceCoverage()` gives a per-kind census (total / unscoped / foreign).
+   Regression coverage: 17 new deterministic checks in `service.validate.ts` covering the classifier, backfill idempotency, foreign-id preservation, cross-workspace create/update/remove refusal, and `scopedList`/`scopedGet` filtering. Total: 217/217 checks passing.
 3. **Rate-limit adapter is per-worker in-memory** — `bindRateLimiter()` provides the injection point; a Redis/Durable-Object/Supabase adapter must be supplied before public traffic.
-4. **RBAC is enforced at UI + `requirePermission()` boundaries, not yet at the repository `mutate()` layer** — a repository-wide audited-mutation wrapper that unconditionally logs actor/before/after and calls `requirePermission()` remains a follow-up.
-5. **Accessibility & load-scale QA** — Playwright a11y sweep, virtualization of admin tables, and a 10× seed load test are not covered in this pass.
+4. **Accessibility & load-scale QA** — Playwright a11y sweep, virtualization of admin tables, and a 10× seed load test are not covered in this pass.
 
-Do not claim RC-1 readiness while any of items 1–5 remain open.
+Do not claim RC-1 readiness while any of items 3–4 remain open.
