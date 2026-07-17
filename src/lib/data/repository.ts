@@ -87,13 +87,20 @@ const ADMIN_KEYS: Partial<Record<EntityKey, { create: Permission; update: Permis
 const DEFAULT_PERMS = { create: "content.create" as Permission, update: "content.update" as Permission, delete: "content.delete" as Permission };
 function permsFor(key: EntityKey) { return ADMIN_KEYS[key] ?? DEFAULT_PERMS; }
 
-// W9 #5 — Workspace stamping. When an entity type carries a `workspaceId`
-// (or we're stamping a fresh row), attach the active workspace.
-function stampWorkspace<T extends object>(item: T, workspaceId: string): T {
-  if (workspaceId && typeof item === "object" && !("workspaceId" in item)) {
-    return { ...item, workspaceId } as T;
-  }
-  return item;
+// W9 #5b — Per-entity workspace isolation.
+// `stampWorkspace` stamps a workspaceId on a fresh row when the kind is
+// workspace-owned. `assertSameWorkspace` guards update/remove from crossing
+// tenants; a mismatch fails closed with a permission-denied audit.
+function stampWorkspace<T extends object>(kind: EntityType, item: T, workspaceId: string): T {
+  if (!isWorkspaceOwned(kind)) return item;
+  const current = (item as { workspaceId?: string }).workspaceId;
+  if (current && current !== workspaceId) return item; // caller-provided id preserved
+  return { ...item, workspaceId } as T;
+}
+function crossWorkspace(kind: EntityType, row: unknown, workspaceId: string): boolean {
+  if (!isWorkspaceOwned(kind)) return false;
+  const w = (row as { workspaceId?: string } | undefined)?.workspaceId;
+  return typeof w === "string" && w !== workspaceId;
 }
 
 /**
