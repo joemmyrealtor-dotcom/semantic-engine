@@ -144,18 +144,18 @@ function buildUniversalIndexImpl(s: DataSnapshot): UniversalAsset[] {
     out.push({
       id: p.id, kind: "Publication", title: p.title, description: p.description || p.purpose,
       owner: p.owner || p.steward, status: p.status, stage: p.manufacturingStage,
-      tags: p.tags, keywords: [p.publicationType, p.audience],
+      tags: p.tags ?? [], keywords: [p.publicationType, p.audience],
       updatedAt: p.updatedAt,
-      haystack: H([p.id, p.title, p.description, p.purpose, p.audience, p.publicationType, ...p.tags, p.owner, p.steward]),
+      haystack: H([p.id, p.title, p.description, p.purpose, p.audience, p.publicationType, ...(p.tags ?? []), p.owner, p.steward]),
       routeTo: "/publications/$id", routeParams: { id: p.id }, parentId: null,
     });
-    for (const ch of p.chapters) {
+    for (const ch of (p.chapters ?? [])) {
       out.push({
         id: ch.id, kind: "Chapter", title: ch.title, description: ch.description,
         owner: p.owner || p.steward, status: ch.reviewStatus, stage: ch.manufacturingStage,
-        tags: [], keywords: ch.learningObjectives,
+        tags: [], keywords: ch.learningObjectives ?? [],
         updatedAt: p.updatedAt,
-        haystack: H([ch.id, ch.title, ch.description, ...ch.learningObjectives, ch.editorialNotes]),
+        haystack: H([ch.id, ch.title, ch.description, ...(ch.learningObjectives ?? []), ch.editorialNotes]),
         routeTo: "/publications/$id", routeParams: { id: p.id }, parentId: p.id,
       });
     }
@@ -249,8 +249,8 @@ function buildUniversalIndexImpl(s: DataSnapshot): UniversalAsset[] {
       routeTo: null, routeParams: null, parentId: parent,
     });
   };
-  for (const p of s.publications) for (const pl of p.presentations) addPres(pl.id, pl.title, pl.url, pl.kind, p.updatedAt, p.id);
-  for (const tk of s.clientToolkits ?? []) for (const pl of tk.presentations) addPres(pl.id, pl.title, pl.url, pl.kind, tk.updatedAt, tk.id);
+  for (const p of s.publications) for (const pl of (p.presentations ?? [])) addPres(pl.id, pl.title, pl.url, pl.kind, p.updatedAt, p.id);
+  for (const tk of s.clientToolkits ?? []) for (const pl of (tk.presentations ?? [])) addPres(pl.id, pl.title, pl.url, pl.kind, tk.updatedAt, tk.id);
 
   return out;
 }
@@ -302,8 +302,8 @@ export function universalSearch(index: UniversalAsset[], query: string, opts: Se
       if (titleL === t) { score += 80; matched.push("title"); }
       else if (titleL.startsWith(t)) { score += 50; matched.push("title"); }
       else if (titleL.includes(t)) { score += 25; matched.push("title"); }
-      if (asset.tags.some(x => x.toLowerCase().includes(t))) { score += 15; matched.push("tag"); }
-      if (asset.keywords.some(x => x.toLowerCase().includes(t))) { score += 12; matched.push("keyword"); }
+      if (asset.tags.some(x => (x ?? "").toLowerCase().includes(t))) { score += 15; matched.push("tag"); }
+      if (asset.keywords.some(x => (x ?? "").toLowerCase().includes(t))) { score += 12; matched.push("keyword"); }
       if (asset.haystack.includes(t)) { score += 5; matched.push("body"); }
     }
     if (score === 0) continue;
