@@ -271,7 +271,7 @@ function HardGatesPanel() {
           </Button>
         </div>
       </div>
-      </PageBody>
     </>
   );
 }
+
