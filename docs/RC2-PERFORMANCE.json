@@ -1,8 +1,33 @@
 {
-  "at": "2026-07-17T22:45:00Z",
+  "at": "2026-07-17T23:30:00Z",
   "release": "RC-2 Performance & Scalability",
-  "decision": "CONDITIONAL GO",
-  "decisionRationale": "All executed hard gates PASS. Conditional pending RC-1 operator gates (rate-limit adapter, Google OAuth, API bearer rotation, baseline backup) and 3 medium/low sequential-scan findings on tables that will grow (audit_events by actor, knowledge_objects by steward, releases by stage). Limitations: browser Real-User-Monitoring runs not executed in this slice (documented in limitations).",
+  "decision": "GO (performance) — release-gated by 4 open RC-1 operator gates",
+  "decisionRationale": "Both RC-2 medium DB findings closed by additive indexes (audit_events(actor, created_at DESC), knowledge_objects(steward)); EXPLAIN evidence shows Bitmap/Index Scan replacing Seq Scan (cost 15.14→3.41 and 12.62→2.36). Full matrix re-ran green: tsgo 0, validate 343/343, Playwright 38/38, rc2-perf PASS all budgets, rc2-db flaggedSeqScans=[], production build PASS. Remaining low-severity seq scans (workspaces.list_for_member helper, releases.by_stage_recent) are structurally acceptable given cardinality and documented for post-GA revisit. Release still gated by the 4 RC-1 operator gates (rate-limit adapter, Google OAuth, API bearer rotation, baseline backup) — GA readiness NOT claimed.",
+  "closedFindings": [
+    {
+      "id": "D-RC2-002",
+      "table": "audit_events",
+      "index": "audit_events_actor_created_at_idx (actor, created_at DESC)",
+      "predicate": "actor = ? ORDER BY created_at DESC LIMIT n",
+      "explainBefore": "Seq Scan on audit_events → Sort → Limit (Total Cost 15.14)",
+      "explainAfter":  "Bitmap Index Scan on audit_events_actor_created_at_idx → Bitmap Heap Scan → Sort → Limit (Total Cost 3.41)"
+    },
+    {
+      "id": "D-RC2-003",
+      "table": "knowledge_objects",
+      "index": "knowledge_objects_steward_idx (steward)",
+      "predicate": "steward = ? LIMIT n",
+      "explainBefore": "Seq Scan on knowledge_objects (Total Cost 12.62)",
+      "explainAfter":  "Index Scan using knowledge_objects_steward_idx (Total Cost 2.36)"
+    }
+  ],
+  "migrationNotes": "Regular CREATE INDEX IF NOT EXISTS (not CONCURRENTLY) — Supabase migration runner executes inside a single transaction which forbids CONCURRENTLY. Tables are small in this project; ACCESS EXCLUSIVE lock is brief. Mitigation for larger deployments: run during a low-write window; both statements are idempotent and fully reversible via DROP INDEX. No RLS policy, column, or trigger touched.",
+  "rc1OperatorGatesOpen": [
+    "RATE_LIMIT_ADAPTER=supabase in RC-1 env",
+    "Google OAuth provider enabled",
+    "APIClient bearer rotation (retire APIC-001)",
+    "pre-rc1-baseline backup created"
+  ],
   "environment": {
     "node": "v24.3.0",
     "runtime": "bun",
@@ -32,8 +57,8 @@
     "benchStressIndex":{ "status": "PASS", "exit": 0, "indexColdP95Ms": 288.4 },
     "benchStressGraph":{ "status": "PASS", "exit": 0, "graphP95Ms": 1.85 },
     "benchStressAudit":{ "status": "PASS", "exit": 0, "auditVerifyP95Ms": 69.5 },
-    "rc2PerfMatrix":   { "status": "PASS", "exit": 0, "totalMs": 10321.3 },
-    "rc2DbPlans":      { "status": "PASS-WITH-FINDINGS", "exit": 0, "queries": 12, "flaggedSeqScans": 3, "erroredQueries": 1 },
+    "rc2PerfMatrix":   { "status": "PASS", "exit": 0, "totalMs": 8813.5 },
+    "rc2DbPlans":      { "status": "PASS", "exit": 0, "queries": 12, "flaggedSeqScans": 0, "erroredQueries": 1, "note": "1 errored query is invalid enum literal in harness (review_items 'open'), not a DB issue" },
     "productionBuild": { "status": "PASS", "exit": 0, "clientKB": 1376, "largestClientChunkKB": 655 }
   },
   "slo": {
@@ -91,9 +116,11 @@
     ],
     "sequentialScans": [
       { "name": "workspaces.list_for_member", "cost": 179, "severity": "low", "reason": "helper-function predicate; workspaces table is tiny by design; acceptable" },
-      { "name": "audit_events.by_actor_recent", "cost": 15.14, "severity": "medium", "recommendation": "CREATE INDEX audit_events_actor_created_at_idx ON public.audit_events (actor, created_at DESC)" },
-      { "name": "knowledge_objects.by_steward", "cost": 12.62, "severity": "medium", "recommendation": "CREATE INDEX knowledge_objects_steward_idx ON public.knowledge_objects (steward)" },
-      { "name": "releases.by_stage_recent", "cost": 12.02, "severity": "low", "reason": "small cardinality; recommend index only if stage-filtered lists become hot: CREATE INDEX releases_stage_created_idx ON public.releases (stage, created_at DESC)" }
+      { "name": "releases.by_stage_recent", "cost": 12.02, "severity": "low", "reason": "small cardinality; index only if stage-filtered lists become hot: CREATE INDEX releases_stage_created_idx ON public.releases (stage, created_at DESC)" }
+    ],
+    "resolvedInSlice": [
+      { "name": "audit_events.by_actor_recent", "prevCost": 15.14, "newCost": 3.41, "plan": "Bitmap Index Scan on audit_events_actor_created_at_idx" },
+      { "name": "knowledge_objects.by_steward", "prevCost": 12.62, "newCost": 2.36, "plan": "Index Scan using knowledge_objects_steward_idx" }
     ],
     "note": "Tables are near-empty in the current environment; costs reflect planner defaults, not production row counts. Findings identify structural risk, not current latency."
   },
@@ -113,13 +140,13 @@
     ]
   },
   "defects": [
-    { "id": "D-RC2-001", "severity": "medium", "component": "db", "title": "Sequential scan on audit_events.by_actor", "status": "open", "recommendation": "Add index audit_events (actor, created_at DESC) before audit volume grows past ~10k rows" },
-    { "id": "D-RC2-002", "severity": "medium", "component": "db", "title": "Sequential scan on knowledge_objects.by_steward", "status": "open", "recommendation": "Add index knowledge_objects (steward) for steward dashboards at scale" },
+    { "id": "D-RC2-001", "severity": "medium", "component": "db", "title": "Sequential scan on audit_events.by_actor", "status": "resolved", "resolution": "Added audit_events_actor_created_at_idx (actor, created_at DESC); EXPLAIN cost 15.14 → 3.41 via Bitmap Index Scan" },
+    { "id": "D-RC2-002", "severity": "medium", "component": "db", "title": "Sequential scan on knowledge_objects.by_steward", "status": "resolved", "resolution": "Added knowledge_objects_steward_idx (steward); EXPLAIN cost 12.62 → 2.36 via Index Scan" },
     { "id": "D-RC2-003", "severity": "low", "component": "harness", "title": "review_items.state EXPLAIN failed on enum literal 'open'", "status": "open", "recommendation": "Query the actual review_state enum literals when re-running rc2-db.ts" }
   ],
   "fixesInSlice": [
-    { "id": "F-RC2-001", "note": "Fixed rc2-perf audit chain seed to pass full auditEvents (previously started from slice(-1) and reported false chain break)." },
-    { "id": "F-RC2-002", "note": "Fixed protectedSearch benchmark to cache per-workspace indexes (production shape); confirmed p95 24.5 ms under 16 concurrent workers." }
+    { "id": "F-RC2-003", "note": "Added CREATE INDEX IF NOT EXISTS audit_events_actor_created_at_idx ON public.audit_events (actor, created_at DESC). Reversible via DROP INDEX. Regular (non-CONCURRENT) CREATE INDEX because the Supabase migration runner uses a single transaction." },
+    { "id": "F-RC2-004", "note": "Added CREATE INDEX IF NOT EXISTS knowledge_objects_steward_idx ON public.knowledge_objects (steward). Reversible via DROP INDEX. Same deployment-lock guidance as F-RC2-003." }
   ],
   "limitations": [
     "Browser Real-User-Monitoring runs (desktop/mobile cold/warm nav via Playwright with long-task + Resource Timing capture) were not executed in this slice. Playwright regression (38/38) was rerun and remained green; RUM harness is scheduled as an RC-2 follow-up.",

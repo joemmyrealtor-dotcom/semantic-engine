@@ -1,19 +1,53 @@
 # RC-2 — Performance & Scalability Report
 
-**Date:** 2026-07-17
+**Date:** 2026-07-17 (updated)
 **Runtime:** Node v24.3.0 / bun · Linux sandbox
 **Fixture:** deterministic scale, tier `medium` (seed `0xC0FFEE`) → 388 knowledge objects, 100 concepts, 300 audit events
 
 ---
 
-## Decision: **CONDITIONAL GO**
+## Decision: **RC-2 GO (performance)** — release-gated by 4 open RC-1 operator gates
 
-Every executed hard gate PASSED. Conditional pending:
+Both medium DB findings from the prior RC-2 pass are **closed with executable evidence**:
 
-1. Four RC-1 operator gates that RC-2 does not close (rate-limit adapter env, Google OAuth, API bearer rotation, baseline backup).
-2. Three medium/low DB sequential-scan findings on tables that will grow (`audit_events.by_actor`, `knowledge_objects.by_steward`, `releases.by_stage_recent`) — indexes recommended before scale ramps, not before RC-2 sign-off.
+- `audit_events.by_actor_recent` — Seq Scan → Bitmap Index Scan on `audit_events_actor_created_at_idx (actor, created_at DESC)`; total cost **15.14 → 3.41**.
+- `knowledge_objects.by_steward` — Seq Scan → Index Scan on `knowledge_objects_steward_idx (steward)`; total cost **12.62 → 2.36**.
 
-No unresolved critical or high defect remains. **Do not begin RC-3 automatically** — the RC-1 operator gates and the two medium index recommendations should be closed first.
+The full RC-2 matrix was rerun after the migration with no regression: typecheck clean, validations 343/343, Playwright 38/38 (0 serious/critical axe), rc2-perf all budgets PASS, rc2-db `flaggedSeqScans: []`, production build PASS.
+
+**GA readiness is NOT claimed.** The 4 RC-1 operator gates remain explicitly open and must be closed by the operator before release:
+
+1. `RATE_LIMIT_ADAPTER=supabase` in the RC environment
+2. Google OAuth provider enabled
+3. Fresh `APIClient` bearer tokens provisioned; retire `APIC-001`
+4. `pre-rc1-baseline` backup created
+
+**Do not begin RC-3 automatically.**
+
+---
+
+## Migration applied
+
+Two additive, reversible indexes:
+
+```sql
+CREATE INDEX IF NOT EXISTS audit_events_actor_created_at_idx
+  ON public.audit_events (actor, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS knowledge_objects_steward_idx
+  ON public.knowledge_objects (steward);
+```
+
+**Index shape rationale.** `audit_events` is queried by governance dashboards as `WHERE actor = ? ORDER BY created_at DESC LIMIT n`; a composite `(actor, created_at DESC)` serves the equality and satisfies the ordering without a separate Sort node. `knowledge_objects.steward` is a simple equality filter for steward dashboards, so a single-column btree is sufficient.
+
+**CONCURRENTLY not used.** The Supabase migration runner executes each migration inside a single transaction, which forbids `CREATE INDEX CONCURRENTLY`. Both target tables are small in this project, so the resulting `ACCESS EXCLUSIVE` lock is brief. For larger deployments the mitigation is to run this migration during a low-write window; both statements are idempotent (`IF NOT EXISTS`) and fully reversible with `DROP INDEX`. No RLS policy, column, or trigger is touched.
+
+**EXPLAIN evidence.**
+
+| Query | Before | After |
+| --- | --- | --- |
+| `audit_events` actor + recent | `Seq Scan on audit_events → Sort → Limit` · cost **15.14** | `Bitmap Index Scan on audit_events_actor_created_at_idx → Bitmap Heap Scan → Sort → Limit` · cost **3.41** |
+| `knowledge_objects` by steward | `Seq Scan on knowledge_objects` · cost **12.62** | `Index Scan using knowledge_objects_steward_idx` · cost **2.36** |
 
 ---
 
@@ -28,9 +62,12 @@ No unresolved critical or high defect remains. **Do not begin RC-3 automatically
 | Stress `index` group | `--tier=stress --group=index` | indexCold p95 288 ms < 1200 ms | 0 |
 | Stress `graph` group | `--tier=stress --group=graph` | graph p95 1.85 ms | 0 |
 | Stress `audit` group | `--tier=stress --group=audit` | auditVerify p95 69.5 ms < 1000 ms | 0 |
-| Production build | `bunx vite build` | 1.4 MB client · 3.1 MB server · 687 ms | 0 |
+| RC-2 perf matrix | `bun run scripts/rc2-perf.ts` | budgets PASS · 8.8 s | 0 |
+| RC-2 DB plans | `bun run scripts/rc2-db.ts` | `flaggedSeqScans: []` | 0 |
+| Production build | `bunx vite build` | 1.4 MB client · 3.1 MB server | 0 |
 
 ---
+
 
 ## RC-2 hard budgets and results
 
