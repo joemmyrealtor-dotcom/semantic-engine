@@ -935,18 +935,18 @@ export async function runValidations(): Promise<number> {
   // 4a. In-memory adapter: allow → block → retry-after → reset on new window.
   const mem = new rlMod.InMemoryRateLimitStore({ maxEntries: 128 });
   const policy = { windowSeconds: 60, maxRequests: 3, failClosed: false };
-  const t0 = "2026-07-17T12:00:00.000Z";
-  const d1 = await mem.consume("K1", policy, t0);
-  const d2 = await mem.consume("K1", policy, t0);
-  const d3 = await mem.consume("K1", policy, t0);
-  const d4 = await mem.consume("K1", policy, t0);
+  const nowA = "2026-07-17T12:00:00.000Z";
+  const d1 = await mem.consume("K1", policy, nowA);
+  const d2 = await mem.consume("K1", policy, nowA);
+  const d3 = await mem.consume("K1", policy, nowA);
+  const d4 = await mem.consume("K1", policy, nowA);
   check("in-memory: first 3 allowed", d1.allowed && d2.allowed && d3.allowed);
   check("in-memory: 4th denied", !d4.allowed);
   check("in-memory: retry-after populated", d4.retryAfterSeconds > 0 && d4.retryAfterSeconds <= 60);
   eq("in-memory: remaining tracks limit", d3.remaining, 0);
   eq("in-memory: reset ISO present", typeof d4.resetAt, "string");
-  const t1 = "2026-07-17T12:01:30.000Z"; // > 60s later
-  const d5 = await mem.consume("K1", policy, t1);
+  const nowB = "2026-07-17T12:01:30.000Z"; // > 60s later
+  const d5 = await mem.consume("K1", policy, nowB);
   check("in-memory: allowed after window reset", d5.allowed);
 
   // 4b. Distinct keys/dimensions get isolated buckets.
