@@ -17,7 +17,10 @@
     "e2e:mobile": "PLAYWRIGHT_BROWSERS_PATH=/ playwright test --project=chromium-mobile",
     "e2e:tablet": "PLAYWRIGHT_BROWSERS_PATH=/ playwright test --project=chromium-tablet",
     "e2e:smoke": "PLAYWRIGHT_BROWSERS_PATH=/ playwright test --project=chromium-desktop e2e/smoke.spec.ts e2e/boot.spec.ts",
-    "e2e:report": "PLAYWRIGHT_BROWSERS_PATH=/ playwright show-report playwright-report"
+    "e2e:report": "PLAYWRIGHT_BROWSERS_PATH=/ playwright show-report playwright-report",
+    "perf": "bun run scripts/bench.ts",
+    "perf:stress": "bun run scripts/bench.ts --stress --out=bench-results/stress.json",
+    "validate": "bun run scripts/validate.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
