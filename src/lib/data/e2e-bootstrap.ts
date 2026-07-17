@@ -18,7 +18,7 @@
 // or any persistent secret. It only writes to the in-memory actor slot.
 
 import {
-  injectTestActor, clearTestActor, clearActor,
+  injectTestActor, clearTestActor, clearActor, getActor, isSessionExpired,
   type ActorContext,
 } from "@/lib/data/actor";
 import { setRole } from "@/lib/data/auth";
@@ -40,6 +40,8 @@ export interface E2EBridge {
   clearActor(): void;
   signOut(): void;
   expireSession(): ActorContext;
+  isSessionExpired(): boolean;
+  getActor(): ActorContext;
 }
 
 declare global {
