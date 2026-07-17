@@ -9,7 +9,9 @@ import { LayoutDashboard, Library, Network, BookOpen, Wrench, ScrollText, Bot, P
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthSessionBridge } from "@/lib/data/session-bridge";
+import { installE2EBridge } from "@/lib/data/e2e-bootstrap";
 import { toast } from "sonner";
+import { useEffect } from "react";
 
 const navItems = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, exact: true },
