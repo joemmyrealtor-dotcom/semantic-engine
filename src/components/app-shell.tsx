@@ -1,12 +1,15 @@
 import type { ReactNode } from "react";
-import { Search, Menu } from "lucide-react";
+import { Search, Menu, LogOut, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AppSidebar } from "./app-sidebar";
 import { CommandPalette, useCommandPalette } from "./command-palette";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { LayoutDashboard, Library, Network, BookOpen, Wrench, ScrollText, Bot, Package, ShieldCheck, Database, PenTool } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuthSessionBridge } from "@/lib/data/session-bridge";
+import { toast } from "sonner";
 
 const navItems = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, exact: true },
@@ -25,6 +28,14 @@ const navItems = [
 export function AppShell({ children }: { children: ReactNode }) {
   const cp = useCommandPalette();
   const pathname = useRouterState({ select: s => s.location.pathname });
+  const actor = useAuthSessionBridge();
+  const nav = useNavigate();
+  const signedIn = actor.source === "session";
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    toast.success("Signed out");
+    nav({ to: "/auth" });
+  };
   return (
     <div className="flex min-h-screen w-full bg-background text-foreground">
       <AppSidebar />
@@ -67,9 +78,20 @@ export function AppShell({ children }: { children: ReactNode }) {
             <span className="flex-1 text-left">Search or jump to…</span>
             <kbd className="text-[10px] px-1.5 py-0.5 rounded border border-border bg-muted font-mono">⌘K</kbd>
           </button>
-          <div className="ml-auto hidden sm:flex items-center gap-2 text-xs text-muted-foreground">
+          <div className="ml-auto hidden sm:flex items-center gap-3 text-xs text-muted-foreground">
             <span className="inline-block size-2 rounded-full bg-evergreen" />
-            Local demo · IndexedDB
+            {signedIn ? (
+              <>
+                <span className="max-w-[16ch] truncate" title={actor.displayLabel}>{actor.displayLabel}</span>
+                <Button variant="ghost" size="sm" onClick={handleSignOut} aria-label="Sign out">
+                  <LogOut className="size-3.5" /> Sign out
+                </Button>
+              </>
+            ) : (
+              <Link to="/auth" className="inline-flex items-center gap-1 hover:text-foreground">
+                <LogIn className="size-3.5" /> Sign in
+              </Link>
+            )}
           </div>
         </header>
         <main className="flex-1 min-w-0">{children}</main>

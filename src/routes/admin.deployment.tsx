@@ -9,10 +9,16 @@ import { startupDiagnostics, releaseCandidateReadiness, maintenanceGate } from "
 import { appendAudit } from "@/lib/data/audit";
 import { getRole, currentCan, setRole, permissionsFor } from "@/lib/data/auth";
 import { ALL_ROLES, type Role } from "@/lib/data/schema";
+import { RequirePermission } from "@/components/require-permission";
+import { isDevRuntime, getActor } from "@/lib/data/actor";
 
 export const Route = createFileRoute("/admin/deployment")({
   head: () => ({ meta: [{ title: "Deployment Readiness — Legacy Platform" }] }),
-  component: DeploymentPage,
+  component: () => (
+    <RequirePermission permission="maintenance.manage" label="Deployment Readiness">
+      <DeploymentPage />
+    </RequirePermission>
+  ),
 });
 
 function DeploymentPage() {
@@ -26,8 +32,9 @@ function DeploymentPage() {
   const toggleMaintenance = async () => {
     if (!currentCan("maintenance.manage")) { toast.error("Permission denied"); return; }
     const next = !s.maintenanceMode.enabled;
-    const mm = { ...s.maintenanceMode, enabled: next, reason: next ? "Manual toggle" : "", since: next ? new Date().toISOString() : null, by: "current-user" };
-    const audit = appendAudit(s.auditEvents, { actor: "current-user", actorRole: getRole(), workspaceId: s.activeWorkspaceId, action: "maintenance-mode-change", entityType: "system", entityId: "maintenance", reason: next ? "enabled" : "disabled", before: { enabled: s.maintenanceMode.enabled }, after: { enabled: next } });
+    const who = getActor();
+    const mm = { ...s.maintenanceMode, enabled: next, reason: next ? "Manual toggle" : "", since: next ? new Date().toISOString() : null, by: who.userId };
+    const audit = appendAudit(s.auditEvents, { actor: who.userId, actorRole: getRole(), workspaceId: s.activeWorkspaceId, action: "maintenance-mode-change", entityType: "system", entityId: "maintenance", reason: next ? "enabled" : "disabled", before: { enabled: s.maintenanceMode.enabled }, after: { enabled: next }, correlationId: who.correlationId });
     await Repo.replaceAll({ ...s, maintenanceMode: mm, auditEvents: audit });
     toast.success(next ? "Maintenance mode ON" : "Maintenance mode OFF");
   };
@@ -35,7 +42,8 @@ function DeploymentPage() {
   const toggleFlag = async (key: string) => {
     if (!currentCan("featureflag.manage")) { toast.error("Permission denied"); return; }
     const flags = s.featureFlags.map(f => f.key === key ? { ...f, enabled: !f.enabled, updatedAt: new Date().toISOString() } : f);
-    const audit = appendAudit(s.auditEvents, { actor: "current-user", actorRole: getRole(), workspaceId: s.activeWorkspaceId, action: "feature-flag-change", entityType: "featureFlag", entityId: key, reason: "toggle" });
+    const who = getActor();
+    const audit = appendAudit(s.auditEvents, { actor: who.userId, actorRole: getRole(), workspaceId: s.activeWorkspaceId, action: "feature-flag-change", entityType: "featureFlag", entityId: key, reason: "toggle", correlationId: who.correlationId });
     await Repo.replaceAll({ ...s, featureFlags: flags, auditEvents: audit });
   };
 
@@ -97,17 +105,29 @@ function DeploymentPage() {
                 </div>
                 <Button size="sm" onClick={toggleMaintenance}>{s.maintenanceMode.enabled ? "Disable" : "Enable"}</Button>
               </div>
-              <div className="pt-3 border-t border-border">
-                <div className="text-sm font-medium mb-2">Current role (demo)</div>
-                <select
-                  value={getRole()}
-                  onChange={e => { setRole(e.target.value as Role); toast.success(`Role set to ${e.target.value}`); }}
-                  className="border border-border rounded px-2 py-1 text-sm bg-background w-full"
-                >
-                  {ALL_ROLES.map((r: Role) => <option key={r} value={r}>{r}</option>)}
-                </select>
-                <div className="text-xs text-muted-foreground mt-2">Permissions: {permissionsFor(getRole()).length}</div>
-              </div>
+              {isDevRuntime() ? (
+                <div className="pt-3 border-t border-border">
+                  <div className="text-sm font-medium mb-2 flex items-center gap-2">
+                    Current role
+                    <span className="text-[10px] uppercase tracking-widest rounded bg-gold/20 text-gold px-1.5 py-0.5">Dev only</span>
+                  </div>
+                  <select
+                    value={getRole()}
+                    onChange={e => { setRole(e.target.value as Role); toast.success(`Role set to ${e.target.value}`); }}
+                    className="border border-border rounded px-2 py-1 text-sm bg-background w-full"
+                    aria-label="Development role selector"
+                  >
+                    {ALL_ROLES.map((r: Role) => <option key={r} value={r}>{r}</option>)}
+                  </select>
+                  <div className="text-xs text-muted-foreground mt-2">Permissions: {permissionsFor(getRole()).length} · shown only in development builds.</div>
+                </div>
+              ) : (
+                <div className="pt-3 border-t border-border">
+                  <div className="text-sm font-medium">Current role</div>
+                  <div className="text-xs text-muted-foreground mt-1">{getActor().displayLabel} · <span className="font-mono">{getRole()}</span> · {permissionsFor(getRole()).length} permissions</div>
+                  <div className="text-xs text-muted-foreground mt-1">Role assignment is managed through workspace memberships.</div>
+                </div>
+              )}
             </div>
           </div>
         </div>
