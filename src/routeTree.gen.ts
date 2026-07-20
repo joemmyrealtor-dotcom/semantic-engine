@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RepositoryRouteImport } from './routes/repository'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as PromptsRouteImport } from './routes/prompts'
@@ -50,6 +51,11 @@ import { Route as AdminBackupsRouteImport } from './routes/admin.backups'
 import { Route as AdminAuditRouteImport } from './routes/admin.audit'
 import { Route as ApiPublicV1SplatRouteImport } from './routes/api/public/v1/$'
 
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RepositoryRoute = RepositoryRouteImport.update({
   id: '/repository',
   path: '/repository',
@@ -265,6 +271,7 @@ export interface FileRoutesByFullPath {
   '/prompts': typeof PromptsRoute
   '/reports': typeof ReportsRoute
   '/repository': typeof RepositoryRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/backups': typeof AdminBackupsRoute
   '/admin/cutover': typeof AdminCutoverRoute
@@ -307,6 +314,7 @@ export interface FileRoutesByTo {
   '/prompts': typeof PromptsRoute
   '/reports': typeof ReportsRoute
   '/repository': typeof RepositoryRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/backups': typeof AdminBackupsRoute
   '/admin/cutover': typeof AdminCutoverRoute
@@ -350,6 +358,7 @@ export interface FileRoutesById {
   '/prompts': typeof PromptsRoute
   '/reports': typeof ReportsRoute
   '/repository': typeof RepositoryRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/backups': typeof AdminBackupsRoute
   '/admin/cutover': typeof AdminCutoverRoute
@@ -394,6 +403,7 @@ export interface FileRouteTypes {
     | '/prompts'
     | '/reports'
     | '/repository'
+    | '/reset-password'
     | '/admin/audit'
     | '/admin/backups'
     | '/admin/cutover'
@@ -436,6 +446,7 @@ export interface FileRouteTypes {
     | '/prompts'
     | '/reports'
     | '/repository'
+    | '/reset-password'
     | '/admin/audit'
     | '/admin/backups'
     | '/admin/cutover'
@@ -478,6 +489,7 @@ export interface FileRouteTypes {
     | '/prompts'
     | '/reports'
     | '/repository'
+    | '/reset-password'
     | '/admin/audit'
     | '/admin/backups'
     | '/admin/cutover'
@@ -521,6 +533,7 @@ export interface RootRouteChildren {
   PromptsRoute: typeof PromptsRoute
   ReportsRoute: typeof ReportsRoute
   RepositoryRoute: typeof RepositoryRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   AdminAuditRoute: typeof AdminAuditRoute
   AdminBackupsRoute: typeof AdminBackupsRoute
   AdminCutoverRoute: typeof AdminCutoverRoute
@@ -550,6 +563,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/repository': {
       id: '/repository'
       path: '/repository'
@@ -871,6 +891,7 @@ const rootRouteChildren: RootRouteChildren = {
   PromptsRoute: PromptsRoute,
   ReportsRoute: ReportsRoute,
   RepositoryRoute: RepositoryRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   AdminAuditRoute: AdminAuditRoute,
   AdminBackupsRoute: AdminBackupsRoute,
   AdminCutoverRoute: AdminCutoverRoute,
@@ -900,13 +921,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
