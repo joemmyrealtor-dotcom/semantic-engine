@@ -41,14 +41,25 @@ const HARD_GATE_DB_ROLES: Record<LaunchGateId, DbAppRole[]> = {
 
 interface VerifierResult { passed: boolean; detail: string; verifier: string }
 
+interface AdminLike {
+  from: (t: string) => {
+    select: (c: string) => {
+      limit?: (n: number) => Promise<{ data: unknown[] | null }>;
+      eq?: (col: string, val: unknown) => {
+        limit: (n: number) => Promise<{ data: unknown[] | null }>;
+      };
+    };
+  };
+}
+
+interface ApiClientRow { slug: string; enabled: boolean; is_demo: boolean; key_reference_name: string | null }
+
 /** Server-side verifier — runs only inside handlers, reads process.env at call time. */
 async function verifyGateServer(
   gateId: LaunchGateId,
-  supabaseAdmin: {
-    from: (t: string) => { select: (c: string) => { limit: (n: number) => Promise<{ data: unknown[] | null }> } };
-  },
+  workspaceId: string,
+  supabaseAdmin: AdminLike,
 ): Promise<VerifierResult> {
-
   const env = process.env;
   switch (gateId) {
     case "H1": {
@@ -72,22 +83,25 @@ async function verifyGateServer(
       };
     }
     case "H3": {
-      // Placeholder: real check queries an api_clients table if/when persisted.
-      // For now, treat as blocked unless env explicitly asserts rotation.
-      const rotated = (env.API_BEARER_ROTATED ?? "").toLowerCase();
-      const passed = rotated === "true" || rotated === "1";
-      return {
-        passed,
-        detail: passed
-          ? "API_BEARER_ROTATED confirmed in runtime env"
-          : "API_BEARER_ROTATED not set — demo bearer presumed live",
-        verifier: "server:api-client-env",
-      };
+      // Authoritative check: query the governed api_clients table.
+      //   PASS iff no enabled demo/APIC-001 row AND >=1 enabled non-demo row
+      //   whose key_reference_name is set (a runtime secret handle).
+      const rowsRes = await supabaseAdmin.from("api_clients").select("slug, enabled, is_demo, key_reference_name").eq!("workspace_id", workspaceId).limit(500);
+      const rows = (rowsRes.data ?? []) as ApiClientRow[];
+      const demoLive = rows.some(r => (r.is_demo || r.slug === "APIC-001") && r.enabled);
+      const prodReady = rows.filter(r => !r.is_demo && r.slug !== "APIC-001" && r.enabled && !!r.key_reference_name);
+      const passed = !demoLive && prodReady.length >= 1;
+      const detail = demoLive
+        ? "Demo bearer (APIC-001 / is_demo=true) is still enabled — disable or delete it"
+        : prodReady.length >= 1
+          ? `${prodReady.length} production API client(s) enabled with runtime key reference(s)`
+          : "No enabled non-demo api_clients row with a key_reference_name; register one before attesting H3";
+      return { passed, detail, verifier: "server:api-clients-table" };
     }
     case "H4": {
       // Presence-of-workspace probe as a minimal baseline signal.
-      const { data } = await supabaseAdmin.from("workspaces").select("id").limit(1) as unknown as { data: unknown[] | null };
-      const passed = Array.isArray(data) && data.length > 0;
+      const probe = await supabaseAdmin.from("workspaces").select("id").limit!(1);
+      const passed = Array.isArray(probe.data) && probe.data.length > 0;
       const declared = (env.BASELINE_BACKUP_ID ?? "").trim();
       const finalPassed = passed && declared.length > 0;
       return {
@@ -161,7 +175,8 @@ export const attestGateServer = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const verifier = await verifyGateServer(
       data.gateId,
-      supabaseAdmin as unknown as Parameters<typeof verifyGateServer>[1],
+      data.workspaceId,
+      supabaseAdmin as unknown as Parameters<typeof verifyGateServer>[2],
     );
     if (data.status === "PASS" && !verifier.passed) {
       throw new Error(`Cannot attest ${data.gateId} as PASS: verifier failed — ${verifier.detail}`);
@@ -230,25 +245,46 @@ export const computeReadinessServer = createServerFn({ method: "POST" })
     const gateIds: LaunchGateId[] = ["H1", "H2", "H3", "H4"];
     const { data: rows, error } = await context.supabase
       .from("launch_gate_evidence")
-      .select("gate_id, status, version, build_fingerprint, attested_at, attested_by, verifier_passed, verifier_detail")
+      .select("gate_id, status, version, build_fingerprint, attested_at, attested_by, verifier_passed, verifier_detail, reason")
       .eq("workspace_id", data.workspaceId)
       .is("superseded_by", null);
     if (error) throw new Error(`computeReadiness: ${error.message}`);
     const fp = buildFingerprintServer();
     const active = new Map<string, (typeof rows extends (infer T)[] | null ? T : never)>();
     for (const r of rows ?? []) active.set(r.gate_id, r);
-    const gates = gateIds.map(id => {
+
+    // Re-run verifiers now to detect drift (env changed, api_clients disabled, etc).
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const verifiers = await Promise.all(gateIds.map(id =>
+      verifyGateServer(id, data.workspaceId, supabaseAdmin as unknown as Parameters<typeof verifyGateServer>[2]),
+    ));
+
+    const gates = gateIds.map((id, i) => {
       const row = active.get(id) ?? null;
-      const stale = !!row && row.build_fingerprint !== fp;
+      const v = verifiers[i];
+      const fingerprintDrift = !!row && row.build_fingerprint !== fp;
+      const verifierRegressed = !!row && row.status === "PASS" && !v.passed;
+      const stale = fingerprintDrift || verifierRegressed;
+      const staleReason = fingerprintDrift
+        ? `Build fingerprint changed (${row!.build_fingerprint} → ${fp})`
+        : verifierRegressed
+          ? `Verifier now fails: ${v.detail}`
+          : "";
       const status = stale ? "STALE" : (row?.status ?? "BLOCKED-OPERATOR");
-      return { gateId: id, status, current: row, stale, buildFingerprint: fp };
+      return {
+        gateId: id, status, current: row, stale, staleReason,
+        buildFingerprint: fp,
+        verifier: v,
+      };
     });
     const blocking = gates.filter(g => g.status !== "PASS").map(g => g.gateId);
     return {
       ready: blocking.length === 0,
       gates,
       blockingGateIds: blocking,
+      staleGateIds: gates.filter(g => g.stale).map(g => g.gateId),
       buildFingerprint: fp,
       generatedAt: new Date().toISOString(),
     };
   });
+

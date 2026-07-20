@@ -4,8 +4,11 @@ import { PageHeader, PageBody } from "@/components/page-header";
 import { LoadingState, KpiCard, SectionTitle } from "@/components/ui-kit";
 import { useSnapshot } from "@/lib/use-snapshot";
 import { RequirePermission } from "@/components/require-permission";
-import { computeCutoverReadiness } from "@/lib/data/launch-gates";
 import { computeMonitoring } from "@/lib/data/monitoring";
+import {
+  AuthoritativeGatesPanel, useAuthoritativeReadiness,
+} from "@/components/launch-gates-panel";
+import { LAUNCH_GATE_DEFINITIONS } from "@/lib/data/launch-gates";
 
 export const Route = createFileRoute("/admin/cutover")({
   head: () => ({ meta: [{ title: "Cutover Command Center — Legacy Platform" }] }),
@@ -18,57 +21,41 @@ export const Route = createFileRoute("/admin/cutover")({
 
 function CutoverPage() {
   const s = useSnapshot();
-  const env = typeof import.meta !== "undefined" ? (import.meta as unknown as { env: Record<string, string | undefined> }).env : {};
-  const readiness = useMemo(() => (s ? computeCutoverReadiness(s, env, s.activeWorkspaceId) : null), [s, env]);
   const monitoring = useMemo(() => (s ? computeMonitoring(s) : null), [s]);
-  if (!s || !readiness || !monitoring) return <LoadingState />;
+  const readiness = useAuthoritativeReadiness(s?.activeWorkspaceId ?? "");
+  if (!s || !monitoring) return <LoadingState />;
 
-  const passing = readiness.gates.filter(g => g.status === "PASS").length;
-  const staleCount = readiness.staleGateIds.length;
+  const authoritative = !readiness.isError && !!readiness.data;
+  const data = readiness.data;
+  const passing = data?.gates.filter(g => g.status === "PASS").length ?? 0;
+  const staleCount = data?.staleGateIds.length ?? 0;
+  const blocking = data?.blockingGateIds.length ?? 4;
 
   return (
     <>
       <PageHeader
         title="Cutover Command Center"
-        description="Production readiness at a glance · append-only evidence · staleness-aware."
+        description="Server-authoritative readiness · append-only evidence · re-locks on drift."
       />
       <PageBody>
         <div className="grid gap-4 md:grid-cols-4 mb-6">
-          <KpiCard label="Production GO" value={readiness.ready ? "UNLOCKED" : "LOCKED"} tone={readiness.ready ? "evergreen" : "warn"} hint={`${passing}/${readiness.gates.length} PASS`} />
-          <KpiCard label="Blocking gates" value={readiness.blockingGateIds.length} tone={readiness.blockingGateIds.length ? "warn" : "evergreen"} hint={readiness.blockingGateIds.join(", ") || "none"} />
-          <KpiCard label="Stale evidence" value={staleCount} tone={staleCount ? "warn" : "evergreen"} hint={readiness.staleGateIds.join(", ") || "current"} />
+          <KpiCard label="Production GO" value={authoritative && data!.ready ? "UNLOCKED" : "LOCKED"} tone={authoritative && data!.ready ? "evergreen" : "warn"} hint={authoritative ? `${passing}/${data!.gates.length} PASS` : "server unreachable"} />
+          <KpiCard label="Blocking gates" value={blocking} tone={blocking ? "warn" : "evergreen"} hint={data?.blockingGateIds.join(", ") || (authoritative ? "none" : "unknown")} />
+          <KpiCard label="Stale evidence" value={staleCount} tone={staleCount ? "warn" : "evergreen"} hint={data?.staleGateIds.join(", ") || "current"} />
           <KpiCard label="Monitoring" value={monitoring.overall.toUpperCase()} tone={monitoring.overall === "ok" ? "evergreen" : monitoring.overall === "warning" ? "gold" : "warn"} />
         </div>
 
-        <SectionTitle hint={`generated ${readiness.generatedAt.slice(11, 19)}Z`}>Hard gate ledger</SectionTitle>
-        <div className="editorial-card divide-y divide-border text-sm" data-testid="cutover-ledger">
-          {readiness.gates.map(g => (
-            <div key={g.definition.id} className="p-3" data-testid={`cutover-${g.definition.id}`}>
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="font-mono text-xs text-muted-foreground mr-2">{g.definition.id}</span>
-                  <span className="font-medium">{g.definition.name}</span>
-                  <span className="text-xs text-muted-foreground ml-2">· {g.definition.owner}</span>
-                </div>
-                <span
-                  className={
-                    g.status === "PASS" ? "text-evergreen text-xs uppercase tracking-widest"
-                    : g.status === "STALE" ? "text-destructive/80 text-xs uppercase tracking-widest"
-                    : g.status === "FAIL" ? "text-destructive text-xs uppercase tracking-widest"
-                    : "text-gold text-xs uppercase tracking-widest"
-                  }
-                >
-                  {g.status}
-                </span>
-              </div>
-              <div className="text-xs text-muted-foreground pl-6 mt-1 space-y-0.5">
-                <div>Verifier: <span className={g.verifier.passed ? "text-evergreen" : "text-destructive"}>{g.verifier.passed ? "OK" : "FAIL"}</span> — {g.verifier.detail}</div>
-                {g.current ? (
-                  <div>Attested v{g.current.version} by {g.current.attestedBy} at {new Date(g.current.attestedAt).toLocaleString()}</div>
-                ) : <div>No evidence captured.</div>}
-                {g.stale && <div className="text-destructive/80">Stale — {g.staleReason}</div>}
-              </div>
-            </div>
+        <SectionTitle hint={authoritative ? `server @ ${data!.generatedAt.slice(11, 19)}Z` : "server unreachable"}>
+          Hard gate ledger
+        </SectionTitle>
+        <div data-testid="cutover-ledger">
+          <AuthoritativeGatesPanel workspaceId={s.activeWorkspaceId} showAttestControls={false} />
+        </div>
+
+        {/* Stable per-gate anchors for tests / deep-linking */}
+        <div className="sr-only" aria-hidden="true">
+          {(["H1", "H2", "H3", "H4"] as const).map(id => (
+            <div key={id} data-testid={`cutover-${id}`}>{LAUNCH_GATE_DEFINITIONS[id].name}</div>
           ))}
         </div>
 
