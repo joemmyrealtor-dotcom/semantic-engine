@@ -257,11 +257,12 @@ export const computeReadinessServer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ workspaceId: z.string().min(1) }).parse(input))
   .handler(async ({ data, context }) => {
+    const workspaceId = toWorkspaceUuid(data.workspaceId);
     const gateIds: LaunchGateId[] = ["H1", "H2", "H3", "H4"];
     const { data: rows, error } = await context.supabase
       .from("launch_gate_evidence")
       .select("gate_id, status, version, build_fingerprint, attested_at, attested_by, verifier_passed, verifier_detail, reason")
-      .eq("workspace_id", data.workspaceId)
+      .eq("workspace_id", workspaceId)
       .is("superseded_by", null);
     if (error) throw new Error(`computeReadiness: ${error.message}`);
     const fp = buildFingerprintServer();
@@ -271,8 +272,9 @@ export const computeReadinessServer = createServerFn({ method: "POST" })
     // Re-run verifiers now to detect drift (env changed, api_clients disabled, etc).
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const verifiers = await Promise.all(gateIds.map(id =>
-      verifyGateServer(id, data.workspaceId, supabaseAdmin as unknown as Parameters<typeof verifyGateServer>[2]),
+      verifyGateServer(id, workspaceId, supabaseAdmin as unknown as Parameters<typeof verifyGateServer>[2]),
     ));
+
 
     const gates = gateIds.map((id, i) => {
       const row = active.get(id) ?? null;
