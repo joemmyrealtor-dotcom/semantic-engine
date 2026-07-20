@@ -245,25 +245,47 @@ export const computeReadinessServer = createServerFn({ method: "POST" })
     const gateIds: LaunchGateId[] = ["H1", "H2", "H3", "H4"];
     const { data: rows, error } = await context.supabase
       .from("launch_gate_evidence")
-      .select("gate_id, status, version, build_fingerprint, attested_at, attested_by, verifier_passed, verifier_detail")
+      .select("gate_id, status, version, build_fingerprint, attested_at, attested_by, verifier_passed, verifier_detail, reason")
       .eq("workspace_id", data.workspaceId)
       .is("superseded_by", null);
     if (error) throw new Error(`computeReadiness: ${error.message}`);
     const fp = buildFingerprintServer();
     const active = new Map<string, (typeof rows extends (infer T)[] | null ? T : never)>();
     for (const r of rows ?? []) active.set(r.gate_id, r);
-    const gates = gateIds.map(id => {
+
+    // Re-run verifiers now to detect drift (env changed, api_clients disabled, etc).
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const verifiers = await Promise.all(gateIds.map(id =>
+      verifyGateServer(id, data.workspaceId, supabaseAdmin as unknown as Parameters<typeof verifyGateServer>[2]),
+    ));
+
+    const gates = gateIds.map((id, i) => {
       const row = active.get(id) ?? null;
-      const stale = !!row && row.build_fingerprint !== fp;
+      const v = verifiers[i];
+      const fingerprintDrift = !!row && row.build_fingerprint !== fp;
+      const verifierRegressed = !!row && row.status === "PASS" && !v.passed;
+      const stale = fingerprintDrift || verifierRegressed;
+      const staleReason = fingerprintDrift
+        ? `Build fingerprint changed (${row!.build_fingerprint} → ${fp})`
+        : verifierRegressed
+          ? `Verifier now fails: ${v.detail}`
+          : "";
       const status = stale ? "STALE" : (row?.status ?? "BLOCKED-OPERATOR");
-      return { gateId: id, status, current: row, stale, buildFingerprint: fp };
+      return {
+        gateId: id, status, current: row, stale, staleReason,
+        buildFingerprint: fp,
+        verifier: v,
+      };
     });
     const blocking = gates.filter(g => g.status !== "PASS").map(g => g.gateId);
     return {
       ready: blocking.length === 0,
       gates,
       blockingGateIds: blocking,
+      staleGateIds: gates.filter(g => g.stale).map(g => g.gateId),
       buildFingerprint: fp,
       generatedAt: new Date().toISOString(),
     };
+  });
+
   });
