@@ -26,7 +26,7 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const nav = useNavigate();
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -51,13 +51,20 @@ function AuthPage() {
         if (error) throw error;
         toast.success("Signed in");
         nav({ to: "/" });
-      } else {
+      } else if (mode === "signup") {
         const { error } = await supabase.auth.signUp({
           email, password,
           options: { emailRedirectTo: window.location.origin + "/auth" },
         });
         if (error) throw error;
         toast.success("Check your email to confirm");
+      } else {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin + "/reset-password",
+        });
+        if (error) throw error;
+        toast.success("Password reset email sent. Check your inbox.");
+        setMode("signin");
       }
     } catch (err) {
       toast.error((err as Error).message);
@@ -80,9 +87,12 @@ function AuthPage() {
 
   if (hasSession === null) return null;
 
+  const title = mode === "signin" ? "Sign in" : mode === "signup" ? "Create account" : "Reset password";
+  const cta = mode === "signin" ? "Sign in" : mode === "signup" ? "Create account" : "Send reset email";
+
   return (
     <>
-      <PageHeader title={mode === "signin" ? "Sign in" : "Create account"} description="Access the JM Advisory Press governance surface." />
+      <PageHeader title={title} description="Access the JM Advisory Press governance surface." />
       <PageBody>
         <div className="max-w-md">
           <form onSubmit={handleSubmit} className="editorial-card p-6 space-y-4">
@@ -90,21 +100,48 @@ function AuthPage() {
               <Label htmlFor="email">Email</Label>
               <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={8} autoComplete={mode === "signin" ? "current-password" : "new-password"} />
-            </div>
+            {mode !== "forgot" && (
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={8} autoComplete={mode === "signin" ? "current-password" : "new-password"} />
+              </div>
+            )}
             <Button type="submit" disabled={busy} className="w-full">
-              {busy ? "Working…" : mode === "signin" ? "Sign in" : "Create account"}
+              {busy ? "Working…" : cta}
             </Button>
-            <div className="text-xs text-muted-foreground text-center">or</div>
-            <Button type="button" variant="outline" className="w-full" onClick={handleGoogle} disabled={busy}>
-              Continue with Google
-            </Button>
-            <div className="text-sm text-center">
-              <button type="button" className="underline underline-offset-2 text-muted-foreground" onClick={() => setMode(mode === "signin" ? "signup" : "signin")}>
-                {mode === "signin" ? "Need an account? Create one" : "Already have an account? Sign in"}
-              </button>
+            {mode !== "forgot" && (
+              <>
+                <div className="text-xs text-muted-foreground text-center">or</div>
+                <Button type="button" variant="outline" className="w-full" onClick={handleGoogle} disabled={busy}>
+                  Continue with Google
+                </Button>
+              </>
+            )}
+            <div className="text-sm text-center space-y-2">
+              {mode === "signin" && (
+                <>
+                  <div>
+                    <button type="button" className="underline underline-offset-2 text-muted-foreground" onClick={() => setMode("forgot")}>
+                      Forgot password?
+                    </button>
+                  </div>
+                  <div>
+                    <button type="button" className="underline underline-offset-2 text-muted-foreground" onClick={() => setMode("signup")}>
+                      Need an account? Create one
+                    </button>
+                  </div>
+                </>
+              )}
+              {mode === "signup" && (
+                <button type="button" className="underline underline-offset-2 text-muted-foreground" onClick={() => setMode("signin")}>
+                  Already have an account? Sign in
+                </button>
+              )}
+              {mode === "forgot" && (
+                <button type="button" className="underline underline-offset-2 text-muted-foreground" onClick={() => setMode("signin")}>
+                  Back to sign in
+                </button>
+              )}
             </div>
           </form>
         </div>
