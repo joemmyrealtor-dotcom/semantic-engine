@@ -31,18 +31,18 @@ const SetEnabledInput = z.object({
   enabled: z.boolean(),
 });
 
-async function requireOwner(context: {
-  supabase: {
-    rpc: (name: string, args: Record<string, unknown>) => Promise<{ data: unknown }>;
-  };
+interface RequireOwnerContext {
+  supabase: { rpc: (name: string, args: Record<string, unknown>) => Promise<{ data: unknown }> };
   userId: string;
-}, workspaceId: string) {
-  const { data: isMember } = await context.supabase.rpc("is_workspace_member", {
-    _user_id: context.userId, _workspace_id: workspaceId,
+}
+async function requireOwner(context: unknown, workspaceId: string) {
+  const ctx = context as RequireOwnerContext;
+  const { data: isMember } = await ctx.supabase.rpc("is_workspace_member", {
+    _user_id: ctx.userId, _workspace_id: workspaceId,
   });
   if (!isMember) throw new Error("Forbidden: not a member of the target workspace");
-  const { data: role } = await context.supabase.rpc("workspace_role", {
-    _user_id: context.userId, _workspace_id: workspaceId,
+  const { data: role } = await ctx.supabase.rpc("workspace_role", {
+    _user_id: ctx.userId, _workspace_id: workspaceId,
   });
   if (role !== "owner") throw new Error(`Forbidden: role ${role ?? "none"} may not manage api_clients`);
 }
