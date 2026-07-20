@@ -11,9 +11,20 @@
 //   client writes entirely (server-authoritative).
 
 import { createServerFn } from "@tanstack/react-start";
+import { createHash } from "node:crypto";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { LaunchGateId } from "@/lib/data/schema";
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+/** Map legacy workspace slugs (e.g. "WS-001") to a deterministic UUID so
+ *  Postgres uuid columns accept them. Real UUIDs pass through unchanged. */
+function toWorkspaceUuid(id: string): string {
+  if (UUID_RE.test(id)) return id.toLowerCase();
+  const h = createHash("sha1").update(`workspace:${id}`).digest("hex");
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-5${h.slice(13, 16)}-8${h.slice(17, 20)}-${h.slice(20, 32)}`;
+}
+
 
 const AttestInput = z.object({
   gateId: z.enum(["H1", "H2", "H3", "H4"]),
@@ -134,12 +145,14 @@ export const listGateEvidenceServer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => ListInput.parse(input))
   .handler(async ({ data, context }) => {
+    const workspaceId = toWorkspaceUuid(data.workspaceId);
     // RLS-enforced read as the caller.
     let q = context.supabase
       .from("launch_gate_evidence")
       .select("id, gate_id, workspace_id, version, status, attested_by, attested_by_role, attested_at, reason, verifier, verifier_passed, verifier_detail, build_fingerprint, superseded_by, correlation_id")
-      .eq("workspace_id", data.workspaceId)
+      .eq("workspace_id", workspaceId)
       .order("version", { ascending: false });
+
     if (data.gateId) q = q.eq("gate_id", data.gateId);
     if (data.activeOnly) q = q.is("superseded_by", null);
     const { data: rows, error } = await q;
@@ -153,16 +166,17 @@ export const attestGateServer = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => AttestInput.parse(input))
   .handler(async ({ data, context }) => {
     const userId = context.userId;
+    const workspaceId = toWorkspaceUuid(data.workspaceId);
 
     // 1) Membership check (as the caller, via RLS-enabled RPC).
     const { data: isMember } = await context.supabase.rpc("is_workspace_member", {
-      _user_id: userId, _workspace_id: data.workspaceId,
+      _user_id: userId, _workspace_id: workspaceId,
     });
     if (!isMember) throw new Error("Forbidden: not a member of the target workspace");
 
     // 2) Fetch the caller's workspace role via RLS.
     const { data: roleRow } = await context.supabase.rpc("workspace_role", {
-      _user_id: userId, _workspace_id: data.workspaceId,
+      _user_id: userId, _workspace_id: workspaceId,
     });
     const role = roleRow as DbAppRole | null;
     if (!role) throw new Error("Forbidden: no workspace role");
@@ -175,7 +189,7 @@ export const attestGateServer = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const verifier = await verifyGateServer(
       data.gateId,
-      data.workspaceId,
+      workspaceId,
       supabaseAdmin as unknown as Parameters<typeof verifyGateServer>[2],
     );
     if (data.status === "PASS" && !verifier.passed) {
@@ -186,7 +200,7 @@ export const attestGateServer = createServerFn({ method: "POST" })
     const { data: activeRows } = await context.supabase
       .from("launch_gate_evidence")
       .select("id, version")
-      .eq("workspace_id", data.workspaceId)
+      .eq("workspace_id", workspaceId)
       .eq("gate_id", data.gateId)
       .is("superseded_by", null)
       .order("version", { ascending: false })
@@ -197,7 +211,8 @@ export const attestGateServer = createServerFn({ method: "POST" })
     // 5) Insert new row via service role (client is blocked by RLS by design).
     const insertRow = {
       gate_id: data.gateId,
-      workspace_id: data.workspaceId,
+      workspace_id: workspaceId,
+
       version,
       status: data.status,
       attested_by: userId,
@@ -242,11 +257,12 @@ export const computeReadinessServer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ workspaceId: z.string().min(1) }).parse(input))
   .handler(async ({ data, context }) => {
+    const workspaceId = toWorkspaceUuid(data.workspaceId);
     const gateIds: LaunchGateId[] = ["H1", "H2", "H3", "H4"];
     const { data: rows, error } = await context.supabase
       .from("launch_gate_evidence")
       .select("gate_id, status, version, build_fingerprint, attested_at, attested_by, verifier_passed, verifier_detail, reason")
-      .eq("workspace_id", data.workspaceId)
+      .eq("workspace_id", workspaceId)
       .is("superseded_by", null);
     if (error) throw new Error(`computeReadiness: ${error.message}`);
     const fp = buildFingerprintServer();
@@ -256,8 +272,9 @@ export const computeReadinessServer = createServerFn({ method: "POST" })
     // Re-run verifiers now to detect drift (env changed, api_clients disabled, etc).
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const verifiers = await Promise.all(gateIds.map(id =>
-      verifyGateServer(id, data.workspaceId, supabaseAdmin as unknown as Parameters<typeof verifyGateServer>[2]),
+      verifyGateServer(id, workspaceId, supabaseAdmin as unknown as Parameters<typeof verifyGateServer>[2]),
     ));
+
 
     const gates = gateIds.map((id, i) => {
       const row = active.get(id) ?? null;
