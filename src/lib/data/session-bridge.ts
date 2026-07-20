@@ -76,5 +76,5 @@ export function useAuthSessionBridge() {
     return () => { mounted = false; sub.subscription.unsubscribe(); };
   }, []);
 
-  return getActor();
+  return actor;
 }
