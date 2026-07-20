@@ -47,7 +47,8 @@ const MATRIX: Record<Role, Permission[]> = {
     "content.read","content.create","content.update","content.delete","content.promote",
     "review.approve","review.reject","release.create","release.publish",
     "automation.run","automation.approve","integration.manage","api.manage",
-    "backup.create","backup.restore","workspace.switch","audit.read","monitoring.read",
+    "backup.create","backup.restore","workspace.manage","workspace.switch",
+    "audit.read","monitoring.read","featureflag.manage","maintenance.manage","role.assign",
   ],
   Publisher: [
     "content.read","content.update","content.promote","release.create","release.publish",
