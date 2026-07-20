@@ -3,7 +3,7 @@
 // signed-out / forbidden / expired states.
 
 import type { ReactNode } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { useAuthSessionBridge } from "@/lib/data/session-bridge";
 import { hasPermission, type Permission } from "@/lib/data/auth";
@@ -13,16 +13,19 @@ export function RequirePermission({
   permission, children, label,
 }: { permission: Permission; children: ReactNode; label?: string }) {
   const actor = useAuthSessionBridge();
+  const redirect = useRouterState({ select: s => s.location.pathname });
 
-  // In DEV we honour the demo role for the offline harness.
-  const signedIn = actor.source === "session" || isDevRuntime();
+  // Only real sessions and explicit test actors count as authenticated here.
+  // The dev runtime itself must not turn an anonymous ReadOnly actor into a
+  // misleading "Access denied" state on protected production screens.
+  const signedIn = actor.source === "session" || actor.source === "test";
   if (!signedIn) {
     return (
       <div role="alert" aria-live="polite" className="max-w-md mx-auto mt-24 editorial-card p-6 text-center">
         <div className="text-[11px] uppercase tracking-[0.22em] text-gold">Sign in required</div>
         <h1 className="font-serif text-2xl text-heritage mt-2">{label ?? "Governed surface"}</h1>
         <p className="text-sm text-muted-foreground mt-2">Sign in to access this area.</p>
-        <Link to="/auth"><Button className="mt-4">Sign in</Button></Link>
+        <Link to="/auth" search={{ redirect }}><Button className="mt-4">Sign in</Button></Link>
       </div>
     );
   }
