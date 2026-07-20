@@ -11,9 +11,20 @@
 //   client writes entirely (server-authoritative).
 
 import { createServerFn } from "@tanstack/react-start";
+import { createHash } from "node:crypto";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { LaunchGateId } from "@/lib/data/schema";
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+/** Map legacy workspace slugs (e.g. "WS-001") to a deterministic UUID so
+ *  Postgres uuid columns accept them. Real UUIDs pass through unchanged. */
+function toWorkspaceUuid(id: string): string {
+  if (UUID_RE.test(id)) return id.toLowerCase();
+  const h = createHash("sha1").update(`workspace:${id}`).digest("hex");
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-5${h.slice(13, 16)}-8${h.slice(17, 20)}-${h.slice(20, 32)}`;
+}
+
 
 const AttestInput = z.object({
   gateId: z.enum(["H1", "H2", "H3", "H4"]),
