@@ -1,4 +1,7 @@
 // Launch-closure — hard-gate lock, permission gating, evidence flow.
+// Session subscription race is fixed in application code
+// (session-bridge uses useSyncExternalStore), so tests no longer need
+// to reinject the actor or reload() to observe permission changes.
 import { test, expect, type Page } from "./fixtures";
 
 async function waitForActor(page: Page, role: string) {
@@ -6,22 +9,13 @@ async function waitForActor(page: Page, role: string) {
     const w = window as unknown as { __lovableE2E?: { getActor(): { role: string } } };
     return !!w.__lovableE2E && w.__lovableE2E.getActor().role === r;
   }, role, { timeout: 10_000 });
-  // Re-inject once after DOM has settled so any React subtree that subscribed
-  // AFTER the initial injection also receives the notification.
-  await page.evaluate((r) => {
-    const w = window as unknown as { __lovableE2E?: { injectActor: (p: unknown) => void; getActor(): unknown } };
-    const cur = w.__lovableE2E?.getActor() as { userId: string; displayLabel?: string } | undefined;
-    if (w.__lovableE2E && cur) w.__lovableE2E.injectActor({ userId: cur.userId, role: r, displayLabel: cur.displayLabel });
-  }, role);
 }
-
 
 test.describe("Launch closure — hard gates", () => {
   test("viewer sees Forbidden on deployment; cannot reach promote", async ({ page, asActor }) => {
     await asActor({ userId: "e2e:viewer", role: "Viewer", displayLabel: "Viewer User" });
     await page.goto("/admin/deployment");
     await waitForActor(page, "Viewer");
-    await page.reload();
     await expect(page.getByRole("heading", { name: /access denied/i })).toBeVisible();
     await expect(page.getByTestId("promote-production")).toHaveCount(0);
   });
@@ -29,8 +23,6 @@ test.describe("Launch closure — hard gates", () => {
   test("owner sees hard-gate panel with all 4 gates locked and promote disabled", async ({ page, asActor }) => {
     await asActor({ userId: "e2e:admin", role: "Administrator", displayLabel: "Admin User" });
     await page.goto("/admin/deployment");
-    await waitForActor(page, "Administrator");
-    await page.reload();
     await waitForActor(page, "Administrator");
     await expect(page.getByTestId("hard-gates")).toBeVisible({ timeout: 15_000 });
     for (const id of ["H1", "H2", "H3", "H4"]) {
@@ -44,13 +36,12 @@ test.describe("Launch closure — hard gates", () => {
     await asActor({ userId: "e2e:admin", role: "Administrator", displayLabel: "Admin User" });
     await page.goto("/admin/cutover");
     await waitForActor(page, "Administrator");
-    await page.reload();
-    await waitForActor(page, "Administrator");
     await expect(page.getByTestId("cutover-ledger")).toBeVisible({ timeout: 15_000 });
     for (const id of ["H1", "H2", "H3", "H4"]) {
       await expect(page.getByTestId(`cutover-${id}`)).toBeVisible();
     }
   });
 });
+
 
 

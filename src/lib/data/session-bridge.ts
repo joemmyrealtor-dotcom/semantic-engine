@@ -5,18 +5,22 @@
 // app shell so every mutation path — governed studios, admin, API — sees
 // the real signed-in identity instead of a fabricated "current-user".
 
-import { useEffect } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   setActorFromSession, clearActor, subscribeActor, getActor,
 } from "@/lib/data/actor";
 import { Repo } from "@/lib/data/repository";
 import { getRole } from "@/lib/data/auth";
-import { useState } from "react";
 
 export function useAuthSessionBridge() {
-  const [, force] = useState(0);
-  useEffect(() => { const un = subscribeActor(() => force(x => x + 1)); return () => { un(); }; }, []);
+  // Subscribe with useSyncExternalStore so any actor mutation that
+  // happens BEFORE this component's effect runs (e.g. test-bridge
+  // injection during app boot) is still observed on the very first
+  // render. Previously we subscribed in useEffect + forceUpdate, which
+  // opened a race: an inject that fired between render and effect was
+  // lost until the next unrelated re-render or a manual reload().
+  const actor = useSyncExternalStore(subscribeActor, getActor, getActor);
 
   useEffect(() => {
     let mounted = true;
@@ -72,5 +76,5 @@ export function useAuthSessionBridge() {
     return () => { mounted = false; sub.subscription.unsubscribe(); };
   }, []);
 
-  return getActor();
+  return actor;
 }

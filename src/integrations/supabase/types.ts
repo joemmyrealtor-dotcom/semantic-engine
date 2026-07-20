@@ -359,6 +359,78 @@ export type Database = {
         }
         Relationships: []
       }
+      launch_gate_evidence: {
+        Row: {
+          attested_at: string
+          attested_by: string
+          attested_by_role: Database["public"]["Enums"]["app_role"]
+          build_fingerprint: string
+          correlation_id: string
+          created_at: string
+          gate_id: Database["public"]["Enums"]["launch_gate_id"]
+          id: string
+          reason: string
+          status: Database["public"]["Enums"]["launch_gate_status"]
+          superseded_by: string | null
+          verifier: string
+          verifier_detail: string
+          verifier_passed: boolean
+          version: number
+          workspace_id: string
+        }
+        Insert: {
+          attested_at?: string
+          attested_by: string
+          attested_by_role: Database["public"]["Enums"]["app_role"]
+          build_fingerprint: string
+          correlation_id: string
+          created_at?: string
+          gate_id: Database["public"]["Enums"]["launch_gate_id"]
+          id?: string
+          reason: string
+          status: Database["public"]["Enums"]["launch_gate_status"]
+          superseded_by?: string | null
+          verifier: string
+          verifier_detail: string
+          verifier_passed: boolean
+          version: number
+          workspace_id: string
+        }
+        Update: {
+          attested_at?: string
+          attested_by?: string
+          attested_by_role?: Database["public"]["Enums"]["app_role"]
+          build_fingerprint?: string
+          correlation_id?: string
+          created_at?: string
+          gate_id?: Database["public"]["Enums"]["launch_gate_id"]
+          id?: string
+          reason?: string
+          status?: Database["public"]["Enums"]["launch_gate_status"]
+          superseded_by?: string | null
+          verifier?: string
+          verifier_detail?: string
+          verifier_passed?: boolean
+          version?: number
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "launch_gate_evidence_superseded_by_fkey"
+            columns: ["superseded_by"]
+            isOneToOne: false
+            referencedRelation: "launch_gate_evidence"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "launch_gate_evidence_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           active_workspace_id: string | null
@@ -848,6 +920,8 @@ export type Database = {
         | "Canonical"
         | "Deprecated"
         | "Archived"
+      launch_gate_id: "H1" | "H2" | "H3" | "H4"
+      launch_gate_status: "PASS" | "BLOCKED-OPERATOR" | "FAIL" | "STALE"
       qa_severity: "info" | "warning" | "error" | "blocker"
       release_stage:
         | "Planned"
@@ -994,6 +1068,8 @@ export const Constants = {
         "Deprecated",
         "Archived",
       ],
+      launch_gate_id: ["H1", "H2", "H3", "H4"],
+      launch_gate_status: ["PASS", "BLOCKED-OPERATOR", "FAIL", "STALE"],
       qa_severity: ["info", "warning", "error", "blocker"],
       release_stage: [
         "Planned",
