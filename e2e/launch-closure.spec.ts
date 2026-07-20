@@ -81,4 +81,32 @@ test.describe("Launch closure — Phase 3 authoritative server state", () => {
     // Authoritative badge present.
     await expect(page.getByTestId("authoritative-source-badge")).toBeVisible();
   });
+
+  test("deployment page issues a real server-fn RPC and server rejects unauthenticated caller", async ({ page, asActor }) => {
+    await asActor({ userId: "e2e:admin", role: "Administrator", displayLabel: "Admin User" });
+    // Capture every RPC to the TanStack server-fn base (`/n/`) — the panel's
+    // authoritative call goes here. Without a real Supabase bearer the
+    // `requireSupabaseAuth` middleware must deny (401 or Response-thrown
+    // error surfacing as non-2xx). A silent 200 would prove the panel
+    // fabricated PASS locally instead of consulting the server.
+    const rpcResponses: number[] = [];
+    page.on("response", (res) => {
+      const u = new URL(res.url());
+      if (u.pathname.startsWith("/n/")) rpcResponses.push(res.status());
+    });
+    await page.goto("/admin/deployment");
+    await waitForActor(page, "Administrator");
+    await expect(page.getByTestId("authoritative-source-badge")).toBeVisible({ timeout: 15_000 });
+    // Give the query a moment to fire and settle.
+    await page.waitForTimeout(1500);
+    expect(rpcResponses.length, "expected at least one /n/ server-fn RPC").toBeGreaterThan(0);
+    // Every RPC must be a denial — no 2xx allowed without a real session.
+    for (const s of rpcResponses) expect(s, `unexpected 2xx from /n/ RPC (status ${s})`).toBeGreaterThanOrEqual(400);
+    // And the UI must reflect denial: badge = DIAGNOSTIC ONLY, lock = LOCKED,
+    // promote disabled. Together this proves the promote path is
+    // server-authoritative and cannot be unlocked from the browser.
+    await expect(page.getByTestId("authoritative-source-badge")).toContainText(/DIAGNOSTIC ONLY/);
+    await expect(page.getByTestId("launch-lock-state")).toContainText(/LOCKED/);
+    await expect(page.getByTestId("promote-production")).toBeDisabled();
+  });
 });
