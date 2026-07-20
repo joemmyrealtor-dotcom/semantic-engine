@@ -180,197 +180,65 @@ function DeploymentPage() {
           ))}
         </div>
 
-        <SectionTitle hint="docs/LAUNCH-CLOSURE.md">Launch-closure — hard gates</SectionTitle>
+        <SectionTitle hint="server-authoritative · computeReadinessServer">Launch-closure — hard gates</SectionTitle>
         <div className="mb-3 text-xs text-muted-foreground">
-          Attestations are append-only. Stale evidence is flagged automatically after build or
-          environment changes.{" "}
+          Authoritative state comes from the server (RLS-scoped, verifier-checked, append-only).
+          Local browser evidence appears below as diagnostic only and cannot unlock production.{" "}
           <Link to="/admin/cutover" className="underline text-heritage">Open cutover command center →</Link>
         </div>
-        <GateWorkflowPanel snap={s} env={env as Record<string, string | undefined>} />
+        <AuthoritativeGatesPanel workspaceId={s.activeWorkspaceId} />
+
+        <SectionTitle hint="IndexedDB · not authoritative">Local evidence (diagnostic)</SectionTitle>
+        <LocalDiagnosticPanel snap={s} env={env as Record<string, string | undefined>} />
       </PageBody>
     </>
   );
 }
 
-function GateWorkflowPanel({ snap, env }: { snap: DataSnapshot; env: Record<string, string | undefined> }) {
+/**
+ * Diagnostic-only view of client-side (IndexedDB) launch-gate evidence.
+ * Never used to unlock the production promote button; the authoritative
+ * panel above is the sole source of PASS.
+ */
+function LocalDiagnosticPanel({
+  snap, env,
+}: {
+  snap: ReturnType<typeof useSnapshot> & object;
+  env: Record<string, string | undefined>;
+}) {
   const wsId = snap.activeWorkspaceId;
   const states = HARD_GATE_IDS.map(id => computeGateState(snap, env, id, wsId));
-  const allPass = states.every(g => g.status === "PASS");
-  const canAttest = currentCan("maintenance.manage");
   return (
-    <>
-      <div className="editorial-card p-4 text-sm mb-4" role="status" aria-live="polite">
-        <div className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
-          Production GO:{" "}
-          <span className={allPass ? "text-evergreen" : "text-destructive"} data-testid="launch-lock-state">
-            {allPass ? "UNLOCKED" : "LOCKED — hard gates open"}
-          </span>
-        </div>
-        <div className="text-xs text-muted-foreground">
-          Production cutover is blocked while any hard gate below is not PASS. Enforced by policy.
-        </div>
+    <div className="editorial-card divide-y divide-border text-sm" data-testid="local-diagnostic-panel">
+      <div className="p-3 bg-muted/30 text-xs text-muted-foreground">
+        <strong>Diagnostic only.</strong> Rows below reflect browser-local IndexedDB evidence
+        and are ignored by the launch lock. Do not treat as production truth.
       </div>
-      <div className="editorial-card divide-y divide-border text-sm" data-testid="hard-gates">
-        {states.map(g => (
-          <GateRow key={g.definition.id} state={g} snap={snap} env={env} canAttest={canAttest} />
-        ))}
-        <div className="p-3">
-          <Button
-            size="sm" variant="outline"
-            disabled={!allPass} aria-disabled={!allPass}
-            data-testid="promote-production"
-            title={allPass ? "All hard gates PASS" : "Locked while any hard gate is not PASS"}
-          >
-            Promote to production {allPass ? "" : "(locked)"}
-          </Button>
-        </div>
-      </div>
-    </>
-  );
-}
-
-function GateRow({
-  state, snap, env, canAttest,
-}: {
-  state: ReturnType<typeof computeGateState>;
-  snap: DataSnapshot;
-  env: Record<string, string | undefined>;
-  canAttest: boolean;
-}) {
-  const g = state;
-  const [reason, setReason] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [open, setOpen] = useState(false);
-
-  const statusTone =
-    g.status === "PASS" ? "text-evergreen"
-      : g.status === "FAIL" ? "text-destructive"
-      : g.status === "STALE" ? "text-destructive/80"
-      : "text-gold";
-
-  const attest = async (status: "PASS" | "BLOCKED-OPERATOR" | "FAIL") => {
-    setBusy(true);
-    try {
-      const actor = getActor();
-      const { row, previous } = buildAttestation(snap, {
-        gateId: g.definition.id, workspaceId: snap.activeWorkspaceId,
-        status, reason,
-        actor: actor.userId, actorRole: actor.role,
-        correlationId: `attest-${g.definition.id}-${Date.now()}`, env,
-      });
-      await Repo.auditedTransaction(
-        {
-          permission: "maintenance.manage", action: "launch-gate-attest",
-          entityType: "launchGateEvidence", entityId: row.id, reason: `${g.definition.id}:${status}`,
-          before: previous ? { id: previous.id, status: previous.status, version: previous.version } : null,
-          after: { id: row.id, status: row.status, version: row.version, verifierPassed: row.verifierPassed },
-        },
-        s => applyAttestation(s, row, previous),
-      );
-      toast.success(`Recorded ${g.definition.id} = ${status} (v${row.version})`);
-      setReason(""); setOpen(false);
-    } catch (e) {
-      toast.error((e as Error).message);
-    } finally { setBusy(false); }
-  };
-
-  return (
-    <div className="p-3" data-testid={`gate-${g.definition.id}`}>
-      <div className="flex items-center justify-between mb-1">
-        <div>
-          <span className="font-mono text-xs text-muted-foreground mr-2">{g.definition.id}</span>
-          <span className="font-medium">{g.definition.name}</span>
-          <span className="text-xs text-muted-foreground ml-2">· {g.definition.owner}</span>
-        </div>
-        <span className={`text-xs uppercase tracking-widest ${statusTone}`} data-testid={`gate-${g.definition.id}-status`}>
-          {g.status}
-        </span>
-      </div>
-      <div className="text-xs text-muted-foreground pl-6 space-y-1">
-        <div><span className="uppercase tracking-widest text-[10px] mr-1">Requirement:</span>{g.definition.evidenceRequirement}</div>
-        <div>
-          <span className="uppercase tracking-widest text-[10px] mr-1">Verifier:</span>
-          <span className={g.verifier.passed ? "text-evergreen" : "text-destructive"}>{g.verifier.passed ? "OK" : "FAIL"}</span>
-          <span className="ml-2 font-mono">{g.verifier.verifier}</span>
-          <span className="ml-2">{g.verifier.detail}</span>
-        </div>
-        {g.current ? (
-          <div>
-            <span className="uppercase tracking-widest text-[10px] mr-1">Evidence:</span>
-            v{g.current.version} · {g.current.status} · by {g.current.attestedBy} ({g.current.attestedByRole})
-            <span className="ml-2">· {new Date(g.current.attestedAt).toLocaleString()}</span>
-            <span className="ml-2 font-mono">fp:{g.current.buildFingerprint}</span>
-          </div>
-        ) : (
-          <div><span className="uppercase tracking-widest text-[10px] mr-1">Evidence:</span>none captured</div>
-        )}
-        {g.stale && (
-          <div className="text-destructive/80" data-testid={`gate-${g.definition.id}-stale`}>
-            <span className="uppercase tracking-widest text-[10px] mr-1">Stale:</span>{g.staleReason}
-          </div>
-        )}
-        {g.current?.reason && (
-          <div><span className="uppercase tracking-widest text-[10px] mr-1">Reason:</span>{g.current.reason}</div>
-        )}
-      </div>
-
-      <div className="mt-2 pl-6">
-        {!canAttest ? (
-          <div className="text-xs text-muted-foreground" data-testid={`gate-${g.definition.id}-denied`}>
-            Your role lacks <code>maintenance.manage</code>; attesting is disabled.
-          </div>
-        ) : !open ? (
-          <Button size="sm" variant="outline" onClick={() => setOpen(true)} data-testid={`gate-${g.definition.id}-attest-open`}>
-            Record evidence
-          </Button>
-        ) : (
-          <div className="space-y-2">
-            <label className="text-xs uppercase tracking-widest text-muted-foreground" htmlFor={`reason-${g.definition.id}`}>
-              Written reason (≥ 12 chars)
-            </label>
-            <textarea
-              id={`reason-${g.definition.id}`}
-              value={reason} onChange={e => setReason(e.target.value)}
-              rows={2}
-              className="w-full text-sm border border-border rounded px-2 py-1 bg-background"
-              data-testid={`gate-${g.definition.id}-reason`}
-            />
-            <div className="flex flex-wrap gap-2">
-              <Button size="sm" disabled={busy || reason.trim().length < 12} onClick={() => attest("PASS")} data-testid={`gate-${g.definition.id}-attest-pass`}>
-                Attest PASS
-              </Button>
-              <Button size="sm" variant="outline" disabled={busy || reason.trim().length < 12} onClick={() => attest("BLOCKED-OPERATOR")}>
-                Mark BLOCKED
-              </Button>
-              <Button size="sm" variant="outline" disabled={busy || reason.trim().length < 12} onClick={() => attest("FAIL")}>
-                Mark FAIL
-              </Button>
-              <Button size="sm" variant="ghost" onClick={() => { setOpen(false); setReason(""); }}>Cancel</Button>
+      {states.map(g => (
+        <div key={g.definition.id} className="p-3" data-testid={`local-gate-${g.definition.id}`}>
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="font-mono text-xs text-muted-foreground mr-2">{g.definition.id}</span>
+              <span className="font-medium">{LAUNCH_GATE_DEFINITIONS[g.definition.id].name}</span>
             </div>
-            <div className="text-[11px] text-muted-foreground">
-              Verifier <span className="font-mono">{g.verifier.verifier}</span> must PASS to record status PASS.
-            </div>
+            <span className="text-xs uppercase tracking-widest text-muted-foreground">
+              local: {g.status}
+            </span>
           </div>
-        )}
-        {g.history.length > 1 && (
-          <details className="mt-2 text-xs">
-            <summary className="cursor-pointer text-muted-foreground">History ({g.history.length})</summary>
-            <ul className="mt-1 space-y-1 pl-3 border-l border-border">
-              {g.history.map(h => (
-                <li key={h.id} className="font-mono text-[11px]">
-                  v{h.version} · {h.status} · {h.attestedBy} · {new Date(h.attestedAt).toISOString().slice(0, 19)} · fp:{h.buildFingerprint}
-                  {h.supersededBy && <span className="ml-1 text-muted-foreground">(→ {h.supersededBy})</span>}
-                </li>
-              ))}
-            </ul>
-          </details>
-        )}
-      </div>
+          <div className="text-xs text-muted-foreground pl-6 mt-1">
+            {g.current
+              ? `v${g.current.version} · ${g.current.status} · by ${g.current.attestedBy}`
+              : "no local evidence"}
+            {g.stale && <span className="ml-2 text-destructive/80">stale ({g.staleReason})</span>}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
 
 // Suppress unused-import warning if LaunchGateId ever becomes needed elsewhere.
 export type _LaunchGateId = LaunchGateId;
+
 
 
