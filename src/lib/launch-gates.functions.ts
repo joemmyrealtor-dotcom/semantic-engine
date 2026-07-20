@@ -150,11 +150,12 @@ export const attestGateServer = createServerFn({ method: "POST" })
     const { data: roleRow } = await context.supabase.rpc("workspace_role", {
       _user_id: userId, _workspace_id: data.workspaceId,
     });
-    const role = roleRow as Role | null;
+    const role = roleRow as DbAppRole | null;
     if (!role) throw new Error("Forbidden: no workspace role");
-    if (!HARD_GATE_ROLES[data.gateId].includes(role)) {
+    if (!HARD_GATE_DB_ROLES[data.gateId].includes(role)) {
       throw new Error(`Forbidden: role ${role} may not attest ${data.gateId}`);
     }
+
 
     // 3) Server-side verifier runs BEFORE write. PASS is refused unless verifier passes.
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
