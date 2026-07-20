@@ -15,6 +15,12 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth")({
+  validateSearch: (search: Record<string, unknown>): { redirect?: string } => {
+    const redirect = typeof search.redirect === "string" ? search.redirect : undefined;
+    return {
+      redirect: redirect && redirect.startsWith("/") && !redirect.startsWith("//") ? redirect : undefined,
+    };
+  },
   head: () => ({
     meta: [
       { title: "Sign in — Legacy Platform" },
@@ -26,6 +32,7 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const nav = useNavigate();
+  const search = Route.useSearch();
   const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -37,10 +44,10 @@ function AuthPage() {
     supabase.auth.getSession().then(({ data }) => {
       if (!alive) return;
       setHasSession(!!data.session);
-      if (data.session) nav({ to: "/" });
+      if (data.session) nav({ to: search.redirect ?? "/" });
     });
     return () => { alive = false; };
-  }, [nav]);
+  }, [nav, search.redirect]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -50,7 +57,7 @@ function AuthPage() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success("Signed in");
-        nav({ to: "/" });
+        nav({ to: search.redirect ?? "/" });
       } else if (mode === "signup") {
         const { error } = await supabase.auth.signUp({
           email, password,
