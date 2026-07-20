@@ -45,13 +45,10 @@ interface VerifierResult { passed: boolean; detail: string; verifier: string }
 async function verifyGateServer(
   gateId: LaunchGateId,
   supabaseAdmin: {
-    from: (t: string) => {
-      select: (c: string) => {
-        eq: (col: string, v: unknown) => { limit: (n: number) => Promise<{ data: unknown[] | null }> };
-      };
-    };
+    from: (t: string) => { select: (c: string) => { limit: (n: number) => Promise<{ data: unknown[] | null }> } };
   },
 ): Promise<VerifierResult> {
+
   const env = process.env;
   switch (gateId) {
     case "H1": {
