@@ -11,7 +11,42 @@ import {
   setActorFromSession, clearActor, subscribeActor, getActor,
 } from "@/lib/data/actor";
 import { Repo } from "@/lib/data/repository";
-import { getRole } from "@/lib/data/auth";
+import { getRole, setRole } from "@/lib/data/auth";
+import type { Role } from "@/lib/data/schema";
+
+const ROLE_MAP: Record<string, Role> = {
+  owner: "Owner",
+  admin: "Administrator",
+  administrator: "Administrator",
+  editor: "Editor",
+  publisher: "Publisher",
+  reviewer: "Reviewer",
+  sme: "SME",
+  qa: "QA",
+  operations: "Operations",
+  contributor: "Contributor",
+  viewer: "Viewer",
+};
+
+async function resolveRoleForUser(userId: string): Promise<Role | null> {
+  try {
+    const { data, error } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId);
+    if (error || !data?.length) return null;
+    let best: Role | null = null;
+    let bestRank = -1;
+    const { ROLE_RANK } = await import("@/lib/data/auth");
+    for (const row of data) {
+      const mapped = ROLE_MAP[String(row.role).toLowerCase()];
+      if (!mapped) continue;
+      const rank = ROLE_RANK[mapped] ?? 0;
+      if (rank > bestRank) { best = mapped; bestRank = rank; }
+    }
+    return best;
+  } catch { return null; }
+}
 
 export function useAuthSessionBridge() {
   // Subscribe with useSyncExternalStore so any actor mutation that
