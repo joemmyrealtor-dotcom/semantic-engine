@@ -90,11 +90,12 @@ export function AuthoritativeGatesPanel({ workspaceId, showAttestControls = true
             {allPass ? "UNLOCKED" : "LOCKED — hard gates open"}
           </span>
           <span
-            className={"ml-3 px-1.5 py-0.5 rounded text-[10px] " + (authoritative ? "bg-evergreen/15 text-evergreen" : "bg-destructive/15 text-destructive")}
+            className={"ml-3 px-1.5 py-0.5 rounded text-[10px] font-semibold " + (authoritative ? "bg-evergreen text-white" : "bg-destructive text-white")}
             data-testid="authoritative-source-badge"
           >
             {authoritative ? "AUTHORITATIVE · server" : "DIAGNOSTIC ONLY · server unreachable"}
           </span>
+
         </div>
         <div className="text-xs text-muted-foreground">
           Production cutover is blocked while any hard gate below is not PASS.
