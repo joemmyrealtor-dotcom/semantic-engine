@@ -166,16 +166,17 @@ export const attestGateServer = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => AttestInput.parse(input))
   .handler(async ({ data, context }) => {
     const userId = context.userId;
+    const workspaceId = toWorkspaceUuid(data.workspaceId);
 
     // 1) Membership check (as the caller, via RLS-enabled RPC).
     const { data: isMember } = await context.supabase.rpc("is_workspace_member", {
-      _user_id: userId, _workspace_id: data.workspaceId,
+      _user_id: userId, _workspace_id: workspaceId,
     });
     if (!isMember) throw new Error("Forbidden: not a member of the target workspace");
 
     // 2) Fetch the caller's workspace role via RLS.
     const { data: roleRow } = await context.supabase.rpc("workspace_role", {
-      _user_id: userId, _workspace_id: data.workspaceId,
+      _user_id: userId, _workspace_id: workspaceId,
     });
     const role = roleRow as DbAppRole | null;
     if (!role) throw new Error("Forbidden: no workspace role");
@@ -188,7 +189,7 @@ export const attestGateServer = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const verifier = await verifyGateServer(
       data.gateId,
-      data.workspaceId,
+      workspaceId,
       supabaseAdmin as unknown as Parameters<typeof verifyGateServer>[2],
     );
     if (data.status === "PASS" && !verifier.passed) {
@@ -199,7 +200,7 @@ export const attestGateServer = createServerFn({ method: "POST" })
     const { data: activeRows } = await context.supabase
       .from("launch_gate_evidence")
       .select("id, version")
-      .eq("workspace_id", data.workspaceId)
+      .eq("workspace_id", workspaceId)
       .eq("gate_id", data.gateId)
       .is("superseded_by", null)
       .order("version", { ascending: false })
@@ -210,7 +211,8 @@ export const attestGateServer = createServerFn({ method: "POST" })
     // 5) Insert new row via service role (client is blocked by RLS by design).
     const insertRow = {
       gate_id: data.gateId,
-      workspace_id: data.workspaceId,
+      workspace_id: workspaceId,
+
       version,
       status: data.status,
       attested_by: userId,
