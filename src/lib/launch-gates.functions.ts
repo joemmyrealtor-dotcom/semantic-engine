@@ -175,7 +175,8 @@ export const attestGateServer = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const verifier = await verifyGateServer(
       data.gateId,
-      supabaseAdmin as unknown as Parameters<typeof verifyGateServer>[1],
+      data.workspaceId,
+      supabaseAdmin as unknown as Parameters<typeof verifyGateServer>[2],
     );
     if (data.status === "PASS" && !verifier.passed) {
       throw new Error(`Cannot attest ${data.gateId} as PASS: verifier failed — ${verifier.detail}`);
