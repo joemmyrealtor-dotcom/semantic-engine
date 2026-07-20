@@ -53,6 +53,74 @@ export type Database = {
         }
         Relationships: []
       }
+      api_clients: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string
+          enabled: boolean
+          environment: string
+          id: string
+          is_demo: boolean
+          key_prefix: string
+          key_reference_name: string | null
+          last_used_at: string | null
+          name: string
+          owner: string
+          rate_limit_per_minute: number
+          scopes: string[]
+          slug: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          enabled?: boolean
+          environment?: string
+          id?: string
+          is_demo?: boolean
+          key_prefix?: string
+          key_reference_name?: string | null
+          last_used_at?: string | null
+          name: string
+          owner?: string
+          rate_limit_per_minute?: number
+          scopes?: string[]
+          slug: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          enabled?: boolean
+          environment?: string
+          id?: string
+          is_demo?: boolean
+          key_prefix?: string
+          key_reference_name?: string | null
+          last_used_at?: string | null
+          name?: string
+          owner?: string
+          rate_limit_per_minute?: number
+          scopes?: string[]
+          slug?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_clients_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_events: {
         Row: {
           action: string
