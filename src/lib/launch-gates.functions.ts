@@ -13,7 +13,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import type { LaunchGateId, Role } from "@/lib/data/schema";
+import type { LaunchGateId } from "@/lib/data/schema";
 
 const AttestInput = z.object({
   gateId: z.enum(["H1", "H2", "H3", "H4"]),
@@ -29,12 +29,15 @@ const ListInput = z.object({
   activeOnly: z.boolean().optional(),
 });
 
-const HARD_GATE_ROLES: Record<LaunchGateId, Role[]> = {
-  H1: ["Administrator", "Owner", "Operations"],
-  H2: ["Administrator", "Owner"],
-  H3: ["Administrator", "Owner"],
-  H4: ["Administrator", "Owner", "Operations"],
+// DB `app_role` enum is legacy lowercase. Map hard-gate ownership by DB values.
+type DbAppRole = "owner" | "editor" | "reviewer" | "contributor" | "viewer";
+const HARD_GATE_DB_ROLES: Record<LaunchGateId, DbAppRole[]> = {
+  H1: ["owner"],
+  H2: ["owner"],
+  H3: ["owner"],
+  H4: ["owner"],
 };
+
 
 interface VerifierResult { passed: boolean; detail: string; verifier: string }
 
