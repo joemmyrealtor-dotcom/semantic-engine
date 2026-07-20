@@ -33,8 +33,8 @@ const QUERIES: Query[] = [
     sql: "SELECT * FROM public.rate_limit_buckets WHERE key = 'rl_demo'" },
   { name: "releases.by_stage_recent", note: "release list",
     sql: "SELECT id, stage, created_at FROM public.releases WHERE stage = 'Canonical' ORDER BY created_at DESC LIMIT 50" },
-  { name: "review_items.open", note: "review queue",
-    sql: "SELECT id FROM public.review_items WHERE state = 'open' LIMIT 100" },
+  { name: "review_items.pending", note: "review queue",
+    sql: "SELECT id FROM public.review_items WHERE state = 'Pending' LIMIT 100" },
   { name: "qa_issues.blocking_open", note: "release gate",
     sql: "SELECT id FROM public.qa_issues WHERE blocking = true AND resolved = false LIMIT 100" },
 ];
