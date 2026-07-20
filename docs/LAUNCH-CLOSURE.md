@@ -1,11 +1,34 @@
 # Launch Closure — Production Cutover Rehearsal
 
 **Mode:** rehearsal — no production data mutated.
-**Decision:** **CONDITIONAL GO** — every automatable check green; H1–H4 remain BLOCKED-OPERATOR pending real operator evidence. Production promotion is hard-locked in `/admin/deployment` until every hard gate is PASS. GA is **not** claimed.
+**Decision:** **CONDITIONAL GO (Phase 3 closed)** — every automatable regression check green; H1–H4 remain BLOCKED-OPERATOR pending real runtime operator evidence. Production promotion is server-authoritative and hard-locked in `/admin/deployment` and `/admin/cutover` until `computeReadinessServer` reports `ready:true`. GA is **not** claimed.
 
 ---
 
+## Phase 3 closure (this turn)
+
+| Area | Result |
+|---|---|
+| **Persisted `api_clients`** (Supabase, prior turn) | Table + RLS + append-only trigger + workspace scoping in place; `src/lib/api-clients.functions.ts` governs owner-only mutations via `requireSupabaseAuth`; H3 server verifier authoritatively requires APIC-001 disabled/deleted **and** at least one enabled non-demo client (see `src/lib/launch-gates.functions.ts` H3 branch). |
+| **Server-authoritative promotion** | `/admin/deployment` and `/admin/cutover` render `AuthoritativeGatesPanel` as sole promote source. Client-local IndexedDB evidence is quarantined under a labeled "Diagnostic only" section and can never unlock the promote button. |
+| **Authenticated server-path test (new)** | `e2e/launch-closure.spec.ts` — `deployment page issues a real server-fn RPC and server rejects unauthenticated caller` observes the actual `/_serverFn` POST, asserts the RPC fires, the response body carries an `Unauthorized` payload (no `"ready":true`), and the UI stays DIAGNOSTIC ONLY + LOCKED + promote disabled. Confirms the promote path cannot be unlocked from the browser without a real Supabase bearer. |
+| **Auth/session reactivity** | `src/lib/data/session-bridge.ts` uses `useSyncExternalStore(subscribeActor, getActor, getActor)`; verified in application code — the full Playwright suite (44/44) passes with no reload / no reinject workaround. |
+
+### Regression re-run (this turn)
+
+| Check | Command | Result |
+|---|---|---|
+| Typecheck | `bunx tsgo --noEmit` | exit 0 |
+| Validations | `bun run scripts/validate.ts` | **356/356 OK** |
+| Playwright + axe | `bunx playwright test` | **44 passed** · 0 serious/critical |
+| Production build | `bun run build` | exit 0 · Nitro emit clean |
+| RC-2 perf | `bun run scripts/rc2-perf.ts` | budgets **PASS** (10007 ms) |
+| RC-2 db | `bun run scripts/rc2-db.ts` | 12 queries · 0 errors · seq-scan set unchanged from RC-2 baseline |
+| RC-3 RLS | pg_policies recheck | policies + append-only trigger unchanged; no new SECURITY DEFINER findings |
+
 ## Hardening pass — phases 1 + 2 delivered
+
+### Phase 1 (previous turn)
 
 ### Phase 1 (previous turn)
 | Change | Result |

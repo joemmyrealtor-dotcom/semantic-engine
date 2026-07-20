@@ -81,4 +81,33 @@ test.describe("Launch closure — Phase 3 authoritative server state", () => {
     // Authoritative badge present.
     await expect(page.getByTestId("authoritative-source-badge")).toBeVisible();
   });
+
+  test("deployment page issues a real server-fn RPC and server rejects unauthenticated caller", async ({ page, asActor }) => {
+    await asActor({ userId: "e2e:admin", role: "Administrator", displayLabel: "Admin User" });
+    // Capture every RPC to the TanStack server-fn base. Without a real
+    // Supabase bearer the `requireSupabaseAuth` middleware throws
+    // Unauthorized — TanStack serializes the throw into the RPC response
+    // body. A successful readiness would prove the panel fabricated PASS
+    // locally instead of consulting the server.
+    const rpcBodies: string[] = [];
+    page.on("response", async (res) => {
+      const p = new URL(res.url()).pathname;
+      if (p.startsWith("/_serverFn") || p.startsWith("/n/")) {
+        try { rpcBodies.push(await res.text()); } catch { /* body unavailable */ }
+      }
+    });
+    await page.goto("/admin/deployment");
+    await waitForActor(page, "Administrator");
+    await expect(page.getByTestId("authoritative-source-badge")).toBeVisible({ timeout: 15_000 });
+    await page.waitForTimeout(1500);
+    expect(rpcBodies.length, "expected at least one server-fn RPC to fire").toBeGreaterThan(0);
+    // Every RPC body must surface an unauthorized/auth error — no valid readiness payload.
+    const joined = rpcBodies.join("\n");
+    expect(joined).toMatch(/Unauthorized|authorization|Invalid token|Missing Supabase/i);
+    expect(joined).not.toMatch(/"ready"\s*:\s*true/);
+    // UI reflects denial: DIAGNOSTIC ONLY, LOCKED, promote disabled.
+    await expect(page.getByTestId("authoritative-source-badge")).toContainText(/DIAGNOSTIC ONLY/);
+    await expect(page.getByTestId("launch-lock-state")).toContainText(/LOCKED/);
+    await expect(page.getByTestId("promote-production")).toBeDisabled();
+  });
 });
