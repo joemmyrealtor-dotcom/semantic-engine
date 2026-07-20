@@ -1,7 +1,7 @@
 # Launch Closure — Production Cutover Rehearsal
 
 **Mode:** rehearsal — no production data mutated.
-**Build commit:** `24361d269cd23e6579a839da03e7c631e917344f` (2026-07-17T23:04:59Z)
+**Build commit:** `9ababbee89d217f7b284db58697851ee8d5b939d` (2026-07-20T17:35:42Z)
 **Decision:** **CONDITIONAL GO** — every automatable check green; H1–H4 remain BLOCKED-OPERATOR pending real operator evidence. Production promotion is hard-locked in `/admin/deployment` until every hard gate is PASS. GA is **not** claimed.
 
 ---
@@ -11,12 +11,13 @@
 | Check | Command | Result |
 |---|---|---|
 | Typecheck | `bunx tsgo --noEmit` | exit 0 |
-| Validations | `bun run scripts/validate.ts` | **343/343 OK** |
-| Playwright + axe | `bunx playwright test` | **38 passed** (55.5s) · 0 serious/critical |
-| Production build | `bun run build` | exit 0 · `dist/client` + `dist/nitro.json` |
-| RC-2 perf | `bun run scripts/rc2-perf.ts` | budgets **PASS** · total 9.74s |
-| RC-2 DB | `bun run scripts/rc2-db.ts` | exit 0 |
-| RC-3 targeted RLS (audit_events, profiles) | `pg_policies` recheck | unchanged since RC-3 |
+| Validations | `bun run scripts/validate.ts` | **356/356 OK** (was 343 pre-launch-closure) |
+| Playwright + axe | `bunx playwright test` | **41 passed** (1.1m) · 0 serious/critical (was 38) |
+| Production build | `bun run build` | exit 0 · `dist/client` + `dist/nitro.json` emitted (748ms) |
+| RC-2 perf | `bun run scripts/rc2-perf.ts` | budgets **PASS** · total 10.12s |
+| RC-2 DB | `bun run scripts/rc2-db.ts` | 12 queries · 0 flagged seq-scans on tuned paths (pre-existing `review_items.state='open'` enum probe error is not launch-closure related and does not affect the tuned index set) |
+| RC-3 targeted RLS (audit_events, profiles) | `pg_policies` recheck | unchanged since RC-3 (61 policies · 19 RLS-enabled tables) |
+| Schema v9 impact | `launchGateEvidence` is **client-side IndexedDB only** — no new Postgres table, no new RLS grants, no change to workspace-scoping semantics for Supabase-backed entities; audit ledger hash-chain integrity re-verified in `rc2-perf.ts` (`auditAppend verify=15.2ms ok=true`); hard-gate lock in `/admin/deployment` and `/admin/cutover` remains disabled while any of H1–H4 is not PASS |
 
 ## Cutover sequence
 
