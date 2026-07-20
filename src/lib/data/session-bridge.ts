@@ -64,11 +64,14 @@ export function useAuthSessionBridge() {
       if (!mounted) return;
       const s = data.session;
       if (s?.user) {
+        const role = await resolveRoleForUser(s.user.id);
+        if (role) setRole(role);
         setActorFromSession({
           userId: s.user.id,
           email: s.user.email ?? null,
           displayLabel: s.user.user_metadata?.display_name ?? s.user.email ?? s.user.id,
           expiresAt: s.expires_at ?? null,
+          role: role ?? undefined,
         });
       }
     }
