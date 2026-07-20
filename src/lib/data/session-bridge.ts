@@ -80,22 +80,26 @@ export function useAuthSessionBridge() {
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED") {
         if (session?.user) {
-          setActorFromSession({
-            userId: session.user.id,
-            email: session.user.email ?? null,
-            displayLabel: session.user.user_metadata?.display_name ?? session.user.email ?? session.user.id,
-            expiresAt: session.expires_at ?? null,
+          const userId = session.user.id;
+          resolveRoleForUser(userId).then(role => {
+            if (role) setRole(role);
+            setActorFromSession({
+              userId,
+              email: session.user.email ?? null,
+              displayLabel: session.user.user_metadata?.display_name ?? session.user.email ?? userId,
+              expiresAt: session.expires_at ?? null,
+              role: role ?? undefined,
+            });
+            if (event === "SIGNED_IN") {
+              Repo.appendAuditEvent({
+                actor: userId, actorRole: role ?? getRole(),
+                workspaceId: Repo.snapshot()?.activeWorkspaceId ?? "",
+                action: "login",
+                entityType: "session", entityId: userId,
+                reason: "Supabase session established",
+              }).catch(() => { /* best effort */ });
+            }
           });
-          // Best-effort login audit (safe — no tokens included).
-          if (event === "SIGNED_IN") {
-            Repo.appendAuditEvent({
-              actor: session.user.id, actorRole: getRole(),
-              workspaceId: Repo.snapshot()?.activeWorkspaceId ?? "",
-              action: "login",
-              entityType: "session", entityId: session.user.id,
-              reason: "Supabase session established",
-            }).catch(() => { /* best effort */ });
-          }
         }
       } else if (event === "SIGNED_OUT") {
         const prev = getActor();
