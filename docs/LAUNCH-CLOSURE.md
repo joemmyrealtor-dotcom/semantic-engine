@@ -5,21 +5,27 @@
 
 ---
 
-## Hardening pass — this turn (server-authoritative evidence, phase 1)
+## Hardening pass — phases 1 + 2 delivered
 
-Landed:
-
+### Phase 1 (previous turn)
 | Change | Result |
 |---|---|
-| **Migration** — durable `public.launch_gate_evidence` ledger (append-only via trigger, RLS-gated to workspace members for read, no client write path, indexes on `(workspace, gate, version DESC)` and active-row partial index) | 62 policies (was 61) · 20 RLS-enabled tables (was 19) · trigger `enforce_gate_evidence_append_only` is **not** SECURITY DEFINER (added 0 new SECURITY DEFINER findings) |
-| **Session-subscription race** fixed at the application layer: `useAuthSessionBridge` now uses `useSyncExternalStore(subscribeActor, getActor)` so any actor mutation that fires between render and effect is observed on the first paint | Playwright launch-closure spec no longer needs `page.reload()` or actor reinjection; suite stable at 41/41 without workarounds |
-| **rc2-db harness** — `review_items` probe corrected from invalid `state='open'` to the real enum label `state='Pending'` | 12/12 queries succeed · 0 errors · 0 flagged seq-scans on tuned paths |
+| **Migration** — durable `public.launch_gate_evidence` ledger (append-only via trigger, RLS-gated to workspace members for read, no client write path, indexes on `(workspace, gate, version DESC)` and active-row partial index) | 62 policies · 20 RLS-enabled tables · trigger `enforce_gate_evidence_append_only` is not SECURITY DEFINER (0 new lint findings) |
+| **Session-subscription race** fixed at the application layer via `useSyncExternalStore(subscribeActor, getActor)` | Playwright launch-closure spec stable at 41/41 with no reload/reinject workaround |
+| **rc2-db harness** — `review_items` probe corrected to `state='Pending'` | 12/12 clean, 0 errors |
 
-Deferred to phase 2 (explicitly not claimed this turn):
+### Phase 2 (this turn) — server-authoritative verification
+| Change | Result |
+|---|---|
+| **`src/lib/launch-gates.functions.ts`** — three authenticated server functions using `requireSupabaseAuth`: `listGateEvidenceServer` (RLS-scoped read as caller), `attestGateServer` (workspace-membership + workspace-role check via existing RLS SECURITY DEFINER helpers, then server-side verifier run **before** any write, then service-role insert since RLS denies all direct client writes), `computeReadinessServer` (durable readiness snapshot with server-computed build fingerprint for stale detection) | Typecheck exit 0; the write path for PASS evidence is now unreachable from any client code |
+| **Server-side verifier** for each gate reads `process.env` at call time — H1 checks `RATE_LIMIT_ADAPTER=supabase`, H2 checks `SUPABASE_AUTH_GOOGLE_ENABLED` / `AUTH_GOOGLE_ENABLED`, H3 checks `API_BEARER_ROTATED`, H4 requires `BASELINE_BACKUP_ID` and probes `workspaces` reachability | Verifier refuses `PASS` unless it returns ok — enforced server-side, not client-side |
+| **Automatic re-locking** — `computeReadinessServer` recomputes the build fingerprint from live env on each call; any active row whose fingerprint no longer matches surfaces as `STALE`, and `blockingGateIds` includes every non-`PASS` gate | Stale evidence cannot masquerade as PASS after env or config drift |
+| **Client mirror** in the deployment UI (`src/routes/admin.deployment.tsx`) remains for offline diagnostics only; the RLS + append-only trigger + service-role-only write path together guarantee the client-local `launchGateEvidence` cannot produce authoritative PASS | Client-local evidence is never authoritative |
 
-- Authenticated server functions (`verifyGate` / `attestGate` / `listGateEvidence` / `getCutoverReadiness`) that use `requireSupabaseAuth` + `supabaseAdmin` to run the H1–H4 verifiers and write the ledger. Table + trigger + policies are in place so the write path is already closed to clients; the server-fn module and the deployment/cutover UI rewire to read authoritative Supabase state are the next slice.
-- Client-local `launchGateEvidence` in IndexedDB remains a diagnostic mirror only; the RLS + append-only trigger already guarantee no client-side path can produce authoritative PASS evidence.
-- Playwright coverage for multi-user visibility, unauthorized-PASS denial, and stale-locking hits the ledger directly once phase 2 lands.
+### Deferred (phase 3, not claimed)
+- Wiring the deployment/cutover routes to consume `listGateEvidenceServer` / `computeReadinessServer` as their primary read (currently additive; the client-local `computeGateState` view still renders). This is a UI switch; the server contract is in place.
+- Persisted `api_clients` table for a real H3 verifier (currently env-flag driven).
+- Playwright coverage that exercises the server-fn path end-to-end for multi-user visibility and unauthorized-PASS denial — the underlying DB invariants (RLS-select-only, append-only trigger, `pass_requires_verifier` check constraint) are already the enforcement surface.
 
 ## Regression re-run (this turn)
 
@@ -27,11 +33,12 @@ Deferred to phase 2 (explicitly not claimed this turn):
 |---|---|---|
 | Typecheck | `bunx tsgo --noEmit` | exit 0 |
 | Validations | `bun run scripts/validate.ts` | **356/356 OK** (baseline preserved) |
-| Playwright + axe | `bunx playwright test` | **41 passed** (1.3m) · 0 serious/critical (baseline preserved, no reload/reinject workaround) |
+| Playwright + axe | `bunx playwright test` | **41 passed** (1.3m) · 0 serious/critical |
 | Production build | `bun run build` | exit 0 · `dist/client` + `dist/nitro.json` + wrangler config emitted |
-| RC-2 DB | `bun run scripts/rc2-db.ts` | 12 queries · **0 errors** · 0 flagged seq-scans on tuned paths |
-| RC-3 targeted RLS | `pg_policies` recheck | **62 policies · 20 RLS-enabled tables** (delta: +1 SELECT policy on `launch_gate_evidence` for workspace members) |
-| Migration security linter | Supabase linter | 6 pre-existing SECURITY DEFINER warnings (has_role, has_any_role, is_workspace_member, workspace_role, consume_rate_limit, cleanup_rate_limit_buckets) — documented as intentional in RC-3; **no new findings from this migration** |
+| RC-2 DB | `bun run scripts/rc2-db.ts` | 12 queries · **0 errors** · seq-scan findings unchanged from RC-2 baseline (`releases.by_stage_recent` still SEQ-SCAN — pre-existing, tracked in RC-2 report) |
+| RC-3 targeted RLS | `pg_policies` recheck | **62 policies · 20 RLS-enabled tables** (delta from RC-3: +1 SELECT policy on `launch_gate_evidence` for workspace members; **no** INSERT/UPDATE/DELETE policies for authenticated — server-authoritative by construction) |
+| Migration security linter | Supabase linter | 6 pre-existing SECURITY DEFINER warnings (`has_role`, `has_any_role`, `is_workspace_member`, `workspace_role`, `consume_rate_limit`, `cleanup_rate_limit_buckets`) — documented as intentional in RC-3; **no new findings** from either migration this workstream |
+
 
 
 
