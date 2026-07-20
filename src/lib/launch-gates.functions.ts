@@ -145,12 +145,14 @@ export const listGateEvidenceServer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => ListInput.parse(input))
   .handler(async ({ data, context }) => {
+    const workspaceId = toWorkspaceUuid(data.workspaceId);
     // RLS-enforced read as the caller.
     let q = context.supabase
       .from("launch_gate_evidence")
       .select("id, gate_id, workspace_id, version, status, attested_by, attested_by_role, attested_at, reason, verifier, verifier_passed, verifier_detail, build_fingerprint, superseded_by, correlation_id")
-      .eq("workspace_id", data.workspaceId)
+      .eq("workspace_id", workspaceId)
       .order("version", { ascending: false });
+
     if (data.gateId) q = q.eq("gate_id", data.gateId);
     if (data.activeOnly) q = q.is("superseded_by", null);
     const { data: rows, error } = await q;
