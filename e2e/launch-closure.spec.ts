@@ -91,8 +91,8 @@ test.describe("Launch closure — Phase 3 authoritative server state", () => {
     // fabricated PASS locally instead of consulting the server.
     const rpcResponses: number[] = [];
     page.on("response", (res) => {
-      const u = new URL(res.url());
-      if (u.pathname.startsWith("/n/")) rpcResponses.push(res.status());
+      const p = u.pathname;
+      if (p.startsWith("/_serverFn") || p.startsWith("/n/")) rpcResponses.push(res.status());
     });
     await page.goto("/admin/deployment");
     await waitForActor(page, "Administrator");
