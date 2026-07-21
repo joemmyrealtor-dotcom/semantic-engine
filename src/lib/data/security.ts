@@ -152,11 +152,17 @@ export interface EnvValidationResult {
   warnings: string[];
 }
 
-export function validateEnvironment(env: Record<string, string | undefined>): EnvValidationResult {
+export type EnvScope = "client" | "server" | "all";
+
+export function validateEnvironment(
+  env: Record<string, string | undefined>,
+  scope: EnvScope = "all",
+): EnvValidationResult {
   const missing: string[] = [];
   const present: string[] = [];
   const warnings: string[] = [];
   for (const req of ENV_REQUIREMENTS) {
+    if (scope !== "all" && req.scope !== scope) continue;
     const v = env[req.key];
     if (!v && req.required) missing.push(req.key); else if (v) present.push(req.key);
   }
