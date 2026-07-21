@@ -27,8 +27,11 @@ export const Route = createFileRoute("/admin/deployment")({
 function DeploymentPage() {
   const s = useSnapshot();
   const env = typeof import.meta !== "undefined" ? (import.meta as unknown as { env: Record<string, string | undefined> }).env : {};
-  const diags = useMemo(() => (s ? startupDiagnostics(env, s) : []), [s, env]);
-  const rc = useMemo(() => (s ? releaseCandidateReadiness(env, s) : null), [s, env]);
+  // Browser can only observe client-scoped (VITE_*) variables. Server-scoped
+  // environment (SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, rate-limit adapter,
+  // etc.) is authoritative via protected server functions and H1–H4 gates.
+  const diags = useMemo(() => (s ? startupDiagnostics(env, s, "client") : []), [s, env]);
+  const rc = useMemo(() => (s ? releaseCandidateReadiness(env, s, "client") : null), [s, env]);
   const gate = useMemo(() => (s ? maintenanceGate(s, getRole()) : { allowed: true, reason: "" }), [s]);
   if (!s || !rc) return <LoadingState />;
 
