@@ -1,0 +1,1 @@
+DROP POLICY "profiles public directory" ON public.profiles;
