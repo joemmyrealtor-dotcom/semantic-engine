@@ -5,7 +5,7 @@
 
 import type { DataSnapshot, FeatureFlag, Role } from "./schema";
 import { SCHEMA_VERSION } from "./schema";
-import { validateEnvironment, type EnvValidationResult } from "./security";
+import { validateEnvironment, type EnvValidationResult, type EnvScope } from "./security";
 import { computeMonitoring, type HealthState } from "./monitoring";
 import { verifyAuditChain } from "./audit";
 import { buildDisasterRecoveryPlan } from "./backups";
@@ -13,8 +13,12 @@ import { assertRateLimitReadiness } from "./rate-limit";
 
 export interface StartupDiagnostic { name: string; ok: boolean; detail: string }
 
-export function startupDiagnostics(env: Record<string, string | undefined>, snap: DataSnapshot): StartupDiagnostic[] {
-  const envRes: EnvValidationResult = validateEnvironment(env);
+export function startupDiagnostics(
+  env: Record<string, string | undefined>,
+  snap: DataSnapshot,
+  scope: EnvScope = "all",
+): StartupDiagnostic[] {
+  const envRes: EnvValidationResult = validateEnvironment(env, scope);
   const out: StartupDiagnostic[] = [];
   const workspaces = snap.workspaces ?? [];
   const auditEvents = snap.auditEvents ?? [];
