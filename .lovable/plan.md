@@ -1,39 +1,65 @@
-## Release-freeze verification (read-only)
+# Security Triage — Release-Freeze Report
 
-Project ID: `2d27448a-b42d-4dae-9ce6-fec430b61624`, current sandbox on main. No files changed.
+Freeze intact. No code, schema, secrets, memberships, evidence, or fingerprint changes proposed. Build fingerprint `srv-2fa8803f` unchanged. Launch remains blocked.
 
-### File existence — all present
+## The Critical Finding
 
-- **`src/routes/admin.deployment.tsx`** ✅
-  - Line 18: `export const Route = createFileRoute("/admin/deployment")({ ... })`
-  - Line 16: imports `AuthoritativeGatesPanel` from `@/components/launch-gates-panel`
-  - Line 189: renders `<AuthoritativeGatesPanel workspaceId={s.activeWorkspaceId} />`
+- **Title:** All authenticated users can read every user's email address
+- **Scanner ID:** `PUBLIC_USER_DATA`
+- **Severity:** error (critical) — the only non-warn finding in the scan; the other 8 items are warn-level `SECURITY DEFINER` executability notices and two additional warn-level RLS-scope issues (`review_items`, `audit_events`) that do NOT block publish.
+- **Affected surface:** Supabase table `public.profiles`, RLS policy **`profiles public directory`**
+- **Not a code/route issue:** no file under `src/` needs to change; this is a database policy.
 
-- **`src/components/launch-gates-panel.tsx`** ✅
-  - Renders `AUTHORITATIVE · server` / `DIAGNOSTIC ONLY · server unreachable` badge
-  - Renders H1–H4 verifier rows via `ServerGateRow` with per-gate `verifier.passed` status
-  - Renders `Record evidence` button (`gate-<id>-attest-open`) and `Attest PASS` button (`gate-<id>-attest-pass`)
-  - Promote button disabled unless server-authoritative `ready === true`
+## Exact Evidence (live query against production DB)
 
-- **`src/lib/launch-gates.functions.ts`** ✅
-  - Line 151: `export const attestGateServer = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])`
-  - Line 241: `export const computeReadinessServer = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])`
-  - Both server functions are gated by `requireSupabaseAuth` from `@/integrations/supabase/auth-middleware`
+`pg_policies` for `public.profiles` currently contains:
 
-### Preview build inclusion
+```text
+policyname                     cmd     roles           qual                                              with_check
+profiles public directory      SELECT  {authenticated} true                                              NULL
+profiles self or owner read    SELECT  {authenticated} auth.uid()=id OR has_role(auth.uid(),'owner')     NULL
+profiles self insert           INSERT  {authenticated} NULL                                              auth.uid()=id
+profiles self update           UPDATE  {authenticated} auth.uid()=id                                     auth.uid()=id
+```
 
-These files are on `main` in the active project checkout that Vite serves as the preview build. `admin.deployment.tsx` is a route file under `src/routes/`, so the TanStack Router plugin auto-registers `/admin/deployment` in `routeTree.gen.ts` on the running dev server. The server functions are wired through their route imports and reachable at the `_serverFn` endpoint.
+The `profiles public directory` policy has `USING (true)` for role `authenticated`. Because PostgREST OR-combines permissive SELECT policies, this single row makes the narrower `profiles self or owner read` policy irrelevant. Columns on `public.profiles` include `email` and `display_name`, so every signed-in user can `SELECT id, email, display_name, …` for every other user.
 
-### Root cause of the earlier contradictory response
+## Exploit Scenario
 
-The earlier reply that claimed these artifacts were missing was incorrect for this project. The prior turn did not re-read the current source before answering — it relied on a stale mental model rather than the on-disk state of this project ID / branch. The files above have existed on main since the Phase 3 closure turn and were not removed.
+1. Attacker signs up through `/auth` (self-serve email/password is enabled; first-user-owner logic does not gate later signups).
+2. From the browser, with only the publishable anon key, they run
+   `supabase.from('profiles').select('id,email,display_name')`.
+3. RLS lets it through via `profiles public directory`, returning the full user directory — including `joe@cb-diamond.com`, `joemmyrealtor@gmail.com`, and any future Owner/Editor/Reviewer emails.
+4. Harvested emails enable targeted phishing, credential-stuffing, and Owner-account social engineering against the very accounts that attest launch gates.
 
-### State unchanged
+## True Positive / False Positive
 
-- H1–H4 remain `BLOCKED-OPERATOR`.
-- Production promotion remains hard-locked (`Promote to production (locked)`).
-- No code, schema, tests, routes, or docs modified. No publish.
+**True positive.** The policy is literally `USING (true)` on a table containing PII (`email`). The narrower self-or-owner policy exists but is overridden by the permissive one. There is no application-layer view or column filter enforcing masking; the schema exposes the full row.
 
-### Next operator action (unchanged)
+## Smallest Safe Remediation (to be applied only after release-freeze lifts)
 
-Sign in as workspace Owner on the live app, open `/admin/deployment`, confirm the `AUTHORITATIVE · server` badge and H1 verifier `OK · server:rate-limit-adapter`, then Record evidence + Attest PASS.
+Single-migration change, no code touched, no route touched, no data mutated:
+
+```sql
+-- Remove the overly-broad directory policy.
+-- 'profiles self or owner read' already allows a user to read their own row
+-- and Owners to read all rows, which matches the intended access model.
+DROP POLICY "profiles public directory" ON public.profiles;
+```
+
+If a directory feature is genuinely required later, reintroduce it as a **`SECURITY DEFINER` view** exposing only non-sensitive columns (e.g. `id`, `display_name`) with its own grant, rather than a `USING (true)` policy on the base table. Do not add such a view as part of this remediation — scope is strictly closing the leak.
+
+## Verification Steps (post-fix, still no publish)
+
+1. Re-run `pg_policies` query — confirm `profiles public directory` is gone and only the self/owner + self insert/update policies remain.
+2. As a non-Owner authenticated user, `select id,email from profiles` must return only that user's own row.
+3. As Owner, the same query must still return all rows (unchanged).
+4. Re-run `security--run_security_scan`; confirm `PUBLIC_USER_DATA` is no longer present. Warn-level items (`SECURITY DEFINER` executable, `review_items`/`audit_events` scoping) remain out of scope for this triage and do not block publish.
+5. Only then request publish authorization.
+
+## Status
+
+- Finding **not** ignored, **not** dismissed, **not** marked fixed.
+- No remediation applied in this turn (release freeze).
+- Publish remains correctly blocked by the platform's critical-finding gate.
+- Awaiting operator decision to lift freeze for the single `DROP POLICY` migration above, or to defer.
