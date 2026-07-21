@@ -61,8 +61,8 @@ export interface ReleaseReadiness {
   monitoring: HealthState;
 }
 
-export function releaseCandidateReadiness(env: Record<string, string | undefined>, snap: DataSnapshot): ReleaseReadiness {
-  const diags = startupDiagnostics(env, snap);
+export function releaseCandidateReadiness(env: Record<string, string | undefined>, snap: DataSnapshot, scope: EnvScope = "all"): ReleaseReadiness {
+  const diags = startupDiagnostics(env, snap, scope);
   const monitoring = computeMonitoring(snap);
   const dr = buildDisasterRecoveryPlan(snap);
 
