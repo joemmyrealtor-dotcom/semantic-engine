@@ -132,3 +132,26 @@ const finalEvidence = {
 };
 writeFileSync("/tmp/dr-phase2b/drill-result.json", JSON.stringify(finalEvidence, null, 2));
 console.log("NORMALIZED:", JSON.stringify(finalEvidence.normalized, null, 2));
+
+import { migrateSnapshot } from "../src/lib/data/db";
+const migratedRestored = migrateSnapshot(restored);
+const migratedNorm = normHash(migratedRestored);
+const equivalence = {
+  reloadedEqualsMigratedRestored: reloadedNorm === migratedNorm,
+  reloadedContentHash: reloadedNorm,
+  migratedRestoredContentHash: migratedNorm,
+  entityParity: {
+    concepts: reloaded.concepts.length === restored.concepts.length,
+    publications: reloaded.publications.length === restored.publications.length,
+    frameworks: reloaded.frameworks.length === restored.frameworks.length,
+    knowledgeObjects: reloaded.knowledgeObjects.length === restored.knowledgeObjects.length,
+    agents: reloaded.agents.length === restored.agents.length,
+    releases: reloaded.releases.length === restored.releases.length,
+    backups: reloaded.backups.length === restored.backups.length,
+    workspaceId: reloaded.activeWorkspaceId === restored.activeWorkspaceId,
+    schemaVersion: reloaded.schemaVersion === restored.schemaVersion,
+  },
+};
+console.log("EQUIV:", JSON.stringify(equivalence, null, 2));
+const final2 = { ...finalEvidence, equivalence };
+writeFileSync("/tmp/dr-phase2b/drill-result.json", JSON.stringify(final2, null, 2));
