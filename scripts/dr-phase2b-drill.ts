@@ -110,3 +110,25 @@ evidence.rto = {
 
 writeFileSync("/tmp/dr-phase2b/drill-result.json", JSON.stringify(evidence, null, 2));
 console.log(JSON.stringify(evidence, null, 2));
+
+// Normalized comparison — saveSnapshot bumps exportedAt; migrateSnapshot backfills defaults.
+// Compare structural equivalence excluding exportedAt.
+function normHash(s: DataSnapshot): string {
+  const { exportedAt: _e, ...rest } = s as DataSnapshot & Record<string, unknown>;
+  return contentHash(rest);
+}
+const restoredNorm = normHash(restored);
+const persistedNorm = normHash(persisted);
+const reloadedNorm = normHash(reloaded);
+const finalEvidence = {
+  ...evidence,
+  normalized: {
+    restored: restoredNorm,
+    persisted: persistedNorm,
+    reloaded: reloadedNorm,
+    persistedMatches: persistedNorm === restoredNorm,
+    reloadedMatches: reloadedNorm === restoredNorm,
+  },
+};
+writeFileSync("/tmp/dr-phase2b/drill-result.json", JSON.stringify(finalEvidence, null, 2));
+console.log("NORMALIZED:", JSON.stringify(finalEvidence.normalized, null, 2));
