@@ -1,0 +1,88 @@
+name: SECURITY DEFINER guard
+
+# Re-runs the two targeted SECURITY DEFINER execute-grant checks whenever a
+# migration changes, and fails the build if the anon/PUBLIC finding reappears
+# or a new function becomes callable by signed-in users.
+
+on:
+  push:
+    paths:
+      - "supabase/migrations/**"
+      - "scripts/secdef-check.ts"
+      - ".github/workflows/secdef-check.yml"
+  pull_request:
+    paths:
+      - "supabase/migrations/**"
+      - "scripts/secdef-check.ts"
+      - ".github/workflows/secdef-check.yml"
+  workflow_dispatch:
+
+jobs:
+  secdef-check:
+    name: SECURITY DEFINER execute grants
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install postgresql-client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Start ephemeral Postgres
+        run: |
+          docker run -d --name secdef-pg \
+            -e POSTGRES_PASSWORD=postgres \
+            -e POSTGRES_DB=postgres \
+            -p 5432:5432 postgres:15
+          for i in $(seq 1 60); do
+            pg_isready -h 127.0.0.1 -p 5432 -U postgres && break
+            sleep 1
+          done
+
+      - name: Bootstrap Supabase roles
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h 127.0.0.1 -U postgres -d postgres -v ON_ERROR_STOP=1 -c "
+            DO \$\$ BEGIN
+              CREATE ROLE anon NOLOGIN;
+              CREATE ROLE authenticated NOLOGIN;
+              CREATE ROLE service_role NOLOGIN BYPASSRLS;
+              CREATE ROLE supabase_auth_admin NOLOGIN;
+            EXCEPTION WHEN duplicate_object THEN NULL; END \$\$;
+            CREATE SCHEMA IF NOT EXISTS auth;
+            CREATE TABLE IF NOT EXISTS auth.users (id uuid PRIMARY KEY, email text, raw_user_meta_data jsonb);
+            CREATE OR REPLACE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS \$\$ SELECT NULL::uuid \$\$;
+            CREATE OR REPLACE FUNCTION auth.role() RETURNS text LANGUAGE sql STABLE AS \$\$ SELECT NULL::text \$\$;
+            CREATE EXTENSION IF NOT EXISTS pgcrypto;
+          "
+
+      - name: Apply migrations
+        env:
+          PGPASSWORD: postgres
+        run: |
+          set -e
+          for f in $(ls supabase/migrations/*.sql | sort); do
+            echo "applying $f"
+            psql -h 127.0.0.1 -U postgres -d postgres -v ON_ERROR_STOP=1 -f "$f"
+          done
+
+      - name: Run SECURITY DEFINER targeted checks
+        env:
+          PGHOST: 127.0.0.1
+          PGPORT: "5432"
+          PGUSER: postgres
+          PGPASSWORD: postgres
+          PGDATABASE: postgres
+        run: bun run security:secdef -- --json=security-results/secdef-check.json
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: secdef-check-evidence
+          path: security-results/secdef-check.json
+          if-no-files-found: ignore

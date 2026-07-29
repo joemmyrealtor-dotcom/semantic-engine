@@ -20,7 +20,8 @@
     "e2e:report": "PLAYWRIGHT_BROWSERS_PATH=/ playwright show-report playwright-report",
     "perf": "bun run scripts/bench.ts",
     "perf:stress": "bun run scripts/bench.ts --stress --out=bench-results/stress.json",
-    "validate": "bun run scripts/validate.ts"
+    "validate": "bun run scripts/validate.ts",
+    "security:secdef": "bun run scripts/secdef-check.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
