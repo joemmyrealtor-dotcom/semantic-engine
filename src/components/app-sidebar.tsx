@@ -14,7 +14,7 @@ const items = [
   { to: "/client-tools/new", label: "Client Tools", icon: Wrench },
   { to: "/publications", label: "Publications", icon: BookOpen },
   { to: "/client-toolkits", label: "Client Toolkits", icon: Briefcase },
-  { to: "/attorneys", label: "Attorneys", icon: Scale },
+  { to: "/attorney-partners", label: "Attorneys", icon: Scale },
   { to: "/ai-packs", label: "AI Packs", icon: Sparkles },
   { to: "/prompts", label: "Prompts", icon: ScrollText },
   { to: "/agents", label: "Agents", icon: Bot },
