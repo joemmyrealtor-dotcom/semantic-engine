@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RepositoryRouteImport } from './routes/repository'
 import { Route as ReportsRouteImport } from './routes/reports'
@@ -23,6 +24,7 @@ import { Route as DeveloperRouteImport } from './routes/developer'
 import { Route as DataRouteImport } from './routes/data'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AttorneysRouteImport } from './routes/attorneys'
+import { Route as AttorneyPartnersRouteImport } from './routes/attorney-partners'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PublicationsIndexRouteImport } from './routes/publications.index'
 import { Route as ConceptsIndexRouteImport } from './routes/concepts.index'
@@ -52,6 +54,11 @@ import { Route as AdminBackupsRouteImport } from './routes/admin.backups'
 import { Route as AdminAuditRouteImport } from './routes/admin.audit'
 import { Route as ApiPublicV1SplatRouteImport } from './routes/api/public/v1/$'
 
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
@@ -120,6 +127,11 @@ const AuthRoute = AuthRouteImport.update({
 const AttorneysRoute = AttorneysRouteImport.update({
   id: '/attorneys',
   path: '/attorneys',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AttorneyPartnersRoute = AttorneyPartnersRouteImport.update({
+  id: '/attorney-partners',
+  path: '/attorney-partners',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -265,6 +277,7 @@ const ApiPublicV1SplatRoute = ApiPublicV1SplatRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/attorney-partners': typeof AttorneyPartnersRoute
   '/attorneys': typeof AttorneysRoute
   '/auth': typeof AuthRoute
   '/data': typeof DataRoute
@@ -279,6 +292,7 @@ export interface FileRoutesByFullPath {
   '/reports': typeof ReportsRoute
   '/repository': typeof RepositoryRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/backups': typeof AdminBackupsRoute
   '/admin/cutover': typeof AdminCutoverRoute
@@ -309,6 +323,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/attorney-partners': typeof AttorneyPartnersRoute
   '/attorneys': typeof AttorneysRoute
   '/auth': typeof AuthRoute
   '/data': typeof DataRoute
@@ -323,6 +338,7 @@ export interface FileRoutesByTo {
   '/reports': typeof ReportsRoute
   '/repository': typeof RepositoryRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/backups': typeof AdminBackupsRoute
   '/admin/cutover': typeof AdminCutoverRoute
@@ -354,6 +370,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/attorney-partners': typeof AttorneyPartnersRoute
   '/attorneys': typeof AttorneysRoute
   '/auth': typeof AuthRoute
   '/data': typeof DataRoute
@@ -368,6 +385,7 @@ export interface FileRoutesById {
   '/reports': typeof ReportsRoute
   '/repository': typeof RepositoryRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/backups': typeof AdminBackupsRoute
   '/admin/cutover': typeof AdminCutoverRoute
@@ -400,6 +418,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/attorney-partners'
     | '/attorneys'
     | '/auth'
     | '/data'
@@ -414,6 +433,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/repository'
     | '/reset-password'
+    | '/sitemap.xml'
     | '/admin/audit'
     | '/admin/backups'
     | '/admin/cutover'
@@ -444,6 +464,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/attorney-partners'
     | '/attorneys'
     | '/auth'
     | '/data'
@@ -458,6 +479,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/repository'
     | '/reset-password'
+    | '/sitemap.xml'
     | '/admin/audit'
     | '/admin/backups'
     | '/admin/cutover'
@@ -488,6 +510,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/attorney-partners'
     | '/attorneys'
     | '/auth'
     | '/data'
@@ -502,6 +525,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/repository'
     | '/reset-password'
+    | '/sitemap.xml'
     | '/admin/audit'
     | '/admin/backups'
     | '/admin/cutover'
@@ -533,6 +557,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AttorneyPartnersRoute: typeof AttorneyPartnersRoute
   AttorneysRoute: typeof AttorneysRoute
   AuthRoute: typeof AuthRoute
   DataRoute: typeof DataRoute
@@ -547,6 +572,7 @@ export interface RootRouteChildren {
   ReportsRoute: typeof ReportsRoute
   RepositoryRoute: typeof RepositoryRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   AdminAuditRoute: typeof AdminAuditRoute
   AdminBackupsRoute: typeof AdminBackupsRoute
   AdminCutoverRoute: typeof AdminCutoverRoute
@@ -576,6 +602,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
@@ -672,6 +705,13 @@ declare module '@tanstack/react-router' {
       path: '/attorneys'
       fullPath: '/attorneys'
       preLoaderRoute: typeof AttorneysRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/attorney-partners': {
+      id: '/attorney-partners'
+      path: '/attorney-partners'
+      fullPath: '/attorney-partners'
+      preLoaderRoute: typeof AttorneyPartnersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -899,6 +939,7 @@ const KnowledgeRouteWithChildren = KnowledgeRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AttorneyPartnersRoute: AttorneyPartnersRoute,
   AttorneysRoute: AttorneysRoute,
   AuthRoute: AuthRoute,
   DataRoute: DataRoute,
@@ -913,6 +954,7 @@ const rootRouteChildren: RootRouteChildren = {
   ReportsRoute: ReportsRoute,
   RepositoryRoute: RepositoryRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   AdminAuditRoute: AdminAuditRoute,
   AdminBackupsRoute: AdminBackupsRoute,
   AdminCutoverRoute: AdminCutoverRoute,
