@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RepositoryRouteImport } from './routes/repository'
 import { Route as ReportsRouteImport } from './routes/reports'
@@ -53,6 +54,11 @@ import { Route as AdminBackupsRouteImport } from './routes/admin.backups'
 import { Route as AdminAuditRouteImport } from './routes/admin.audit'
 import { Route as ApiPublicV1SplatRouteImport } from './routes/api/public/v1/$'
 
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
@@ -286,6 +292,7 @@ export interface FileRoutesByFullPath {
   '/reports': typeof ReportsRoute
   '/repository': typeof RepositoryRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/backups': typeof AdminBackupsRoute
   '/admin/cutover': typeof AdminCutoverRoute
@@ -331,6 +338,7 @@ export interface FileRoutesByTo {
   '/reports': typeof ReportsRoute
   '/repository': typeof RepositoryRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/backups': typeof AdminBackupsRoute
   '/admin/cutover': typeof AdminCutoverRoute
@@ -377,6 +385,7 @@ export interface FileRoutesById {
   '/reports': typeof ReportsRoute
   '/repository': typeof RepositoryRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/backups': typeof AdminBackupsRoute
   '/admin/cutover': typeof AdminCutoverRoute
@@ -424,6 +433,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/repository'
     | '/reset-password'
+    | '/sitemap.xml'
     | '/admin/audit'
     | '/admin/backups'
     | '/admin/cutover'
@@ -469,6 +479,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/repository'
     | '/reset-password'
+    | '/sitemap.xml'
     | '/admin/audit'
     | '/admin/backups'
     | '/admin/cutover'
@@ -514,6 +525,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/repository'
     | '/reset-password'
+    | '/sitemap.xml'
     | '/admin/audit'
     | '/admin/backups'
     | '/admin/cutover'
@@ -560,6 +572,7 @@ export interface RootRouteChildren {
   ReportsRoute: typeof ReportsRoute
   RepositoryRoute: typeof RepositoryRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   AdminAuditRoute: typeof AdminAuditRoute
   AdminBackupsRoute: typeof AdminBackupsRoute
   AdminCutoverRoute: typeof AdminCutoverRoute
@@ -589,6 +602,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
@@ -934,6 +954,7 @@ const rootRouteChildren: RootRouteChildren = {
   ReportsRoute: ReportsRoute,
   RepositoryRoute: RepositoryRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   AdminAuditRoute: AdminAuditRoute,
   AdminBackupsRoute: AdminBackupsRoute,
   AdminCutoverRoute: AdminCutoverRoute,
