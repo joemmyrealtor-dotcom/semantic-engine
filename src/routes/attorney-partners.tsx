@@ -13,7 +13,44 @@ export const Route = createFileRoute("/attorney-partners")({
       { property: "og:title", content: "Attorneys — Legacy Platform for Legal Practices" },
       { property: "og:description", content: "Marketing toolkits, client education packs and structured documentation workflows built for real estate, probate, divorce and family law attorneys." },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://semantic-engine.lovable.app/attorney-partners" },
       { name: "twitter:card", content: "summary_large_image" },
+    ],
+    links: [{ rel: "canonical", href: "https://semantic-engine.lovable.app/attorney-partners" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Service",
+          name: "Legacy Forge for Attorneys",
+          serviceType: "Legacy and estate documentation systems for law firms",
+          url: "https://semantic-engine.lovable.app/attorney-partners",
+          provider: {
+            "@type": "Organization",
+            name: "JM Advisory Press",
+            url: "https://semantic-engine.lovable.app",
+          },
+          areaServed: "US",
+          audience: {
+            "@type": "Audience",
+            audienceType: "Real estate, probate, divorce and family law attorneys",
+          },
+          hasOfferCatalog: {
+            "@type": "OfferCatalog",
+            name: "Attorney Practice Areas",
+            itemListElement: [
+              "Real Estate",
+              "Probate",
+              "Divorce",
+              "Family Law",
+            ].map((n) => ({
+              "@type": "Offer",
+              itemOffered: { "@type": "Service", name: `${n} Legacy Toolkit` },
+            })),
+          },
+        }),
+      },
     ],
   }),
   component: AttorneysPage,
