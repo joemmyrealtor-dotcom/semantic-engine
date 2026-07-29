@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Scale, Home, FileHeart, Gavel, Users } from "lucide-react";
 
-export const Route = createFileRoute("/attorneys")({
+export const Route = createFileRoute("/attorney-partners")({
   head: () => ({
     meta: [
       { title: "Attorneys — Legacy Platform for Legal Practices" },
