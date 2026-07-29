@@ -22,6 +22,7 @@ import { Route as ExecutiveRouteImport } from './routes/executive'
 import { Route as DeveloperRouteImport } from './routes/developer'
 import { Route as DataRouteImport } from './routes/data'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AttorneysRouteImport } from './routes/attorneys'
 import { Route as AttorneyPartnersRouteImport } from './routes/attorney-partners'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PublicationsIndexRouteImport } from './routes/publications.index'
@@ -115,6 +116,11 @@ const DataRoute = DataRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AttorneysRoute = AttorneysRouteImport.update({
+  id: '/attorneys',
+  path: '/attorneys',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AttorneyPartnersRoute = AttorneyPartnersRouteImport.update({
@@ -266,6 +272,7 @@ const ApiPublicV1SplatRoute = ApiPublicV1SplatRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/attorney-partners': typeof AttorneyPartnersRoute
+  '/attorneys': typeof AttorneysRoute
   '/auth': typeof AuthRoute
   '/data': typeof DataRoute
   '/developer': typeof DeveloperRoute
@@ -310,6 +317,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/attorney-partners': typeof AttorneyPartnersRoute
+  '/attorneys': typeof AttorneysRoute
   '/auth': typeof AuthRoute
   '/data': typeof DataRoute
   '/developer': typeof DeveloperRoute
@@ -355,6 +363,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/attorney-partners': typeof AttorneyPartnersRoute
+  '/attorneys': typeof AttorneysRoute
   '/auth': typeof AuthRoute
   '/data': typeof DataRoute
   '/developer': typeof DeveloperRoute
@@ -401,6 +410,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/attorney-partners'
+    | '/attorneys'
     | '/auth'
     | '/data'
     | '/developer'
@@ -445,6 +455,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/attorney-partners'
+    | '/attorneys'
     | '/auth'
     | '/data'
     | '/developer'
@@ -489,6 +500,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/attorney-partners'
+    | '/attorneys'
     | '/auth'
     | '/data'
     | '/developer'
@@ -534,6 +546,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AttorneyPartnersRoute: typeof AttorneyPartnersRoute
+  AttorneysRoute: typeof AttorneysRoute
   AuthRoute: typeof AuthRoute
   DataRoute: typeof DataRoute
   DeveloperRoute: typeof DeveloperRoute
@@ -665,6 +678,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/attorneys': {
+      id: '/attorneys'
+      path: '/attorneys'
+      fullPath: '/attorneys'
+      preLoaderRoute: typeof AttorneysRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/attorney-partners': {
@@ -900,6 +920,7 @@ const KnowledgeRouteWithChildren = KnowledgeRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AttorneyPartnersRoute: AttorneyPartnersRoute,
+  AttorneysRoute: AttorneysRoute,
   AuthRoute: AuthRoute,
   DataRoute: DataRoute,
   DeveloperRoute: DeveloperRoute,
