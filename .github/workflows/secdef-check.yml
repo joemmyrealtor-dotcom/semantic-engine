@@ -87,29 +87,44 @@ jobs:
       - name: Negative path - probe granted to anon must fail the check
         run: |
           set -e
+          # Isolated: strip the PUBLIC default first so the only reachable
+          # grant under test is the explicit anon grant.
           psql -v ON_ERROR_STOP=1 -c "
             CREATE FUNCTION public.__secdef_probe() RETURNS boolean
             LANGUAGE sql SECURITY DEFINER SET search_path = public AS \$\$ SELECT true \$\$;
+            REVOKE ALL ON FUNCTION public.__secdef_probe() FROM PUBLIC;
             GRANT EXECUTE ON FUNCTION public.__secdef_probe() TO anon;
           "
           set +e
-          bun run security:secdef -- --json=security-results/secdef-negative.json
+          bun run security:secdef -- --json=security-results/secdef-negative-anon.json
           code=$?
           set -e
           psql -v ON_ERROR_STOP=1 -c "DROP FUNCTION public.__secdef_probe();"
           if [ "$code" -ne 1 ]; then
-            echo "::error::negative path did not fail as expected (exit $code, want 1)"
+            echo "::error::anon negative path did not fail as expected (exit $code, want 1)"
             exit 1
           fi
-          echo "negative path OK: checker exited 1 with the anon probe present"
+          bun run scripts/secdef-assert.ts security-results/secdef-negative-anon.json FAIL \
+            "fn=public.__secdef_probe()" role=anon \
+            checks=anon_or_public_execute,anon_effective_execute
+          echo "anon negative path OK: exit 1 and the expected violation is present in the evidence"
 
       - name: Negative path - overload of an allowlisted name must fail the check
         run: |
           set -e
+          # Isolated: revoke the PUBLIC default (and anon) so the ONLY grant is
+          # to authenticated. A failure here can therefore only come from
+          # signature-level allowlisting, not from PUBLIC/anon reachability.
           psql -v ON_ERROR_STOP=1 -c "
             CREATE FUNCTION public.has_role(text) RETURNS boolean
             LANGUAGE sql SECURITY DEFINER SET search_path = public AS \$\$ SELECT true \$\$;
+            REVOKE ALL ON FUNCTION public.has_role(text) FROM PUBLIC;
+            REVOKE ALL ON FUNCTION public.has_role(text) FROM anon;
             GRANT EXECUTE ON FUNCTION public.has_role(text) TO authenticated;
+          "
+          psql -v ON_ERROR_STOP=1 -Atc "
+            SELECT 'anon_execute=' || has_function_privilege('anon', 'public.has_role(text)', 'EXECUTE')::text
+                || ' authenticated_execute=' || has_function_privilege('authenticated', 'public.has_role(text)', 'EXECUTE')::text
           "
           set +e
           bun run security:secdef -- --json=security-results/secdef-negative-overload.json
@@ -120,10 +135,16 @@ jobs:
             echo "::error::overload negative path did not fail as expected (exit $code, want 1)"
             exit 1
           fi
-          echo "overload negative path OK: signature-level allowlist enforced"
+          bun run scripts/secdef-assert.ts security-results/secdef-negative-overload.json FAIL \
+            "fn=public.has_role(text)" role=authenticated \
+            checks=authenticated_execute_allowlist,authenticated_effective_allowlist
+          echo "overload negative path OK: signature-level allowlist enforced in isolation"
 
       - name: Positive path - clean schema must pass
-        run: bun run security:secdef -- --json=security-results/secdef-check.json
+        run: |
+          set -e
+          bun run security:secdef -- --json=security-results/secdef-check.json
+          bun run scripts/secdef-assert.ts security-results/secdef-check.json PASS
 
       - name: Upload evidence
         if: always()
@@ -131,4 +152,6 @@ jobs:
         with:
           name: secdef-check-evidence
           path: security-results/
-          if-no-files-found: ignore
+          retention-days: 90
+          if-no-files-found: error
+
