@@ -1,0 +1,105 @@
+{
+  "ranAt": "2026-07-30T14:29:50.469Z",
+  "functionsInspected": 8,
+  "functions": [
+    {
+      "signature": "public.cleanup_rate_limit_buckets()",
+      "directGrantees": [
+        "postgres",
+        "service_role"
+      ],
+      "anonEffectiveExecute": false,
+      "authenticatedEffectiveExecute": false
+    },
+    {
+      "signature": "public.consume_rate_limit(text,integer,integer)",
+      "directGrantees": [
+        "postgres",
+        "service_role"
+      ],
+      "anonEffectiveExecute": false,
+      "authenticatedEffectiveExecute": false
+    },
+    {
+      "signature": "public.handle_new_user()",
+      "directGrantees": [
+        "postgres",
+        "service_role"
+      ],
+      "anonEffectiveExecute": false,
+      "authenticatedEffectiveExecute": false
+    },
+    {
+      "signature": "public.has_any_role(uuid,app_role[])",
+      "directGrantees": [
+        "authenticated",
+        "postgres",
+        "service_role"
+      ],
+      "anonEffectiveExecute": false,
+      "authenticatedEffectiveExecute": true
+    },
+    {
+      "signature": "public.has_role(text)",
+      "directGrantees": [
+        "authenticated",
+        "postgres"
+      ],
+      "anonEffectiveExecute": false,
+      "authenticatedEffectiveExecute": true
+    },
+    {
+      "signature": "public.has_role(uuid,app_role)",
+      "directGrantees": [
+        "authenticated",
+        "postgres",
+        "service_role"
+      ],
+      "anonEffectiveExecute": false,
+      "authenticatedEffectiveExecute": true
+    },
+    {
+      "signature": "public.is_workspace_member(uuid,uuid)",
+      "directGrantees": [
+        "authenticated",
+        "postgres",
+        "service_role"
+      ],
+      "anonEffectiveExecute": false,
+      "authenticatedEffectiveExecute": true
+    },
+    {
+      "signature": "public.workspace_role(uuid,uuid)",
+      "directGrantees": [
+        "authenticated",
+        "postgres",
+        "service_role"
+      ],
+      "anonEffectiveExecute": false,
+      "authenticatedEffectiveExecute": true
+    }
+  ],
+  "allowlist": [
+    "public.has_role(uuid,app_role)",
+    "public.has_any_role(uuid,app_role[])",
+    "public.workspace_role(uuid,uuid)",
+    "public.is_workspace_member(uuid,uuid)"
+  ],
+  "violations": [
+    {
+      "check": "authenticated_execute_allowlist",
+      "finding": "SUPA_authenticated_security_definer_function_executable",
+      "fn": "public.has_role(text)",
+      "role": "authenticated",
+      "detail": "public.has_role(text) is SECURITY DEFINER and grants EXECUTE to authenticated but its exact signature is not on the reviewed RLS-helper allowlist. Revoke it, or add the signature to AUTHENTICATED_ALLOWLIST with a security review."
+    },
+    {
+      "check": "authenticated_effective_allowlist",
+      "finding": "SUPA_authenticated_security_definer_function_executable",
+      "fn": "public.has_role(text)",
+      "role": "authenticated",
+      "detail": "public.has_role(text) is effectively EXECUTE-able by authenticated (has_function_privilege) but is not on the reviewed RLS-helper allowlist."
+    }
+  ],
+  "result": "FAIL"
+}
