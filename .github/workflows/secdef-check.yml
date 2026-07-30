@@ -1,8 +1,14 @@
 name: SECURITY DEFINER guard
 
 # Re-runs the two targeted SECURITY DEFINER execute-grant checks whenever a
-# migration changes, and fails the build if the anon/PUBLIC finding reappears
-# or a new function becomes callable by signed-in users.
+# migration (or the checker's own runtime/dependency state) changes, and fails
+# the build if the anon/PUBLIC finding reappears or a new function becomes
+# callable by signed-in users.
+#
+# The job proves BOTH paths on every run:
+#   negative path - a probe SECURITY DEFINER function granted to anon must make
+#                   the checker exit 1;
+#   positive path - after dropping the probe, the checker must exit 0.
 
 on:
   push:
@@ -10,23 +16,34 @@ on:
       - "supabase/migrations/**"
       - "scripts/secdef-check.ts"
       - ".github/workflows/secdef-check.yml"
+      - "package.json"
+      - "bun.lock"
   pull_request:
     paths:
       - "supabase/migrations/**"
       - "scripts/secdef-check.ts"
       - ".github/workflows/secdef-check.yml"
+      - "package.json"
+      - "bun.lock"
   workflow_dispatch:
 
 jobs:
   secdef-check:
     name: SECURITY DEFINER execute grants
     runs-on: ubuntu-latest
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: "5432"
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: postgres
     steps:
       - uses: actions/checkout@v4
 
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          # Pinned to the project-approved Bun runtime for deterministic runs.
+          bun-version: 1.3.3
 
       - name: Install postgresql-client
         run: sudo apt-get update && sudo apt-get install -y postgresql-client
@@ -41,12 +58,11 @@ jobs:
             pg_isready -h 127.0.0.1 -p 5432 -U postgres && break
             sleep 1
           done
+          pg_isready -h 127.0.0.1 -p 5432 -U postgres
 
       - name: Bootstrap Supabase roles
-        env:
-          PGPASSWORD: postgres
         run: |
-          psql -h 127.0.0.1 -U postgres -d postgres -v ON_ERROR_STOP=1 -c "
+          psql -v ON_ERROR_STOP=1 -c "
             DO \$\$ BEGIN
               CREATE ROLE anon NOLOGIN;
               CREATE ROLE authenticated NOLOGIN;
@@ -61,22 +77,33 @@ jobs:
           "
 
       - name: Apply migrations
-        env:
-          PGPASSWORD: postgres
         run: |
           set -e
           for f in $(ls supabase/migrations/*.sql | sort); do
             echo "applying $f"
-            psql -h 127.0.0.1 -U postgres -d postgres -v ON_ERROR_STOP=1 -f "$f"
+            psql -v ON_ERROR_STOP=1 -f "$f"
           done
 
-      - name: Run SECURITY DEFINER targeted checks
-        env:
-          PGHOST: 127.0.0.1
-          PGPORT: "5432"
-          PGUSER: postgres
-          PGPASSWORD: postgres
-          PGDATABASE: postgres
+      - name: Negative path - probe granted to anon must fail the check
+        run: |
+          set -e
+          psql -v ON_ERROR_STOP=1 -c "
+            CREATE FUNCTION public.__secdef_probe() RETURNS boolean
+            LANGUAGE sql SECURITY DEFINER SET search_path = public AS \$\$ SELECT true \$\$;
+            GRANT EXECUTE ON FUNCTION public.__secdef_probe() TO anon;
+          "
+          set +e
+          bun run security:secdef -- --json=security-results/secdef-negative.json
+          code=$?
+          set -e
+          psql -v ON_ERROR_STOP=1 -c "DROP FUNCTION public.__secdef_probe();"
+          if [ "$code" -ne 1 ]; then
+            echo "::error::negative path did not fail as expected (exit $code, want 1)"
+            exit 1
+          fi
+          echo "negative path OK: checker exited 1 with the anon probe present"
+
+      - name: Positive path - clean schema must pass
         run: bun run security:secdef -- --json=security-results/secdef-check.json
 
       - name: Upload evidence
@@ -84,5 +111,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: secdef-check-evidence
-          path: security-results/secdef-check.json
+          path: security-results/
           if-no-files-found: ignore
