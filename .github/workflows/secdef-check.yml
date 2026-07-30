@@ -103,6 +103,25 @@ jobs:
           fi
           echo "negative path OK: checker exited 1 with the anon probe present"
 
+      - name: Negative path - overload of an allowlisted name must fail the check
+        run: |
+          set -e
+          psql -v ON_ERROR_STOP=1 -c "
+            CREATE FUNCTION public.has_role(text) RETURNS boolean
+            LANGUAGE sql SECURITY DEFINER SET search_path = public AS \$\$ SELECT true \$\$;
+            GRANT EXECUTE ON FUNCTION public.has_role(text) TO authenticated;
+          "
+          set +e
+          bun run security:secdef -- --json=security-results/secdef-negative-overload.json
+          code=$?
+          set -e
+          psql -v ON_ERROR_STOP=1 -c "DROP FUNCTION public.has_role(text);"
+          if [ "$code" -ne 1 ]; then
+            echo "::error::overload negative path did not fail as expected (exit $code, want 1)"
+            exit 1
+          fi
+          echo "overload negative path OK: signature-level allowlist enforced"
+
       - name: Positive path - clean schema must pass
         run: bun run security:secdef -- --json=security-results/secdef-check.json
 
