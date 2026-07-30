@@ -56,7 +56,10 @@ function normalizeSig(schema: string, name: string, args: string): string {
 const QUERY = `
 SELECT n.nspname
   || '\u0001' || p.proname
-  || '\u0001' || pg_get_function_identity_arguments(p.oid)
+  || '\u0001' || COALESCE((
+       SELECT string_agg(format_type(t, NULL), ',' ORDER BY o)
+       FROM unnest(p.proargtypes) WITH ORDINALITY AS x(t, o)
+     ), '')
   || '\u0001' || COALESCE(NULLIF(r.rolname, ''), CASE WHEN acl.grantee IS NULL THEN '' ELSE 'PUBLIC' END)
   || '\u0001' || has_function_privilege('anon', p.oid, 'EXECUTE')::text
   || '\u0001' || has_function_privilege('authenticated', p.oid, 'EXECUTE')::text
