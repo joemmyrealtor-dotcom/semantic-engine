@@ -82,8 +82,14 @@ test.describe("OCC role matrix", () => {
       const occ = page.getByTestId("occ-dashboard");
       // Strictly read-only subtree: no interactive controls of any kind.
       expect(await occ.locator("button, input, select, textarea, [role=button]").count()).toBe(0);
-      // And specifically none of the prohibited operational actions.
-      await expect(occ.getByText(/publish|rollback|restore|re-attest|capture baseline/i)).toHaveCount(0);
+      // And specifically no actionable publish/rollback/restore affordance.
+      // (Informational label text such as "Production rollback capability" is allowed.)
+      await expect(
+        occ.getByRole("button", { name: /publish|rollback|restore|re-attest|capture baseline/i }),
+      ).toHaveCount(0);
+      await expect(
+        occ.getByRole("link", { name: /publish|rollback|restore|re-attest|capture baseline/i }),
+      ).toHaveCount(0);
     });
   }
 
