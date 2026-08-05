@@ -204,13 +204,11 @@ export function buildOccReport(
     const ts = latest ? (latest.updatedAt ?? latest.createdAt) : null;
     const stale = isStale(ts, 24 * 30);
     const failing = latest ? latest.gateChecklist.filter(g => !g.passed) : [];
-    const state: PanelState = !latest ? "UNVERIFIED"
-      : stale ? "STALE"
-      : failing.length || latest.blockingErrors > 0 ? "ATTENTION" : "OK";
-    panels.push({
-      id: "S4",
-      title: "Release readiness",
-      state,
+    // Production release activity is BLOCKED pending accepted external
+    // governance. The panel state must never read OK while that holds.
+    const state: PanelState = "BLOCKED";
+    void failing;
+
       summary: latest
         ? `${latest.id} · stage ${latest.stage} · ${latest.blockingErrors} blocking · ${latest.alignmentWarnings} warnings`
         : "No release record available — release readiness UNVERIFIED.",
