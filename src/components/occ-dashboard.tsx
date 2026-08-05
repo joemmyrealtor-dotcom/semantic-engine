@@ -18,6 +18,7 @@ function stateClass(state: PanelState): string {
     case "OK": return "text-evergreen border-evergreen/40 bg-evergreen/10";
     case "ATTENTION": return "text-gold border-gold/50 bg-gold/10";
     case "CRITICAL": return "text-destructive border-destructive/40 bg-destructive/10";
+    case "BLOCKED": return "text-destructive border-destructive/60 bg-destructive/15";
     case "STALE": return "text-gold border-gold/50 bg-gold/10";
     default: return "text-muted-foreground border-border bg-muted";
   }
@@ -57,13 +58,16 @@ function PanelCard({ panel }: { panel: OccPanel }) {
       <dl className="mt-3 grid gap-1 text-[11px] text-muted-foreground sm:grid-cols-2">
         <div><dt className="inline uppercase tracking-wider">Source class: </dt>
           <dd className="inline font-semibold" data-testid={`occ-${panel.id}-class`}>{panel.sourceClass}</dd></div>
-        <div><dt className="inline uppercase tracking-wider">Source timestamp: </dt>
+        <div><dt className="inline uppercase tracking-wider">Source data timestamp: </dt>
           <dd className="inline font-mono" data-testid={`occ-${panel.id}-timestamp`}>{panel.sourceTimestamp ?? "UNVERIFIED"}</dd></div>
+        <div><dt className="inline uppercase tracking-wider">Report computed at: </dt>
+          <dd className="inline font-mono" data-testid={`occ-${panel.id}-computed`}>{panel.computedAt}</dd></div>
+        <div><dt className="inline uppercase tracking-wider">Freshness threshold: </dt>
+          <dd className="inline">{panel.freshnessHours === null ? "not applicable" : `${panel.freshnessHours} h`}</dd></div>
         <div className="sm:col-span-2"><dt className="inline uppercase tracking-wider">Source: </dt>
           <dd className="inline">{panel.source}</dd></div>
-        <div className="sm:col-span-2"><dt className="inline uppercase tracking-wider">Freshness threshold: </dt>
-          <dd className="inline">{panel.freshnessHours === null ? "not applicable" : `${panel.freshnessHours} h`}</dd></div>
       </dl>
+
 
       <div className="mt-3 grid gap-1 sm:grid-cols-2 lg:grid-cols-3">
         <ReadinessCell label="Component exists" value={panel.readiness.componentExists} />

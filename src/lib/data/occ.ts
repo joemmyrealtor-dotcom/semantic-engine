@@ -26,7 +26,7 @@ export const OCC_PROVISIONAL_LABEL =
 export type SourceClass = "EXISTING" | "PROPOSED" | "UNVERIFIED";
 export type PanelState =
   | "OK" | "ATTENTION" | "CRITICAL"
-  | "UNVERIFIED" | "NOT IMPLEMENTED" | "STALE" | "NOT ESTABLISHED";
+  | "UNVERIFIED" | "NOT IMPLEMENTED" | "STALE" | "NOT ESTABLISHED" | "BLOCKED";
 export type ReadinessValue = "YES" | "NO" | "UNVERIFIED";
 
 export interface PanelReadiness {
@@ -51,12 +51,24 @@ export interface OccPanel {
   summary: string;
   source: string;                   // human-readable source description
   sourceClass: SourceClass;
-  sourceTimestamp: string | null;   // ISO or null when no trustworthy data
+  /**
+   * Timestamp of the underlying SOURCE DATA. Null when no trustworthy source
+   * timestamp exists — a report-computation time is never substituted here.
+   */
+  sourceTimestamp: string | null;
+  /** Timestamp at which this report was computed. Never proof of freshness. */
+  computedAt: string;
   freshnessHours: number | null;    // defined threshold, null = not applicable
   readiness: PanelReadiness;
   rows: PanelRow[];
   notes: string[];
 }
+
+/** Panel states that block an aggregate roll-up from reporting OK. */
+export const BLOCKING_STATES: PanelState[] = [
+  "BLOCKED", "CRITICAL", "NOT IMPLEMENTED", "NOT ESTABLISHED", "UNVERIFIED",
+];
+
 
 const READINESS_NONE: PanelReadiness = {
   componentExists: "NO",
@@ -65,6 +77,27 @@ const READINESS_NONE: PanelReadiness = {
   dataIsApplicationAccessible: "NO",
   dashboardIntegrationExists: "NO",
 };
+
+/**
+ * Complete currently-held governance, CI, recovery, and release risk set.
+ * These are carried-forward limitations, not an accepted risk register.
+ */
+export const HELD_RISKS: PanelRow[] = [
+  { label: "Production Release Standard v1.0.3", value: "PENDING EXTERNAL AUTHORING", state: "NOT IMPLEMENTED" },
+  { label: "Operations Command Center v1.0.2", value: "PENDING EXTERNAL AUTHORING", state: "NOT IMPLEMENTED" },
+  { label: "GitHub Actions enforcement (SECURITY DEFINER)", value: "NOT VERIFIED", state: "UNVERIFIED",
+    note: "Local guard accepted; remote workflow run not evidenced." },
+  { label: "Branch protection requiring the SECDEF status check", value: "PENDING", state: "UNVERIFIED" },
+  { label: "Production database restore", value: "UNVERIFIED", state: "UNVERIFIED",
+    note: "Application-drill restore evidence is separate and does not cover production." },
+  { label: "Production infrastructure recovery", value: "UNVERIFIED", state: "UNVERIFIED" },
+  { label: "Production RPO", value: "NOT ESTABLISHED", state: "NOT ESTABLISHED" },
+  { label: "Production RTO", value: "NOT ESTABLISHED", state: "NOT ESTABLISHED" },
+  { label: "Production rollback capability", value: "NOT ESTABLISHED", state: "NOT ESTABLISHED" },
+  { label: "Production release activity", value: "BLOCKED", state: "BLOCKED" },
+];
+
+
 
 function isStale(iso: string | null, hours: number | null): boolean {
   if (!iso || hours === null) return false;
@@ -96,44 +129,18 @@ export interface HardGateInput {
   }[];
 }
 
+type DraftPanel = Omit<OccPanel, "computedAt">;
+
 export function buildOccReport(
   snap: DataSnapshot,
   hardGates: HardGateInput | null,
 ): OccPanel[] {
-  const panels: OccPanel[] = [];
+  const panels: DraftPanel[] = [];
   const monitoring = computeMonitoring(snap);
   const now = new Date().toISOString();
 
-  // ---------- S1 Executive health summary ----------
-  {
-    const state: PanelState =
-      monitoring.overall === "ok" ? "OK" : monitoring.overall === "warning" ? "ATTENTION" : "CRITICAL";
-    const ts = monitoring.generatedAt;
-    panels.push({
-      id: "S1",
-      title: "Executive health summary",
-      state: isStale(ts, 1) ? "STALE" : state,
-      summary: `${monitoring.signals.filter(s => s.state === "ok").length}/${monitoring.signals.length} signals healthy · overall ${monitoring.overall.toUpperCase()}`,
-      source: "computeMonitoring(snapshot) — local application data layer",
-      sourceClass: "EXISTING",
-      sourceTimestamp: ts,
-      freshnessHours: 1,
-      readiness: {
-        componentExists: "YES",
-        operationalDataExists: "YES",
-        dataIsCurrent: isStale(ts, 1) ? "NO" : "YES",
-        dataIsApplicationAccessible: "YES",
-        dashboardIntegrationExists: "YES",
-      },
-      rows: monitoring.signals.map(s => ({
-        label: s.name,
-        value: s.value,
-        state: s.state === "ok" ? "OK" : s.state === "warning" ? "ATTENTION" : "CRITICAL",
-        note: s.note,
-      })),
-      notes: ["Derived from application-accessible snapshot signals only. Not a production infrastructure health read."],
-    });
-  }
+  // S1 is built LAST (see below) as a true roll-up of S2–S12.
+
 
   // ---------- S2 Production gate status G1–G11 ----------
   {
@@ -218,13 +225,16 @@ export function buildOccReport(
     const ts = latest ? (latest.updatedAt ?? latest.createdAt) : null;
     const stale = isStale(ts, 24 * 30);
     const failing = latest ? latest.gateChecklist.filter(g => !g.passed) : [];
-    const state: PanelState = !latest ? "UNVERIFIED"
-      : stale ? "STALE"
-      : failing.length || latest.blockingErrors > 0 ? "ATTENTION" : "OK";
+    // Production release activity is BLOCKED pending accepted external
+    // governance. The panel state must never read OK while that holds.
+    const state: PanelState = "BLOCKED";
+    void failing;
     panels.push({
       id: "S4",
       title: "Release readiness",
       state,
+
+
       summary: latest
         ? `${latest.id} · stage ${latest.stage} · ${latest.blockingErrors} blocking · ${latest.alignmentWarnings} warnings`
         : "No release record available — release readiness UNVERIFIED.",
@@ -245,7 +255,7 @@ export function buildOccReport(
           value: g.passed ? "PASSED" : "OPEN",
           state: (g.passed ? "OK" : "ATTENTION") as PanelState,
         })),
-        { label: "Production release activity", value: "BLOCKED", state: "CRITICAL" as PanelState,
+        { label: "Production release activity", value: "BLOCKED", state: "BLOCKED" as PanelState,
           note: "Release activity remains blocked pending accepted governance documents." },
       ],
       notes: ["Release-record gate checklist is application data, not the production G1–G11 registry (see S2)."],
@@ -297,23 +307,25 @@ export function buildOccReport(
   {
     const alerting = monitoring.signals.filter(s => s.state !== "ok");
     const execAlerts = snap.executiveAlerts ?? [];
-    const ts = monitoring.generatedAt;
-    const state: PanelState = isStale(ts, 1) ? "STALE"
-      : alerting.some(a => a.state === "critical") ? "CRITICAL"
-      : alerting.length ? "ATTENTION" : "OK";
+    // computeMonitoring().generatedAt is a REPORT COMPUTATION time, not a
+    // source-data timestamp. No trustworthy source timestamp exists for the
+    // aggregated signal set, so freshness stays UNVERIFIED.
+    const ts: string | null = null;
+    const state: PanelState = alerting.some(a => a.state === "critical") ? "CRITICAL"
+      : alerting.length ? "ATTENTION" : "UNVERIFIED";
     panels.push({
       id: "S6",
       title: "Monitoring alerts",
       state,
       summary: `${alerting.length} monitoring signal(s) non-nominal · ${execAlerts.length} executive alert rule(s)`,
-      source: "computeMonitoring(snapshot) + snapshot.executiveAlerts",
+      source: "computeMonitoring(snapshot) + snapshot.executiveAlerts — no source-data timestamp available",
       sourceClass: "EXISTING",
       sourceTimestamp: ts,
       freshnessHours: 1,
       readiness: {
         componentExists: "YES",
         operationalDataExists: "YES",
-        dataIsCurrent: isStale(ts, 1) ? "NO" : "YES",
+        dataIsCurrent: "UNVERIFIED",
         dataIsApplicationAccessible: "YES",
         dashboardIntegrationExists: "YES",
       },
@@ -360,22 +372,24 @@ export function buildOccReport(
   // ---------- S8 Workspace-isolation status ----------
   {
     const leak = detectWorkspaceLeakage(snap);
-    const state: PanelState = leak.ok ? "OK" : "ATTENTION";
+    // No trustworthy snapshot/record timestamp exists for the isolation scan
+    // input; the current time proves only when the calculation ran.
+    const state: PanelState = leak.ok ? "UNVERIFIED" : "ATTENTION";
     panels.push({
       id: "S8",
       title: "Workspace-isolation status",
       state,
       summary: leak.ok
-        ? `${(snap.workspaces ?? []).length} workspace(s) · no orphaned or unscoped rows`
+        ? `${(snap.workspaces ?? []).length} workspace(s) · no orphaned or unscoped rows · freshness UNVERIFIED`
         : `${leak.unscopedEntities.length} unscoped · ${leak.crossWorkspaceEntities.length} foreign-scoped rows`,
-      source: "detectWorkspaceLeakage(snapshot)",
+      source: "detectWorkspaceLeakage(snapshot) — no source-data timestamp available",
       sourceClass: "EXISTING",
-      sourceTimestamp: now,
+      sourceTimestamp: null,
       freshnessHours: 1,
       readiness: {
         componentExists: "YES",
         operationalDataExists: "YES",
-        dataIsCurrent: "YES",
+        dataIsCurrent: "UNVERIFIED",
         dataIsApplicationAccessible: "YES",
         dashboardIntegrationExists: "YES",
       },
@@ -420,10 +434,12 @@ export function buildOccReport(
       readiness: READINESS_NONE,
       rows: [
         { label: "Residual risk register", value: "NOT IMPLEMENTED", state: "NOT IMPLEMENTED" },
-        { label: "Production recovery risk", value: "UNVERIFIED", state: "UNVERIFIED", note: "Carried forward from DR drill scope limitation." },
-        { label: "CI enforcement of SECURITY DEFINER grants", value: "UNVERIFIED", state: "UNVERIFIED", note: "Local guard accepted; GitHub Actions enforcement not verified." },
+        ...HELD_RISKS,
       ],
-      notes: ["Risk items shown are limitations carried forward, not an accepted register."],
+      notes: [
+        "Risk items shown are limitations carried forward, not an accepted register.",
+        "This is the complete currently-held governance, CI, recovery, and release risk set.",
+      ],
     });
   }
 
@@ -490,5 +506,43 @@ export function buildOccReport(
     });
   }
 
-  return panels;
+  // ---------- S1 Executive health summary (roll-up of S2–S12) ----------
+  const blocking = panels.filter(p => BLOCKING_STATES.includes(p.state));
+  const attention = panels.filter(p => p.state === "ATTENTION" || p.state === "STALE");
+  const rollupState: PanelState = blocking.length ? "BLOCKED" : attention.length ? "ATTENTION" : "OK";
+  const s1: DraftPanel = {
+    id: "S1",
+    title: "Executive health summary",
+    state: rollupState,
+    summary: blocking.length
+      ? `BLOCKED — ${blocking.length} of ${panels.length} sections blocked, unverified, not implemented, or not established`
+      : attention.length
+        ? `${attention.length} section(s) require attention`
+        : "All aggregated sections nominal",
+    source: "Aggregate roll-up of OCC sections S2–S12 (no independent data source)",
+    sourceClass: "EXISTING",
+    // A roll-up has no single source-data timestamp; contributing panels carry
+    // their own. Report-computation time is never presented as source freshness.
+    sourceTimestamp: null,
+    freshnessHours: null,
+    readiness: {
+      componentExists: "YES",
+      operationalDataExists: "YES",
+      dataIsCurrent: "UNVERIFIED",
+      dataIsApplicationAccessible: "YES",
+      dashboardIntegrationExists: "YES",
+    },
+    rows: panels.map(p => ({
+      label: `${p.id} ${p.title}`,
+      value: p.state,
+      state: p.state,
+      note: p.sourceTimestamp ? `source ${p.sourceTimestamp}` : "source timestamp UNVERIFIED",
+    })),
+    notes: [
+      "S1 aggregates S2–S12 only. Application-layer monitoring signal detail is shown in S6.",
+      "Any BLOCKED, CRITICAL, UNVERIFIED, NOT IMPLEMENTED, or NOT ESTABLISHED section forces a BLOCKED roll-up.",
+    ],
+  };
+
+  return [s1, ...panels].map(p => ({ ...p, computedAt: now }));
 }
