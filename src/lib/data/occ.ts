@@ -78,6 +78,27 @@ const READINESS_NONE: PanelReadiness = {
   dashboardIntegrationExists: "NO",
 };
 
+/**
+ * Complete currently-held governance, CI, recovery, and release risk set.
+ * These are carried-forward limitations, not an accepted risk register.
+ */
+export const HELD_RISKS: PanelRow[] = [
+  { label: "Production Release Standard v1.0.3", value: "PENDING EXTERNAL AUTHORING", state: "NOT IMPLEMENTED" },
+  { label: "Operations Command Center v1.0.2", value: "PENDING EXTERNAL AUTHORING", state: "NOT IMPLEMENTED" },
+  { label: "GitHub Actions enforcement (SECURITY DEFINER)", value: "NOT VERIFIED", state: "UNVERIFIED",
+    note: "Local guard accepted; remote workflow run not evidenced." },
+  { label: "Branch protection requiring the SECDEF status check", value: "PENDING", state: "UNVERIFIED" },
+  { label: "Production database restore", value: "UNVERIFIED", state: "UNVERIFIED",
+    note: "Application-drill restore evidence is separate and does not cover production." },
+  { label: "Production infrastructure recovery", value: "UNVERIFIED", state: "UNVERIFIED" },
+  { label: "Production RPO", value: "NOT ESTABLISHED", state: "NOT ESTABLISHED" },
+  { label: "Production RTO", value: "NOT ESTABLISHED", state: "NOT ESTABLISHED" },
+  { label: "Production rollback capability", value: "NOT ESTABLISHED", state: "NOT ESTABLISHED" },
+  { label: "Production release activity", value: "BLOCKED", state: "BLOCKED" },
+];
+
+
+
 function isStale(iso: string | null, hours: number | null): boolean {
   if (!iso || hours === null) return false;
   const t = Date.parse(iso);
