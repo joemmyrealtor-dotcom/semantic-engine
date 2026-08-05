@@ -208,6 +208,11 @@ export function buildOccReport(
     // governance. The panel state must never read OK while that holds.
     const state: PanelState = "BLOCKED";
     void failing;
+    panels.push({
+      id: "S4",
+      title: "Release readiness",
+      state,
+
 
       summary: latest
         ? `${latest.id} · stage ${latest.stage} · ${latest.blockingErrors} blocking · ${latest.alignmentWarnings} warnings`
