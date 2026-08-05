@@ -108,44 +108,18 @@ export interface HardGateInput {
   }[];
 }
 
+type DraftPanel = Omit<OccPanel, "computedAt">;
+
 export function buildOccReport(
   snap: DataSnapshot,
   hardGates: HardGateInput | null,
 ): OccPanel[] {
-  const panels: OccPanel[] = [];
+  const panels: DraftPanel[] = [];
   const monitoring = computeMonitoring(snap);
   const now = new Date().toISOString();
 
-  // ---------- S1 Executive health summary ----------
-  {
-    const state: PanelState =
-      monitoring.overall === "ok" ? "OK" : monitoring.overall === "warning" ? "ATTENTION" : "CRITICAL";
-    const ts = monitoring.generatedAt;
-    panels.push({
-      id: "S1",
-      title: "Executive health summary",
-      state: isStale(ts, 1) ? "STALE" : state,
-      summary: `${monitoring.signals.filter(s => s.state === "ok").length}/${monitoring.signals.length} signals healthy · overall ${monitoring.overall.toUpperCase()}`,
-      source: "computeMonitoring(snapshot) — local application data layer",
-      sourceClass: "EXISTING",
-      sourceTimestamp: ts,
-      freshnessHours: 1,
-      readiness: {
-        componentExists: "YES",
-        operationalDataExists: "YES",
-        dataIsCurrent: isStale(ts, 1) ? "NO" : "YES",
-        dataIsApplicationAccessible: "YES",
-        dashboardIntegrationExists: "YES",
-      },
-      rows: monitoring.signals.map(s => ({
-        label: s.name,
-        value: s.value,
-        state: s.state === "ok" ? "OK" : s.state === "warning" ? "ATTENTION" : "CRITICAL",
-        note: s.note,
-      })),
-      notes: ["Derived from application-accessible snapshot signals only. Not a production infrastructure health read."],
-    });
-  }
+  // S1 is built LAST (see below) as a true roll-up of S2–S12.
+
 
   // ---------- S2 Production gate status G1–G11 ----------
   {
