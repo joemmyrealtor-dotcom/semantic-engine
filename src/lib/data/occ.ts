@@ -26,7 +26,7 @@ export const OCC_PROVISIONAL_LABEL =
 export type SourceClass = "EXISTING" | "PROPOSED" | "UNVERIFIED";
 export type PanelState =
   | "OK" | "ATTENTION" | "CRITICAL"
-  | "UNVERIFIED" | "NOT IMPLEMENTED" | "STALE" | "NOT ESTABLISHED";
+  | "UNVERIFIED" | "NOT IMPLEMENTED" | "STALE" | "NOT ESTABLISHED" | "BLOCKED";
 export type ReadinessValue = "YES" | "NO" | "UNVERIFIED";
 
 export interface PanelReadiness {
@@ -51,12 +51,24 @@ export interface OccPanel {
   summary: string;
   source: string;                   // human-readable source description
   sourceClass: SourceClass;
-  sourceTimestamp: string | null;   // ISO or null when no trustworthy data
+  /**
+   * Timestamp of the underlying SOURCE DATA. Null when no trustworthy source
+   * timestamp exists — a report-computation time is never substituted here.
+   */
+  sourceTimestamp: string | null;
+  /** Timestamp at which this report was computed. Never proof of freshness. */
+  computedAt: string;
   freshnessHours: number | null;    // defined threshold, null = not applicable
   readiness: PanelReadiness;
   rows: PanelRow[];
   notes: string[];
 }
+
+/** Panel states that block an aggregate roll-up from reporting OK. */
+export const BLOCKING_STATES: PanelState[] = [
+  "BLOCKED", "CRITICAL", "NOT IMPLEMENTED", "NOT ESTABLISHED", "UNVERIFIED",
+];
+
 
 const READINESS_NONE: PanelReadiness = {
   componentExists: "NO",
