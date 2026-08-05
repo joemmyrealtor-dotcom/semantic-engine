@@ -4,10 +4,11 @@
 // rollback, restore, database, baseline-capture, or gate re-attestation
 // controls are rendered here.
 
-import { useMemo } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import { useSnapshot } from "@/lib/use-snapshot";
 import { LoadingState, SectionTitle } from "@/components/ui-kit";
 import { useAuthoritativeReadiness } from "@/components/launch-gates-panel";
+import { getActor, subscribeActor, isSessionExpired } from "@/lib/data/actor";
 import {
   buildOccReport, OCC_PROVISIONAL_LABEL,
   type HardGateInput, type OccPanel, type PanelState, type ReadinessValue,
@@ -17,8 +18,8 @@ function stateClass(state: PanelState): string {
   switch (state) {
     case "OK": return "text-evergreen border-evergreen/40 bg-evergreen/10";
     case "ATTENTION": return "text-gold border-gold/50 bg-gold/10";
-    case "CRITICAL": return "text-destructive border-destructive/40 bg-destructive/10";
-    case "BLOCKED": return "text-destructive border-destructive/60 bg-destructive/15";
+    case "CRITICAL": return "bg-destructive text-destructive-foreground border-destructive";
+    case "BLOCKED": return "bg-destructive text-destructive-foreground border-destructive";
     case "STALE": return "text-gold border-gold/50 bg-gold/10";
     default: return "text-muted-foreground border-border bg-muted";
   }
@@ -52,7 +53,7 @@ function PanelCard({ panel }: { panel: OccPanel }) {
           </h3>
           <p className="text-xs text-muted-foreground mt-1">{panel.summary}</p>
         </div>
-        <StatePill state={panel.state} />
+        <span data-testid={`occ-${panel.id}-state`}><StatePill state={panel.state} /></span>
       </div>
 
       <dl className="mt-3 grid gap-1 text-[11px] text-muted-foreground sm:grid-cols-2">
@@ -80,7 +81,13 @@ function PanelCard({ panel }: { panel: OccPanel }) {
       {panel.rows.length > 0 && (
         <ul className="mt-3 divide-y divide-border border-t border-border">
           {panel.rows.map((r, i) => (
-            <li key={`${panel.id}-${i}`} className="py-2 flex flex-wrap items-start justify-between gap-2 text-sm">
+            <li
+              key={`${panel.id}-${i}`}
+              className="py-2 flex flex-wrap items-start justify-between gap-2 text-sm"
+              data-testid={`occ-${panel.id}-row-${i}`}
+              data-row-label={r.label}
+              data-row-state={r.state ?? ""}
+            >
               <div className="min-w-0">
                 <div className="font-medium break-words">{r.label}</div>
                 {r.note && <div className="text-[11px] text-muted-foreground break-words">{r.note}</div>}
@@ -105,6 +112,8 @@ function PanelCard({ panel }: { panel: OccPanel }) {
 
 export function OperationsCommandCenter() {
   const s = useSnapshot();
+  const actor = useSyncExternalStore(subscribeActor, getActor, getActor);
+  const authenticated = actor.source !== "anonymous" && !isSessionExpired(actor);
   const workspaceId = s?.activeWorkspaceId ?? "WS-001";
   const readiness = useAuthoritativeReadiness(workspaceId);
 
@@ -128,6 +137,20 @@ export function OperationsCommandCenter() {
   }, [readiness.data]);
 
   const panels = useMemo(() => (s ? buildOccReport(s, hardGates) : null), [s, hardGates]);
+
+  // No authenticated actor → no OCC content of any kind. Operational status
+  // and gate evidence are protected content and must not render anonymously.
+  if (!authenticated) {
+    return (
+      <div
+        data-testid="occ-unauthenticated"
+        role="status"
+        className="editorial-card border-border p-4 text-sm text-muted-foreground"
+      >
+        Sign in to view operational status. This content is unavailable without an authenticated session.
+      </div>
+    );
+  }
 
   if (!s || !panels) return <LoadingState label="Loading Operations Command Center…" />;
 

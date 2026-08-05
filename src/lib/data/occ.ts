@@ -69,6 +69,32 @@ export const BLOCKING_STATES: PanelState[] = [
   "BLOCKED", "CRITICAL", "NOT IMPLEMENTED", "NOT ESTABLISHED", "UNVERIFIED",
 ];
 
+/** Severity ordering used to escalate a panel to its worst blocking row. */
+const STATE_SEVERITY: Record<PanelState, number> = {
+  OK: 0,
+  ATTENTION: 1,
+  STALE: 2,
+  UNVERIFIED: 3,
+  "NOT IMPLEMENTED": 4,
+  "NOT ESTABLISHED": 5,
+  CRITICAL: 6,
+  BLOCKED: 7,
+};
+
+/**
+ * A panel state must never be less severe than its worst BLOCKING row. A row
+ * reading UNVERIFIED / NOT ESTABLISHED / BLOCKED is unresolved evidence and
+ * must be visible at panel level so the S1 roll-up cannot under-report.
+ */
+export function escalateToWorstBlockingRow(panel: DraftPanel): DraftPanel {
+  const worst = panel.rows.reduce<PanelState>((acc, r) => {
+    if (!r.state || !BLOCKING_STATES.includes(r.state)) return acc;
+    return STATE_SEVERITY[r.state] > STATE_SEVERITY[acc] ? r.state : acc;
+  }, panel.state);
+  return worst === panel.state ? panel : { ...panel, state: worst };
+}
+
+
 
 const READINESS_NONE: PanelReadiness = {
   componentExists: "NO",
@@ -170,12 +196,24 @@ export function buildOccReport(
 
   // ---------- S3 Hard gates H1–H4 ----------
   {
+    const REQUIRED_GATES = ["H1", "H2", "H3", "H4"];
     const hg = hardGates;
-    const ts = hg?.generatedAt ?? null;
-    const stale = isStale(ts, 1);
+    const byId = new Map((hg?.gates ?? []).map(g => [g.gateId, g]));
+    // Source-data timestamps are gate ATTESTATION times. computeReadinessServer
+    // .generatedAt is a report-computation time and is never used here.
+    const attestations = REQUIRED_GATES.map(id => byId.get(id)?.attestedAt ?? null);
+    const allAttested = hg?.authoritative === true && attestations.every(
+      a => typeof a === "string" && !Number.isNaN(Date.parse(a)),
+    );
+    // Aggregate freshness is governed by the LEAST-FRESH required attestation.
+    const ts = allAttested
+      ? (attestations as string[]).reduce((a, b) => (Date.parse(a) <= Date.parse(b) ? a : b))
+      : null;
+    const stale = allAttested && isStale(ts, 1);
     let state: PanelState = "UNVERIFIED";
     if (hg?.authoritative) {
-      state = stale ? "STALE"
+      state = !allAttested ? "UNVERIFIED"
+        : stale ? "STALE"
         : hg.gates.some(g => g.status === "STALE") ? "STALE"
         : hg.ready ? "OK" : "ATTENTION";
     }
@@ -184,37 +222,40 @@ export function buildOccReport(
       title: "Hard gates H1–H4",
       state,
       summary: hg?.authoritative
-        ? `${hg.gates.filter(g => g.status === "PASS").length}/4 PASS · production GO ${hg.ready ? "UNLOCKED" : "LOCKED"}`
+        ? `${hg.gates.filter(g => g.status === "PASS").length}/4 PASS · production GO ${hg.ready ? "UNLOCKED" : "LOCKED"}${allAttested ? "" : " · attestation evidence incomplete, freshness UNVERIFIED"}`
         : "Authoritative server readiness unavailable — hard-gate state UNVERIFIED.",
-      source: "computeReadinessServer (server-authoritative launch gate evidence)",
-      sourceClass: hg?.authoritative ? "EXISTING" : "UNVERIFIED",
+      source: "Launch-gate attestation evidence (attested_at) via computeReadinessServer — report generation time is not a source timestamp",
+      sourceClass: allAttested ? "EXISTING" : "UNVERIFIED",
       sourceTimestamp: ts,
       freshnessHours: 1,
       readiness: {
         componentExists: "YES",
         operationalDataExists: hg?.authoritative ? "YES" : "UNVERIFIED",
-        dataIsCurrent: hg?.authoritative ? (stale ? "NO" : "YES") : "UNVERIFIED",
+        dataIsCurrent: allAttested ? (stale ? "NO" : "YES") : "UNVERIFIED",
         dataIsApplicationAccessible: hg?.authoritative ? "YES" : "UNVERIFIED",
         dashboardIntegrationExists: "YES",
       },
-      rows: (hg?.gates.length ? hg.gates : ["H1", "H2", "H3", "H4"].map(id => ({
-        gateId: id, status: "UNVERIFIED", attestedAt: null, attestedBy: null,
-        stale: false, verifierPassed: false, verifierDetail: "Server verifier not reachable",
-        buildFingerprint: "unknown",
-      }))).map(g => ({
-        label: g.gateId,
-        value: hg?.authoritative ? g.status : "UNVERIFIED",
-        state: !hg?.authoritative ? "UNVERIFIED"
-          : g.status === "PASS" ? "OK"
-          : g.status === "STALE" ? "STALE"
-          : g.status === "FAIL" ? "CRITICAL" : "ATTENTION",
-        note: `${g.verifierDetail}${g.attestedAt ? ` · attested ${g.attestedAt} by ${g.attestedBy ?? "—"}` : ""} · fingerprint ${g.buildFingerprint}`,
-      })),
+      rows: REQUIRED_GATES.map(id => {
+        const g = byId.get(id);
+        const attested = g?.attestedAt && !Number.isNaN(Date.parse(g.attestedAt)) ? g.attestedAt : null;
+        const trustworthy = hg?.authoritative === true && !!attested;
+        return {
+          label: id,
+          value: trustworthy ? (g?.status ?? "UNVERIFIED") : "UNVERIFIED",
+          state: (!trustworthy ? "UNVERIFIED"
+            : g?.status === "PASS" ? "OK"
+            : g?.status === "STALE" ? "STALE"
+            : g?.status === "FAIL" ? "CRITICAL" : "ATTENTION") as PanelState,
+          note: `${g?.verifierDetail ?? "Server verifier not reachable"} · ${attested ? `attested ${attested} by ${g?.attestedBy ?? "—"}` : "no trustworthy attestation timestamp"} · fingerprint ${g?.buildFingerprint ?? "unknown"}`,
+        };
+      }),
       notes: [
         "Read-only view. Attestation controls are intentionally absent from this dashboard.",
+        "Source freshness derives from the least-fresh required H1–H4 attestation timestamp; a missing attestation renders the panel UNVERIFIED.",
       ],
     });
   }
+
 
   // ---------- S4 Release readiness ----------
   {
@@ -507,19 +548,35 @@ export function buildOccReport(
   }
 
   // ---------- S1 Executive health summary (roll-up of S2–S12) ----------
-  const blocking = panels.filter(p => BLOCKING_STATES.includes(p.state));
-  const attention = panels.filter(p => p.state === "ATTENTION" || p.state === "STALE");
+  // Every panel first escalates to its worst BLOCKING row so unresolved
+  // evidence (e.g. S5 production recovery / RPO / RTO / rollback rows, S12
+  // production recovery evidence) can never be hidden behind a panel-level
+  // OK / ATTENTION / STALE reading.
+  const escalated = panels.map(escalateToWorstBlockingRow);
+  panels.length = 0;
+  panels.push(...escalated);
+
+  const blockingRowCount = panels.reduce(
+    (n, p) => n + p.rows.filter(r => r.state && BLOCKING_STATES.includes(r.state)).length, 0,
+  );
+  const blocking = panels.filter(p =>
+    BLOCKING_STATES.includes(p.state) ||
+    p.rows.some(r => r.state && BLOCKING_STATES.includes(r.state)),
+  );
+  const attention = panels.filter(p =>
+    !blocking.includes(p) && (p.state === "ATTENTION" || p.state === "STALE"),
+  );
   const rollupState: PanelState = blocking.length ? "BLOCKED" : attention.length ? "ATTENTION" : "OK";
   const s1: DraftPanel = {
     id: "S1",
     title: "Executive health summary",
     state: rollupState,
     summary: blocking.length
-      ? `BLOCKED — ${blocking.length} of ${panels.length} sections blocked, unverified, not implemented, or not established`
+      ? `BLOCKED — ${blocking.length} of ${panels.length} sections blocked, unverified, not implemented, or not established · ${blockingRowCount} unresolved row(s)`
       : attention.length
         ? `${attention.length} section(s) require attention`
         : "All aggregated sections nominal",
-    source: "Aggregate roll-up of OCC sections S2–S12 (no independent data source)",
+    source: "Aggregate roll-up of OCC sections S2–S12, panel states and blocking row states (no independent data source)",
     sourceClass: "EXISTING",
     // A roll-up has no single source-data timestamp; contributing panels carry
     // their own. Report-computation time is never presented as source freshness.
@@ -532,17 +589,24 @@ export function buildOccReport(
       dataIsApplicationAccessible: "YES",
       dashboardIntegrationExists: "YES",
     },
-    rows: panels.map(p => ({
-      label: `${p.id} ${p.title}`,
-      value: p.state,
-      state: p.state,
-      note: p.sourceTimestamp ? `source ${p.sourceTimestamp}` : "source timestamp UNVERIFIED",
-    })),
+    rows: panels.map(p => {
+      const blockingRows = p.rows.filter(r => r.state && BLOCKING_STATES.includes(r.state));
+      return {
+        label: `${p.id} ${p.title}`,
+        value: p.state,
+        state: p.state,
+        note: `${p.sourceTimestamp ? `source ${p.sourceTimestamp}` : "source timestamp UNVERIFIED"}${
+          blockingRows.length ? ` · ${blockingRows.length} unresolved row(s): ${blockingRows.map(r => r.label).join(", ")}` : ""
+        }`,
+      };
+    }),
     notes: [
       "S1 aggregates S2–S12 only. Application-layer monitoring signal detail is shown in S6.",
-      "Any BLOCKED, CRITICAL, UNVERIFIED, NOT IMPLEMENTED, or NOT ESTABLISHED section forces a BLOCKED roll-up.",
+      "Any BLOCKED, CRITICAL, UNVERIFIED, NOT IMPLEMENTED, or NOT ESTABLISHED section — or any such ROW inside a section — forces a BLOCKED roll-up.",
+      "Unresolved production recovery, RPO, RTO, or rollback rows always force BLOCKED.",
     ],
   };
+
 
   return [s1, ...panels].map(p => ({ ...p, computedAt: now }));
 }
