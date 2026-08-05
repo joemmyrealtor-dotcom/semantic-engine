@@ -6,6 +6,7 @@ import { useSnapshot, Repo } from "@/lib/use-snapshot";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { approveRun, rejectRun, cancelRun, executeRecipe } from "@/lib/data/automation";
+import { OperationsCommandCenter } from "@/components/occ-dashboard";
 
 export const Route = createFileRoute("/operations")({
   head: () => ({ meta: [{ title: "Operations — Legacy Platform" }] }),
@@ -93,6 +94,10 @@ function OperationsDashboard() {
       <PageHeader eyebrow="Governance" title="Operations Dashboard"
         description="Review pending approvals, failed automation runs, and current run activity." />
       <PageBody>
+        <div className="mb-8">
+          <OperationsCommandCenter />
+        </div>
+
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
           <KpiCard label="Pending approval" value={grouped.pending.length} tone="gold" />
           <KpiCard label="Failed" value={grouped.failed.length} tone="warn" />

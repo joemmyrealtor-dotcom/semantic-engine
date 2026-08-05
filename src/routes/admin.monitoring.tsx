@@ -4,6 +4,7 @@ import { PageHeader, PageBody } from "@/components/page-header";
 import { LoadingState, KpiCard, SectionTitle } from "@/components/ui-kit";
 import { useSnapshot } from "@/lib/use-snapshot";
 import { computeMonitoring } from "@/lib/data/monitoring";
+import { OperationsCommandCenter } from "@/components/occ-dashboard";
 
 export const Route = createFileRoute("/admin/monitoring")({
   head: () => ({ meta: [{ title: "Monitoring — Legacy Platform" }] }),
@@ -19,6 +20,10 @@ function MonitoringDash() {
     <>
       <PageHeader title="System Monitoring" description="API · Automation · Webhooks · Storage · Migration · Jobs · Audit · Backups." />
       <PageBody>
+        <div className="mb-8">
+          <OperationsCommandCenter />
+        </div>
+
         <div className="grid gap-4 md:grid-cols-4 mb-6">
           <KpiCard label="Overall" value={report.overall.toUpperCase()} tone={toneMap[report.overall]} />
           <KpiCard label="Signals" value={report.signals.length} />
