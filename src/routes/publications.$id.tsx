@@ -25,6 +25,7 @@ import { CoverageBar } from "./publications.index";
 import { ArrowDown, ArrowUp, GripVertical, Plus, Trash2, ChevronRight, ExternalLink } from "lucide-react";
 import { useAutosave, isStaleConflict } from "@/hooks/use-autosave";
 import { SaveIndicator } from "@/components/save-indicator";
+import { DistressDecisionTree } from "@/components/distress-decision-tree";
 
 export const Route = createFileRoute("/publications/$id")({
   head: ({ params }) => ({ meta: [{ title: `${params.id} — Publication Editor` }] }),
@@ -125,6 +126,7 @@ function PublicationEditorPage() {
         <div className="grid lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             <GeneralInfoCard draft={draft} set={set} />
+            {draft.id === "PL-210" && <DistressDecisionTree />}
             <ChaptersCard draft={draft} snapshot={s} onChapters={setChapters} />
             <CanonicalAssemblyCard draft={draft} snapshot={s} onChapters={setChapters} />
             <CoverageIntelligenceCard cov={cov} draft={draft} snapshot={s} onChapters={setChapters} />
