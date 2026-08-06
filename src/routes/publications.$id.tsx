@@ -126,7 +126,7 @@ function PublicationEditorPage() {
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 min-w-0 space-y-6">
             <GeneralInfoCard draft={draft} set={set} />
             {draft.id === "PL-210" && <DistressDecisionTree />}
             {(draft.id === "PL-211" || draft.id === "PL-206") && (
