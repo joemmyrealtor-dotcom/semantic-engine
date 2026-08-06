@@ -85,7 +85,7 @@ describe("next actions derivation", () => {
     const s: DataSnapshot = {
       ...seed(),
       concepts: [], knowledgeObjects: [], publications: [], releases: [], frameworks: [],
-      clientTools: [], clientToolkits: [], aiPacks: [], agents: [], prompts: [], relationships: [],
+      clientTools: [], clientToolkits: [], aiPacks: [], agents: [], prompts: [],
     };
     const na = deriveNextActions(s);
     expect(na.hasActions).toBe(false);
