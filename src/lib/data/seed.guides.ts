@@ -1118,4 +1118,116 @@ export const seedGuidePublications: PublicationBlueprint[] = ([
       },
     ]),
   }),
+
+  guide({
+    id: "PL-211",
+    title: "The Title Guide: What Title Is, Why It Decides Your Closing, and How a Title Company Protects You",
+    audience: "Buyers, sellers, refinancing owners, heirs, and investors who want to understand title, escrow, and closing before they sign",
+    purpose:
+      "Explain in plain language what title is, what a title company actually does from contract to keys, how title search, examination, curative work, escrow, and title insurance protect your money and your ownership, and exactly what you should ask, read, and verify at every step of closing.",
+    description:
+      "Title is the single most misunderstood part of a real estate transaction — and the one that quietly decides whether your closing happens on time, whether you truly own what you paid for, and whether a problem from 40 years ago becomes your problem today. This guide walks the entire title process: what a title company is and who pays for it, how a title search and examination work, the defects that show up most often and how they get cleared, what your title commitment's Schedule A, B-I, and B-II really say, the difference between owner's and lender's policies, how escrow and settlement move the money, what happens on closing day, wire-fraud protection, and the special cases — inheritance, divorce, trusts, new construction, foreclosure and short sales, and 1031 exchanges. Educational content only; title law, fee structures, and who customarily pays vary by state and county, so confirm specifics with your title company, attorney, and lender.",
+    tags: ["title", "title insurance", "escrow", "closing", "settlement", "liens", "buyer", "seller", "wire fraud"],
+    chapters: chapters("CH-TTL", [
+      {
+        title: "What Title Actually Is — And Why It Is Not the Same as the House",
+        description:
+          "You do not buy a building; you buy the bundle of legal rights attached to it. Title is that bundle: the right to possess, use, exclude others, encumber, and transfer. The deed is the document that moves title from one owner to the next — it is the receipt, not the ownership itself. Those two ideas explain most closing confusion. A property can have a beautiful roof and a broken title, and a broken title costs far more than a roof. Title can be clouded by an unpaid contractor's lien, a divorce decree that never got recorded, a deceased co-owner whose estate never closed, an old mortgage that was paid but never released, a misspelled name on a 1974 deed, a boundary that was fenced in the wrong place for thirty years, or an easement giving a utility permanent access across your yard. It can also be limited on purpose: recorded covenants, HOA restrictions, and mineral or water rights that were severed generations ago. 'Marketable title' means title a reasonable buyer would accept and a lender would finance — not perfect title, but title free of defects that would create real risk of loss or litigation. The whole title process exists to answer one question with evidence: does the seller own what they are selling, and can they hand it over free of anything you did not agree to accept?",
+        learningObjectives: [
+          "Distinguish title (the rights) from the deed (the document that transfers them)",
+          "Name the common categories of title defect: liens, heirs, unreleased mortgages, name and legal-description errors, easements, and encroachments",
+          "Explain what 'marketable title' means and why lenders require it",
+          "Recognize that recorded restrictions can limit use without clouding ownership",
+        ],
+      },
+      {
+        title: "Who a Title Company Is, What They Do, and Who Pays Them",
+        description:
+          "A title company is the neutral third party that verifies ownership, clears problems, insures the result, holds the money, and records the documents. In some states an attorney performs part or all of this role, and in others an independent escrow company handles funds while the title underwriter issues the policy — the functions are the same even when the job titles differ. Practically, the company wears four hats. As researcher, it searches public records and examines the chain of title. As problem-solver, it performs curative work: chasing lien releases, obtaining payoff statements, correcting legal descriptions, and gathering affidavits. As insurer, it issues title insurance backed by an underwriter that pays defense costs and covered losses if a past defect surfaces later. As settlement agent, it holds earnest money and loan proceeds in escrow, prepares the settlement statement, disburses funds, and records the deed and mortgage in the correct order at the county. On cost, two things matter more than the sticker: who customarily pays in your market — it varies by state and even by county, and it is negotiable in the contract — and whether a reissue rate, simultaneous-issue rate, or seller's prior policy can lower the premium. Title insurance is generally a one-time premium paid at closing, not a recurring bill. Ask early: what is customary here, what is negotiable, and which discounts do I qualify for?",
+        learningObjectives: [
+          "Describe the four core roles: search, curative, insurance, and settlement",
+          "Understand how title-agent, escrow-company, and attorney-state models differ in practice",
+          "Ask who customarily pays for owner's and lender's policies in your market and negotiate it in the contract",
+          "Identify reissue and simultaneous-issue discounts that reduce premium",
+        ],
+      },
+      {
+        title: "The Title Search and Examination: How They Look Backward So You Can Move Forward",
+        description:
+          "Once you are under contract, the file opens and the search begins. Examiners assemble the chain of title — the unbroken sequence of recorded transfers connecting today's seller to prior owners — and pull everything recorded against the property and against the names of the people in that chain. That means deeds, mortgages and deeds of trust, assignments and releases, judgments, state and federal tax liens, mechanic's liens, HOA assessments, probate and divorce records, bankruptcy filings, easements, covenants, plats, and sometimes surveys. They check the legal description against the plat, confirm each signature and notarization was proper, and confirm every mortgage that was paid off actually shows a recorded release. Then an examiner reads the results and forms an opinion on insurability: clean, clean with exceptions, or cloudy and requiring curative work. Timing matters to you. A routine residential search often comes back in days; complicated chains — estates, tax sales, long-vacant land, unpermitted splits — take longer. A last-minute update called a bring-down or gap search is run immediately before recording, because a judgment or lien filed the week of closing still attaches. If your contract has short deadlines, ask on day one when the commitment will be delivered so you can review it inside your objection window.",
+        learningObjectives: [
+          "Explain what a chain of title is and what records get searched",
+          "Understand why searches run against people's names as well as the property",
+          "Anticipate longer timelines for estates, tax-sale, and unusual-history properties",
+          "Know why a bring-down or gap search happens right before recording",
+        ],
+      },
+      {
+        title: "Reading Your Title Commitment Like a Professional",
+        description:
+          "The title commitment is the company's promise to insure, on stated conditions, and it is the most valuable document you will receive before closing. Read it the day it arrives. Schedule A is the facts: the proposed insured, the policy amounts, the current record owner, the estate being insured (usually fee simple), and the legal description. Verify your name spelling, the price, the loan amount, and — critically — that the legal description matches the property you walked, including any extra lot or parcel you believed you were buying. Schedule B-I is the requirements: everything that must happen before the policy issues. Payoff and release of the existing mortgage, satisfaction of judgments, HOA estoppel, a death certificate and affidavit for a deceased co-owner, an entity resolution and good-standing certificate for an LLC seller, a signed survey affidavit. Schedule B-II is the exceptions: what the policy will not cover. Standard exceptions include matters a survey would reveal, rights of parties in possession, unrecorded mechanic's liens, and taxes not yet due. Specific exceptions are the real reading: easements, covenants and restrictions, mineral reservations, party-wall agreements, HOA declarations. Request copies of every exception document and actually read them — that is where you learn a utility easement crosses the spot you planned to build a pool, or that the HOA prohibits your intended rental. Many standard exceptions can be removed with a current survey or an endorsement; ask which ones and what they cost.",
+        learningObjectives: [
+          "Verify Schedule A facts, especially names, amounts, and the legal description",
+          "Work through Schedule B-I requirements and know who is responsible for each",
+          "Read Schedule B-II exceptions and request the underlying recorded documents",
+          "Ask which standard exceptions can be removed by survey or endorsement, and at what cost",
+        ],
+      },
+      {
+        title: "When Something Is Wrong: Curative Work, and What It Means for Your Closing Date",
+        description:
+          "Most title problems are solvable; the variable is time. Unreleased paid-off mortgages are cleared with a payoff letter and a recorded release, sometimes requiring the servicer to be chased for weeks. Judgment and tax liens are paid from seller proceeds at closing, or negotiated down and released. Mechanic's liens are resolved with lien waivers and contractor releases. Heirship gaps require probate documents, an affidavit of heirship, or a small-estate affidavit; a missing signature from a former spouse requires a quitclaim deed or the recorded divorce decree. Name discrepancies — 'Robert J. Smith' on one deed and 'Bob Smith' on another — are cured with a one-and-the-same affidavit. Boundary encroachments may need a survey, an encroachment agreement, or a boundary-line agreement with the neighbor. Truly stubborn defects go to a quiet-title action, a court proceeding measured in months, not days. Occasionally the practical answer is an endorsement or affirmative coverage: the underwriter agrees to insure over a low-risk problem rather than cure it. Your job as a party to the transaction is to shorten the clock. Respond to document requests the same day, put the title officer, lender, and agent on the same email thread, ask weekly for a written status of open B-I requirements, and if a cure will slip past your closing date, negotiate an extension in writing early instead of scrambling the night before.",
+        learningObjectives: [
+          "Match common defects to their standard cures and realistic timelines",
+          "Understand when an underwriter will insure over a defect instead of curing it",
+          "Track open Schedule B-I requirements weekly in writing",
+          "Negotiate contract extensions early when curative work will not finish in time",
+        ],
+      },
+      {
+        title: "Title Insurance: Owner's Policy vs. Lender's Policy, and Why You Want Both",
+        description:
+          "Title insurance is backward-looking. Every other policy you own protects against future events; title insurance protects against past events that nobody found. It covers defense costs — often the larger real-world benefit — plus covered losses up to the policy amount. Here is the part buyers miss: the lender's policy protects the lender's loan balance only, and it declines as you pay the loan down. It does nothing for your equity. The owner's policy protects you, generally for the purchase price, for as long as you or your heirs hold an interest, with no renewals and no monthly premium. Standard coverage typically addresses forged or improperly executed documents, undisclosed heirs, prior unreleased liens, defective recordings, and lack of legal right to transfer. Extended or enhanced owner's policies, where available, can add coverage for items like post-policy forgery, building-permit violations, mechanic's liens, subdivision-map issues, and automatic inflation adjustments — for a higher premium. Exclusions are real and worth reading: zoning and governmental police power, matters you knew about and did not disclose, defects created after the policy date, and anything listed in Schedule B-II. Two practical moves. First, if you are refinancing, your original owner's policy still stands even though the lender requires a new lender's policy — and ask about a reissue rate. Second, if a claim ever arises, notify the underwriter promptly and in writing; late notice is the most common self-inflicted claim problem.",
+        learningObjectives: [
+          "Explain why a lender's policy does not protect the owner's equity",
+          "Compare standard and enhanced owner's coverage against their exclusions",
+          "Understand that owner's coverage is one premium, lasting as long as you hold an interest",
+          "Know how and when to file a claim, and to ask about reissue rates on refinance",
+        ],
+      },
+      {
+        title: "Escrow and the Money: How Funds Move Safely From Contract to Keys",
+        description:
+          "Escrow is a neutral holding pattern with rules. Your earnest money goes into a trust account, not the seller's pocket, and it is released only per the contract — which is exactly why a written amendment matters more than a friendly phone call when terms change. As closing approaches, the settlement agent builds the numbers: purchase price, loan proceeds, seller payoffs, prorated property taxes and HOA dues, transfer taxes and recording fees, commissions, home warranty, insurance and escrow reserves, credits and concessions, and the title premium. Buyers using financing receive a Closing Disclosure from the lender, typically at least three business days before consummation — that waiting period exists so you can compare it to your Loan Estimate line by line. Sellers and cash buyers usually see a settlement statement instead. Review it early and out loud: is the sale price right, are the tax prorations calculated to the correct date, are the agreed credits present, do the payoffs match the payoff letters, are there junk fees nobody explained? Bring corrections back within hours, not minutes before signing. Funds must be good funds — a wire or, in some cases, a cashier's check — and personal checks generally do not clear a closing table. Finally, understand the sequence: signing is not closing, funding is not recording, and in most states you are the owner when the deed records at the county, which is when keys are properly released.",
+        learningObjectives: [
+          "Explain how earnest money is held and under what conditions it is released",
+          "Review a Closing Disclosure or settlement statement line by line before signing",
+          "Deliver good funds correctly and on time",
+          "Distinguish signing, funding, recording, and possession",
+        ],
+      },
+      {
+        title: "Closing Day, Wire Fraud, and the Documents You Are Actually Signing",
+        description:
+          "Closings are increasingly flexible — in person, split signings, mobile notary, or fully remote online notarization where the state permits it — but the content is the same. Buyers sign the note, the mortgage or deed of trust, the Closing Disclosure, an affidavit package, and the loan disclosures. Sellers sign the deed, a seller's affidavit regarding liens and possession, tax withholding certifications where applicable, and the settlement statement. Bring government-issued photo identification matching the name on the documents, and if you are signing under a power of attorney, get it approved by the title company and lender days ahead, not at the table. Do a final walkthrough before you sign, not after. Now the most important paragraph in this guide: wire fraud is the single largest financial risk in a modern closing. Criminals monitor email, spoof the title company's domain by one character, and send convincing 'updated wiring instructions' hours before closing. The rule is absolute — never accept wire instructions by email, never act on a change to instructions, and always call the title company at a number you independently looked up, not one in the email, to verbally verify the account before sending a dollar. Verify after sending too, within the hour. If a wire goes wrong, contact your bank and the title company immediately and file with law enforcement the same day; recovery odds drop by the hour. After recording, store your deed, owner's policy, and settlement statement permanently — you will need them for resale, refinance, tax basis, and estate planning.",
+        learningObjectives: [
+          "Know which documents buyers and sellers sign and what each one does",
+          "Prepare identification, powers of attorney, and remote-notarization logistics in advance",
+          "Apply an absolute verbal-verification rule to all wire instructions",
+          "Store the deed, owner's policy, and settlement statement permanently",
+        ],
+      },
+      {
+        title: "Special Situations, Smart Questions, and Your One-Page Title Checklist",
+        description:
+          "Some transactions need extra title attention. Inherited property requires probate documents, letters of administration, heirship affidavits, and often an estate tax clearance — start title work before you list, not after you have a buyer. Divorce sales require the recorded decree and a deed from the departing spouse; a decree alone does not move title. Trust and entity sales require the trust certification or operating agreement, plus proof of authority to sign. New construction adds mechanic's-lien risk, so ask for final lien waivers from the general contractor and subs, and confirm the subdivision plat and any dedication requirements. Foreclosure and short sale purchases carry junior-lien and redemption-period questions; get written lien-release terms from every lienholder before closing. A 1031 exchange requires the qualified intermediary to be in place before you close the sale — one day late and the exchange is dead. Vacant land invites access, easement, and boundary questions; a survey is not optional. Finally, how you take title matters: sole ownership, tenants in common, joint tenancy with right of survivorship, community property with right of survivorship where recognized, or a trust — each changes what happens on death, divorce, and creditor claims, so decide with an attorney before the deed is drafted, not after. Close with a one-page checklist: commitment received and read, legal description verified, exception documents requested, B-I requirements assigned with owners and dates, survey ordered or waived deliberately, endorsements priced, owner's policy elected, closing statement reviewed, wire instructions verbally verified, vesting decided, and documents archived.",
+        learningObjectives: [
+          "Prepare the added documentation required for estates, divorce, trusts, entities, and new construction",
+          "Handle distressed, exchange, and vacant-land closings with the right specialists engaged early",
+          "Choose a vesting method with legal guidance before the deed is drafted",
+          "Run a one-page title checklist from commitment through post-closing archiving",
+        ],
+      },
+    ]),
+  }),
 ] as unknown) as PublicationBlueprint[];
