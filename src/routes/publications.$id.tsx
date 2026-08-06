@@ -164,13 +164,14 @@ function GeneralInfoCard({ draft, set }: { draft: PublicationBlueprint; set: <K 
         <Field label="Owner"><Input value={draft.owner} onChange={e => set("owner", e.target.value)} /></Field>
         <Field label="Publication type">
           <Select value={draft.publicationType} onValueChange={v => set("publicationType", v as PublicationType)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectTrigger aria-label="Publication type"><SelectValue /></SelectTrigger>
+
             <SelectContent>{PUBLICATION_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
           </Select>
         </Field>
         <Field label="Governing framework">
           <Select value={draft.frameworkId ?? "__none__"} onValueChange={v => set("frameworkId", v === "__none__" ? null : v)}>
-            <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+            <SelectTrigger aria-label="Governing framework"><SelectValue placeholder="—" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="__none__">— None</SelectItem>
               {s?.frameworks.map(f => <SelectItem key={f.id} value={f.id}>{f.id} · {f.name}</SelectItem>)}
@@ -335,7 +336,8 @@ function ChaptersCard({ draft, snapshot, onChapters }: { draft: PublicationBluep
                 <div className="grid grid-cols-2 gap-3">
                   <Field label="Parent chapter">
                     <Select value={selected.parentChapterId ?? "__root__"} onValueChange={v => updateChapter({ parentChapterId: v === "__root__" ? null : v })}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectTrigger aria-label="Parent chapter"><SelectValue /></SelectTrigger>
+
                       <SelectContent>
                         <SelectItem value="__root__">— Top level</SelectItem>
                         {draft.chapters.filter(c => !invalidParentIds.has(c.id)).map(c => <SelectItem key={c.id} value={c.id}>{c.id} · {c.title}</SelectItem>)}
@@ -347,13 +349,14 @@ function ChaptersCard({ draft, snapshot, onChapters }: { draft: PublicationBluep
                 <div className="grid grid-cols-2 gap-3">
                   <Field label="Review status">
                     <Select value={selected.reviewStatus} onValueChange={v => updateChapter({ reviewStatus: v as Status })}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectTrigger aria-label="Chapter review status"><SelectValue /></SelectTrigger>
+
                       <SelectContent>{["Draft","In Review","Approved","Canonical","Deprecated","Archived"].map(x => <SelectItem key={x} value={x}>{x}</SelectItem>)}</SelectContent>
                     </Select>
                   </Field>
                   <Field label="Manufacturing stage">
                     <Select value={selected.manufacturingStage} onValueChange={v => updateChapter({ manufacturingStage: v as PublicationStage })}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectTrigger aria-label="Chapter manufacturing stage"><SelectValue /></SelectTrigger>
                       <SelectContent>{PUBLICATION_STAGES.map(x => <SelectItem key={x} value={x}>{x}</SelectItem>)}</SelectContent>
                     </Select>
                   </Field>
