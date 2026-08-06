@@ -443,7 +443,7 @@ function CanonicalAssemblyCard({ draft, snapshot, onChapters }: { draft: Publica
 
 function AssetGroup({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
-    <div>
+    <div className="min-w-0">
       <div className="flex items-baseline justify-between mb-1">
         <div className="text-xs uppercase tracking-wider text-slate-ink font-medium">{label}</div>
         {hint && <div className="text-[10px] text-muted-foreground">{hint}</div>}
