@@ -3,6 +3,10 @@ import { SCHEMA_VERSION, type DataSnapshot, type EntityType, type PublicationSta
 import { buildSeedSnapshot } from "./seed";
 import { seedGuidePublications } from "./seed.guides";
 import { backfillWorkspaceIds } from "./workspace-scoping";
+import {
+  upgradeToV10, verifyIntegrity, isStaleSnapshot, USER_MIGRATION_MESSAGES,
+  type MigrationAuditEntry, type MigrationOutcome,
+} from "./migrations";
 
 const DB_NAME = "legacy-platform-v2";
 const STORE = "kv";
@@ -24,40 +28,117 @@ function getDB() {
   return dbPromise;
 }
 
+const LOG_KEY = "migrationLog";
+const BACKUP_PREFIX = "snapshot.backup.v";
+
+let lastMigration: MigrationAuditEntry | null = null;
+const migrationListeners = new Set<() => void>();
+
+export function getLastMigration(): MigrationAuditEntry | null { return lastMigration; }
+export function subscribeMigration(fn: () => void): () => void {
+  migrationListeners.add(fn);
+  return () => migrationListeners.delete(fn);
+}
+export function migrationMessage(): string {
+  return lastMigration ? USER_MIGRATION_MESSAGES[lastMigration.outcome] : "";
+}
+
+async function recordMigration(entry: MigrationAuditEntry) {
+  lastMigration = entry;
+  try {
+    const db = await getDB();
+    const log = ((await db.get(STORE, LOG_KEY)) as MigrationAuditEntry[] | undefined) ?? [];
+    await db.put(STORE, [...log, entry].slice(-50), LOG_KEY);
+  } catch { /* audit log is best-effort; never blocks boot */ }
+  migrationListeners.forEach(fn => fn());
+}
+
+export async function getMigrationLog(): Promise<MigrationAuditEntry[]> {
+  const db = await getDB();
+  return ((await db.get(STORE, LOG_KEY)) as MigrationAuditEntry[] | undefined) ?? [];
+}
+
+/** Restores the pre-migration backup for a given schema version, if present. */
+export async function restoreMigrationBackup(fromVersion: number): Promise<DataSnapshot | null> {
+  const db = await getDB();
+  const raw = (await db.get(STORE, BACKUP_PREFIX + fromVersion)) as DataSnapshot | undefined;
+  if (!raw) return null;
+  await db.put(STORE, raw, SNAPSHOT_KEY);
+  return raw;
+}
+
+async function brokenRefCount(s: DataSnapshot): Promise<number> {
+  try {
+    const { detectBrokenReferences } = await import("./service");
+    return detectBrokenReferences(s).length;
+  } catch { return 0; }
+}
+
+/** Applies the shared field backfill plus the canonical catalog top-up. */
+function normalize(s: DataSnapshot): DataSnapshot {
+  return migrateSnapshot(upgradeToV10(migrateSnapshot(s)));
+}
+
 export async function loadSnapshot(): Promise<DataSnapshot> {
   const db = await getDB();
   const existing = (await db.get(STORE, SNAPSHOT_KEY)) as DataSnapshot | undefined;
-  if (existing && existing.schemaVersion === SCHEMA_VERSION) {
-    const migrated = migrateSnapshot(existing);
-    // Additive catalog top-up: newly published seed guides appear in existing
-    // snapshots without a schema bump or destructive reseed. Also corrects any
-    // seed guide whose title was saved as "Untitled Publication" before the
-    // canonical seed title was written.
-    const seedById = new Map(seedGuidePublications.map(p => [p.id, p]));
-    let changed = false;
-    const corrected = migrated.publications.map(p => {
-      const seed = seedById.get(p.id);
-      if (!seed) return p;
-      // A placeholder that collides with a seed guide id (untitled or with no
-      // authored chapters) is replaced by the canonical seed guide.
-      const isStub = !p.title || p.title === "Untitled Publication" || (p.chapters?.length ?? 0) === 0;
-      if (isStub) {
-        changed = true;
-        return { ...seed };
-      }
-      return p;
-    });
-    const have = new Set(corrected.map(p => p.id));
-    const missing = seedGuidePublications.filter(p => !have.has(p.id));
-    if (!changed && missing.length === 0) return migrated;
-    const topped = migrateSnapshot({ ...migrated, publications: [...corrected, ...missing] });
-    await db.put(STORE, topped, SNAPSHOT_KEY);
-    return topped;
 
+  if (!existing) {
+    const seeded = normalize(buildSeedSnapshot());
+    await db.put(STORE, seeded, SNAPSHOT_KEY);
+    await recordMigration({
+      at: new Date().toISOString(), fromVersion: 0, toVersion: SCHEMA_VERSION,
+      outcome: "fresh", message: "Fresh install seeded from canonical catalog.",
+      integrity: { ok: true, checks: [] }, backupKey: null,
+    });
+    return seeded;
   }
-  const seeded = migrateSnapshot(buildSeedSnapshot());
-  await db.put(STORE, seeded, SNAPSHOT_KEY);
-  return seeded;
+
+  const from = existing.schemaVersion ?? 0;
+
+  // Same version: keep the non-destructive catalog reconciliation path.
+  if (!isStaleSnapshot(existing)) {
+    const normalized = normalize(existing);
+    if (normalized.publications.length !== existing.publications.length ||
+        JSON.stringify(normalized.publications.map(p => p.id + p.title)) !==
+        JSON.stringify(existing.publications.map(p => p.id + p.title))) {
+      await db.put(STORE, normalized, SNAPSHOT_KEY);
+    }
+    return normalized;
+  }
+
+  // Stale snapshot → controlled migrate-or-reseed.
+  const backupKey = BACKUP_PREFIX + from;
+  try { await db.put(STORE, existing, backupKey); } catch { /* non-fatal */ }
+
+  let outcome: MigrationOutcome = "migrated";
+  let message = `Upgraded snapshot from v${from} to v${SCHEMA_VERSION}.`;
+  let result: DataSnapshot;
+  let integrity;
+
+  try {
+    const upgraded = normalize(existing);
+    integrity = verifyIntegrity(existing, upgraded, await brokenRefCount(upgraded));
+    if (integrity.ok) {
+      result = upgraded;
+    } else {
+      outcome = "reseeded";
+      message = `Integrity check failed; reseeded from canonical catalog. Failing checks: ${integrity.checks.filter(c => !c.ok).map(c => c.name).join(", ")}`;
+      result = normalize(buildSeedSnapshot());
+    }
+  } catch (e) {
+    outcome = "failed";
+    message = `Migration threw: ${String(e)}. Recovered by reseeding.`;
+    result = normalize(buildSeedSnapshot());
+    integrity = { ok: false, checks: [{ name: "Migration executed", ok: false, detail: String(e) }] };
+  }
+
+  await db.put(STORE, result, SNAPSHOT_KEY);
+  await recordMigration({
+    at: new Date().toISOString(), fromVersion: from, toVersion: SCHEMA_VERSION,
+    outcome, message, integrity, backupKey,
+  });
+  return result;
 }
 
 // Additive, backward-compatible field backfill. Runs on every load AND

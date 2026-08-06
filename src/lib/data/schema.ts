@@ -1292,7 +1292,7 @@ export interface DataSnapshot {
   launchGateEvidence: LaunchGateEvidence[];
 }
 
-export const SCHEMA_VERSION = 9;
+export const SCHEMA_VERSION = 10;
 
 export const ID_PATTERNS: Record<string, RegExp> = {
   domain: /^DOM-\d{3}$/,
