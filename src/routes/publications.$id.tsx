@@ -139,7 +139,7 @@ function PublicationEditorPage() {
             <PresentationsCard draft={draft} set={set} />
           </div>
 
-          <aside className="space-y-4">
+          <aside className="min-w-0 space-y-4">
             <ManufacturingPipelineCard draft={draft} snapshot={s} promote={promote} />
             <StageHistoryCard draft={draft} />
             <MetadataCard draft={draft} set={set} />
