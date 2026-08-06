@@ -783,4 +783,115 @@ export const seedGuidePublications: PublicationBlueprint[] = ([
       },
     ]),
   }),
+  guide({
+    id: "PL-208",
+    title: "When You Move: The Complete Relocation Guide",
+    audience: "Anyone moving out of one home and into another — sellers, buyers, renters, and the households behind them",
+    purpose:
+      "Turn a move into a sequenced, budgeted, low-surprise project: what to decide, what to book, what to transfer, what to protect, and what to verify on both sides of the door.",
+    description:
+      "Most moving stress is not caused by boxes. It is caused by unsequenced decisions: overlapping dates, unbooked movers, utilities shut off a day early, insurance gaps between addresses, and a condition dispute nobody documented. This guide runs the move as a timeline — eight weeks out to the first week in — covering budget, mover selection and liability, purge strategy, packing systems, utilities and address changes, kids, pets, schools, valuables and documents, move-day control, condition evidence, and settling into the new property.",
+    tags: ["Moving", "Relocation", "Logistics", "Utilities", "Move-In", "Checklist", "Consumer"],
+    chapters: chapters("PL-208-CH", [
+      {
+        title: "The Move Timeline: Eight Weeks to Keys",
+        description:
+          "Every good move is a backward-planned schedule anchored to two fixed dates: the day you must be out and the day you can be in. Work backward from there. Eight weeks out: confirm dates, set the budget, and gather quotes. Six weeks: book the mover and start purging. Four weeks: order supplies, begin non-essential packing, and file address changes. Two weeks: schedule utilities, confirm building rules and elevator reservations, and arrange care for children and pets. One week: pack essentials, defrost, and finalize payment method. Move week: execute, document, and verify. When the two anchor dates overlap or leave a gap, decide early whether you need a rent-back, short-term housing, or storage — those choices get expensive when made late.",
+        learningObjectives: [
+          "Build a backward-planned schedule from the two anchor dates",
+          "Identify the tasks that must happen at each week marker",
+          "Spot a date gap or overlap early enough to solve cheaply",
+          "Decide between rent-back, storage, and interim housing",
+        ],
+      },
+      {
+        title: "The Real Budget: What Moves Actually Cost",
+        description:
+          "Quote the whole move, not just the truck. Line items include mover or truck rental, packing labor and materials, specialty items such as pianos and safes and large appliances, storage, insurance or valuation coverage, utility deposits and connection fees, cleaning at both ends, minor repairs and paint, travel and lodging for long moves, pet transport and boarding, tips, and the almost-always-underestimated first-week replacement spending on shower curtains, tools, and pantry staples. Add a ten to fifteen percent contingency. Note which costs may be deductible or employer-reimbursable and keep receipts accordingly; rules are narrow, so confirm with a tax adviser rather than assuming.",
+        learningObjectives: [
+          "Build a line-item move budget including hidden costs",
+          "Price specialty items and storage before they surprise you",
+          "Set a realistic contingency reserve",
+          "Retain documentation for reimbursement or tax review",
+        ],
+      },
+      {
+        title: "Choosing Movers: Estimates, Liability, and Red Flags",
+        description:
+          "Get at least three written estimates from an in-home or video survey — phone quotes without an inventory are guesses. Understand estimate types: a binding estimate fixes the price for the listed inventory, a non-binding estimate can rise with actual weight, and a binding not-to-exceed caps the price while allowing it to fall. For interstate moves, verify the company's federal registration and complaint history and read the required consumer rights disclosure. Understand liability: basic released-value protection is minimal per pound, while full-value protection costs more and covers replacement. Red flags: large cash deposits, no written inventory, a rented truck with no company markings, a name that changes between calls, and a refusal to put terms in writing.",
+        learningObjectives: [
+          "Compare binding, non-binding, and not-to-exceed estimates",
+          "Verify a mover's registration, insurance, and complaint record",
+          "Choose between released-value and full-value protection",
+          "Recognize deposit, inventory, and paperwork red flags",
+        ],
+      },
+      {
+        title: "Purge First, Pack Second",
+        description:
+          "You pay to move volume, so the cheapest box is the one you never fill. Run the purge four to six weeks out, room by room, into four piles: keep, sell, donate, dispose. Sell what has real resale value early enough for pickup; donate the rest and keep receipts. Handle non-transportable items separately — most movers will not carry propane, paint, solvents, ammunition, aerosols, or perishables, and many will not take live plants across state lines. Measure large furniture against the new floor plan, doorways, stairwells, and elevator dimensions before you decide to move it; a sectional that cannot enter the new home is a costly discovery on move day.",
+        learningObjectives: [
+          "Run a room-by-room purge on a defined schedule",
+          "Route sell, donate, and dispose items with documentation",
+          "Identify non-transportable and restricted items in advance",
+          "Measure furniture against the new home's access points",
+        ],
+      },
+      {
+        title: "Packing Systems That Survive Unpacking",
+        description:
+          "Pack for the unpack. Label every box on the top and two sides with destination room, a short contents summary, and a number; keep a simple inventory list or photo log keyed to those numbers, which also supports any damage claim. Use small boxes for heavy items and large boxes for light bulk. Protect fragile items with real materials, not linens alone. Photograph the back of every electronics setup before unplugging, and bag hardware to the furniture it belongs to. Build an open-first box for each person — bedding, towels, toiletries, chargers, medication, basic tools, paper goods, coffee — and keep it in your own vehicle along with valuables, documents, and anything irreplaceable.",
+        learningObjectives: [
+          "Apply a consistent labeling and inventory system",
+          "Pack fragile, heavy, and electronic items correctly",
+          "Assemble an open-first box for each household member",
+          "Separate items that should never ride in the truck",
+        ],
+      },
+      {
+        title: "Utilities, Address Changes, and the Service Switch",
+        description:
+          "Time the switch so there is never a dark day. Schedule electricity, gas, water, sewer, trash, internet, and any security or propane service to stop at the old address the day after you leave and start at the new address the day before you arrive — internet installation often has the longest lead time, so book it first. File the postal forwarding order, then update the records forwarding will not fix: employer and payroll, banks and cards, insurance, driver's license and vehicle registration, voter registration, subscriptions and deliveries, medical and dental, schools, and pharmacies. Take final meter readings and photograph them, and keep confirmation numbers for every stop and start order.",
+        learningObjectives: [
+          "Sequence utility stop and start dates to avoid gaps",
+          "Prioritize long-lead services such as internet installation",
+          "Work a complete address-change list beyond mail forwarding",
+          "Document final meter readings and confirmation numbers",
+        ],
+      },
+      {
+        title: "People, Pets, and Paperwork",
+        description:
+          "The logistics people forget are the human ones. Request school records and confirm enrollment requirements and immunization documentation early; transfer dates rarely align neatly with move dates. Move medical, dental, and veterinary records, and refill prescriptions before the pharmacy changes. Pets need current vaccination records, updated microchip and tag information, and a quiet, closed room or off-site care on move day — more pets are lost on move day than any other. Children do better with a role, a known plan, and their own open-first box. Keep a single secure folder with passports, birth and marriage certificates, titles, deeds, leases, insurance policies, tax records, and the moving contract, and carry it personally.",
+        learningObjectives: [
+          "Transfer school, medical, and veterinary records on time",
+          "Protect pets and update identification before move day",
+          "Give children a defined role and a familiar first box",
+          "Hand-carry a secure folder of essential documents",
+        ],
+      },
+      {
+        title: "Move Day: Control, Condition, and Evidence",
+        description:
+          "Move day is an execution and documentation exercise. Before loading, photograph or video every room and the condition of walls, floors, and high-value items — this is your evidence at both ends. Protect floors, doorframes, and banisters. Have one decision-maker on site, phone charged, with cash for tips, water for the crew, and parking or elevator access already reserved. Review and keep the inventory sheet, and note any exception before signing. Walk the empty home for closets, attics, crawlspaces, the garage, the mailbox, and the shed. Leave keys, remotes, codes, and manuals as agreed, do the final clean, and take the last meter photographs.",
+        learningObjectives: [
+          "Capture condition evidence before loading and after unloading",
+          "Manage crew access, parking, and elevator logistics",
+          "Review the inventory sheet and note exceptions before signing",
+          "Complete a full empty-home sweep and handoff",
+        ],
+      },
+      {
+        title: "The First Week In: Safety, Systems, and Claims",
+        description:
+          "Arrive with a first-week protocol. Change or rekey every exterior lock and reset garage, alarm, and smart-home codes. Locate the electrical panel, water shutoff, gas shutoff, and water heater, and label them. Test smoke and carbon monoxide detectors and replace batteries. Confirm the insurance policy is active at the new address with correct coverage and no gap from the move. Unpack in order — beds, bathrooms, kitchen, then everything else — and resist the urge to finish in a weekend. Inspect for transit damage and file any claim within the carrier's window, using your photo log and inventory numbers. Then handle the small things that make it home: register the address locally, meet the neighbors, and learn the trash and recycling schedule.",
+        learningObjectives: [
+          "Complete a security and shutoff-location safety pass",
+          "Verify insurance coverage is active with no gap",
+          "Unpack in a priority order that restores daily function",
+          "File transit damage claims within the carrier's deadline",
+        ],
+      },
+    ]),
+  }),
 ] as unknown) as PublicationBlueprint[];
