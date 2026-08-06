@@ -25,6 +25,7 @@ import { CoverageBar } from "./publications.index";
 import { ArrowDown, ArrowUp, GripVertical, Plus, Trash2, ChevronRight, ExternalLink } from "lucide-react";
 import { useAutosave, isStaleConflict } from "@/hooks/use-autosave";
 import { SaveIndicator } from "@/components/save-indicator";
+import { DistressDecisionTree } from "@/components/distress-decision-tree";
 
 export const Route = createFileRoute("/publications/$id")({
   head: ({ params }) => ({ meta: [{ title: `${params.id} — Publication Editor` }] }),
