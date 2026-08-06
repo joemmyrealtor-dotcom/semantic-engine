@@ -23,13 +23,9 @@ test.describe("PL-212 / PL-213 delta verification", () => {
       await asActor({ userId: "u-owner", role: "Owner" });
       await page.goto(`/publications/${g.id}`, { waitUntil: "domcontentloaded" });
       await expect(page.getByText(g.title.slice(0, 24)).first()).toBeVisible();
-      // Parity check: the new guides must not render worse than an existing canonical guide.
-      // (The publication editor has a pre-existing horizontal scroll region on narrow viewports;
-      // this asserts no NEW overflow is introduced by PL-212 / PL-213.)
+      await page.waitForTimeout(400);
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-      await page.goto("/publications/PL-201", { waitUntil: "domcontentloaded" });
-      const baseline = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-      expect(overflow).toBeLessThanOrEqual(baseline);
+      expect(overflow).toBeLessThanOrEqual(2);
     });
 
     test(`${g.id} has no serious accessibility violations`, async ({ page, asActor }) => {
