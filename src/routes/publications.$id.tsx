@@ -26,6 +26,8 @@ import { ArrowDown, ArrowUp, GripVertical, Plus, Trash2, ChevronRight, ExternalL
 import { useAutosave, isStaleConflict } from "@/hooks/use-autosave";
 import { SaveIndicator } from "@/components/save-indicator";
 import { DistressDecisionTree } from "@/components/distress-decision-tree";
+import { TitleRenovationCrossRef } from "@/components/title-renovation-crossref";
+
 
 export const Route = createFileRoute("/publications/$id")({
   head: ({ params }) => ({ meta: [{ title: `${params.id} — Publication Editor` }] }),
@@ -127,6 +129,10 @@ function PublicationEditorPage() {
           <div className="lg:col-span-2 space-y-6">
             <GeneralInfoCard draft={draft} set={set} />
             {draft.id === "PL-210" && <DistressDecisionTree />}
+            {(draft.id === "PL-211" || draft.id === "PL-206") && (
+              <TitleRenovationCrossRef from={draft.id as "PL-206" | "PL-211"} />
+            )}
+
             <ChaptersCard draft={draft} snapshot={s} onChapters={setChapters} />
             <CanonicalAssemblyCard draft={draft} snapshot={s} onChapters={setChapters} />
             <CoverageIntelligenceCard cov={cov} draft={draft} snapshot={s} onChapters={setChapters} />
