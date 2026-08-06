@@ -772,12 +772,13 @@ function DangerZone({ remove }: { remove: () => void }) {
 
 /* ---------- shared ---------- */
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
-  const labelId = React.useId();
+  const labelId = useId();
   // Associate the visible label with the control so inputs and Radix select
   // triggers expose an accessible name (axe: `label`, `button-name`).
-  const labelled = React.isValidElement(children)
-    ? React.cloneElement(children as React.ReactElement<Record<string, unknown>>, { "aria-labelledby": labelId })
+  const labelled = isValidElement(children)
+    ? cloneElement(children as ReactElement<Record<string, unknown>>, { "aria-labelledby": labelId })
     : children;
+
   return (
     <div className="space-y-1">
       <Label id={labelId} className="text-xs uppercase tracking-wider text-slate-ink">{label}</Label>
