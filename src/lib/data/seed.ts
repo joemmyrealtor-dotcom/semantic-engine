@@ -99,7 +99,7 @@ const frameworkSeed: [string, string, string, string, string[], string[]][] = [
   ["F-007", "Rate & Points Decision Framework", "Decide when to lock and whether to buy points given horizon and cash position.", "Lock now? Buy points?", ["CR-002-003","CR-002-004","CR-002-005","CR-002-006"], []],
   ["F-008", "Loan Estimate Review Framework", "Systematically read a Loan Estimate for accuracy, fit, and negotiation levers.", "Does this Loan Estimate reflect the agreed scenario?", ["CR-002-008","CR-002-009"], []],
   ["F-009", "Offer Strategy Framework", "Construct an offer aligned to buyer priorities, market context, and pre-committed limits.", "What offer should this buyer make?", ["CR-004-001","CR-004-002","CR-004-003","CR-004-004","CR-004-005","CR-004-006","CR-004-007","CR-004-008"], ["C-025","DT-014"]],
-  // F-010 reserved
+  ["F-010", "Market Context Framework", "Translate prevailing supply, demand, and pricing dynamics into realistic offer parameters before structure and price are set.", "What do current market conditions permit for this buyer's offer?", ["CR-004-002","CR-004-001","CR-004-003"], ["DT-014"]],
   ["F-011", "Contingency Design Framework", "Design contingencies that protect the buyer without weakening the offer unnecessarily.", "Which contingencies belong in this offer?", ["CR-004-005","CR-004-003"], ["C-026"]],
   ["F-012", "Negotiation Boundary Framework", "Pre-commit to concessions the buyer will and will not make.", "Where will this buyer hold the line?", ["CR-004-006","CR-004-004"], []],
   ["F-013", "Seller Priority Read Framework", "Infer seller priorities from listing behavior and market signals.", "What matters most to this seller?", ["CR-004-007","CR-004-002"], []],
