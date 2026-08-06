@@ -34,18 +34,26 @@ export async function loadSnapshot(): Promise<DataSnapshot> {
     // seed guide whose title was saved as "Untitled Publication" before the
     // canonical seed title was written.
     const seedById = new Map(seedGuidePublications.map(p => [p.id, p]));
+    let changed = false;
     const corrected = migrated.publications.map(p => {
       const seed = seedById.get(p.id);
       if (!seed) return p;
-      if (p.title && p.title !== "Untitled Publication") return p;
-      return { ...p, title: seed.title };
+      // A placeholder that collides with a seed guide id (untitled or with no
+      // authored chapters) is replaced by the canonical seed guide.
+      const isStub = !p.title || p.title === "Untitled Publication" || (p.chapters?.length ?? 0) === 0;
+      if (isStub) {
+        changed = true;
+        return { ...seed };
+      }
+      return p;
     });
     const have = new Set(corrected.map(p => p.id));
     const missing = seedGuidePublications.filter(p => !have.has(p.id));
-    if (corrected.length === migrated.publications.length && missing.length === 0) return migrated;
+    if (!changed && missing.length === 0) return migrated;
     const topped = migrateSnapshot({ ...migrated, publications: [...corrected, ...missing] });
     await db.put(STORE, topped, SNAPSHOT_KEY);
     return topped;
+
   }
   const seeded = migrateSnapshot(buildSeedSnapshot());
   await db.put(STORE, seeded, SNAPSHOT_KEY);
