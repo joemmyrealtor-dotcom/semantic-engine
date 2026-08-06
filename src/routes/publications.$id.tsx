@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { cloneElement, isValidElement, useEffect, useId, useMemo, useState, type ReactElement } from "react";
 import { PageHeader, PageBody } from "@/components/page-header";
 import { LoadingState, StatusBadge, SectionTitle, ErrorState, KpiCard } from "@/components/ui-kit";
 import { useSnapshot, Repo } from "@/lib/use-snapshot";
@@ -164,13 +164,14 @@ function GeneralInfoCard({ draft, set }: { draft: PublicationBlueprint; set: <K 
         <Field label="Owner"><Input value={draft.owner} onChange={e => set("owner", e.target.value)} /></Field>
         <Field label="Publication type">
           <Select value={draft.publicationType} onValueChange={v => set("publicationType", v as PublicationType)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectTrigger aria-label="Publication type"><SelectValue /></SelectTrigger>
+
             <SelectContent>{PUBLICATION_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
           </Select>
         </Field>
         <Field label="Governing framework">
           <Select value={draft.frameworkId ?? "__none__"} onValueChange={v => set("frameworkId", v === "__none__" ? null : v)}>
-            <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+            <SelectTrigger aria-label="Governing framework"><SelectValue placeholder="—" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="__none__">— None</SelectItem>
               {s?.frameworks.map(f => <SelectItem key={f.id} value={f.id}>{f.id} · {f.name}</SelectItem>)}
@@ -335,7 +336,8 @@ function ChaptersCard({ draft, snapshot, onChapters }: { draft: PublicationBluep
                 <div className="grid grid-cols-2 gap-3">
                   <Field label="Parent chapter">
                     <Select value={selected.parentChapterId ?? "__root__"} onValueChange={v => updateChapter({ parentChapterId: v === "__root__" ? null : v })}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectTrigger aria-label="Parent chapter"><SelectValue /></SelectTrigger>
+
                       <SelectContent>
                         <SelectItem value="__root__">— Top level</SelectItem>
                         {draft.chapters.filter(c => !invalidParentIds.has(c.id)).map(c => <SelectItem key={c.id} value={c.id}>{c.id} · {c.title}</SelectItem>)}
@@ -347,13 +349,14 @@ function ChaptersCard({ draft, snapshot, onChapters }: { draft: PublicationBluep
                 <div className="grid grid-cols-2 gap-3">
                   <Field label="Review status">
                     <Select value={selected.reviewStatus} onValueChange={v => updateChapter({ reviewStatus: v as Status })}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectTrigger aria-label="Chapter review status"><SelectValue /></SelectTrigger>
+
                       <SelectContent>{["Draft","In Review","Approved","Canonical","Deprecated","Archived"].map(x => <SelectItem key={x} value={x}>{x}</SelectItem>)}</SelectContent>
                     </Select>
                   </Field>
                   <Field label="Manufacturing stage">
                     <Select value={selected.manufacturingStage} onValueChange={v => updateChapter({ manufacturingStage: v as PublicationStage })}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectTrigger aria-label="Chapter manufacturing stage"><SelectValue /></SelectTrigger>
                       <SelectContent>{PUBLICATION_STAGES.map(x => <SelectItem key={x} value={x}>{x}</SelectItem>)}</SelectContent>
                     </Select>
                   </Field>
@@ -408,7 +411,8 @@ function CanonicalAssemblyCard({ draft, snapshot, onChapters }: { draft: Publica
       <p className="text-xs text-muted-foreground">Attach existing canonical assets by reference. No content is duplicated — every selection is a link back to the source of truth.</p>
       <div className="grid grid-cols-2 gap-3">
         <Select value={chapterId} onValueChange={setChapterId}>
-          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectTrigger aria-label="Target chapter"><SelectValue /></SelectTrigger>
+
           <SelectContent>{draft.chapters.sort((a, b) => a.order - b.order).map(c => <SelectItem key={c.id} value={c.id}>{c.id} · {c.title}</SelectItem>)}</SelectContent>
         </Select>
         <Input placeholder="Search assets…" value={q} onChange={e => setQ(e.target.value)} />
@@ -632,7 +636,7 @@ function ManufacturingPipelineCard({ draft, snapshot, promote }: { draft: Public
       <div className="pt-2 border-t border-border">
         <Label className="text-xs uppercase tracking-wider text-slate-ink">Governance override</Label>
         <Select value={overrideStage ?? ""} onValueChange={v => setOverrideStage(v as PublicationStage)}>
-          <SelectTrigger><SelectValue placeholder="Select target stage" /></SelectTrigger>
+          <SelectTrigger aria-label="Governance override target stage"><SelectValue placeholder="Select target stage" /></SelectTrigger>
           <SelectContent>{PUBLICATION_STAGES.filter(s => s !== draft.manufacturingStage).map(x => <SelectItem key={x} value={x}>{x}</SelectItem>)}</SelectContent>
         </Select>
         {overrideStage && (
@@ -669,7 +673,7 @@ function ChapterPresentationsEditor({ chapter, onChange }: { chapter: ChapterBlu
           {chapter.presentations.map((p, i) => (
             <div key={p.id} className="grid grid-cols-[110px_1fr_1fr_auto] gap-1 items-center">
               <Select value={p.kind} onValueChange={v => update(i, { kind: v as PresentationKind })}>
-                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                <SelectTrigger aria-label={`Presentation kind for ${p.id}`} className="h-8 text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>{PRESENTATION_KINDS.map(k => <SelectItem key={k} value={k}>{k}</SelectItem>)}</SelectContent>
               </Select>
               <Input className="h-8 text-xs" placeholder="Title" value={p.title} onChange={e => update(i, { title: e.target.value })} />
@@ -708,7 +712,8 @@ function MetadataCard({ draft, set }: { draft: PublicationBlueprint; set: <K ext
       <SectionTitle>Lifecycle</SectionTitle>
       <div className="flex items-center gap-2"><StatusBadge status={draft.status} /><span className="text-xs text-muted-foreground">v{draft.version}</span></div>
       <Select value={draft.status} onValueChange={v => set("status", v as Status)}>
-        <SelectTrigger><SelectValue /></SelectTrigger>
+        <SelectTrigger aria-label="Publication status"><SelectValue /></SelectTrigger>
+
         <SelectContent>{["Draft","In Review","Approved","Canonical","Deprecated","Archived"].map(x => <SelectItem key={x} value={x}>{x}</SelectItem>)}</SelectContent>
       </Select>
       <div className="flex items-center gap-2 pt-2">
@@ -744,7 +749,8 @@ function PresentationsCard({ draft, set }: { draft: PublicationBlueprint; set: <
             <div key={p.id} className="border border-border rounded p-3 grid md:grid-cols-[100px_140px_1fr_1fr_auto] gap-2 items-center">
               <span className="font-mono text-[11px] text-heritage">{p.id}</span>
               <Select value={p.kind} onValueChange={v => update(i, { kind: v as PresentationKind })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger aria-label={`Presentation kind for ${p.id}`}><SelectValue /></SelectTrigger>
+
                 <SelectContent>{PRESENTATION_KINDS.map(k => <SelectItem key={k} value={k}>{k}</SelectItem>)}</SelectContent>
               </Select>
               <Input placeholder="Title" value={p.title} onChange={e => update(i, { title: e.target.value })} />
@@ -772,11 +778,19 @@ function DangerZone({ remove }: { remove: () => void }) {
 
 /* ---------- shared ---------- */
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+  const labelId = useId();
+  // Associate the visible label with the control so inputs and Radix select
+  // triggers expose an accessible name (axe: `label`, `button-name`).
+  const labelled = isValidElement(children)
+    ? cloneElement(children as ReactElement<Record<string, unknown>>, { "aria-labelledby": labelId })
+    : children;
+
   return (
     <div className="space-y-1">
-      <Label className="text-xs uppercase tracking-wider text-slate-ink">{label}</Label>
-      {children}
+      <Label id={labelId} className="text-xs uppercase tracking-wider text-slate-ink">{label}</Label>
+      {labelled}
       {hint && <div className="text-[11px] text-muted-foreground">{hint}</div>}
     </div>
   );
 }
+
