@@ -894,4 +894,116 @@ export const seedGuidePublications: PublicationBlueprint[] = ([
       },
     ]),
   }),
+  guide({
+    id: "PL-209",
+    title: "Buying or Selling a Second Home: The Do's and Don'ts Guide",
+    audience:
+      "Owners and buyers of vacation homes, weekend properties, short-term rentals, and other non-primary residences",
+    purpose:
+      "Give second-home buyers and sellers a decision-grade playbook: how the financing, tax, insurance, rental, and exit rules differ from a primary residence — stated as clear do's and don'ts at every step.",
+    description:
+      "A second home is not a bigger version of your first one. Different loan rules, different down payments, different insurance, different tax treatment, different carrying costs, and a resale market that is thinner and far more seasonal. Most second-home regret traces back to three mistakes: underwriting the purchase on the best week of the year, assuming rental income will cover the gap, and ignoring how the property is classified for taxes and insurance. This guide runs both sides of the transaction — buy and sell — as a sequence of do's and don'ts, with the numbers, documents, and questions that separate a good second property from an expensive one.",
+    tags: ["Second Home", "Vacation Property", "Investment", "Financing", "Short-Term Rental", "Do's and Don'ts", "Consumer"],
+    chapters: chapters("PL-209-CH", [
+      {
+        title: "Define the Purpose Before You Define the Budget",
+        description:
+          "A second home serves one of four purposes: personal use, income, future primary residence, or long-hold appreciation. Each one points to a different property, a different location, and a different loan. DO write the purpose down in one sentence and rank the others below it, because the property that maximizes rental yield is rarely the one that maximizes family use. DO decide how many weeks per year you will realistically be there — then halve it, since the honest number for most owners is two to four weeks. DON'T buy on vacation emotion during the best week of the season; visit in the off-season, on a weekday, in bad weather. DON'T let a mixed purpose stay unresolved, because 'we'll rent it when we're not there' is the assumption that most often turns into a shortfall.",
+        learningObjectives: [
+          "State a single primary purpose and rank secondary uses",
+          "Estimate realistic annual personal-use weeks, not aspirational ones",
+          "Test the location outside peak season before committing",
+          "Recognize when mixed use will compromise both goals",
+        ],
+      },
+      {
+        title: "How Lenders See a Second Home",
+        description:
+          "Occupancy classification drives everything. Lenders sort properties into primary residence, second home, and investment property, and the terms worsen in that order. DO expect a larger down payment, a higher rate, stronger reserve requirements, and tighter credit standards than your primary loan; second-home and investment pricing carries added risk cost. DO ask the lender in writing which classification your file will use and what documentation supports it, because the answer changes your payment. DO get fully underwritten pre-approval before you tour, since second-home markets can move quickly on desirable inventory. DON'T sign an occupancy certification that says 'second home' if you intend to rent it out full-time — misrepresenting occupancy on a loan application is mortgage fraud, not a technicality. DON'T assume the rental income you project will count toward qualifying; second-home programs typically will not use it, and investment programs that do will discount it and require documentation.",
+        learningObjectives: [
+          "Distinguish primary, second-home, and investment loan classifications",
+          "Anticipate higher down payment, rate, and reserve requirements",
+          "Confirm in writing how the lender will classify and document the file",
+          "Avoid occupancy misrepresentation and rental-income assumptions",
+        ],
+      },
+      {
+        title: "Underwrite the Real Carrying Cost",
+        description:
+          "The mortgage payment is the smallest surprise in second-home ownership. DO build a full annual carrying-cost model: principal and interest, property taxes, insurance, HOA or resort dues and special assessments, utilities year-round (not just occupied months), internet, landscaping, snow or storm service, pest control, pool or dock maintenance, security monitoring, local licensing fees, property management, cleaning and turnover if rented, and a reserve line for repairs on a property nobody is watching daily. DO add a vacancy and seasonality assumption if income is part of the plan. DO stress-test the model: what happens if it rents zero nights, if insurance rises materially, or if the HOA levies an assessment. DON'T compare the second home's monthly cost to your primary home's — remote and coastal properties often carry higher insurance, higher maintenance, and higher service premiums. DON'T budget the purchase to the edge; the properties that become burdens are the ones with no margin for a bad year.",
+        learningObjectives: [
+          "Build a complete twelve-month carrying-cost model",
+          "Include management, turnover, licensing, and reserve lines",
+          "Stress-test for zero rental income and cost increases",
+          "Preserve margin rather than budgeting to the maximum approval",
+        ],
+      },
+      {
+        title: "Insurance, Climate, and Location Risk",
+        description:
+          "Second homes cluster where risk concentrates: coastlines, mountains, lakes, wildland edges. DO obtain insurance quotes before your inspection contingency expires, not after — availability and price, not just condition, can end a deal. DO ask specifically about wind, hail, flood, wildfire, earthquake, and freeze coverage, and whether any of those requires a separate policy, a higher deductible, or a state or federal program. DO understand that standard homeowners policies contemplate an occupied home; a property vacant for long stretches may need a specific endorsement, and rental use almost always requires a different policy form. DO check flood maps, wildfire ratings, and any local disclosure history. DON'T assume your current carrier will write the second property, and DON'T let coverage lapse into a vacancy exclusion that voids a claim precisely when you are not there to notice a burst pipe.",
+        learningObjectives: [
+          "Quote insurance before contingency deadlines expire",
+          "Identify perils requiring separate policies or endorsements",
+          "Match the policy form to vacancy and rental use",
+          "Assess flood, wildfire, and climate exposure with real data",
+        ],
+      },
+      {
+        title: "Rental Income: Rules Before Revenue",
+        description:
+          "Rental projections sell properties; local rules govern them. DO research short-term rental legality before you write an offer: city and county ordinances, permit caps, licensing, occupancy limits, minimum stay requirements, parking rules, and enforcement history. DO read the HOA or condominium documents in full — many prohibit or heavily restrict rentals, and a rule can be amended after you buy. DO verify claimed income with actual statements and tax filings rather than a spreadsheet or a listing-site estimate, and DO model net income after management, cleaning, supplies, platform fees, taxes, insurance uplift, and vacancy. DON'T rely on the seller's peak-season nightly rate as an annual average. DON'T assume grandfathering will protect you, and DON'T count on rental income to make the payment work — if the property only pencils when fully booked, it does not pencil.",
+        learningObjectives: [
+          "Verify short-term rental legality, permits, and caps locally",
+          "Read HOA and condo restrictions on rental use",
+          "Validate income claims with statements, not projections",
+          "Model net, not gross, rental income including vacancy",
+        ],
+      },
+      {
+        title: "Taxes: Personal Use, Rental Days, and the Lines That Matter",
+        description:
+          "Tax treatment of a second home turns on how you use it. DO track personal-use days and rental days precisely, in writing, all year — the ratio determines how the property is classified and which deductions apply. DO understand the general framework: a home rented very few days per year is treated differently from one that is rented substantially, and a property with significant personal use is treated differently from a pure rental. DO know that mortgage interest and property tax deductibility on a second residence is subject to limits that may already be consumed by your primary home. DO keep every receipt, invoice, and improvement record, because basis matters at sale. DON'T assume the capital-gains exclusion available on a primary residence applies to a second home — it generally does not unless the property later becomes your principal residence under specific rules. DON'T plan a 1031 exchange around a property with meaningful personal use without professional guidance. Confirm all of it with a CPA who knows the state involved; this is educational content, not tax advice.",
+        learningObjectives: [
+          "Track personal-use and rental days with contemporaneous records",
+          "Understand how use ratio drives property classification",
+          "Maintain basis documentation for every improvement",
+          "Engage a CPA before relying on exclusions or exchanges",
+        ],
+      },
+      {
+        title: "Buying Well: Diligence for a Property You Won't Watch",
+        description:
+          "Distance changes diligence. DO inspect more, not less: general inspection plus the specialists the location demands — septic and well, roof and attic in snow country, seawall, dock, foundation and drainage, wood-destroying organisms, radon, and moisture where humidity is high. DO walk the property with the systems running and, when possible, after rain. DO confirm access: private roads, easements, road-maintenance agreements, seasonal closures, and whether emergency and delivery services actually reach the address. DO line up local vendors — caretaker, plumber, electrician, landscaper — before closing, since finding them from three hundred miles away during a freeze is not a plan. DO review title, survey, boundary, and any shared amenity agreements. DON'T waive inspections to win a competitive offer on a property you cannot check weekly. DON'T skip the HOA reserve study and assessment history; underfunded reserves in a resort community become your bill.",
+        learningObjectives: [
+          "Commission location-specific inspections beyond the general one",
+          "Verify access, easements, and seasonal service availability",
+          "Build a local vendor bench before closing",
+          "Review HOA reserves, assessments, and shared-amenity agreements",
+        ],
+      },
+      {
+        title: "Selling Well: Timing, Presentation, and a Thinner Buyer Pool",
+        description:
+          "Second-home markets are seasonal and discretionary, which means both timing and story matter more than they do for primary residences. DO list into the season buyers are actively imagining themselves there — the market for a lake house is not the market for a suburban colonial. DO assemble a buyer's package in advance: utility and maintenance history, rental income statements and occupancy calendar, permits and licenses, HOA documents and assessment history, insurance history and claims, warranties, and a vendor list — a documented property removes uncertainty and defends price. DO present the property as a lifestyle and a proforma at once, with professional photography in the right season and honest cost transparency. DO understand your net: capital gains treatment, depreciation recapture if it was rented, transfer taxes, and any state withholding for out-of-state sellers. DON'T price to the peak of the last cycle or to your emotional attachment. DON'T hide seasonal negatives — the buyer will discover them, usually during the inspection, at the worst possible moment for the deal.",
+        learningObjectives: [
+          "Time the listing to the property's true buying season",
+          "Assemble a documentation package that defends price",
+          "Calculate net proceeds including recapture and withholding",
+          "Disclose seasonal realities early rather than during inspection",
+        ],
+      },
+      {
+        title: "The Exit Plan, the Ownership Structure, and the Decision Summary",
+        description:
+          "Buy the exit at the same time you buy the property. DO decide up front how long you intend to hold, what would trigger a sale, and who inherits or takes over the property — second homes are the most common source of family conflict among inherited assets. DO discuss ownership structure with your attorney and CPA before closing: sole, joint, trust, LLC, or co-ownership with family or friends, each with different liability, financing, tax, and succession consequences. DO put any co-ownership arrangement in a written agreement covering cost sharing, scheduling, decision-making, buyout rights, and dispute resolution — before the first disagreement, not after. DO revisit the carrying-cost model annually against actual use. DON'T restructure title after closing without checking the effect on your mortgage, insurance, and property tax assessment. DON'T hold a property out of sunk-cost loyalty: if the honest use is two weekends a year and the carry is meaningful, the numbers, not the memories, should decide. Close with a one-page summary: purpose, annual carry, use expectation, income assumptions, exit trigger, and the professionals reviewing it.",
+        learningObjectives: [
+          "Define the hold period and the triggers that would prompt a sale",
+          "Choose an ownership structure with legal and tax guidance",
+          "Document co-ownership terms and buyout mechanics in writing",
+          "Produce a one-page decision summary and review it annually",
+        ],
+      },
+    ]),
+  }),
 ] as unknown) as PublicationBlueprint[];
