@@ -9,7 +9,6 @@
 
 import { SCHEMA_VERSION, type DataSnapshot } from "./schema";
 import { seedGuidePublications } from "./seed.guides";
-import { detectBrokenReferences } from "./service";
 
 export type MigrationOutcome = "current" | "migrated" | "reseeded" | "failed" | "fresh";
 
@@ -39,7 +38,7 @@ function count(s: DataSnapshot, key: string): number {
 }
 
 /** Verifies that a migrated snapshot lost no content and no relationships. */
-export function verifyIntegrity(before: DataSnapshot, after: DataSnapshot): IntegrityResult {
+export function verifyIntegrity(before: DataSnapshot, after: DataSnapshot, brokenRefCount: number): IntegrityResult {
   const checks: { name: string; ok: boolean; detail: string }[] = [];
 
   for (const key of COUNTED) {
@@ -67,16 +66,10 @@ export function verifyIntegrity(before: DataSnapshot, after: DataSnapshot): Inte
     detail: `${seedGuidePublications.length} canonical guides expected`,
   });
 
-  let broken: { source: string; targetId: string; kind: string }[] = [];
-  try {
-    broken = detectBrokenReferences(after);
-  } catch (e) {
-    checks.push({ name: "Broken-reference scan", ok: false, detail: String(e) });
-  }
   checks.push({
     name: "Broken references at zero",
-    ok: broken.length === 0,
-    detail: `${broken.length} found`,
+    ok: brokenRefCount === 0,
+    detail: `${brokenRefCount} found`,
   });
 
   checks.push({
