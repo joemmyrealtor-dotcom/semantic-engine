@@ -125,6 +125,7 @@ function PublicationEditorPage() {
         <div className="grid lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             <GeneralInfoCard draft={draft} set={set} />
+            {draft.id === "PL-210" && <DistressDecisionTree />}
             <ChaptersCard draft={draft} snapshot={s} onChapters={setChapters} />
             <CanonicalAssemblyCard draft={draft} snapshot={s} onChapters={setChapters} />
             <CoverageIntelligenceCard cov={cov} draft={draft} snapshot={s} onChapters={setChapters} />
