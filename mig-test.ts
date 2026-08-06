@@ -9,7 +9,7 @@ const fresh = await loadSnapshot();
 console.log("fresh version", fresh.schemaVersion, "pubs", fresh.publications.length);
 
 // simulate a v9 snapshot with a stub PL-208 and an extra user publication
-const db = await openDB("legacy-forge", SCHEMA_VERSION);
+const db = await openDB("legacy-platform-v2", SCHEMA_VERSION);
 const legacy: any = JSON.parse(JSON.stringify(buildSeedSnapshot()));
 legacy.schemaVersion = 9;
 legacy.publications = legacy.publications.filter((p: any) => !p.id.startsWith("PL-2"));
