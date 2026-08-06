@@ -1006,4 +1006,116 @@ export const seedGuidePublications: PublicationBlueprint[] = ([
       },
     ]),
   }),
+
+  guide({
+    id: "PL-210",
+    title: "Foreclosure vs. Short Sale: What It Actually Means for You",
+    audience: "Homeowners facing missed payments, hardship, negative equity, or a pre-foreclosure notice",
+    purpose:
+      "Explain, in plain language, the real difference between a foreclosure and a short sale — what each one does to your credit, your taxes, your future borrowing, and your control — and lay out every option in between so you can choose deliberately instead of by default.",
+    description:
+      "If you are behind on your mortgage, underwater, or holding a notice you do not fully understand, this guide is written for you. It defines every term you will hear, walks the actual timeline of a default, compares foreclosure and short sale side by side on the four things that matter — credit, taxes, deficiency liability, and control — and gives you a decision framework, a document checklist, a scam-avoidance section, and a first-72-hours action plan. Educational content only: your outcome depends on your state, your loan type, and your numbers, so the guide tells you exactly which professionals to bring in and what to ask them.",
+    tags: ["foreclosure", "short sale", "distressed", "credit", "tax", "hardship", "pre-foreclosure"],
+    chapters: chapters("CH-FSS", [
+      {
+        title: "Start Here: The Words People Are Using, Defined Once and Clearly",
+        description:
+          "Distress has its own vocabulary, and lenders rarely stop to translate. Delinquency is a missed payment. Default is a formal breach of the loan terms, usually after a set number of missed payments. Pre-foreclosure is the window after a default notice and before a sale — the window where you still have the most options. Foreclosure is the legal process by which the lender forces a sale to recover the debt; depending on your state it is judicial (through a court) or non-judicial (through a trustee, typically faster). A short sale is when you sell the home for less than you owe and the lender agrees to release the lien and accept the shortfall. A deed in lieu is handing the property back by agreement instead of being sold out of it. A deficiency is the unpaid balance left after the sale, and whether the lender can pursue you for it is a state-law question with enormous financial consequences. Loss mitigation is the umbrella term for every workout option — forbearance, repayment plan, loan modification, partial claim, short sale, deed in lieu. Write these down. When your servicer uses one, you will know which door they just opened.",
+        learningObjectives: [
+          "Distinguish delinquency, default, pre-foreclosure, and foreclosure precisely",
+          "Understand judicial versus non-judicial foreclosure and why the difference affects your timeline",
+          "Define short sale, deed in lieu, deficiency, and loss mitigation in your own words",
+          "Recognize which term your servicer is using and what option it implies",
+        ],
+      },
+      {
+        title: "The Timeline: What Happens, In What Order, and Where Your Leverage Is",
+        description:
+          "Foreclosure is a sequence, not an event, and every stage has a different set of options. Day one of a missed payment starts late fees and servicer contact. Around thirty days, the delinquency is typically reported to the credit bureaus. Somewhere near the ninety-to-one-hundred-twenty-day mark, most federally backed loans allow the servicer to begin the formal process — which is why the earliest weeks are the most valuable and the least used. Then comes a formal notice: a Notice of Default, a demand letter, or in judicial states a lawsuit and summons. A notice period runs, a sale date is set and advertised, and the auction occurs. After the sale come possession and eviction steps, and, in some states, a redemption period during which the property may be reclaimed. The single most important fact in this chapter: your options narrow at every stage and your leverage is highest today. A homeowner who calls the servicer at day thirty has forbearance, modification, repayment plans, and an unhurried short sale on the table. A homeowner who calls the week before the auction usually has one option left, and it is not the good one.",
+        learningObjectives: [
+          "Map the stages from first missed payment through sale, possession, and redemption",
+          "Identify which options are available at each stage and which expire",
+          "Understand why acting in the first 30-90 days materially changes outcomes",
+          "Locate your own position on the timeline using the notices you have received",
+        ],
+      },
+      {
+        title: "Foreclosure vs. Short Sale, Side by Side: The Four Things That Actually Differ",
+        description:
+          "Strip away the emotion and the two paths differ on four axes. Control: in a short sale you choose the agent, cooperate on price, and influence the closing date; in a foreclosure the lender and the court or trustee control the calendar and you are a passenger. Timeline: a short sale is negotiated and typically closes on a scheduled date you helped set; a foreclosure runs on statutory deadlines. Credit: both are serious derogatory events, but they are reported differently, and the post-event waiting periods lenders impose before you can finance again are commonly shorter after a short sale than after a foreclosure — sometimes dramatically so, and the gap widens further if your short sale is completed without severe delinquency. Deficiency exposure: a short sale gives you a written opportunity to negotiate a release of the remaining balance before you sign; a foreclosure leaves that determination to state law and lender discretion. There is also a fifth axis nobody puts on a chart: dignity and information. A short sale is a transaction you participate in, with documents you read and a closing you attend. A foreclosure is something that happens to you, on a schedule set elsewhere. That difference is worth more than most people expect.",
+        learningObjectives: [
+          "Compare foreclosure and short sale on control, timeline, credit, and deficiency exposure",
+          "Understand why post-event financing waiting periods generally favor a short sale",
+          "Recognize the value of negotiating deficiency language before signing anything",
+          "Use the comparison to frame your own decision rather than react to pressure",
+        ],
+      },
+      {
+        title: "What It Does to Your Credit — Realistically, Not Dramatically",
+        description:
+          "Here is the honest picture. The damage begins before either event: the string of thirty-, sixty-, and ninety-day late payments leading up to it usually drives the largest single score drop. The event itself — foreclosure, short sale, or deed in lieu — is then reported as a serious derogatory mark and generally remains on your credit report for about seven years from the date of first delinquency. Score impact varies widely and depends heavily on where you started; a borrower with excellent credit and no other blemishes typically falls further in points than someone already impaired. Short sales are often reported as a settled account for less than the full balance, which is damaging but frequently viewed differently by future underwriters than a completed foreclosure. What matters most for your future is not the drop but the rebuild: keep every other account current, keep utilization low, do not close old accounts, avoid new derogatory marks, and let time do its work. Pull all three reports after the dust settles and dispute any inaccuracy in the reported status, balance, or dates — errors on distressed accounts are common and correcting them is free. Ask, in writing, exactly how your servicer will report the outcome before you agree to it. That one question has changed more borrowers' next five years than any other in this guide.",
+        learningObjectives: [
+          "Separate the credit impact of late payments from the impact of the event itself",
+          "Understand the roughly seven-year reporting window and how recovery accelerates over time",
+          "Ask your servicer in writing how the account will be reported before agreeing",
+          "Build a deliberate rebuild plan and verify reporting accuracy across all three bureaus",
+        ],
+      },
+      {
+        title: "What It Does to Your Taxes: Forgiven Debt, 1099-C, and the Exceptions",
+        description:
+          "This is the chapter people skip and later regret. When a lender forgives debt — the shortfall in a short sale, or a deficiency written off after a foreclosure — that cancelled amount can be treated as taxable income and reported to you and to the IRS on a Form 1099-C. A foreclosure or deed in lieu can also generate a Form 1099-A and may be treated as a sale of the property, which means there can be a gain or loss calculation based on your basis and the loan balance, separate from any cancellation-of-debt issue. There are important exceptions and exclusions that may reduce or eliminate the tax — including insolvency at the time of cancellation, bankruptcy, certain qualified principal residence indebtedness relief where and when it applies, and rules that differ for recourse versus non-recourse loans. States may treat it differently from the federal government. None of this is guesswork territory. Do three things: keep every 1099 you receive and never ignore one, assemble your basis records and closing statements, and engage a CPA or tax attorney before you sign a short sale approval letter, not after you file. The cost of that consultation is trivial against a surprise tax bill on tens of thousands of forgiven dollars. This is educational content, not tax advice.",
+        learningObjectives: [
+          "Understand cancellation-of-debt income and how Forms 1099-C and 1099-A arise",
+          "Identify the major exceptions: insolvency, bankruptcy, and principal-residence relief where applicable",
+          "Recognize why recourse versus non-recourse status changes the analysis",
+          "Engage a CPA before signing approval documents and retain all basis and 1099 records",
+        ],
+      },
+      {
+        title: "Exploring a Short Sale: How It Actually Works, Start to Finish",
+        description:
+          "A short sale is a normal sale with one extra party at the table: your lender. The sequence is knowable. First, confirm you are genuinely short — get a realistic value opinion and compare it to your payoff, including arrears, fees, and closing costs. Second, contact your servicer's loss mitigation department and request the short sale package; many servicers have a defined program with published timelines. Third, assemble the hardship file: a written hardship letter that states the cause plainly and honestly, income documentation, bank statements, tax returns, a monthly budget, and the authorization form letting your agent speak with the servicer. Fourth, list the property with an agent who has actually closed short sales, priced to the market rather than to your payoff. Fifth, submit the offer with the HUD-1 or closing disclosure estimate and wait for the lender's valuation and decision, which may involve a second lienholder or mortgage insurer whose separate approval is required. Sixth — and this is the step that protects you — read the approval letter for two things: whether the deficiency is released or reserved, and how the account will be reported. Negotiate those before closing, because after closing you have nothing left to trade. Expect the process to take longer than a standard sale, expect requests for updated documents, and keep a dated log of every call.",
+        learningObjectives: [
+          "Verify you are genuinely short before starting the process",
+          "Assemble a complete hardship package that survives servicer review",
+          "Understand junior lien and mortgage insurer approval as separate gates",
+          "Negotiate deficiency release and credit reporting language into the approval letter",
+        ],
+      },
+      {
+        title: "You Received a Notice: The First 72 Hours",
+        description:
+          "A default or pre-foreclosure notice is frightening, and fear produces the two worst responses: ignoring it, and signing something fast. Do this instead. Hour one: read the notice completely and write down the sender, the date, the amount claimed, any deadline, and any sale date. Hour two: put every document in one folder — note, mortgage or deed of trust, all notices, statements, and correspondence. Day one: call your servicer's loss mitigation line, state clearly that you want to be reviewed for all loss mitigation options, and request the application package; log the date, time, representative name, and reference number. Day one, second call: contact a HUD-approved housing counseling agency. Their counseling is free, they know your state's process and your loan program's options, and they can often speak to servicers in a language servicers respond to. Day two: consult a real estate attorney licensed in your state, especially if the notice involves a lawsuit or a scheduled sale date. Day three: get an honest value opinion on the property and build a one-page picture of payoff, arrears, value, income, and expenses. Never miss a court deadline in a judicial state — a default judgment removes options that were otherwise available. And do not move out because you assume it is over; leaving early can forfeit occupancy, relocation assistance, and negotiating position.",
+        learningObjectives: [
+          "Triage a notice by identifying sender, amount, deadlines, and any sale date",
+          "Request full loss mitigation review and document every servicer contact",
+          "Engage a HUD-approved counselor and a state-licensed attorney early",
+          "Avoid the two default errors: silence, and vacating the property prematurely",
+        ],
+      },
+      {
+        title: "Every Option on the Table — Including the Ones Nobody Offered You",
+        description:
+          "Foreclosure and short sale are the two endpoints most people hear about; the middle is where many homeowners actually land. Reinstatement means paying the arrears in a lump sum and returning the loan to current. A repayment plan spreads the arrears across future payments. Forbearance pauses or reduces payments temporarily for a defined hardship, with a required exit plan — always ask how the paused amount comes due, because a lump-sum reinstatement at the end is a very different product than a deferral to the end of the loan. A loan modification permanently changes rate, term, or balance to create an affordable payment. Some government-backed loans offer partial claims or payment supplements that move arrears into a subordinate, often no-interest, obligation. If you have equity, the best answer is often the simplest and most overlooked: sell conventionally, pay the loan in full, and walk away with cash and intact credit — an enormous number of distressed homeowners never realize they are not underwater at all. Refinancing may work if credit and equity still allow. A deed in lieu ends it by agreement, sometimes with relocation assistance. Bankruptcy is a legal tool with real consequences and real protections, including an automatic stay, and it deserves an attorney's evaluation rather than internet opinion. Renting the property, or taking in a tenant, can bridge a temporary gap. Choose by matching the tool to the diagnosis: temporary hardship with recovery ahead points to forbearance or repayment; permanent income reduction points to modification; no realistic path to affordability points to a sale, short or otherwise.",
+        learningObjectives: [
+          "Distinguish reinstatement, repayment plan, forbearance, modification, and partial claim",
+          "Check equity first — a conventional sale is often the overlooked best outcome",
+          "Ask how forbearance ends before accepting it",
+          "Match the remedy to whether the hardship is temporary or permanent",
+        ],
+      },
+      {
+        title: "Scams, Deficiency Traps, Life After, and Your One-Page Decision Summary",
+        description:
+          "Distressed homeowners are targeted, so learn the red flags: anyone who asks for an upfront fee to negotiate with your lender, tells you to stop communicating with your servicer, asks you to make payments to them instead of the lender, pressures you to sign documents you have not read, offers to take title while you 'rent back,' or guarantees a specific result. Legitimate help is free or transparent: HUD-approved counseling agencies, your servicer's own loss mitigation department, and a licensed attorney or agent whose fees are disclosed in writing. On deficiency, get one thing in writing before you sign anything: whether the lender releases you from the remaining balance or reserves the right to pursue it — and if a junior lienholder exists, get the same answer from them separately, because an unreleased second lien can follow you long after the house is gone. Then plan the recovery. Expect a waiting period before you can finance a home again, typically shorter after a short sale than a foreclosure and sometimes shortened further by documented extenuating circumstances. Rebuild credit deliberately, keep housing payments current wherever you live next, save for a down payment, and keep the complete file — approval letters, closing statements, 1099s, and correspondence — because your next lender will ask for it. Close with a one-page summary: your position on the timeline, current value versus payoff, the options you have confirmed are available, deficiency status, expected tax treatment, how the account will be reported, and the counselor, attorney, and CPA advising you. One page, honestly filled in, converts a crisis into a decision.",
+        learningObjectives: [
+          "Identify rescue-scam red flags and route to legitimate free or disclosed help",
+          "Obtain written deficiency release terms from every lienholder before closing",
+          "Plan realistic post-event financing waiting periods and credit rebuilding",
+          "Produce a one-page decision summary covering position, numbers, tax, credit, and advisors",
+        ],
+      },
+    ]),
+  }),
 ] as unknown) as PublicationBlueprint[];
