@@ -454,7 +454,7 @@ export const seedReleases: Release[] = [
       { id: "POL-001", label: "POL-001 AI Governance attestation", passed: true },
     ],
     blockingErrors: 0,
-    alignmentWarnings: 5,
+    alignmentWarnings: 3,
     steward: "Editorial Board",
     ...ts,
   },
