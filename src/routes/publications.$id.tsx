@@ -408,7 +408,8 @@ function CanonicalAssemblyCard({ draft, snapshot, onChapters }: { draft: Publica
       <p className="text-xs text-muted-foreground">Attach existing canonical assets by reference. No content is duplicated — every selection is a link back to the source of truth.</p>
       <div className="grid grid-cols-2 gap-3">
         <Select value={chapterId} onValueChange={setChapterId}>
-          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectTrigger aria-label="Target chapter"><SelectValue /></SelectTrigger>
+
           <SelectContent>{draft.chapters.sort((a, b) => a.order - b.order).map(c => <SelectItem key={c.id} value={c.id}>{c.id} · {c.title}</SelectItem>)}</SelectContent>
         </Select>
         <Input placeholder="Search assets…" value={q} onChange={e => setQ(e.target.value)} />
@@ -632,7 +633,7 @@ function ManufacturingPipelineCard({ draft, snapshot, promote }: { draft: Public
       <div className="pt-2 border-t border-border">
         <Label className="text-xs uppercase tracking-wider text-slate-ink">Governance override</Label>
         <Select value={overrideStage ?? ""} onValueChange={v => setOverrideStage(v as PublicationStage)}>
-          <SelectTrigger><SelectValue placeholder="Select target stage" /></SelectTrigger>
+          <SelectTrigger aria-label="Governance override target stage"><SelectValue placeholder="Select target stage" /></SelectTrigger>
           <SelectContent>{PUBLICATION_STAGES.filter(s => s !== draft.manufacturingStage).map(x => <SelectItem key={x} value={x}>{x}</SelectItem>)}</SelectContent>
         </Select>
         {overrideStage && (
@@ -669,7 +670,7 @@ function ChapterPresentationsEditor({ chapter, onChange }: { chapter: ChapterBlu
           {chapter.presentations.map((p, i) => (
             <div key={p.id} className="grid grid-cols-[110px_1fr_1fr_auto] gap-1 items-center">
               <Select value={p.kind} onValueChange={v => update(i, { kind: v as PresentationKind })}>
-                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                <SelectTrigger aria-label={`Presentation kind for ${p.id}`} className="h-8 text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>{PRESENTATION_KINDS.map(k => <SelectItem key={k} value={k}>{k}</SelectItem>)}</SelectContent>
               </Select>
               <Input className="h-8 text-xs" placeholder="Title" value={p.title} onChange={e => update(i, { title: e.target.value })} />
@@ -708,7 +709,8 @@ function MetadataCard({ draft, set }: { draft: PublicationBlueprint; set: <K ext
       <SectionTitle>Lifecycle</SectionTitle>
       <div className="flex items-center gap-2"><StatusBadge status={draft.status} /><span className="text-xs text-muted-foreground">v{draft.version}</span></div>
       <Select value={draft.status} onValueChange={v => set("status", v as Status)}>
-        <SelectTrigger><SelectValue /></SelectTrigger>
+        <SelectTrigger aria-label="Publication status"><SelectValue /></SelectTrigger>
+
         <SelectContent>{["Draft","In Review","Approved","Canonical","Deprecated","Archived"].map(x => <SelectItem key={x} value={x}>{x}</SelectItem>)}</SelectContent>
       </Select>
       <div className="flex items-center gap-2 pt-2">
@@ -744,7 +746,8 @@ function PresentationsCard({ draft, set }: { draft: PublicationBlueprint; set: <
             <div key={p.id} className="border border-border rounded p-3 grid md:grid-cols-[100px_140px_1fr_1fr_auto] gap-2 items-center">
               <span className="font-mono text-[11px] text-heritage">{p.id}</span>
               <Select value={p.kind} onValueChange={v => update(i, { kind: v as PresentationKind })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger aria-label={`Presentation kind for ${p.id}`}><SelectValue /></SelectTrigger>
+
                 <SelectContent>{PRESENTATION_KINDS.map(k => <SelectItem key={k} value={k}>{k}</SelectItem>)}</SelectContent>
               </Select>
               <Input placeholder="Title" value={p.title} onChange={e => update(i, { title: e.target.value })} />
