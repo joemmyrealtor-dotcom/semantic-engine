@@ -43,12 +43,14 @@ describe("service: export / import round trip", () => {
     const s = seed();
     const json = exportSnapshot(s);
     const parsed = parseImport(json);
-    expect(parsed.ok).toBe(true);
+    expect(parsed.errors).toEqual([]);
     expect(parsed.snapshot?.publications.length).toBe(s.publications.length);
   });
 
   it("rejects malformed payloads", () => {
-    expect(parseImport("{not json").ok).toBe(false);
+    const bad = parseImport("{not json");
+    expect(bad.snapshot).toBeNull();
+    expect(bad.errors.length).toBeGreaterThan(0);
   });
 });
 
@@ -57,10 +59,11 @@ describe("integrations: manifest derivation", () => {
     const s = seed();
     const pub = s.publications[0];
     const built = buildExportManifest(s, {
-      entityType: "publication", entityId: pub.id, includeDependencies: true,
-    } as Parameters<typeof buildExportManifest>[1]);
+      kind: "publication", entityId: pub.id, requestedBy: "vitest",
+    });
     expect(built.manifest[0].ids).toContain(pub.id);
-    expect(built.manifest[0].entityType).toBe("publication");
+    expect(built.manifest[0].entityType).toBe("publications");
+    expect(built.title).toBe(pub.title);
     expect(typeof built.readinessScore).toBe("number");
   });
 });
