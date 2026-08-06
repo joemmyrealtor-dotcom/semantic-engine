@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Search, Menu, LogOut, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AppSidebar } from "./app-sidebar";
+import { MigrationNotice } from "./migration-notice";
 import { CommandPalette, useCommandPalette } from "./command-palette";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
@@ -100,7 +101,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             )}
           </div>
         </header>
-        <main className="flex-1 min-w-0">{children}</main>
+        <main className="flex-1 min-w-0"><MigrationNotice />{children}</main>
       </div>
       <CommandPalette open={cp.open} onOpenChange={cp.setOpen} />
     </div>
