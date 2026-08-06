@@ -1240,6 +1240,18 @@ export const seedGuidePublications: PublicationBlueprint[] = ([
           "Run a one-page title checklist from commitment through post-closing archiving",
         ],
       },
+      {
+        title: "Cross-Reference: Title, Escrow, and Closing Risk as the Renovation Start Gate",
+        description:
+          "Everything in this guide has a downstream consequence most people never connect to it: title and escrow decide when renovation work — tile, cabinets, floors, structural changes — can legally and safely begin. The rule is simple and unforgiving. You are not the owner when the offer is accepted, when the loan is approved, or even when you sign. You are the owner when the deed records. Any dollar spent on construction before that moment is spent on someone else's property, with no lien protection and no insurance backstop. Translate the closing mechanics into four construction gates. Gate one — commitment received: Schedule A tells you who must sign and what is being conveyed; Schedule B-I lists every requirement that must be satisfied first. Plan and bid, but commit nothing. Gate two — B-I cleared in writing: releases recorded, liens paid, heirship or divorce documents delivered, name affidavits signed, survey issues resolved. Only now should long-lead materials be ordered, and preferably on refundable or resellable terms. Gate three — loan funded: schedule crews, but no work. Gate four — deed recorded and possession delivered: start. Schedule B-II matters just as much for what you plan to build: recorded easements, setback and subdivision restrictions, and HOA or CC&R architectural controls can prohibit the very addition, driveway, fence, or exterior finish you budgeted for. Read the exception documents before you sign a construction contract, not after. On the seller side, work in progress is a title problem. Unpaid contractors create mechanic's liens that attach to the property and become Schedule B-I requirements the underwriter will refuse to insure over; open permits appear in the search and delay the file. Pay in full and collect signed final lien waivers plus permit sign-offs before the settlement statement is finalized. Renovation-financed purchases compound the timeline: 203(k), HomeStyle, and construction-to-permanent loans need approved plans, bids, and a draw schedule before funding, so curative work and construction underwriting must run on the same calendar. Practical habit: run one timeline with three columns — title milestone, lender milestone, construction milestone — and never allow a construction commitment to precede the title milestone that authorizes it. For the return-on-investment side of which projects to do at all, see PL-206, Best Home Upgrades to Do — and Not Do.",
+        learningObjectives: [
+          "Map the closing sequence — commitment, curative, funding, recording — onto four renovation start gates",
+          "Check Schedule B-II easements, restrictions, and HOA controls before contracting any construction scope",
+          "Eliminate mechanic's-lien and open-permit exposure on the seller side before the settlement statement is final",
+          "Coordinate renovation-loan draw schedules with title curative work on a single shared timeline",
+        ],
+      },
     ]),
   }),
+
 ] as unknown) as PublicationBlueprint[];
