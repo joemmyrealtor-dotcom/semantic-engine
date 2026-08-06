@@ -185,7 +185,7 @@ export function buildGraph(s: DataSnapshot): { nodes: GraphNode[]; edges: GraphE
 
 export function detectBrokenReferences(s: DataSnapshot): { source: string; targetId: string; kind: string }[] {
   const known = new Set<string>();
-  for (const arr of [s.domains, s.concepts, s.frameworks, s.knowledgeObjects, s.clientTools, s.publications, s.prompts, s.agents, s.releases]) {
+  for (const arr of [s.domains, s.concepts, s.frameworks, s.knowledgeObjects, s.clientTools, s.publications, s.prompts, s.agents, s.releases, s.clientToolkits ?? [], s.aiPacks ?? []]) {
     for (const x of arr as { id: string }[]) known.add(x.id);
   }
   for (const p of s.publications) for (const ch of p.chapters) known.add(ch.id);

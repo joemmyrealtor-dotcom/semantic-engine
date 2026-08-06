@@ -105,14 +105,39 @@ function Dashboard() {
 
           <div className="editorial-card p-5">
             <SectionTitle>Next Actions</SectionTitle>
-            <ul className="text-sm space-y-2">
-              {overdue > 0 && <li>· Review {overdue} concept{overdue === 1 ? "" : "s"} past cadence.</li>}
-              {broken.length > 0 && <li>· Resolve {broken.length} broken reference{broken.length === 1 ? "" : "s"} in <Link to="/graph" className="underline">Relationships</Link>.</li>}
-              {draftKO > 0 && <li>· {draftKO} Knowledge Object draft{draftKO === 1 ? "" : "s"} awaiting human review.</li>}
-              <li>· Complete editorial pass on CH-007 in <Link to="/publications/$id" params={{ id: "PL-101" }} className="underline">PL-101</Link>.</li>
-              <li>· Advance <Link to="/releases/$id" params={{ id: "LKR-1.0.001" }} className="underline">LKR-1.0.001</Link> from Release Candidate to Canonical after warning review.</li>
-              <li>· Populate reserved framework F-010.</li>
-            </ul>
+            {(() => {
+              const draftChapters = s.publications.flatMap(p =>
+                p.chapters.filter(c => c.reviewStatus === "Draft").map(c => ({ pubId: p.id, chapter: c })),
+              );
+              const rcReleases = s.releases.filter(r => r.stage === "Release Candidate");
+              const emptyFrameworks = s.frameworks.filter(f => f.governingConceptIds.length === 0);
+              const items = [
+                overdue > 0,
+                broken.length > 0,
+                draftKO > 0,
+                draftChapters.length > 0,
+                rcReleases.length > 0,
+                emptyFrameworks.length > 0,
+              ].some(Boolean);
+              return items ? (
+                <ul className="text-sm space-y-2">
+                  {overdue > 0 && <li>· Review {overdue} concept{overdue === 1 ? "" : "s"} past cadence.</li>}
+                  {broken.length > 0 && <li>· Resolve {broken.length} broken reference{broken.length === 1 ? "" : "s"} in <Link to="/graph" className="underline">Relationships</Link>.</li>}
+                  {draftKO > 0 && <li>· {draftKO} Knowledge Object draft{draftKO === 1 ? "" : "s"} awaiting human review.</li>}
+                  {draftChapters.map(({ pubId, chapter }) => (
+                    <li key={`${pubId}-${chapter.id}`}>· Complete editorial pass on {chapter.id} in <Link to="/publications/$id" params={{ id: pubId }} className="underline">{pubId}</Link>.</li>
+                  ))}
+                  {rcReleases.map(r => (
+                    <li key={r.id}>· Advance <Link to="/releases/$id" params={{ id: r.id }} className="underline">{r.id}</Link> from Release Candidate to Canonical after warning review.</li>
+                  ))}
+                  {emptyFrameworks.map(f => (
+                    <li key={f.id}>· Populate reserved framework {f.id}.</li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="text-sm text-muted-foreground">All tracked operator actions are clear.</div>
+              );
+            })()}
           </div>
         </div>
 
