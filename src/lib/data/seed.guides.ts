@@ -1254,4 +1254,182 @@ export const seedGuidePublications: PublicationBlueprint[] = ([
     ]),
   }),
 
+  guide({
+    id: "PL-212",
+    title: "The Seller's 30 Questions: Every What-If, Fear, and Worst Case — Answered",
+    audience: "Homeowners who are selling or thinking about it, and the advisors who need straight answers on demand",
+    purpose:
+      "Answer the thirty questions sellers actually lose sleep over — in plain language, with the real numbers, the real timelines, and the decision to make in each case.",
+    description:
+      "This is the answer key, not the textbook. Thirty of the most common seller questions — the money ones, the timing ones, the fear ones, and the what-if-it-all-falls-apart ones — grouped into eight short readings. Every answer gives you the mechanism (why it happens), the range (what it typically costs or takes), and the move (what to actually do). Read it front to back in under an hour, or jump to the question keeping you up tonight.",
+    tags: ["seller", "faq", "objections", "risk", "negotiation", "consumer"],
+    chapters: chapters("CH-SQ", [
+      {
+        title: "Money: What Will I Actually Walk Away With?",
+        description:
+          "Q1. What will I net? Start from sale price and subtract, in this order: mortgage payoff including per-diem interest to the funding date, agent compensation as negotiated, transfer and recording taxes, title and escrow fees, prorated property taxes and HOA dues, any buyer concession you agree to, repair credits, and moving costs. The gap between price and net is commonly 8 to 12 percent of the sale price once payoff-adjacent costs are included; build the line-item sheet before you list and update it with every offer. Q2. What if I owe more than the house is worth? You have four paths: bring cash to closing, stay and pay down, rent it out until values or your balance move, or pursue a short sale with lender approval. A short sale is a credit and tax event, not a free exit — see the foreclosure and short sale guide before you choose. Q3. Do I have to pay taxes on the profit? For a primary residence in the U.S., the federal exclusion is generally up to 250,000 dollars of gain for a single filer and 500,000 dollars for a married couple filing jointly, when you owned and lived in the home two of the last five years. Investment property is a different regime entirely, and a 1031 exchange must be arranged before closing. Confirm your facts with a CPA — this is the single most expensive question to guess on. Q4. Should I sell before I buy, or buy before I sell? Selling first maximizes your negotiating strength and certainty on the buy side but risks a temporary housing gap; buying first protects your housing but often forces a contingent offer, a bridge loan, or two payments. In a market above six months of inventory, sell first. Under three months, a buy-first plan with a strong financing bridge is defensible.",
+        learningObjectives: [
+          "Q1. What will I actually walk away with after everything is paid?",
+          "Q2. What if I owe more than the home is worth?",
+          "Q3. Will I owe capital gains tax on the sale?",
+          "Q4. Should I sell first or buy first?",
+        ],
+      },
+      {
+        title: "Price: Am I Leaving Money on the Table?",
+        description:
+          "Q5. How do I know the price is right? Three signals in the first ten days tell you almost everything: showing volume, saves-to-views ratio online, and second showings. Strong traffic with no offers means the price is close but the condition or the photos are wrong. Weak traffic means the price is wrong. Offers in the first weekend at or above list means you priced into the market correctly — that is a success, not a mistake. Q6. What if I just try a higher price first? Overpricing does not test the market; it spends your best audience. The listing gets its largest, most qualified audience in its first ten days and never recovers that audience at full size. Sellers who start high and reduce almost always sell for less, and later, than sellers who priced into the active search band from day one. Q7. Should I price just below a round number? Yes, price to the search grid. Buyers search in bands — 500,000 to 550,000, for example — so a home listed at 552,000 dollars is invisible to everyone whose ceiling is 550,000. Moving to 549,000 dollars can double your eligible audience for a 3,000-dollar theoretical concession. Q8. What if a neighbor sold for far more? Verify what actually transferred. Different lot, different condition, different date, seller-paid concessions buried in the closing statement, or a cash buyer with a specific motive — these routinely explain a gap that looks like pure price. Comparables must be adjusted, not admired.",
+        learningObjectives: [
+          "Q5. How do I know my list price is right?",
+          "Q6. What is the real cost of starting too high?",
+          "Q7. How do search-band price points change who sees my home?",
+          "Q8. Why did my neighbor's house sell for so much more?",
+        ],
+      },
+      {
+        title: "Preparation: What Do I Fix, and What Do I Leave Alone?",
+        description:
+          "Q9. What repairs are worth doing? Fix what an inspector will find and clean what a camera will show. Paint, lighting, flooring transitions, curb landscaping, deep cleaning, decluttering, and repairing anything that reads as deferred maintenance return reliably. Kitchen and bath remodels done for resale rarely return their full cost. Q10. Should I get a pre-listing inspection? If your home is over roughly twenty-five years old, has known systems near end of life, or is in a market where buyers renegotiate hard, yes. Knowing what is there converts a mid-escrow ambush into a priced, disclosed, planned item. Q11. Do I have to disclose problems I know about? Disclose. Every time, in writing. Non-disclosure is the leading cause of post-closing litigation, and the cost of disclosure is almost always a price adjustment while the cost of concealment can be rescission plus damages. Q12. Is staging worth the money? Partial staging of the entry, main living space, and primary bedroom is the highest-return version. In practice, staging works less by beautifying and more by clarifying scale and function so buyers can read the floor plan in photos. Q13. What if I still live there with kids and pets? Prepare a fifteen-minute reset routine, keep a bin for daily clutter, and take pets out for showings. Restrict showings to defined windows rather than declining them — declined showings are lost offers.",
+        learningObjectives: [
+          "Q9. Which repairs actually pay me back?",
+          "Q10. Should I inspect before I list?",
+          "Q11. What am I legally required to disclose?",
+          "Q12. Is staging worth the cost, and how much of it?",
+          "Q13. How do I show a home I am still living in?",
+        ],
+      },
+      {
+        title: "Offers: How Do I Read Past the Headline Number?",
+        description:
+          "Q14. What makes one offer better than a higher one? Rank offers on five axes: price, financing strength (cash, then conventional with large down payment, then high-LTV, then government-backed with tight timelines), contingency scope and duration, closing date fit, and the buyer's demonstrated behavior. A cash offer 15,000 dollars lower that closes in fourteen days with no appraisal is frequently the better deal. Q15. What if I get multiple offers? Set one deadline, notify every party in writing, and request highest and best. Do not shop numbers between buyers; it destroys trust and invites withdrawals. Ask for proof of funds, a lender letter based on verified income, and, where permitted, an appraisal-gap clause. Q16. What if I get no offers in three weeks? Three weeks of silence is a price signal, not a marketing signal. Reduce decisively into the next search band rather than trimming 5,000 dollars at a time — a reduction spiral trains buyers to wait. Q17. Should I accept an offer with a home-sale contingency? Only with a kick-out clause allowing you to continue marketing and to require the buyer to remove the contingency within a set window once you receive a better offer. Q18. What about the buyer's love letter? Treat it as information, not obligation, and be aware that in several jurisdictions accepting or even reviewing personal buyer letters raises fair-housing exposure. Decide on terms.",
+        learningObjectives: [
+          "Q14. How do I compare offers beyond price?",
+          "Q15. How should I handle a multiple-offer situation?",
+          "Q16. What do I do if there are no offers after three weeks?",
+          "Q17. Should I accept a home-sale contingency?",
+          "Q18. Should buyer letters influence my decision?",
+        ],
+      },
+      {
+        title: "Escrow: The Deal Is Signed — What Can Still Go Wrong?",
+        description:
+          "Q19. What if the inspection comes back bad? Separate the report into three buckets: safety and structure, systems near end of life, and cosmetic. Negotiate the first bucket seriously, the second by credit, and decline the third. Offering a credit is usually better than performing repairs — it avoids workmanship disputes and keeps your timeline. Q20. What if the appraisal comes in low? You have four moves: hold firm and let the buyer bring the difference, meet in the middle, reduce to the appraised value, or challenge the appraisal with better comparables and documented improvements. Which move works depends entirely on how many other buyers are still available to you. Q21. What if the buyer's loan falls apart? Loan denials cluster around job changes, new debt, undisclosed deposits, and appraisal or condition issues. Require an updated lender letter at contingency-removal milestones and keep backup offers in a documented, written position. Q22. Can the buyer just walk away? Within an active contingency, generally yes, with the deposit returned. After contingencies are removed, walking away typically puts the earnest money at risk and may expose the buyer to further remedies under your contract. Know your contract's exact deadlines and put every extension in writing. Q23. What if I change my mind? A seller who breaches faces specific-performance and damages exposure. Cancellation rights are narrow and contract-specific; talk to an attorney before you signal anything to the other side.",
+        learningObjectives: [
+          "Q19. How do I respond to a bad inspection report?",
+          "Q20. What are my options if the appraisal comes in low?",
+          "Q21. What happens if the buyer's financing fails?",
+          "Q22. Can the buyer walk away and keep their deposit?",
+          "Q23. Can I back out after accepting an offer?",
+        ],
+      },
+      {
+        title: "Timing and Logistics: How Do I Not End Up Homeless?",
+        description:
+          "Q24. How long does selling actually take? Two clocks. Preparation to listing is typically two to six weeks. Listing to closing is market-dependent: days on market plus a thirty-to-forty-five-day escrow for financed buyers, or as few as ten to fourteen days for cash. Build your move plan around the recording date, never the contract date. Q25. What if my house sells faster than I can move? Negotiate a rent-back — the buyer takes title and you remain in possession for a defined period at an agreed daily rate. Sellers who ask for it up front, as a term of the deal, almost always get it; sellers who ask after acceptance often pay for it. Q26. Is spring really the best time to sell? Spring brings the most buyers and the most competing listings. A well-prepared home in a thin winter market frequently outperforms the same home lost among thirty spring listings. Inventory in your price band matters more than the month. Q27. What if I need to sell fast? Your levers, in order of effectiveness: price into the band below, offer flexible possession, pre-inspect and disclose everything, and remove friction on showings. Investor and cash-buyer offers trade speed for typically ten to twenty percent below open-market value — a valid choice, but price the convenience honestly.",
+        learningObjectives: [
+          "Q24. How long will the whole process take, realistically?",
+          "Q25. What if I sell before I have somewhere to go?",
+          "Q26. Does the season I list in really matter?",
+          "Q27. What are my options if I need to sell fast?",
+        ],
+      },
+      {
+        title: "Representation and Cost: Do I Need an Agent at All?",
+        description:
+          "Q28. Can I sell it myself? You can, and in a hot market with a clean, well-priced home you may do fine. What you take on is pricing accuracy, marketing reach, showing logistics, disclosure compliance, offer analysis, negotiation, escrow coordination, and liability. Judge the decision on net proceeds and risk, not on the commission line in isolation. Q29. Is the commission negotiable, and what am I actually paying for? Compensation is negotiable and must be documented in writing, including anything offered to a buyer's representative. Ask any agent for three things: the last twelve months of list-to-sale ratios and days on market in your price band, the specific marketing plan with deliverables and dates, and the negotiation plan for inspection and appraisal. Q30. What if my listing expires unsold? Do a forensic review before relisting: price band positioning, photography quality, first three images, showing feedback themes, condition objections, and access friction. Relisting the same product at the same price with a new sign changes nothing — change the variable that actually failed. A note on all thirty answers: this guide is educational. Tax, legal, and title rules vary by state and by fact pattern; confirm your specifics with a CPA, an attorney, and your title company before you act.",
+        learningObjectives: [
+          "Q28. Should I sell without an agent?",
+          "Q29. What is negotiable in compensation, and what should I demand for it?",
+          "Q30. What do I do if my listing expires without selling?",
+          "Know when to escalate a question to a CPA, attorney, or title officer",
+        ],
+      },
+    ]),
+  }),
+
+  guide({
+    id: "PL-213",
+    title: "The Buyer's 30 Questions: Every Fear, What-If, and Hidden Cost — Answered",
+    audience: "First-time and repeat buyers who want straight answers before they commit, and the advisors guiding them",
+    purpose:
+      "Answer the thirty questions buyers are most afraid to ask out loud — affordability, competition, inspections, appraisals, closing, and buyer's remorse — with the mechanism, the numbers, and the move.",
+    description:
+      "Buying a home is the largest financial decision most people make, and it is made under time pressure with incomplete information. This guide removes the information gap. Thirty of the most common buyer questions — the affordability ones, the competition ones, the what-if-the-inspection-is-bad ones, and the what-if-I-am-making-a-mistake ones — answered in eight short readings, each with the underlying mechanism, a realistic range, and the specific action to take.",
+    tags: ["buyer", "faq", "first-time buyer", "financing", "inspection", "consumer"],
+    chapters: chapters("CH-BQ", [
+      {
+        title: "Affordability: What Can I Actually Buy?",
+        description:
+          "Q1. How much house can I afford? Two numbers govern the answer: your debt-to-income ratio, where most conventional programs stretch to roughly 43 to 50 percent of gross income including the new payment, and your comfort payment, which is what you can pay without eliminating savings, retirement contributions, and a normal life. Lenders approve the first; you should buy to the second. Q2. How much do I need for a down payment? Not twenty percent. Conventional loans start near three percent for qualified buyers, FHA near three and a half percent, and VA and USDA can be zero down for those eligible. Under twenty percent you will typically pay mortgage insurance, which on conventional loans can be removed once you reach sufficient equity. Q3. What other cash do I need? Budget closing costs of roughly two to five percent of the purchase price, plus prepaid taxes and insurance into escrow, an inspection at a few hundred dollars, an appraisal, moving costs, and immediate move-in items. Then keep a reserve of three to six months of payments — buyers who spend their last dollar at closing are the ones who suffer from the first repair. Q4. Does my credit score really change that much? Yes. Across a thirty-year loan, the interest-rate spread between a strong score and a marginal one commonly translates into tens of thousands of dollars. Sixty to ninety days of paying down revolving balances and disputing errors before you apply is the highest-return work you can do.",
+        learningObjectives: [
+          "Q1. How much can I truly afford, versus what a lender will approve?",
+          "Q2. Do I really need twenty percent down?",
+          "Q3. What cash do I need beyond the down payment?",
+          "Q4. How much does my credit score actually cost me?",
+        ],
+      },
+      {
+        title: "Financing: Pre-Approval, Rates, and What Can Break the Loan",
+        description:
+          "Q5. What is the difference between pre-qualification and pre-approval? Pre-qualification is a conversation. Pre-approval is an underwritten review of income, assets, and credit, and it is what sellers take seriously. In competitive markets, ask your lender for a fully underwritten approval so the remaining condition is essentially the property itself. Q6. Should I lock my rate? Lock when you are under contract and your timeline is known. Rate locks typically run thirty to sixty days, and extensions cost money. Ask specifically what a float-down provision would cost you. Q7. Should I wait for rates to fall? Nobody can time rates. Compare the payment today against realistic rent, factor the equity you build, and remember you can refinance a rate but you cannot refinance a purchase price you never locked in. If the payment works today, the decision is about the home. Q8. What can kill my loan after approval? New debt, a job or pay-structure change, large unexplained deposits, opening store credit for furniture, co-signing anything, or missing a payment. From application through recording, your financial profile must be frozen. Q9. Should I use the seller's or builder's preferred lender? Sometimes their incentive genuinely beats the market. Get two competing loan estimates on the same day and compare rate, points, lender credits, and total cash to close — not the monthly payment alone.",
+        learningObjectives: [
+          "Q5. What kind of approval do I need to be taken seriously?",
+          "Q6. When should I lock my interest rate?",
+          "Q7. Should I wait for rates or prices to drop?",
+          "Q8. What could cause my loan to fall apart before closing?",
+          "Q9. Is the preferred lender actually a good deal?",
+        ],
+      },
+      {
+        title: "The Search: Finding the Right Home Without Losing Your Mind",
+        description:
+          "Q10. How do I choose between location and house? Location is fixed and house is changeable. You can renovate a kitchen, add a bathroom, and replace a roof; you cannot move a home closer to work, into a different school attendance area, or away from a busy road. When forced to compromise, compromise on the structure. Q11. How many homes should I see? Enough to calibrate, not enough to paralyze. Most buyers form accurate judgment after eight to twelve in-person visits in one price band. Keep a written scorecard on the same criteria so you compare homes rather than moods. Q12. What should I check that photos hide? Water intrusion signs, roof and gutter condition, grading and drainage, electrical panel type and capacity, HVAC age, water heater age, window condition, cell signal, noise at rush hour and at night, and the actual commute at the actual time you drive it. Q13. Is a fixer-upper a good idea? Only with a written scope, three contractor bids, a twenty percent contingency, and a realistic timeline. Renovation loans such as 203(k) and HomeStyle exist, but they add approvals, draws, and calendar risk. Q14. What about new construction? Negotiate on upgrades, closing costs, and rate buy-downs more than list price, use your own inspector at framing and at final, and read the builder's contract carefully — it is written for the builder.",
+        learningObjectives: [
+          "Q10. Do I compromise on location or on the house itself?",
+          "Q11. How many homes should I see before deciding?",
+          "Q12. What should I look for that listing photos never show?",
+          "Q13. Should I buy a fixer-upper?",
+          "Q14. What is different about buying new construction?",
+        ],
+      },
+      {
+        title: "Competition: How Do I Win Without Overpaying?",
+        description:
+          "Q15. What if I keep losing to other buyers? Losing repeatedly is usually a terms problem, not a price problem. Strengthen what costs you least: a fully underwritten approval, a closing date matched to the seller's needs, a larger earnest deposit, shorter inspection windows on homes you have pre-vetted, and clean, complete paperwork. Q16. Should I waive the inspection? Waiving the right to inspect is different from waiving the right to renegotiate. A safer construction is an information-only inspection: you inspect, you do not ask for repairs, but you retain the ability to walk away for something serious. Never buy a home you have not physically examined. Q17. What is an appraisal-gap clause, and should I use one? It commits you to cover a stated dollar amount between the appraised value and the contract price in cash. It is powerful and it is real money — cap it at an amount you can pay without touching your reserve. Q18. How much over asking is too much? Anchor to your own analysis: recent adjusted sales, your comfort payment, and your intended holding period. If you plan to stay seven-plus years, a modest overbid on the right home in the right location usually survives; if you may move in two years, it may not. Q19. Should I write an escalation clause? Only where customary and permitted, only with a hard ceiling, and understanding that it discloses your maximum.",
+        learningObjectives: [
+          "Q15. Why do I keep losing offers, and what should I change?",
+          "Q16. Is it ever safe to waive an inspection?",
+          "Q17. What is an appraisal gap and how much should I cover?",
+          "Q18. How do I decide how far above asking to go?",
+          "Q19. Should I use an escalation clause?",
+        ],
+      },
+      {
+        title: "Under Contract: Inspection, Appraisal, and Title",
+        description:
+          "Q20. What if the inspection finds serious problems? Sort findings into safety and structure, systems near end of life, and cosmetic. Ask for a credit rather than repairs when you can — you control the contractor and the quality. Get specialist bids for foundation, roof, sewer, and electrical before you decide, and use your contingency window rather than guessing. Q21. What if the appraisal comes in below my offer? Renegotiate to the appraised value, split the difference, bring cash, or, if your contingency allows, walk. Ask the lender about a reconsideration of value with better comparables. Q22. What is title insurance and do I need it? The lender's policy protects the lender only. The owner's policy protects your equity against ownership defects, forged deeds, undisclosed heirs, and recording errors. It is a one-time premium; buy it. See the title guide for full mechanics. Q23. What if the survey shows an encroachment or easement? Read the exception documents before you remove contingencies. A recorded easement or setback restriction can prohibit the addition, fence, driveway, or pool you were planning. Q24. Can I do work before closing? No. You are not the owner until the deed records. Plan, measure, and bid — commit nothing and start nothing.",
+        learningObjectives: [
+          "Q20. What do I do if the inspection is bad?",
+          "Q21. What happens if the appraisal is below my offer?",
+          "Q22. Do I need owner's title insurance?",
+          "Q23. What if the survey reveals an easement or encroachment?",
+          "Q24. When can renovation work actually begin?",
+        ],
+      },
+      {
+        title: "Closing and After: Getting the Keys Without a Disaster",
+        description:
+          "Q25. What actually happens at closing? You review the closing disclosure at least three business days in advance, compare it line by line to your loan estimate, complete a final walkthrough, sign, fund, and wait for recording. Possession follows recording unless your contract says otherwise. Q26. How do I avoid wire fraud? Wire fraud is the single most damaging preventable loss in real estate. Never accept wiring instructions by email. Call the escrow or title officer at a number you independently verified, confirm the account details verbally, and confirm receipt after sending. No legitimate party will pressure you to hurry a wire. Q27. What should I look for in the final walkthrough? Agreed repairs completed with receipts, all systems operating, nothing removed that was included, no new damage from the seller's move, and the property in the contracted condition. Do the walkthrough after the seller is out, not before. Q28. What if something breaks the week after I move in? Your recourse depends on disclosure and materiality, not on how frustrating it is. Keep the inspection report, disclosures, and all correspondence; consult an attorney for anything material and concealed. Budget one to three percent of the home's value per year for maintenance so ordinary failures stay ordinary. Q29. Am I making a mistake? Buyer's remorse peaks in the first ninety days and almost always fades. Test it against the facts: can you make the payment, does the location still serve you, and is your holding horizon long enough to absorb transaction costs. If all three hold, the doubt is stress, not a signal. Q30. When does buying actually beat renting? Roughly when your expected stay exceeds the break-even period on transaction costs — commonly three to seven years depending on market appreciation, rate, and rent growth. Run the number for your city rather than accepting the slogan. Educational content only; confirm loan, tax, title, and legal specifics with your lender, CPA, attorney, and title company.",
+        learningObjectives: [
+          "Q25. What happens on closing day, step by step?",
+          "Q26. How do I protect myself from wire fraud?",
+          "Q27. What should I check in the final walkthrough?",
+          "Q28. What if something breaks right after I move in?",
+          "Q29. How do I handle buyer's remorse?",
+          "Q30. Should I be buying at all, or renting longer?",
+        ],
+      },
+    ]),
+  }),
+
 ] as unknown) as PublicationBlueprint[];
