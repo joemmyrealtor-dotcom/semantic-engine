@@ -126,7 +126,7 @@ function PublicationEditorPage() {
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 min-w-0 space-y-6">
             <GeneralInfoCard draft={draft} set={set} />
             {draft.id === "PL-210" && <DistressDecisionTree />}
             {(draft.id === "PL-211" || draft.id === "PL-206") && (
@@ -139,7 +139,7 @@ function PublicationEditorPage() {
             <PresentationsCard draft={draft} set={set} />
           </div>
 
-          <aside className="space-y-4">
+          <aside className="min-w-0 space-y-4">
             <ManufacturingPipelineCard draft={draft} snapshot={s} promote={promote} />
             <StageHistoryCard draft={draft} />
             <MetadataCard draft={draft} set={set} />
@@ -443,7 +443,7 @@ function CanonicalAssemblyCard({ draft, snapshot, onChapters }: { draft: Publica
 
 function AssetGroup({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
-    <div>
+    <div className="min-w-0">
       <div className="flex items-baseline justify-between mb-1">
         <div className="text-xs uppercase tracking-wider text-slate-ink font-medium">{label}</div>
         {hint && <div className="text-[10px] text-muted-foreground">{hint}</div>}
