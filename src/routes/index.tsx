@@ -4,6 +4,8 @@ import { KpiCard, SectionTitle, LoadingState, StatusBadge } from "@/components/u
 import { useSnapshot } from "@/lib/use-snapshot";
 import { detectBrokenReferences, evaluateReleaseGate, publicationCoverage, toolkitCoverage, aiPackCoverage, agentCoverage } from "@/lib/data/service";
 import { knowledgeHealth } from "@/lib/data/intelligence";
+import { deriveNextActions } from "@/lib/data/next-actions";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [{ title: "Executive Dashboard — Legacy Platform v2.0" }] }),
