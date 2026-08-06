@@ -26,6 +26,8 @@ import { ArrowDown, ArrowUp, GripVertical, Plus, Trash2, ChevronRight, ExternalL
 import { useAutosave, isStaleConflict } from "@/hooks/use-autosave";
 import { SaveIndicator } from "@/components/save-indicator";
 import { DistressDecisionTree } from "@/components/distress-decision-tree";
+import { TitleRenovationCrossRef } from "@/components/title-renovation-crossref";
+
 
 export const Route = createFileRoute("/publications/$id")({
   head: ({ params }) => ({ meta: [{ title: `${params.id} — Publication Editor` }] }),
