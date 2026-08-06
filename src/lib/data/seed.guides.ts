@@ -672,4 +672,115 @@ export const seedGuidePublications: PublicationBlueprint[] = ([
       },
     ]),
   }),
+  guide({
+    id: "PL-207",
+    title: "The California Surviving Spouse Property Guide",
+    audience: "Surviving spouses and registered domestic partners who own California real property, and the advisors supporting them",
+    purpose:
+      "Help a surviving spouse organize facts, clear title correctly, protect the existing mortgage, meet county and tax deadlines, and avoid irreversible mistakes before professional review.",
+    description:
+      "A decision-oriented companion to the California Surviving Spouse Property Decision Worksheet. It separates four actions people commonly confuse — clearing title, confirming successor-in-interest status, formally assuming the loan, and refinancing — and walks through vesting, servicing, property tax, income tax basis, and future estate planning. Educational only; not legal, tax, title, or lending advice.",
+    tags: ["California", "Surviving Spouse", "Probate", "Title", "Mortgage Servicing", "Property Tax", "Estate Planning"],
+    chapters: chapters("PL-207-CH", [
+      {
+        title: "Start Here: Goals, Risk Screen, and the Four Separate Actions",
+        description:
+          "Before any document is signed or recorded, name the goal: remain, sell, rent, refinance, preserve the current rate, move title into a trust, or add a future co-owner. Then run the risk screen — foreclosure or default, disputed ownership, children from another relationship, possible separate property, reverse mortgage or PACE/solar/judgment/HOA liens, pending deadlines, or a plan to add a nonspouse to title. Any checked box means professional review comes first. Above all, understand that clearing title, becoming a confirmed successor in interest, formally assuming the mortgage, and refinancing are four separate actions; completing one does not complete the others.",
+        learningObjectives: [
+          "State the primary property goal in one sentence",
+          "Run the initial risk screen and flag items requiring professional review",
+          "Distinguish clearing title, successor status, assumption, and refinance",
+          "Identify which deadlines are already running",
+        ],
+      },
+      {
+        title: "How Title Was Held at Death",
+        description:
+          "The exact wording on the last recorded deed controls the path forward: joint tenancy, community property with right of survivorship, community property without survivorship, tenants in common, a revocable living trust, the deceased spouse's sole name, or the survivor's sole name. Survivorship vesting typically clears through the appropriate affidavit of death; trust property follows the trust terms and funding; non-survivorship or unclear title may require a spousal property petition or probate order. Marriage alone does not make ownership clear, and a surviving spouse does not always receive one hundred percent of separate property when other heirs exist.",
+        learningObjectives: [
+          "Read vesting language from the recorded deed and title report",
+          "Match each vesting type to its common next step and caution",
+          "Recognize when a spousal property petition or probate may be required",
+          "Confirm whether trust assets were actually funded into the trust",
+        ],
+      },
+      {
+        title: "The Document Set",
+        description:
+          "Gather once, use everywhere. Certified death certificates, the current recorded deed and a preliminary title report, the complete trust with all amendments, the will and codicils, marriage or domestic partnership records, any marital or transmutation agreement, probate filings, property tax bills and assessor notices, the mortgage statement and promissory note, homeowners insurance declarations, HOA/solar/PACE/judgment/lien records, and a date-of-death appraisal. Missing documents, not disputed law, cause most delays.",
+        learningObjectives: [
+          "Assemble a complete title, loan, tax, and estate document set",
+          "Order certified death certificates in sufficient quantity",
+          "Obtain a preliminary title report before assuming vesting",
+          "Track which documents are outstanding and who will supply them",
+        ],
+      },
+      {
+        title: "Mortgage Servicing and Successor-in-Interest Status",
+        description:
+          "Identify the servicer, loan number, balance, rate, payment, term, status, loan type, and — critically — who signed the promissory note. Federal rules generally prevent a lender from accelerating a loan solely because ownership changed through a protected death-related transfer, and a confirmed successor in interest can receive servicing protections without assuming the debt. Keep a dated contact log with representative names and reference numbers, and get key answers in writing. Reverse mortgages follow separate death and eligible non-borrowing spouse rules with hard deadlines.",
+        learningObjectives: [
+          "Confirm note signers and loan type from documents, not memory",
+          "Request confirmed successor-in-interest status in writing",
+          "Maintain a servicer contact log with reference numbers",
+          "Recognize reverse-mortgage deadlines that require immediate action",
+        ],
+      },
+      {
+        title: "Keep, Assume, Refinance, or Sell",
+        description:
+          "Four loan paths, four trade-offs. Continuing payments with confirmed successor status preserves the existing rate and terms but does not put the survivor on the note. Formal assumption or substitution places the survivor on the debt when the servicer and investor allow it, and financial documents may still be requested. Refinancing creates a new loan at current market terms with full underwriting and closing costs, and can forfeit a favorable legacy rate. Selling clears the loan through escrow but requires marketable title and a review of timing, gain, and net proceeds.",
+        learningObjectives: [
+          "Compare the four loan paths against the stated household goal",
+          "Quantify the cost of giving up an existing below-market rate",
+          "Ask the servicer the right assumption and substitution questions",
+          "Confirm title is marketable before committing to a sale timeline",
+        ],
+      },
+      {
+        title: "California Property Tax: Reassessment and the Assessor Filing",
+        description:
+          "A qualifying transfer between spouses, including one caused by death, is generally excluded from California reassessment — but the exclusion does not erase reporting duties. File the county's current BOE-502-D, Change in Ownership Statement, Death of Real Property Owner; where there is no probate, the deadline is generally 150 days after the date of death, and in a probated estate the statement is coordinated with the Inventory and Appraisal. Update the tax-bill mailing address, verify the homeowners' exemption, keep the recorded document and assessor response together, and review any supplemental or escape assessment notice promptly.",
+        learningObjectives: [
+          "File BOE-502-D within the applicable county deadline",
+          "Coordinate the assessor filing with any probate proceeding",
+          "Verify the homeowners' exemption and mailing address",
+          "Respond promptly to supplemental or escape assessment notices",
+        ],
+      },
+      {
+        title: "Income Tax, Cost Basis, and the Two-Year Sale Window",
+        description:
+          "Obtain a defensible date-of-death fair market value and determine whether the property was community, separate, or mixed in character. Community property often receives a basis adjustment for the entire property at the first spouse's death, while joint tenancy, separate property, depreciation, and rental use can produce a different result. Track post-death improvements and selling expenses. A surviving spouse may qualify to exclude up to $500,000 of gain on a qualifying principal-residence sale within two years after death when all statutory conditions are met — confirm with a tax adviser before relying on it.",
+        learningObjectives: [
+          "Secure a defensible date-of-death valuation",
+          "Determine community, separate, or mixed property character",
+          "Understand how basis adjustment affects a future sale",
+          "Evaluate the two-year surviving-spouse exclusion window",
+        ],
+      },
+      {
+        title: "Future Title Choices and Adding Anyone to Title",
+        description:
+          "Sole ownership is simple now but can expose the estate to probate later. A revocable living trust often avoids probate and supports incapacity planning when the deed and lender notice are handled correctly. A revocable transfer-on-death deed may pass qualifying property outside probate but follows strict statutory form, execution, recording, and notice rules. Adding a future spouse, a child, a partner, or an entity to title can trigger reassessment, gift reporting, creditor exposure, partition rights, loss of control, and due-on-sale review. Every later transfer needs a fresh review.",
+        learningObjectives: [
+          "Compare sole ownership, trust, and transfer-on-death deed paths",
+          "Anticipate reassessment and gift consequences of adding a nonspouse",
+          "Coordinate any deed change with the lender and insurer",
+          "Schedule a review before any future transfer is recorded",
+        ],
+      },
+      {
+        title: "Decision Summary, Action Plan, and Professional Review",
+        description:
+          "Close the loop with a written summary: vesting confirmed from recorded documents, estate plan and heirs reviewed, ownership percentage confirmed, note signers and loan type confirmed, successor status confirmed in writing, assessor filing and exemption confirmed, date-of-death valuation obtained, and liens and insurance reviewed. Then assign each next step a responsible person and target date, and record the estate attorney, CPA or tax adviser, servicer contact, title or escrow contact, and county assessor contact. A valid choice is to take no title-changing action until professional review is complete. This guide is educational and does not provide legal, tax, probate, title, lending, or accounting advice.",
+        learningObjectives: [
+          "Confirm the eight core facts before acting",
+          "Assign every next step an owner and target date",
+          "Build the professional review team and contact record",
+          "Recognize when the correct action is to wait",
+        ],
+      },
+    ]),
+  }),
 ] as unknown) as PublicationBlueprint[];
