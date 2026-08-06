@@ -30,12 +30,20 @@ export async function loadSnapshot(): Promise<DataSnapshot> {
   if (existing && existing.schemaVersion === SCHEMA_VERSION) {
     const migrated = migrateSnapshot(existing);
     // Additive catalog top-up: newly published seed guides appear in existing
-    // snapshots without a schema bump or destructive reseed. Never overwrites
-    // a publication the user already has.
-    const have = new Set(migrated.publications.map(p => p.id));
+    // snapshots without a schema bump or destructive reseed. Also corrects any
+    // seed guide whose title was saved as "Untitled Publication" before the
+    // canonical seed title was written.
+    const seedById = new Map(seedGuidePublications.map(p => [p.id, p]));
+    const corrected = migrated.publications.map(p => {
+      const seed = seedById.get(p.id);
+      if (!seed) return p;
+      if (p.title && p.title !== "Untitled Publication") return p;
+      return { ...p, title: seed.title };
+    });
+    const have = new Set(corrected.map(p => p.id));
     const missing = seedGuidePublications.filter(p => !have.has(p.id));
-    if (missing.length === 0) return migrated;
-    const topped = migrateSnapshot({ ...migrated, publications: [...migrated.publications, ...missing] });
+    if (corrected.length === migrated.publications.length && missing.length === 0) return migrated;
+    const topped = migrateSnapshot({ ...migrated, publications: [...corrected, ...missing] });
     await db.put(STORE, topped, SNAPSHOT_KEY);
     return topped;
   }
