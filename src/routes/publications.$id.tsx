@@ -127,6 +127,10 @@ function PublicationEditorPage() {
           <div className="lg:col-span-2 space-y-6">
             <GeneralInfoCard draft={draft} set={set} />
             {draft.id === "PL-210" && <DistressDecisionTree />}
+            {(draft.id === "PL-211" || draft.id === "PL-206") && (
+              <TitleRenovationCrossRef from={draft.id as "PL-206" | "PL-211"} />
+            )}
+
             <ChaptersCard draft={draft} snapshot={s} onChapters={setChapters} />
             <CanonicalAssemblyCard draft={draft} snapshot={s} onChapters={setChapters} />
             <CoverageIntelligenceCard cov={cov} draft={draft} snapshot={s} onChapters={setChapters} />
