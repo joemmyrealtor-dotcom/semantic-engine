@@ -1,6 +1,7 @@
 import { openDB, type IDBPDatabase } from "idb";
 import { SCHEMA_VERSION, type DataSnapshot, type EntityType, type PublicationStage } from "./schema";
 import { buildSeedSnapshot } from "./seed";
+import { seedGuidePublications } from "./seed.guides";
 import { backfillWorkspaceIds } from "./workspace-scoping";
 
 const DB_NAME = "legacy-platform-v2";
@@ -26,7 +27,18 @@ function getDB() {
 export async function loadSnapshot(): Promise<DataSnapshot> {
   const db = await getDB();
   const existing = (await db.get(STORE, SNAPSHOT_KEY)) as DataSnapshot | undefined;
-  if (existing && existing.schemaVersion === SCHEMA_VERSION) return migrateSnapshot(existing);
+  if (existing && existing.schemaVersion === SCHEMA_VERSION) {
+    const migrated = migrateSnapshot(existing);
+    // Additive catalog top-up: newly published seed guides appear in existing
+    // snapshots without a schema bump or destructive reseed. Never overwrites
+    // a publication the user already has.
+    const have = new Set(migrated.publications.map(p => p.id));
+    const missing = seedGuidePublications.filter(p => !have.has(p.id));
+    if (missing.length === 0) return migrated;
+    const topped = migrateSnapshot({ ...migrated, publications: [...migrated.publications, ...missing] });
+    await db.put(STORE, topped, SNAPSHOT_KEY);
+    return topped;
+  }
   const seeded = migrateSnapshot(buildSeedSnapshot());
   await db.put(STORE, seeded, SNAPSHOT_KEY);
   return seeded;

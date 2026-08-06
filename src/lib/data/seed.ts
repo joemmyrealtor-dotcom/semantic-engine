@@ -10,6 +10,7 @@ import {
   seedExternalReferences, seedDeliveryPackages, seedDeliveryRuns,
   seedEventSubscriptions, seedDomainEvents,
 } from "./seed.integrations";
+import { seedGuidePublications } from "./seed.guides";
 
 const now = "2026-01-15T10:00:00.000Z";
 const ts = { createdAt: now, updatedAt: now };
@@ -873,7 +874,7 @@ export function buildSeedSnapshot(): DataSnapshot {
     frameworks: seedFrameworks,
     knowledgeObjects: seedKnowledgeObjects,
     clientTools: seedClientTools,
-    publications: seedPublications,
+    publications: [...seedPublications, ...seedGuidePublications],
     prompts: seedPrompts,
     agents: seedAgents,
     releases: seedReleases,
