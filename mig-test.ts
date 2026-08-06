@@ -1,3 +1,4 @@
+(globalThis as any).window = globalThis;
 import "fake-indexeddb/auto";
 import { loadSnapshot, getMigrationLog, restoreMigrationBackup, resetSnapshot } from "@/lib/data/db";
 import { buildSeedSnapshot } from "@/lib/data/seed";
