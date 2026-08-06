@@ -1,7 +1,6 @@
 import { openDB, type IDBPDatabase } from "idb";
 import { SCHEMA_VERSION, type DataSnapshot, type EntityType, type PublicationStage } from "./schema";
 import { buildSeedSnapshot } from "./seed";
-import { seedGuidePublications } from "./seed.guides";
 import { backfillWorkspaceIds } from "./workspace-scoping";
 import {
   upgradeToV10, verifyIntegrity, isStaleSnapshot, USER_MIGRATION_MESSAGES,
