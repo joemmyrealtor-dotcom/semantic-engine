@@ -6,12 +6,14 @@ import { test, expect } from "./fixtures";
 const GUIDE = "/guides/seller-decision-guide";
 
 async function fillForm(page: import("@playwright/test").Page, email: string) {
+  // Wait for hydration: the submit handler only exists after React attaches.
+  await page.waitForLoadState("networkidle");
   await page.getByLabel("First name").fill("Joe");
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("City").fill("Brea");
   await page.getByLabel("Your situation").selectOption("sellers");
   await page.getByLabel("Your timeline").selectOption("0-90");
-  const consent = page.getByRole("checkbox").first();
+  const consent = page.locator("#consent");
   if (!(await consent.isChecked())) await consent.check();
 }
 
