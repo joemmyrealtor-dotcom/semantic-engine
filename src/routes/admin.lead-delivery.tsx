@@ -10,10 +10,13 @@ import { RequirePermission } from "@/components/require-permission";
 import {
   deliveryStats,
   flushQueue,
+  isBulkDeliveryPaused,
   loadQueue,
   retryDelivery,
+  setBulkDeliveryPaused,
   type LeadDelivery,
 } from "@/lib/marketing/lead-queue";
+
 import { hubspotTransport } from "@/lib/marketing/lead-capture";
 
 export const Route = createFileRoute("/admin/lead-delivery")({
@@ -46,8 +49,12 @@ function LeadDeliveryRoute() {
 function LeadDeliveryPanel() {
   const [records, setRecords] = useState<LeadDelivery[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
+  const [paused, setPaused] = useState(true);
 
-  const refresh = useCallback(() => setRecords([...loadQueue()].reverse()), []);
+  const refresh = useCallback(() => {
+    setRecords([...loadQueue()].reverse());
+    setPaused(isBulkDeliveryPaused());
+  }, []);
   useEffect(refresh, [refresh]);
 
   const stats = deliveryStats(records);
@@ -67,9 +74,32 @@ function LeadDeliveryPanel() {
           <KpiCard label="Failed" value={stats.failed} tone={stats.failed ? "warn" : "evergreen"} />
         </div>
 
+        <div className="editorial-card p-3 mb-4 text-sm">
+          <span className="uppercase tracking-widest text-xs text-muted-foreground">
+            Bulk delivery
+          </span>{" "}
+          <span className={paused ? "text-gold" : "text-evergreen"}>
+            {paused ? "PAUSED" : "ENABLED"}
+          </span>
+          <p className="text-xs text-muted-foreground mt-1">
+            While paused, new conversions deliver individually and historical queued records are
+            never flushed automatically.
+          </p>
+        </div>
+
         <div className="flex gap-2 mb-4">
           <Button size="sm" variant="outline" onClick={refresh}>
             Refresh
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              setBulkDeliveryPaused(!paused);
+              refresh();
+            }}
+          >
+            {paused ? "Enable bulk delivery" : "Pause bulk delivery"}
           </Button>
           <Button
             size="sm"
@@ -79,11 +109,13 @@ function LeadDeliveryPanel() {
               setBusy(null);
               refresh();
             }}
-            disabled={busy !== null}
+            disabled={busy !== null || paused}
+            title={paused ? "Bulk delivery is paused" : undefined}
           >
             Flush due deliveries
           </Button>
         </div>
+
 
         <SectionTitle>Deliveries</SectionTitle>
         {records.length === 0 ? (
