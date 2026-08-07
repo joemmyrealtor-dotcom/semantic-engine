@@ -43,6 +43,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PublicationsIndexRouteImport } from './routes/publications.index'
 import { Route as LocalGuidesIndexRouteImport } from './routes/local-guides.index'
+import { Route as GuidesIndexRouteImport } from './routes/guides.index'
 import { Route as ConceptsIndexRouteImport } from './routes/concepts.index'
 import { Route as ClientToolkitsIndexRouteImport } from './routes/client-toolkits.index'
 import { Route as AutomationsIndexRouteImport } from './routes/automations.index'
@@ -241,6 +242,11 @@ const LocalGuidesIndexRoute = LocalGuidesIndexRouteImport.update({
   path: '/local-guides/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GuidesIndexRoute = GuidesIndexRouteImport.update({
+  id: '/guides/',
+  path: '/guides/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ConceptsIndexRoute = ConceptsIndexRouteImport.update({
   id: '/concepts/',
   path: '/concepts/',
@@ -436,6 +442,7 @@ export interface FileRoutesByFullPath {
   '/automations/': typeof AutomationsIndexRoute
   '/client-toolkits/': typeof ClientToolkitsIndexRoute
   '/concepts/': typeof ConceptsIndexRoute
+  '/guides/': typeof GuidesIndexRoute
   '/local-guides/': typeof LocalGuidesIndexRoute
   '/publications/': typeof PublicationsIndexRoute
   '/api/public/v1/$': typeof ApiPublicV1SplatRoute
@@ -499,6 +506,7 @@ export interface FileRoutesByTo {
   '/automations': typeof AutomationsIndexRoute
   '/client-toolkits': typeof ClientToolkitsIndexRoute
   '/concepts': typeof ConceptsIndexRoute
+  '/guides': typeof GuidesIndexRoute
   '/local-guides': typeof LocalGuidesIndexRoute
   '/publications': typeof PublicationsIndexRoute
   '/api/public/v1/$': typeof ApiPublicV1SplatRoute
@@ -563,6 +571,7 @@ export interface FileRoutesById {
   '/automations/': typeof AutomationsIndexRoute
   '/client-toolkits/': typeof ClientToolkitsIndexRoute
   '/concepts/': typeof ConceptsIndexRoute
+  '/guides/': typeof GuidesIndexRoute
   '/local-guides/': typeof LocalGuidesIndexRoute
   '/publications/': typeof PublicationsIndexRoute
   '/api/public/v1/$': typeof ApiPublicV1SplatRoute
@@ -628,6 +637,7 @@ export interface FileRouteTypes {
     | '/automations/'
     | '/client-toolkits/'
     | '/concepts/'
+    | '/guides/'
     | '/local-guides/'
     | '/publications/'
     | '/api/public/v1/$'
@@ -691,6 +701,7 @@ export interface FileRouteTypes {
     | '/automations'
     | '/client-toolkits'
     | '/concepts'
+    | '/guides'
     | '/local-guides'
     | '/publications'
     | '/api/public/v1/$'
@@ -754,6 +765,7 @@ export interface FileRouteTypes {
     | '/automations/'
     | '/client-toolkits/'
     | '/concepts/'
+    | '/guides/'
     | '/local-guides/'
     | '/publications/'
     | '/api/public/v1/$'
@@ -816,6 +828,7 @@ export interface RootRouteChildren {
   AutomationsIndexRoute: typeof AutomationsIndexRoute
   ClientToolkitsIndexRoute: typeof ClientToolkitsIndexRoute
   ConceptsIndexRoute: typeof ConceptsIndexRoute
+  GuidesIndexRoute: typeof GuidesIndexRoute
   LocalGuidesIndexRoute: typeof LocalGuidesIndexRoute
   PublicationsIndexRoute: typeof PublicationsIndexRoute
   ApiPublicV1SplatRoute: typeof ApiPublicV1SplatRoute
@@ -1059,6 +1072,13 @@ declare module '@tanstack/react-router' {
       path: '/local-guides'
       fullPath: '/local-guides/'
       preLoaderRoute: typeof LocalGuidesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/guides/': {
+      id: '/guides/'
+      path: '/guides'
+      fullPath: '/guides/'
+      preLoaderRoute: typeof GuidesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/concepts/': {
@@ -1334,6 +1354,7 @@ const rootRouteChildren: RootRouteChildren = {
   AutomationsIndexRoute: AutomationsIndexRoute,
   ClientToolkitsIndexRoute: ClientToolkitsIndexRoute,
   ConceptsIndexRoute: ConceptsIndexRoute,
+  GuidesIndexRoute: GuidesIndexRoute,
   LocalGuidesIndexRoute: LocalGuidesIndexRoute,
   PublicationsIndexRoute: PublicationsIndexRoute,
   ApiPublicV1SplatRoute: ApiPublicV1SplatRoute,
