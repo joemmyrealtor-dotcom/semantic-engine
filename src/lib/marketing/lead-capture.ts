@@ -14,6 +14,9 @@ import { submitCrmLead } from "./lead-capture.functions";
 import {
   enqueueDelivery,
   flushQueue,
+  isBulkDeliveryPaused,
+  sendRecord,
+
   idempotencyKeyFor,
   type LeadDelivery,
   type Transport,
