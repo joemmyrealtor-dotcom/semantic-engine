@@ -3,6 +3,7 @@ test("dbg", async ({ page }) => {
   page.on("console", m => console.log("CONSOLE", m.type(), m.text().slice(0,300)));
   page.on("pageerror", e => console.log("PAGEERROR", e.message));
   await page.goto("/guides/seller-decision-guide");
+  await page.waitForLoadState("networkidle");
   await page.getByLabel("First name").fill("Joe");
   await page.getByLabel("Email").fill("e2e@example.com");
   await page.getByLabel("City").fill("Brea");
