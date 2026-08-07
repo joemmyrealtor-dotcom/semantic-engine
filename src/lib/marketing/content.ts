@@ -822,6 +822,7 @@ export const PUBLIC_NAV: { label: string; to: string }[] = [
   { label: "Investing", to: "/investing" },
   { label: "Resources", to: "/resources" },
   { label: "Local", to: "/local-guides" },
+  { label: "Assessment", to: "/assessment" },
   { label: "About", to: "/about" },
   { label: "Contact", to: "/contact" },
 ];
@@ -839,6 +840,12 @@ export const PUBLIC_PATHS: string[] = [
   ...PUBLIC_LEGAL_NAV.map(n => n.to),
 ];
 
+/** Public path prefixes for dynamic public routes (e.g. city guides). */
+export const PUBLIC_PATH_PREFIXES: string[] = ["/local-guides/"];
+
 export function isPublicPath(pathname: string): boolean {
-  return PUBLIC_PATHS.includes(pathname.replace(/\/+$/, "") || "/");
+  const clean = pathname.replace(/\/+$/, "") || "/";
+  if (PUBLIC_PATHS.includes(clean)) return true;
+  return PUBLIC_PATH_PREFIXES.some(p => `${clean}/`.startsWith(p));
 }
+
