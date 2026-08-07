@@ -87,7 +87,7 @@ function CityGuideRoute() {
               <Link to="/contact">Book a {guide.city} strategy call</Link>
             </Button>
             <Button asChild size="lg" variant="outline">
-              <Link to="/assessment">Take the readiness assessment</Link>
+              <Link to="/assessments">Take the readiness assessment</Link>
             </Button>
           </div>
         </header>
