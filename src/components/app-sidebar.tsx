@@ -30,6 +30,7 @@ const items = [
   { to: "/admin/lead-delivery", label: "Lead Delivery", icon: Send },
 
   { to: "/admin/backups", label: "Backups", icon: HardDrive },
+  { to: "/admin/recovery", label: "Recovery Evidence", icon: HardDrive },
   { to: "/admin/workspaces", label: "Workspaces", icon: Users },
   { to: "/admin/deployment", label: "Deployment", icon: Rocket },
 ] as const;
