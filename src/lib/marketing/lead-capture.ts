@@ -12,7 +12,9 @@ import { scoreLead, intentVisitCount, type LeadScore } from "./lead-scoring";
 import { trackAction } from "./analytics";
 import { submitCrmLead } from "./lead-capture.functions";
 import {
+  dueRecords,
   enqueueDelivery,
+
   flushQueue,
   isBulkDeliveryPaused,
   sendRecord,
