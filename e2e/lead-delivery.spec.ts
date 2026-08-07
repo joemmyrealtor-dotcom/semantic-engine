@@ -24,7 +24,7 @@ test.describe("lead delivery transport", () => {
     await expect(page.getByText(/on the way|thank|check your email/i).first()).toBeVisible();
 
     const queue = await page.evaluate(() =>
-      JSON.parse(window.localStorage.getItem("lf.crmqueue.v1") ?? "[]"),
+      JSON.parse(window.localStorage.getItem("lf.lead-queue.v1") ?? "[]"),
     );
     expect(queue.length).toBe(1);
     expect(queue[0].payload.email).toBe("e2e.seller@example.com");
@@ -39,7 +39,7 @@ test.describe("lead delivery transport", () => {
     await page.getByRole("button", { name: /send|get the guide|request/i }).first().click();
     await page.waitForTimeout(500);
     const after = await page.evaluate(() =>
-      JSON.parse(window.localStorage.getItem("lf.crmqueue.v1") ?? "[]"),
+      JSON.parse(window.localStorage.getItem("lf.lead-queue.v1") ?? "[]"),
     );
     expect(after.length).toBe(1);
 
