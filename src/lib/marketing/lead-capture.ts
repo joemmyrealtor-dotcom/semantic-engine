@@ -243,9 +243,12 @@ export async function captureLead(
     idempotencyKey,
   });
 
-  // Flush this record plus anything left over from an earlier outage.
-  const flushed = await flushQueue(transport);
-  const delivery = flushed.find(r => r.id === record.id) ?? record;
+  // While bulk delivery is paused (default), deliver only this conversion —
+  // never drain historical queue records implicitly.
+  const delivery = isBulkDeliveryPaused()
+    ? await sendRecord(record, transport)
+    : ((await flushQueue(transport)).find(r => r.id === record.id) ?? record);
+
 
   if (!duplicate) {
     trackAction(input.assessmentId || input.guideId ? "lead_submitted" : "contact_submitted", {

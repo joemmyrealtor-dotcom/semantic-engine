@@ -213,12 +213,39 @@ async function send(record: LeadDelivery, transport: Transport): Promise<LeadDel
   return next;
 }
 
+/** Deliver exactly one record, ignoring the rest of the queue. */
+export async function sendRecord(
+  record: LeadDelivery,
+  transport: Transport,
+): Promise<LeadDelivery> {
+  return send(record, transport);
+}
+
+/**
+ * Bulk delivery pause. Controlled live CRM verification requires that the
+ * existing queue is never drained implicitly; only explicit operator action
+ * (or an explicit unpause) may flush historical records.
+ */
+const PAUSE_KEY = "lf.lead-queue.bulk-paused.v1";
+
+export function isBulkDeliveryPaused(): boolean {
+  if (typeof window === "undefined") return true;
+  // Default: paused. Only an explicit "false" enables bulk flushing.
+  return window.localStorage.getItem(PAUSE_KEY) !== "false";
+}
+
+export function setBulkDeliveryPaused(paused: boolean): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(PAUSE_KEY, paused ? "true" : "false");
+}
+
 /** Flush every due record. Safe to call repeatedly. */
 export async function flushQueue(transport: Transport, now = Date.now()): Promise<LeadDelivery[]> {
   const out: LeadDelivery[] = [];
   for (const record of dueRecords(now)) out.push(await send(record, transport));
   return out;
 }
+
 
 /** Operator-initiated retry; ignores the backoff window. */
 export async function retryDelivery(id: string, transport: Transport): Promise<LeadDelivery | null> {
