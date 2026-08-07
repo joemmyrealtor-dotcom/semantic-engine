@@ -39,6 +39,7 @@ import { Route as BuyersRouteImport } from './routes/buyers'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AttorneysRouteImport } from './routes/attorneys'
 import { Route as AttorneyPartnersRouteImport } from './routes/attorney-partners'
+import { Route as AssessmentRouteImport } from './routes/assessment'
 import { Route as AccessibilityRouteImport } from './routes/accessibility'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
@@ -51,6 +52,7 @@ import { Route as AgentsIndexRouteImport } from './routes/agents.index'
 import { Route as ReleasesIdRouteImport } from './routes/releases.$id'
 import { Route as PublicationsNewRouteImport } from './routes/publications.new'
 import { Route as PublicationsIdRouteImport } from './routes/publications.$id'
+import { Route as LocalGuidesCityRouteImport } from './routes/local-guides.$city'
 import { Route as KnowledgeIdRouteImport } from './routes/knowledge.$id'
 import { Route as KnowledgeObjectsNewRouteImport } from './routes/knowledge-objects.new'
 import { Route as IntegrationsIdRouteImport } from './routes/integrations.$id'
@@ -220,6 +222,11 @@ const AttorneyPartnersRoute = AttorneyPartnersRouteImport.update({
   path: '/attorney-partners',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AssessmentRoute = AssessmentRouteImport.update({
+  id: '/assessment',
+  path: '/assessment',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AccessibilityRoute = AccessibilityRouteImport.update({
   id: '/accessibility',
   path: '/accessibility',
@@ -279,6 +286,11 @@ const PublicationsIdRoute = PublicationsIdRouteImport.update({
   id: '/publications/$id',
   path: '/publications/$id',
   getParentRoute: () => rootRouteImport,
+} as any)
+const LocalGuidesCityRoute = LocalGuidesCityRouteImport.update({
+  id: '/$city',
+  path: '/$city',
+  getParentRoute: () => LocalGuidesRoute,
 } as any)
 const KnowledgeIdRoute = KnowledgeIdRouteImport.update({
   id: '/$id',
@@ -375,6 +387,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/accessibility': typeof AccessibilityRoute
+  '/assessment': typeof AssessmentRoute
   '/attorney-partners': typeof AttorneyPartnersRoute
   '/attorneys': typeof AttorneysRoute
   '/auth': typeof AuthRoute
@@ -393,7 +406,7 @@ export interface FileRoutesByFullPath {
   '/integrations': typeof IntegrationsRouteWithChildren
   '/investing': typeof InvestingRoute
   '/knowledge': typeof KnowledgeRouteWithChildren
-  '/local-guides': typeof LocalGuidesRoute
+  '/local-guides': typeof LocalGuidesRouteWithChildren
   '/operations': typeof OperationsRoute
   '/privacy': typeof PrivacyRoute
   '/probate': typeof ProbateRoute
@@ -422,6 +435,7 @@ export interface FileRoutesByFullPath {
   '/integrations/$id': typeof IntegrationsIdRoute
   '/knowledge-objects/new': typeof KnowledgeObjectsNewRoute
   '/knowledge/$id': typeof KnowledgeIdRoute
+  '/local-guides/$city': typeof LocalGuidesCityRoute
   '/publications/$id': typeof PublicationsIdRoute
   '/publications/new': typeof PublicationsNewRoute
   '/releases/$id': typeof ReleasesIdRoute
@@ -437,6 +451,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/accessibility': typeof AccessibilityRoute
+  '/assessment': typeof AssessmentRoute
   '/attorney-partners': typeof AttorneyPartnersRoute
   '/attorneys': typeof AttorneysRoute
   '/auth': typeof AuthRoute
@@ -455,7 +470,7 @@ export interface FileRoutesByTo {
   '/integrations': typeof IntegrationsRouteWithChildren
   '/investing': typeof InvestingRoute
   '/knowledge': typeof KnowledgeRouteWithChildren
-  '/local-guides': typeof LocalGuidesRoute
+  '/local-guides': typeof LocalGuidesRouteWithChildren
   '/operations': typeof OperationsRoute
   '/privacy': typeof PrivacyRoute
   '/probate': typeof ProbateRoute
@@ -484,6 +499,7 @@ export interface FileRoutesByTo {
   '/integrations/$id': typeof IntegrationsIdRoute
   '/knowledge-objects/new': typeof KnowledgeObjectsNewRoute
   '/knowledge/$id': typeof KnowledgeIdRoute
+  '/local-guides/$city': typeof LocalGuidesCityRoute
   '/publications/$id': typeof PublicationsIdRoute
   '/publications/new': typeof PublicationsNewRoute
   '/releases/$id': typeof ReleasesIdRoute
@@ -500,6 +516,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/accessibility': typeof AccessibilityRoute
+  '/assessment': typeof AssessmentRoute
   '/attorney-partners': typeof AttorneyPartnersRoute
   '/attorneys': typeof AttorneysRoute
   '/auth': typeof AuthRoute
@@ -518,7 +535,7 @@ export interface FileRoutesById {
   '/integrations': typeof IntegrationsRouteWithChildren
   '/investing': typeof InvestingRoute
   '/knowledge': typeof KnowledgeRouteWithChildren
-  '/local-guides': typeof LocalGuidesRoute
+  '/local-guides': typeof LocalGuidesRouteWithChildren
   '/operations': typeof OperationsRoute
   '/privacy': typeof PrivacyRoute
   '/probate': typeof ProbateRoute
@@ -547,6 +564,7 @@ export interface FileRoutesById {
   '/integrations/$id': typeof IntegrationsIdRoute
   '/knowledge-objects/new': typeof KnowledgeObjectsNewRoute
   '/knowledge/$id': typeof KnowledgeIdRoute
+  '/local-guides/$city': typeof LocalGuidesCityRoute
   '/publications/$id': typeof PublicationsIdRoute
   '/publications/new': typeof PublicationsNewRoute
   '/releases/$id': typeof ReleasesIdRoute
@@ -564,6 +582,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/accessibility'
+    | '/assessment'
     | '/attorney-partners'
     | '/attorneys'
     | '/auth'
@@ -611,6 +630,7 @@ export interface FileRouteTypes {
     | '/integrations/$id'
     | '/knowledge-objects/new'
     | '/knowledge/$id'
+    | '/local-guides/$city'
     | '/publications/$id'
     | '/publications/new'
     | '/releases/$id'
@@ -626,6 +646,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/accessibility'
+    | '/assessment'
     | '/attorney-partners'
     | '/attorneys'
     | '/auth'
@@ -673,6 +694,7 @@ export interface FileRouteTypes {
     | '/integrations/$id'
     | '/knowledge-objects/new'
     | '/knowledge/$id'
+    | '/local-guides/$city'
     | '/publications/$id'
     | '/publications/new'
     | '/releases/$id'
@@ -688,6 +710,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/accessibility'
+    | '/assessment'
     | '/attorney-partners'
     | '/attorneys'
     | '/auth'
@@ -735,6 +758,7 @@ export interface FileRouteTypes {
     | '/integrations/$id'
     | '/knowledge-objects/new'
     | '/knowledge/$id'
+    | '/local-guides/$city'
     | '/publications/$id'
     | '/publications/new'
     | '/releases/$id'
@@ -751,6 +775,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   AccessibilityRoute: typeof AccessibilityRoute
+  AssessmentRoute: typeof AssessmentRoute
   AttorneyPartnersRoute: typeof AttorneyPartnersRoute
   AttorneysRoute: typeof AttorneysRoute
   AuthRoute: typeof AuthRoute
@@ -769,7 +794,7 @@ export interface RootRouteChildren {
   IntegrationsRoute: typeof IntegrationsRouteWithChildren
   InvestingRoute: typeof InvestingRoute
   KnowledgeRoute: typeof KnowledgeRouteWithChildren
-  LocalGuidesRoute: typeof LocalGuidesRoute
+  LocalGuidesRoute: typeof LocalGuidesRouteWithChildren
   OperationsRoute: typeof OperationsRoute
   PrivacyRoute: typeof PrivacyRoute
   ProbateRoute: typeof ProbateRoute
@@ -1020,6 +1045,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AttorneyPartnersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/assessment': {
+      id: '/assessment'
+      path: '/assessment'
+      fullPath: '/assessment'
+      preLoaderRoute: typeof AssessmentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/accessibility': {
       id: '/accessibility'
       path: '/accessibility'
@@ -1103,6 +1135,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/publications/$id'
       preLoaderRoute: typeof PublicationsIdRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/local-guides/$city': {
+      id: '/local-guides/$city'
+      path: '/$city'
+      fullPath: '/local-guides/$city'
+      preLoaderRoute: typeof LocalGuidesCityRouteImport
+      parentRoute: typeof LocalGuidesRoute
     }
     '/knowledge/$id': {
       id: '/knowledge/$id'
@@ -1257,10 +1296,23 @@ const KnowledgeRouteWithChildren = KnowledgeRoute._addFileChildren(
   KnowledgeRouteChildren,
 )
 
+interface LocalGuidesRouteChildren {
+  LocalGuidesCityRoute: typeof LocalGuidesCityRoute
+}
+
+const LocalGuidesRouteChildren: LocalGuidesRouteChildren = {
+  LocalGuidesCityRoute: LocalGuidesCityRoute,
+}
+
+const LocalGuidesRouteWithChildren = LocalGuidesRoute._addFileChildren(
+  LocalGuidesRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   AccessibilityRoute: AccessibilityRoute,
+  AssessmentRoute: AssessmentRoute,
   AttorneyPartnersRoute: AttorneyPartnersRoute,
   AttorneysRoute: AttorneysRoute,
   AuthRoute: AuthRoute,
@@ -1279,7 +1331,7 @@ const rootRouteChildren: RootRouteChildren = {
   IntegrationsRoute: IntegrationsRouteWithChildren,
   InvestingRoute: InvestingRoute,
   KnowledgeRoute: KnowledgeRouteWithChildren,
-  LocalGuidesRoute: LocalGuidesRoute,
+  LocalGuidesRoute: LocalGuidesRouteWithChildren,
   OperationsRoute: OperationsRoute,
   PrivacyRoute: PrivacyRoute,
   ProbateRoute: ProbateRoute,
@@ -1320,13 +1372,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
