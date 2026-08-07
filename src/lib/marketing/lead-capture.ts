@@ -12,7 +12,9 @@ import { scoreLead, intentVisitCount, type LeadScore } from "./lead-scoring";
 import { trackAction } from "./analytics";
 import { submitCrmLead } from "./lead-capture.functions";
 import {
+  dueRecords,
   enqueueDelivery,
+
   flushQueue,
   isBulkDeliveryPaused,
   sendRecord,
@@ -247,10 +249,15 @@ export async function captureLead(
   });
 
   // While bulk delivery is paused (default), deliver only this conversion —
-  // never drain historical queue records implicitly.
+  // never drain historical queue records implicitly. A record that is already
+  // delivered (or waiting on backoff) is left untouched.
+  const dueNow = dueRecords().some(r => r.id === record.id);
   const delivery = isBulkDeliveryPaused()
-    ? await sendRecord(record, transport)
+    ? dueNow
+      ? await sendRecord(record, transport)
+      : record
     : ((await flushQueue(transport)).find(r => r.id === record.id) ?? record);
+
 
 
   if (!duplicate) {
