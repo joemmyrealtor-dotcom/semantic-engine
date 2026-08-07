@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { CITY_GUIDES } from "@/lib/marketing/cities";
 import type {} from "@tanstack/react-start";
 
 const BASE_URL = "https://semantic-engine.lovable.app";
@@ -25,6 +26,12 @@ export const Route = createFileRoute("/sitemap.xml")({
           { path: "/investing", changefreq: "weekly", priority: "0.8" },
           { path: "/resources", changefreq: "weekly", priority: "0.8" },
           { path: "/local-guides", changefreq: "weekly", priority: "0.8" },
+          { path: "/assessment", changefreq: "monthly", priority: "0.9" },
+          ...CITY_GUIDES.map((c) => ({
+            path: `/local-guides/${c.slug}`,
+            changefreq: "weekly" as const,
+            priority: "0.7",
+          })),
           { path: "/about", changefreq: "monthly", priority: "0.6" },
           { path: "/contact", changefreq: "monthly", priority: "0.7" },
           { path: "/attorney-partners", changefreq: "monthly", priority: "0.9" },
