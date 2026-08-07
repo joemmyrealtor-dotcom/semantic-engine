@@ -28,6 +28,12 @@ export const CRM_CONTACT_PROPERTIES: CrmPropertyDefinition[] = [
   // attribution
   { name: "hs_lead_source", label: "Lead source", type: "string", group: "attribution", description: "Conversion surface that created the contact." },
   { name: "lf_original_source", label: "Original source", type: "string", group: "attribution", description: "First-touch source, never overwritten." },
+  { name: "lf_original_medium", label: "Original medium", type: "string", group: "attribution", description: "First-touch medium, never overwritten." },
+  { name: "lf_original_campaign", label: "Original campaign", type: "string", group: "attribution", description: "First-touch campaign, never overwritten." },
+  { name: "lf_latest_landing_page", label: "Latest landing page", type: "string", group: "attribution", description: "Landing page of the most recent campaign touch." },
+  { name: "lf_latest_referrer", label: "Latest referrer", type: "string", group: "attribution", description: "Referrer of the most recent touch." },
+  { name: "lf_delivery_key", label: "Delivery key", type: "string", group: "attribution", description: "Idempotency key of the conversion that last updated this contact." },
+
   { name: "hs_campaign", label: "Campaign", type: "string", group: "attribution", description: "Marketing campaign attached to the conversion." },
   { name: "utm_source", label: "UTM source", type: "string", group: "attribution", description: "Latest-touch utm_source." },
   { name: "utm_medium", label: "UTM medium", type: "string", group: "attribution", description: "Latest-touch utm_medium." },
