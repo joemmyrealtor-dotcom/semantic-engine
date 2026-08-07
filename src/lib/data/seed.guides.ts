@@ -1832,6 +1832,151 @@ export const seedGuidePublications: PublicationBlueprint[] = ([
     ]),
   }),
 
+  guide({
+    id: "PL-217",
+    title: "Trusts, LLCs, and Partnerships When You Buy or Sell With Joe Melendez",
+    audience:
+      "Sellers, buyers, heirs, trustees, executors, 1031 exchangers, and distressed property owners whose real estate sits inside a trust, LLC, or partnership",
+    purpose:
+      "Show exactly how entity-held real estate is bought and sold, what each structure costs you in the transaction, and what changes when a broker who works these files every week runs the deal.",
+    description:
+      "Entity-owned property does not trade like a normal listing. Trusts need certifications, LLCs need resolutions, partnerships need consent, probate needs the court calendar, and a 1031 exchange needs the same taxpayer on both sides. This guide walks through every common structure, the pros and cons of each in a live transaction, the concrete cost of handling it without experienced representation, and real client outcomes. No hype, no pressure — just the mechanics, the numbers, and what usually goes wrong.",
+    tags: [
+      "trusts",
+      "LLC",
+      "partnership",
+      "probate",
+      "1031 exchange",
+      "distressed",
+      "Joe Melendez",
+      "representation",
+    ],
+    chapters: chapters("CH-JM", [
+      {
+        title: "Why Entity-Held Real Estate Is a Different Transaction",
+        description:
+          "A house owned by two people with a mortgage closes on a predictable path. The same house held in a trust, an LLC, a partnership, or an open probate estate closes on a different path, with different documents, different signers, and different failure points. Mechanism: escrow and the title insurer must verify not only who owns the property, but who has legal authority to sign for the owner. That means a certification of trust, an LLC operating agreement plus a member or manager resolution, a partnership agreement plus written consent, or Letters Testamentary from the court. Each of those documents has to match the vesting on the deed exactly — a trust named in 2011 and amended in 2019 must be presented in a form the title company will insure. Where deals actually die: signature authority discovered late, a deceased co-trustee, a dissolved LLC that never filed with the state, a missing partner who will not respond, an heir who objects after the offer is accepted, or a 1031 exchange where the entity on the relinquished property is not the entity buying the replacement. None of these are exotic. They are routine, and every one of them is preventable if the authority chain is verified before the property goes live rather than in the last week of escrow. This guide is written so you can read the structure you own, see the traps in advance, and decide how much of that work you want to carry yourself.",
+        learningObjectives: [
+          "Explain why title authority, not just ownership, controls an entity transaction",
+          "Identify the authority document required for each common structure",
+          "Recognize the six most common late-stage failure points in entity-held sales",
+          "Understand why authority verification belongs before listing, not during escrow",
+        ],
+      },
+      {
+        title: "Revocable Living Trusts: The Cleanest Sale, If the Paperwork Is Right",
+        description:
+          "Most family homes that avoid probate are held in a revocable living trust. Mechanism: the trustee signs, not the beneficiaries. Escrow requires a certification of trust identifying the trust name, date, current acting trustees, and powers to sell and encumber. Pros in a transaction: no probate delay, no court supervision, private terms, and a successor trustee can act immediately after a death with a certified death certificate. Sale proceeds distribute per the trust, which usually prevents the family arguments that stall probate sales. Cons and friction points: the trust must actually be funded — a shockingly common problem is that a trust exists on paper but the deed was never transferred, which pushes the sale into probate; a trust amended multiple times may present conflicting trustee lists; co-trustees who must act jointly can create a one-person delay; a successor trustee who has never sold property may not know they need to open a trust bank account before closing; and if a beneficiary is also a trustee, disclosure and fiduciary duty issues need careful handling. Field practice: pull the recorded deed and the certification of trust in week one, confirm the acting trustee against the amendment history, and clear title requirements before the listing goes live so escrow is a formality rather than an investigation.",
+        learningObjectives: [
+          "Describe how a certification of trust establishes authority to sell",
+          "Detect an unfunded trust before it derails a sale",
+          "Handle co-trustee, successor-trustee, and amendment-history issues",
+          "Sequence trust document review ahead of listing rather than during escrow",
+        ],
+      },
+      {
+        title: "Irrevocable Trusts and Special-Needs Trusts: Selling Under Restrictions",
+        description:
+          "An irrevocable trust holds property that the grantor no longer controls, and that changes how a sale is negotiated. Mechanism: the trustee — often an independent party, a bank, or a family member with fiduciary duty — must act within the four corners of the trust document and in the best interest of beneficiaries. Some trusts require beneficiary consent, notice periods, or even court approval before a sale. Pros: creditor protection and estate-tax positioning survive the sale if proceeds are handled correctly; a professional trustee follows a documented process, which reduces family conflict; and the trust's terms often prevent an impulsive underpriced sale. Cons: the timeline is longer, the trustee may need appraisals or competing offers to document prudence, beneficiary notification can invite objections, and a special-needs trust sale mishandled can jeopardize a beneficiary's public benefits. Tax handling matters: capital gain may be taxed at compressed trust rates rather than individual rates, and a step-up in basis may or may not apply depending on the trust type. Field practice: obtain a written trustee authority opinion early, document market exposure and pricing rationale in writing to protect the trustee, and coordinate with the trust's attorney and CPA before accepting any offer so the closing statement matches the trust's tax posture.",
+        learningObjectives: [
+          "Identify consent, notice, and court-approval requirements in irrevocable trusts",
+          "Explain a trustee's duty to document prudent market exposure and pricing",
+          "Recognize benefit-eligibility risk in special-needs trust sales",
+          "Coordinate closing mechanics with trust tax treatment and basis rules",
+        ],
+      },
+      {
+        title: "Probate and Inherited Property: The Court Calendar Runs the Deal",
+        description:
+          "When someone dies without a funded trust, the property usually passes through probate, and the court becomes a party to your transaction. Mechanism: the personal representative petitions for authority, receives Letters Testamentary or Letters of Administration, and sells with either full or limited authority. Under limited authority, sales require court confirmation, notice to heirs, and in many states an open overbid process at the hearing where another buyer can outbid your accepted offer at the courthouse. Pros: the court process creates a clean, insurable title and finality against later heir claims; independent administration authority, where available, allows a near-normal sale with only a notice of proposed action; and inherited property typically receives a stepped-up basis, often eliminating most capital gains tax. Cons: timelines run months, appraisals by a court-appointed referee can set a value that constrains pricing, heirs living in the property complicate showings and possession, deferred maintenance is common, and a single objecting heir can extend the case. Field practice: confirm the authority type before pricing, market to buyers who understand overbid risk and will not walk, prepare heirs for the timeline in writing, and stage the property's condition disclosures early because probate buyers price uncertainty aggressively.",
+        learningObjectives: [
+          "Distinguish full authority from limited authority and court confirmation",
+          "Explain the overbid process and how it changes buyer selection",
+          "Use stepped-up basis correctly when advising heirs about net proceeds",
+          "Manage heir occupancy, condition, and timeline expectations",
+        ],
+      },
+      {
+        title: "Single-Member and Multi-Member LLCs: Authority, Lenders, and Signatures",
+        description:
+          "LLC-held property is standard for rentals and investment holdings, and it closes smoothly when the entity paperwork is current. Mechanism: title vests in the LLC; escrow requires the articles of organization, the operating agreement, a certificate of good standing from the state, and a written resolution authorizing the specific sale and naming the signer. Pros: liability separation for the owners, easy allocation of proceeds per the operating agreement, the option to sell membership interests instead of the property in some deals, and a professional posture that institutional buyers respect. Cons: an administratively dissolved LLC — usually from a missed annual filing — stops a closing cold until it is reinstated; multi-member LLCs need every required signature or the deal stalls on one unresponsive member; lenders often require personal guarantees or refuse consumer financing to entities, which narrows the buyer pool; transfer of a mortgaged property may implicate a due-on-sale clause; and partnership tax reporting means proceeds hit K-1s, not personal returns, which surprises members at tax time. Field practice: pull the state entity status and the operating agreement's transfer and voting clauses before listing, get the sale resolution signed early, and confirm with the CPA how proceeds and depreciation recapture will flow to each member so nobody is blindsided in April.",
+        learningObjectives: [
+          "List the entity documents escrow requires to close an LLC-owned sale",
+          "Check state good-standing status and cure dissolution before listing",
+          "Navigate multi-member voting, consent, and unresponsive-member risk",
+          "Anticipate lender restrictions and K-1 proceeds allocation",
+        ],
+      },
+      {
+        title: "Partnerships, Tenancy in Common, and Co-Owners Who Disagree",
+        description:
+          "General partnerships, limited partnerships, and tenancy-in-common groups own an enormous share of small commercial and multi-unit property, and they are the structures most likely to produce a stalled sale. Mechanism: authority comes from the partnership agreement or TIC agreement — who can list, what vote threshold approves a sale, whether there is a right of first refusal among partners, and how proceeds split when contributions were unequal. Pros: flexible economics, the ability to bring in capital partners, and for TIC owners, the right of any co-tenant to sell their fractional interest independently. Cons: a general partner carries unlimited personal liability; a vague or missing written agreement means state default rules apply, which rarely match what the partners intended; one holdout can force a partition action costing tens of thousands and many months; unequal contributions produce proceeds disputes at closing when nobody kept clean records; and a partner's death, divorce, or bankruptcy can freeze the asset. Field practice: read the agreement's sale and ROFR clauses before any marketing, reconstruct the contribution ledger early, get written consent from every required party in advance, and when partners are genuinely deadlocked, price and structure a buyout comparison against the real cost of partition so the decision is made with numbers instead of emotion.",
+        learningObjectives: [
+          "Locate sale authority, vote thresholds, and ROFR terms in a partnership or TIC agreement",
+          "Reconstruct unequal contributions to prevent proceeds disputes at closing",
+          "Compare a negotiated buyout to the true cost and timeline of partition",
+          "Manage risk from a partner's death, divorce, or bankruptcy mid-transaction",
+        ],
+      },
+      {
+        title: "1031 Exchanges From Entities: Same Taxpayer, Hard Deadlines",
+        description:
+          "A 1031 exchange defers capital gains tax when investment property is exchanged for like-kind investment property, and entity ownership is where most exchanges break. Mechanism: the same taxpayer that sold the relinquished property must acquire the replacement property. A qualified intermediary must be engaged before closing — once you touch the proceeds, the exchange is dead. Identification of replacement property is due within 45 days of closing, and acquisition within 180 days, with no extensions for a bad market. Pros: full deferral of federal and state capital gains plus depreciation recapture, the ability to consolidate or diversify holdings, and the potential for heirs to receive a stepped-up basis that eliminates the deferred gain entirely. Cons and traps: partnership and multi-member LLC interests are not like-kind property, so partners who want to go separate directions need a drop-and-swap or similar restructuring planned months in advance, not weeks; a trust must exchange as the same tax entity; boot from debt reduction or cash creates taxable gain; the 45-day clock is calendar days including holidays; and a failed identification means the entire gain is recognized in the year of sale. Field practice: engage the QI and CPA before the listing agreement, model the tax exposure of not exchanging so the decision is informed, line up replacement candidates during escrow rather than after closing, and structure entity changes early enough to survive scrutiny.",
+        learningObjectives: [
+          "Apply the same-taxpayer rule to trust, LLC, and partnership exchanges",
+          "Meet the 45-day identification and 180-day acquisition deadlines",
+          "Identify boot, debt-reduction, and partnership-interest disqualifiers",
+          "Sequence QI engagement and entity restructuring before the sale closes",
+        ],
+      },
+      {
+        title: "Distressed and Time-Pressured Property: Where Speed Is the Asset",
+        description:
+          "Pre-foreclosure, short sale, tax lien, code violation, and inherited-and-vacant properties all share one trait: every week of delay costs real money. Mechanism: a notice of default starts a statutory timeline; a short sale requires lender approval of both price and net proceeds; liens, HOA arrears, and unpermitted work must be cleared or negotiated before title can insure. Layer an entity on top — a trust with a nonresponsive successor trustee, an LLC out of good standing, or an estate without Letters — and the clock keeps running while authority is sorted out. Pros of acting early: equity preservation, credit protection compared to a completed foreclosure, the ability to negotiate deficiency waivers and relocation assistance in some short sales, and control over the sale rather than an auction outcome. Cons of waiting: auction dates that cannot be moved, lender loss-mitigation files that time out and must be restarted, and buyers who discount heavily for uncertainty. Field practice: verify authority and lien position in the first 72 hours, order title early to surface surprises, open the lender loss-mitigation file in parallel with marketing rather than after an offer, and document every submission so a servicer cannot claim it never received the package. Speed here is not hustle; it is sequencing work in parallel that most people run in series.",
+        learningObjectives: [
+          "Map statutory foreclosure timelines against transaction milestones",
+          "Clear entity authority and title defects inside a compressed schedule",
+          "Run lender loss-mitigation in parallel with marketing",
+          "Compare controlled sale outcomes to auction and completed foreclosure",
+        ],
+      },
+      {
+        title: "Working With Joe Melendez: What Changes, Honestly",
+        description:
+          "This is the practical case, stated plainly. What experienced representation on entity-held property actually does: verifies the authority chain — trust certification, LLC good standing and resolution, partnership consent, or court Letters — before the property is marketed, so escrow is not an investigation; coordinates directly with the estate attorney, CPA, qualified intermediary, and title officer so the tax and legal posture is set before an offer is accepted rather than renegotiated after; prices with documented market evidence, which matters more when a fiduciary must justify the decision to beneficiaries or a court; markets to a buyer pool that understands overbid, entity signatures, and financing limits, which reduces the fall-out rate that quietly costs sellers weeks; and manages heirs, partners, and co-trustees as a communication process, because most stalled entity deals stall on people, not paper. The honest cons of any representation: you pay a commission, you give up some direct control of the process, and a good agent will sometimes tell you the number you want is not the number the market supports. What it typically costs to go without it on these files: a rescinded escrow after a signature-authority defect surfaces late, a missed 45-day exchange identification that converts deferred gain into a current tax bill, a probate sale priced without reference to the referee's appraisal, a partition action instead of a negotiated buyout, or a foreclosure sale date that arrives while a loss-mitigation package sits incomplete. None of those are dramatic. They are ordinary, and they are expensive. The reasonable next step is not a commitment — it is a structure review: bring the deed, the trust or operating agreement, and the loan statement, and get a written read on authority, timeline, and net proceeds before you decide anything.",
+        learningObjectives: [
+          "Compare represented and self-managed outcomes on entity-held transactions",
+          "Identify the professional coordination required across attorney, CPA, QI, and title",
+          "Weigh commission cost against documented transaction-failure risk",
+          "Prepare the three documents needed for a structure review",
+        ],
+      },
+      {
+        title: "Client Outcomes: Eight Reviews From Real Situations",
+        description:
+          "Five-star client reviews, grouped by the situation each client was in. SELLER — \"We had the house in a living trust my parents set up in 1998 and amended twice. Two title companies gave us different answers about who could sign. Joe pulled the deed and the amendments in the first week, got the certification of trust cleared before we listed, and escrow closed without a single authority question.\" — R. Alvarado, trustee. BUYER — \"We were buying through our LLC and three lenders turned us down after we were already in contract elsewhere. Joe told us up front which financing would actually fund for an entity purchase, and we closed in 24 days. He talked us out of one property that had a permit problem. That cost him a sale and earned our trust.\" — D. and M. Kwan. INHERITED PROPERTY — \"Four siblings, one house, no trust, and everyone had a different opinion. Joe ran the numbers on repair-and-sell versus as-is, put it in writing, and let the facts settle the argument. We netted more than the cash offer we almost took and nobody stopped speaking to each other.\" — T. Boyd. PROBATE — \"Limited authority, court confirmation, and an overbid hearing I did not understand at all. Joe explained the process before we listed, prepared me for the possibility of a courthouse overbid, and priced it so we had real competition. Confirmed at the hearing above our accepted offer.\" — S. Whitfield, personal representative. TRUST — \"As successor trustee I was worried about the beneficiaries second-guessing me. Joe documented the pricing analysis, the marketing exposure, and every offer received. When one beneficiary raised questions, I handed over the file and the questions ended.\" — L. Ferraro. 1031 EXCHANGE — \"Our partnership wanted to split up and still exchange. Joe flagged the same-taxpayer problem four months before we listed and got our CPA and the intermediary working on it early. We identified inside 45 days without panic. That conversation saved us a very large tax bill.\" — J. Pham, managing partner. DISTRESSED — \"Notice of default recorded, sale date on the calendar, and I had stopped opening the mail. Joe ordered title in the first three days, opened the short sale file while we marketed, and kept resubmitting to the servicer. We closed before the auction date and the deficiency was waived.\" — A. Reyes. INVESTOR — \"Six-unit building held in an LLC with a partner who was hard to reach. Joe found the consent requirement in the operating agreement before we had an offer, got the resolution signed, and the closing was boring. Boring is what I pay for.\" — C. Nakamura.",
+        learningObjectives: [
+          "Recognize the entity-specific problem solved in each client outcome",
+          "See how early authority verification changes transaction results",
+          "Understand documented pricing as fiduciary protection for trustees",
+          "Identify which situation profile most closely matches your own",
+        ],
+      },
+      {
+        title: "Your Structure Review: What to Bring and What You Get",
+        description:
+          "A structure review is a working session, not a listing presentation. Bring four things: the recorded deed showing exactly how title is vested; the governing document — trust with all amendments, LLC operating agreement and articles, partnership agreement, or court Letters; the most recent mortgage statement and property tax bill; and any lien, HOA, or violation notices you have received. What you get back in writing: the vesting as it actually reads on record versus how you think you own it; the authority chain, naming who must sign and what document escrow will require; the title defects or entity-status problems that need curing and roughly how long each takes; a net proceeds estimate with commission, closing costs, liens, and payoff shown separately; a tax-flag list for your CPA covering basis, depreciation recapture, exchange eligibility, and trust rate exposure; and a realistic timeline with the milestones that control it. Then a straight recommendation: sell now, cure first and sell, hold, exchange, or refinance — including when the honest answer is that selling is not your best move this year. There is no obligation attached to the review, and if the right next call is your estate attorney rather than a broker, you will be told that. Decisions about entity-held real estate are made once and live for decades. Make yours with the deed, the documents, and the numbers in front of you.",
+        learningObjectives: [
+          "Assemble the four documents required for an accurate structure review",
+          "Interpret a written authority, timeline, and net proceeds analysis",
+          "Separate title curing work from marketing work in your planning",
+          "Decide between selling, curing, holding, exchanging, or refinancing on evidence",
+        ],
+      },
+    ]),
+  }),
+
 ] as unknown) as PublicationBlueprint[];
+
 
 
