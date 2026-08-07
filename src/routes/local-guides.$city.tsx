@@ -2,7 +2,7 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PublicShell } from "@/components/public-shell";
-import { CITY_GUIDES, cityJsonLd, getCityGuide } from "@/lib/marketing/cities";
+import { CITY_GUIDES, cityJsonLd, getCityGuide, type CityGuide } from "@/lib/marketing/cities";
 import { BRAND } from "@/lib/marketing/positioning";
 
 export const Route = createFileRoute("/local-guides/$city")({
@@ -68,7 +68,7 @@ function CityNotFound() {
 }
 
 function CityGuideRoute() {
-  const { guide } = Route.useLoaderData();
+  const { guide } = Route.useLoaderData() as { guide: CityGuide };
   const others = CITY_GUIDES.filter(c => c.slug !== guide.slug);
 
   return (
