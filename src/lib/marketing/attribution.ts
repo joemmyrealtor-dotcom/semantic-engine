@@ -1,9 +1,9 @@
-// Task 20 — CRM attribution scaffold (app-side).
+// Task 20 / 24 — CRM attribution (first-touch and latest-touch).
 //
-// Captures campaign attribution on first public pageview, persists it for
-// the session, and shapes the lead payload that the HubSpot integration
-// will submit once the CRM objects exist (Task 24). No network calls are
-// made here — this is deliberately the app-side half of the contract.
+// First touch is captured once and never overwritten, so HubSpot always
+// knows the campaign and landing page that originated the relationship.
+// Latest touch updates whenever a new campaign or external referrer
+// brings the visitor back, so the closing channel is measurable too.
 
 export interface Attribution {
   source: string;
@@ -17,6 +17,7 @@ export interface Attribution {
 }
 
 const KEY = "lf.attribution.v1";
+const LAST_KEY = "lf.attribution.last.v1";
 
 const UTM_KEYS = [
   ["utm_source", "source"],
@@ -44,49 +45,70 @@ function classifyReferrer(referrer: string): { source: string; medium: string } 
   return { source: host, medium: "referral" };
 }
 
-/** Read stored attribution without writing. Safe during SSR (returns null). */
-export function readAttribution(): Attribution | null {
+function read(key: string): Attribution | null {
   if (typeof window === "undefined") return null;
   try {
-    const raw = window.sessionStorage.getItem(KEY);
+    const raw = window.sessionStorage.getItem(key);
     return raw ? (JSON.parse(raw) as Attribution) : null;
   } catch {
     return null;
   }
 }
 
-/**
- * Capture attribution once per session. First touch wins so that an
- * in-session navigation never overwrites the campaign that produced
- * the visit.
- */
-export function captureAttribution(): Attribution | null {
-  if (typeof window === "undefined") return null;
-  const existing = readAttribution();
-  if (existing) return existing;
+function write(key: string, value: Attribution): void {
+  try {
+    window.sessionStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    /* storage unavailable — attribution is best-effort */
+  }
+}
 
+/** Read stored first-touch attribution without writing. Safe during SSR. */
+export function readAttribution(): Attribution | null {
+  return read(KEY);
+}
+
+/** Read the most recent touch; falls back to first touch. */
+export function readLatestAttribution(): Attribution | null {
+  return read(LAST_KEY) ?? read(KEY);
+}
+
+function currentTouch(): Attribution & { hasCampaignSignal: boolean } {
   const params = new URLSearchParams(window.location.search);
   const fallback = classifyReferrer(document.referrer || "");
   const utm: Record<string, string> = {};
   for (const [param, field] of UTM_KEYS) utm[field] = params.get(param) ?? "";
+  const hasCampaignSignal =
+    Boolean(utm.source || utm.medium || utm.campaign) || fallback.medium !== "none";
 
-  const attribution: Attribution = {
+  return {
     source: utm.source || fallback.source,
     medium: utm.medium || fallback.medium,
     campaign: utm.campaign || "(none)",
-    content: utm.content,
-    term: utm.term,
+    content: utm.content ?? "",
+    term: utm.term ?? "",
     referrer: document.referrer || "",
     landingPage: window.location.pathname,
     firstSeenAt: new Date().toISOString(),
+    hasCampaignSignal,
   };
+}
 
-  try {
-    window.sessionStorage.setItem(KEY, JSON.stringify(attribution));
-  } catch {
-    /* storage unavailable — attribution is best-effort */
-  }
-  return attribution;
+/**
+ * Capture attribution. First touch wins for the origin record; the latest
+ * touch is refreshed whenever a new campaign or external referrer appears.
+ */
+export function captureAttribution(): Attribution | null {
+  if (typeof window === "undefined") return null;
+  const { hasCampaignSignal, ...touch } = currentTouch();
+
+  const existing = readAttribution();
+  if (!existing) write(KEY, touch);
+
+  const lastTouch = read(LAST_KEY);
+  if (!lastTouch || hasCampaignSignal) write(LAST_KEY, touch);
+
+  return existing ?? touch;
 }
 
 export interface LeadPayload {
@@ -99,8 +121,7 @@ export interface LeadPayload {
 
 /**
  * Shape a CRM-ready lead payload. Field names intentionally mirror the
- * HubSpot properties defined in Task 24 so the submit handler is a
- * pass-through when the CRM objects are created.
+ * HubSpot properties defined in src/lib/marketing/crm-schema.ts.
  */
 export function buildLeadPayload(input: {
   entryPath: string;
@@ -114,4 +135,15 @@ export function buildLeadPayload(input: {
     attribution: readAttribution(),
     submittedAt: new Date().toISOString(),
   };
+}
+
+/** Test helper. */
+export function resetAttribution(): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.removeItem(KEY);
+    window.sessionStorage.removeItem(LAST_KEY);
+  } catch {
+    /* noop */
+  }
 }
