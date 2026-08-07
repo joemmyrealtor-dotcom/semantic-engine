@@ -27,6 +27,8 @@ const items = [
   { to: "/data", label: "Import / Export", icon: Database },
   { to: "/admin/audit", label: "Audit Explorer", icon: AuditIcon },
   { to: "/admin/monitoring", label: "Monitoring", icon: Gauge },
+  { to: "/admin/lead-delivery", label: "Lead Delivery", icon: Send },
+
   { to: "/admin/backups", label: "Backups", icon: HardDrive },
   { to: "/admin/workspaces", label: "Workspaces", icon: Users },
   { to: "/admin/deployment", label: "Deployment", icon: Rocket },
