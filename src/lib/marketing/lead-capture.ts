@@ -10,7 +10,15 @@ import type { LeadQualification } from "./assessments";
 import { pipelineForSituation } from "./crm-schema";
 import { scoreLead, intentVisitCount, type LeadScore } from "./lead-scoring";
 import { trackAction } from "./analytics";
-import { submitCrmLead, type CrmSubmitResult } from "./lead-capture.functions";
+import { submitCrmLead } from "./lead-capture.functions";
+import {
+  enqueueDelivery,
+  flushQueue,
+  idempotencyKeyFor,
+  type LeadDelivery,
+  type Transport,
+} from "./lead-queue";
+
 
 export const TIMELINE_OPTIONS = [
   { value: "0-90", label: "Within 90 days" },
