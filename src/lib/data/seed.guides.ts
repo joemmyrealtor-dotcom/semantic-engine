@@ -1432,4 +1432,137 @@ export const seedGuidePublications: PublicationBlueprint[] = ([
     ]),
   }),
 
+  guide({
+    id: "PL-214",
+    title: "The Loan Program Guide: Every Way to Finance a Home, With the Real Pros and Cons",
+    audience: "Buyers comparing financing options, investors structuring purchases, and the advisors who must explain the trade-offs plainly",
+    purpose:
+      "Lay every mainstream and specialty loan program side by side — how it works, who it fits, what it costs, and where it hurts — so the financing decision is made on mechanics and math instead of on whichever product a buyer happened to be offered first.",
+    description:
+      "Most buyers are sold a loan; very few choose one. The difference is worth tens of thousands of dollars and, in a competitive market, the house itself. This guide is the comparison nobody hands you: conventional, FHA, VA, USDA, jumbo, adjustable-rate, renovation, construction, bridge, HELOC and second liens, non-QM and bank-statement, DSCR and investor loans, portfolio and physician programs, assumables, and seller financing. Each is explained the same way — the mechanism, who it fits, the honest advantages, the honest disadvantages, and the specific question to ask your lender before you commit. Educational content only; program guidelines, limits, and rates change and vary by lender and by state.",
+    tags: ["buyer", "financing", "loan programs", "mortgage", "FHA", "VA", "conventional", "investor", "comparison"],
+    chapters: chapters("CH-LP", [
+      {
+        title: "How to Compare Any Two Loans Without Getting Fooled",
+        description:
+          "Before a single program name matters, learn the comparison method — it is the only thing that protects you across every option in this guide. Four numbers decide a loan: the note rate, the total cash to close, the monthly payment including taxes, insurance and mortgage insurance, and the break-even horizon for any points you pay. Points are prepaid interest: divide the cost of the points by the monthly savings they buy, and if the result is longer than you expect to hold the loan, you are donating money. Compare Loan Estimates issued on the same day, because a rate quoted Tuesday against a rate quoted Friday is not a comparison. Read page two of the Loan Estimate, section A, for the lender's own origination charges — that is the part the lender controls and the part that is genuinely negotiable. Ignore the APR as your primary screen; it assumes you hold the loan to term, which almost nobody does. Finally, distinguish the rate from the structure: a slightly higher rate on a loan with no mortgage insurance, no prepayment penalty, and a clean appraisal path frequently beats a headline-low rate wrapped in conditions that can break your closing.",
+        learningObjectives: [
+          "Compare loans on four numbers: rate, cash to close, full monthly payment, and points break-even",
+          "Force same-day Loan Estimates so quotes are genuinely comparable",
+          "Read section A of the Loan Estimate to isolate negotiable lender fees",
+          "Understand why APR and monthly payment alone are misleading screens",
+          "Weigh structural risk — mortgage insurance, prepayment penalties, appraisal fragility — against headline rate",
+        ],
+      },
+      {
+        title: "Conventional Loans: The Default Benchmark",
+        description:
+          "A conventional conforming loan is any loan that meets Fannie Mae or Freddie Mac guidelines and falls under the annual conforming limit for the county. It is the benchmark every other program should be measured against. Mechanism: down payments start near three percent for qualified buyers, credit is priced in tiers, and below twenty percent equity you pay private mortgage insurance. Pros: private mortgage insurance is cancellable — this is the single most underrated advantage in residential financing, because it means today's mortgage insurance is temporary rather than permanent; there is no upfront funding fee on most structures; appraisal standards are less rigid than government programs; sellers in multiple-offer situations generally view conventional financing as the cleanest non-cash option; and the loan can cover primary residences, second homes, and investment property. Cons: pricing is credit-score and equity sensitive, so a mid-600s score pays materially more than a mid-700s score; debt-to-income tolerance is real but finite; low-down-payment conventional loans can price worse than FHA for weaker credit profiles; and condominium projects must be warrantable, which quietly disqualifies a meaningful share of inventory. Fit: buyers with solid credit, documentable income, and any down payment from three percent upward. Ask your lender: what does my rate look like at my current score versus twenty points higher, and at what loan-to-value does my mortgage insurance drop off automatically.",
+        learningObjectives: [
+          "Explain conforming limits, credit tiering, and how conventional pricing is built",
+          "Understand why cancellable mortgage insurance is a structural advantage",
+          "Identify when FHA out-prices conventional for lower credit profiles",
+          "Screen condominium warrantability before falling in love with a unit",
+          "Ask the two questions that reveal your real conventional pricing",
+        ],
+      },
+      {
+        title: "FHA Loans: Access Over Elegance",
+        description:
+          "FHA is government-insured financing built for access. Mechanism: down payments start near three and a half percent, credit thresholds are lower than conventional, and the government insures the lender against loss in exchange for two mortgage insurance charges — an upfront premium usually financed into the loan, and an annual premium collected monthly. Pros: the most forgiving credit and debt-to-income profile among mainstream programs; gift funds for the entire down payment are permitted; documented recovery from bankruptcy or foreclosure is possible sooner than conventional; and FHA loans are assumable, which becomes an extraordinary asset if you buy in a high-rate environment and later sell into a higher one. Cons: on most modern FHA loans taken with the minimum down payment, the annual mortgage insurance lasts the life of the loan — you cannot cancel it by building equity, you can only refinance out of it; the appraisal is also a minimum-property-standards inspection, so peeling paint, missing handrails, roof condition, and non-functioning systems can require repairs before closing; loan limits are lower than conventional in many counties; and some sellers, fairly or not, discount FHA offers in competitive situations. Fit: buyers whose credit or reserves rule out competitive conventional pricing, and buyers who value the assumability option. Ask your lender: model my total five-year cost under FHA versus conventional, including the upfront premium and the refinance I would need to shed mortgage insurance.",
+        learningObjectives: [
+          "Distinguish the upfront and annual FHA mortgage insurance premiums",
+          "Understand life-of-loan mortgage insurance and the refinance exit it forces",
+          "Anticipate FHA minimum-property-standard repair triggers before writing an offer",
+          "Value FHA assumability as a future resale advantage",
+          "Run the five-year total-cost comparison against conventional",
+        ],
+      },
+      {
+        title: "VA Loans: The Strongest Program Almost Nobody Explains Properly",
+        description:
+          "For eligible veterans, active-duty service members, National Guard and Reserve members, and many surviving spouses, the VA loan is the most powerful financing instrument in the residential market. Mechanism: the Department of Veterans Affairs guarantees a portion of the loan, so lenders extend terms no conventional program matches. Pros: zero down payment on eligible purchases; no monthly mortgage insurance at all, which is often a several-hundred-dollar monthly advantage over any comparable low-down-payment loan; competitive rates; limits on what closing costs the veteran may pay; assumable by qualified parties; the entitlement is reusable and can sometimes be restored or partially used more than once; and there is no prepayment penalty. Cons: a one-time funding fee applies unless exempt, typically for service-connected disability, and that fee rises for subsequent uses; the VA appraisal enforces minimum property requirements and can be slower in some markets; the property must generally be owner-occupied, so this is not an investor tool; entitlement math becomes genuinely complicated when you already own a VA-financed home; and misinformed listing agents sometimes steer sellers away from VA offers, which is a marketing problem your agent must solve with a lender letter and a preemptive conversation. Fit: any eligible borrower, in nearly every scenario. Ask your lender: am I exempt from the funding fee, and exactly how much entitlement do I have remaining.",
+        learningObjectives: [
+          "Confirm eligibility categories including surviving spouses and Guard or Reserve service",
+          "Quantify the monthly advantage of having no mortgage insurance",
+          "Understand the funding fee, exemptions, and subsequent-use increases",
+          "Plan for minimum property requirements and appraisal timing",
+          "Counter seller bias against VA offers with lender documentation",
+        ],
+      },
+      {
+        title: "USDA and Other Location-Based Programs",
+        description:
+          "USDA Rural Development financing offers zero down payment for properties inside eligible areas — and eligible does not mean remote; many outer-ring suburbs qualify. Mechanism: the loan is guaranteed by the USDA, with both a property-location test and a household-income cap based on area median income and household size. Pros: no down payment; mortgage insurance equivalents that are typically cheaper than FHA's; competitive rates; and the ability to finance closing costs into the loan when the appraisal supports it. Cons: the geographic and income limits are absolute, not negotiable; household income includes adults who are not on the loan; processing can involve an additional agency review step that lengthens timelines; and it is owner-occupied only. Alongside USDA sit the programs most buyers never hear about: state housing finance agency loans, which often pair below-market rates with down payment assistance in the form of grants or silent second liens; municipal and employer-sponsored assistance; teacher, first responder, and healthcare worker programs; and tribal lending programs. Their common trade-off is real — cheaper money in exchange for occupancy commitments, recapture provisions if you sell early, income ceilings, mandatory homebuyer education, and slower closings. Fit: income-qualified buyers with time and patience. Ask your lender: which state and local programs am I eligible for, and what is the recapture or repayment trigger on each.",
+        learningObjectives: [
+          "Verify USDA property eligibility and household-income limits accurately",
+          "Compare USDA guarantee fees against FHA and conventional mortgage insurance",
+          "Locate state housing finance agency and down payment assistance programs",
+          "Identify recapture, occupancy, and resale strings attached to assistance money",
+          "Build a realistic timeline for agency-reviewed loans",
+        ],
+      },
+      {
+        title: "Jumbo and High-Balance Financing",
+        description:
+          "When the loan exceeds the county conforming limit, you leave the Fannie and Freddie world. High-balance conforming loans occupy the middle ground in designated high-cost counties; true jumbo loans sit above that. Mechanism: jumbo loans are held on bank balance sheets or sold to private investors, so guidelines are set by the individual lender rather than by an agency, and they vary widely. Pros: access to properties above the conforming ceiling; frequently no mortgage insurance even below twenty percent down at the right lenders; relationship pricing for clients who bring deposits or assets under management; interest-only and portfolio structures that agency loans cannot offer; and asset-depletion underwriting that can qualify wealthy borrowers with modest reported income. Cons: reserve requirements are serious, often six to twenty-four months of payments after closing; credit and documentation standards are the strictest in residential lending; appraisal risk is elevated because high-end comparables are thin and a single appraisal can reset the whole negotiation, with some lenders requiring two; guidelines differ so much between lenders that shopping is mandatory rather than optional; and pricing can move sharply with market conditions. Fit: high-balance buyers, especially those with strong assets. Ask your lender: what are your reserve requirements after closing, do you require a second appraisal at my loan amount, and does a banking relationship improve my pricing.",
+        learningObjectives: [
+          "Distinguish conforming, high-balance, and true jumbo tiers",
+          "Plan for post-closing reserve requirements before writing an offer",
+          "Manage appraisal risk on properties with thin comparable data",
+          "Use relationship and asset-depletion underwriting where it applies",
+          "Shop at least three jumbo lenders because guidelines are lender-specific",
+        ],
+      },
+      {
+        title: "Fixed Versus Adjustable: Choosing Your Rate Structure",
+        description:
+          "The thirty-year fixed rate mortgage is an American default, not a universal answer. Mechanism: a fixed loan holds one rate for the full term; an adjustable-rate mortgage holds an introductory rate for a stated period — commonly five, seven, or ten years — then adjusts periodically against an index plus a margin, bounded by initial, periodic, and lifetime caps. Fixed pros: absolute payment certainty, immunity to rate shocks, and simplicity. Fixed cons: you pay a premium for that certainty, and if rates fall you must refinance, with costs, to capture the benefit. Adjustable pros: a meaningfully lower introductory rate, faster principal reduction during the fixed period, and a strong fit when your realistic holding period is shorter than the fixed window — which is far more common than buyers assume. Adjustable cons: genuine payment risk after the reset, caps that permit larger increases than most borrowers picture, refinance plans that depend on future rates, future credit, and future value all cooperating, and the psychological cost of an unknown payment. Also consider the fifteen-year fixed, which typically prices below thirty-year and builds equity dramatically faster at the price of a rigid, higher payment, and temporary buy-downs such as a two-one structure, which lowers the payment for the first two years using seller-funded escrow. Ask your lender: show me the worst-case payment at first reset and at the lifetime cap, in dollars.",
+        learningObjectives: [
+          "Read an adjustable-rate mortgage's index, margin, and cap structure",
+          "Match rate structure to a realistic holding period rather than to habit",
+          "Model worst-case adjusted payments in dollars, not percentages",
+          "Evaluate fifteen-year fixed loans for equity velocity versus payment rigidity",
+          "Assess temporary buy-downs and who actually funds them",
+        ],
+      },
+      {
+        title: "Renovation, Construction, and Bridge Financing",
+        description:
+          "Some properties cannot be financed as they stand, and some purchases cannot wait for a sale. Renovation loans — FHA 203(k) in limited and standard forms, Fannie Mae HomeStyle, and Freddie Mac CHOICERenovation — finance the purchase and the improvements in a single loan based on the after-improved value. Pros: they unlock distressed and dated inventory other buyers cannot touch, avoid high-interest project debt, and roll one payment. Cons: contractor approval, fixed scopes, inspected draw schedules, consultant fees on larger scopes, and timelines that routinely run longer than promised; change orders are painful. Construction-to-permanent loans fund a ground-up build and convert to a permanent mortgage at completion. Pros: one closing and one set of costs, with rate protection during the build in many structures. Cons: builder vetting, contingency reserves, interest-only carrying costs during construction, and real exposure to cost overruns and delays. Bridge loans and HELOC-funded down payments let you buy before you sell. Pros: they eliminate the sale contingency that weakens your offer, and they remove the double-move. Cons: expensive short-term money, two payments at once if the sale slips, and a plan that fails if the market turns while you are exposed. Ask your lender: what happens to my cost and my rate if the project runs ninety days long or the departing home takes six months to sell.",
+        learningObjectives: [
+          "Compare 203(k), HomeStyle, and CHOICERenovation structures and their draw mechanics",
+          "Budget contingency and consultant costs into renovation financing",
+          "Understand construction-to-permanent conversion and carrying costs",
+          "Weigh bridge financing against a sale contingency in offer strategy",
+          "Stress-test every short-term structure against a delayed timeline",
+        ],
+      },
+      {
+        title: "Non-QM, Bank Statement, DSCR, and Investor Financing",
+        description:
+          "Self-employed buyers, investors, and borrowers with non-traditional profiles live outside agency guidelines, and an entire lending market exists to serve them. Bank statement loans qualify from twelve or twenty-four months of deposits rather than tax returns. Pros: they solve the fundamental problem of a business owner whose write-offs destroy qualifying income. Cons: higher rates, larger down payments, and heavy documentation of the deposit history. Asset-depletion and asset-utilization loans convert a liquid portfolio into qualifying income for retirees and high-net-worth borrowers, at the cost of large asset minimums. DSCR loans qualify the property, not the borrower: the debt service coverage ratio compares rental income to the payment, typically requiring a ratio near or above one. Pros: no personal income documentation, portfolio scalability past agency property-count limits, and speed. Cons: higher rates, twenty to twenty-five percent down, prepayment penalties that are standard rather than exceptional, and pure exposure to rent softness. Hard money and private lending buy speed for fix-and-flip and auction purchases at double-digit rates and short terms — a tool for a defined exit, never a place to live. Across all of these, read the prepayment penalty clause first, because it is where non-QM economics are actually decided. Ask your lender: what is the prepayment penalty structure, and what is my true all-in cost including points.",
+        learningObjectives: [
+          "Match self-employed income realities to bank statement and asset-based programs",
+          "Calculate a debt service coverage ratio and know the lender's threshold",
+          "Recognize prepayment penalties as the defining term of non-QM loans",
+          "Use hard money only against a documented, dated exit strategy",
+          "Price non-QM all-in, including points, rate, and penalty exposure",
+        ],
+      },
+      {
+        title: "Assumables, Seller Financing, and Creative Structures",
+        description:
+          "In a high-rate market, the cheapest money on the table often already exists on the property. Assumable loans — FHA, VA, and USDA — let a qualified buyer take over the seller's existing note at the seller's original rate. Pros: a below-market rate that no lender can currently offer, and lower closing costs. Cons: you must bring the entire gap between the purchase price and the remaining loan balance in cash or a second lien, servicer processing is slow and often measured in months, buyer qualification still applies, and on a VA loan the seller's entitlement stays tied up unless the buyer is an eligible veteran substituting entitlement — a detail that has harmed sellers who did not understand it. Seller financing has the seller act as the bank under a promissory note and deed of trust. Pros: negotiable terms, speed, no lender overlays, and a genuine solution for unusual properties or borrowers; sellers may spread capital gains and earn interest. Cons: due-on-sale clauses on the seller's existing mortgage, balloon payments that force a refinance on a fixed date, servicing and default complexity, and a legal structure that must be drafted by an attorney rather than improvised. Related structures — wraparound notes, lease-options, and subject-to purchases — carry escalating legal risk and should never be entered without counsel and title review. Close the guide with the discipline that opens it: get the Loan Estimate, compare four numbers, and confirm state-specific and tax-specific consequences with a CPA, an attorney, and your title company before you sign.",
+        learningObjectives: [
+          "Determine whether an existing loan is assumable and calculate the cash gap",
+          "Protect a VA seller's entitlement during an assumption",
+          "Structure seller financing around due-on-sale and balloon risk",
+          "Recognize when creative structures require attorney and title involvement",
+          "Return to the four-number comparison before signing any final financing decision",
+        ],
+      },
+    ]),
+  }),
+
 ] as unknown) as PublicationBlueprint[];
