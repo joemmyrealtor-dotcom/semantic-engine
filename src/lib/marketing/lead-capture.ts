@@ -1,8 +1,16 @@
-// Task 22A — Lead capture: validation and HubSpot-ready payload shaping.
+// Task 24 — Reusable lead-capture service.
+//
+// Every public conversion (contact form, lead magnet, assessment handoff,
+// consultation request, local guide CTA) goes through captureLead(). There
+// is exactly one CRM mapping, one scoring pass, and one analytics event.
 
 import { z } from "zod";
-import { readAttribution, type Attribution } from "./attribution";
+import { readAttribution, readLatestAttribution, type Attribution } from "./attribution";
 import type { LeadQualification } from "./assessments";
+import { pipelineForSituation } from "./crm-schema";
+import { scoreLead, intentVisitCount, type LeadScore } from "./lead-scoring";
+import { trackAction } from "./analytics";
+import { submitCrmLead, type CrmSubmitResult } from "./lead-capture.functions";
 
 export const TIMELINE_OPTIONS = [
   { value: "0-90", label: "Within 90 days" },
@@ -36,6 +44,25 @@ export const leadFormSchema = z.object({
     .max(80, { message: "City must be under 80 characters" }),
   situation: z.string().trim().min(1, { message: "Please choose your situation" }).max(60),
   timeline: z.string().trim().min(1, { message: "Please choose a timeline" }).max(30),
+  propertyAddress: z
+    .string()
+    .trim()
+    .max(160, { message: "Address must be under 160 characters" })
+    .optional()
+    .or(z.literal("")),
+  motivation: z
+    .string()
+    .trim()
+    .max(600, { message: "Please keep this under 600 characters" })
+    .optional()
+    .or(z.literal("")),
+  referralSource: z
+    .string()
+    .trim()
+    .max(120, { message: "Please keep this under 120 characters" })
+    .optional()
+    .or(z.literal("")),
+  consultationRequested: z.boolean().optional(),
   consent: z.literal(true, { message: "Please agree before continuing" }),
 });
 
@@ -48,17 +75,23 @@ export interface CrmLeadPayload {
   city: string;
   lf_situation: string;
   lf_timeline: string;
-  lf_guide_id: string;
+  lf_motivation: string;
+  lf_property_address: string;
+  lf_lead_magnet: string;
   lf_guide_slug: string;
-  lf_assessment_id: string;
+  lf_assessment_result: string;
   lf_readiness_level: string;
-  lf_lead_tier: string;
   lf_lead_score: number;
+  lf_lead_classification: string;
   lf_lead_signals: string;
+  lf_consultation_requested: boolean;
+  lf_referral_source: string;
   lf_consent: boolean;
   lf_consent_at: string;
+  lf_consent_text: string;
   hs_lead_source: string;
   hs_campaign: string;
+  lf_original_source: string;
   utm_source: string;
   utm_medium: string;
   utm_campaign: string;
@@ -70,55 +103,132 @@ export interface CrmLeadPayload {
   lf_submitted_at: string;
 }
 
-export function buildCrmLeadPayload(input: {
+export interface LeadCaptureInput {
   values: LeadFormValues;
+  /** Conversion surface, e.g. "guide:seller-decision" or "contact". */
+  leadSource: string;
+  campaign: string;
+  formId: string;
   guideId?: string;
   guideSlug?: string;
   assessmentId?: string;
   readinessLevel?: string;
   qualification?: LeadQualification;
-  leadSource: string;
-  campaign: string;
   attribution?: Attribution | null;
-}): CrmLeadPayload {
-  const attr = input.attribution ?? readAttribution();
+}
+
+export function buildCrmLeadPayload(
+  input: LeadCaptureInput & { score?: LeadScore },
+): CrmLeadPayload {
+  const first = input.attribution ?? readAttribution();
+  const last = readLatestAttribution() ?? first;
   const now = new Date().toISOString();
+  const score = input.score ?? scoreLeadFor(input);
+  const v = input.values;
+
   return {
-    firstname: input.values.firstName,
-    email: input.values.email,
-    phone: input.values.phone ?? "",
-    city: input.values.city,
-    lf_situation: input.values.situation,
-    lf_timeline: input.values.timeline,
-    lf_guide_id: input.guideId ?? "",
+    firstname: v.firstName,
+    email: v.email,
+    phone: v.phone ?? "",
+    city: v.city,
+    lf_situation: v.situation,
+    lf_timeline: v.timeline,
+    lf_motivation: v.motivation ?? "",
+    lf_property_address: v.propertyAddress ?? "",
+    lf_lead_magnet: input.guideId ?? "",
     lf_guide_slug: input.guideSlug ?? "",
-    lf_assessment_id: input.assessmentId ?? "",
+    lf_assessment_result: input.assessmentId
+      ? `${input.assessmentId}: ${input.readinessLevel ?? "n/a"}`
+      : "",
     lf_readiness_level: input.readinessLevel ?? "",
-    lf_lead_tier: input.qualification?.tier ?? "",
-    lf_lead_score: input.qualification?.points ?? 0,
-    lf_lead_signals: (input.qualification?.signals ?? []).join("; "),
-    lf_consent: input.values.consent,
+    lf_lead_score: score.points,
+    lf_lead_classification: score.classification,
+    lf_lead_signals: [...score.signals, ...(input.qualification?.signals ?? [])].join("; "),
+    lf_consultation_requested: Boolean(v.consultationRequested),
+    lf_referral_source: v.referralSource ?? "",
+    lf_consent: v.consent,
     lf_consent_at: now,
+    lf_consent_text: CONSENT_TEXT,
     hs_lead_source: input.leadSource,
     hs_campaign: input.campaign,
-    utm_source: attr?.source ?? "direct",
-    utm_medium: attr?.medium ?? "none",
-    utm_campaign: attr?.campaign ?? "(none)",
-    utm_content: attr?.content ?? "",
-    utm_term: attr?.term ?? "",
-    lf_referrer: attr?.referrer ?? "",
-    lf_landing_page: attr?.landingPage ?? "",
-    lf_first_seen_at: attr?.firstSeenAt ?? now,
+    lf_original_source: first?.source ?? "direct",
+    utm_source: last?.source ?? "direct",
+    utm_medium: last?.medium ?? "none",
+    utm_campaign: last?.campaign ?? "(none)",
+    utm_content: last?.content ?? "",
+    utm_term: last?.term ?? "",
+    lf_referrer: first?.referrer ?? "",
+    lf_landing_page: first?.landingPage ?? "",
+    lf_first_seen_at: first?.firstSeenAt ?? now,
     lf_submitted_at: now,
   };
 }
 
-const STORE_KEY = "lf.leads.v1";
+export function scoreLeadFor(input: LeadCaptureInput): LeadScore {
+  const v = input.values;
+  return scoreLead({
+    timeline: v.timeline,
+    situation: v.situation,
+    city: v.city,
+    ...(v.motivation ? { motivation: v.motivation } : {}),
+    ...(v.propertyAddress ? { propertyAddress: v.propertyAddress } : {}),
+    consultationRequested: Boolean(v.consultationRequested),
+    assessmentCompleted: Boolean(input.assessmentId),
+    ...(input.readinessLevel ? { readinessLevel: input.readinessLevel } : {}),
+    intentVisits: intentVisitCount(),
+  });
+}
+
+export interface LeadCaptureOutcome {
+  payload: CrmLeadPayload;
+  score: LeadScore;
+  pipeline: string;
+  result: CrmSubmitResult;
+}
 
 /**
- * Queue the payload locally. The HubSpot transport lands in Task 25;
- * until then submissions are retained so nothing is lost.
+ * The single conversion entry point. Scores, maps, submits, queues, and
+ * emits the analytics event — never duplicated per page.
  */
+export async function captureLead(input: LeadCaptureInput): Promise<LeadCaptureOutcome> {
+  const score = scoreLeadFor(input);
+  const payload = buildCrmLeadPayload({ ...input, score });
+  const pipeline = pipelineForSituation(input.values.situation).id;
+
+  queueLead(payload);
+
+  let result: CrmSubmitResult;
+  try {
+    result = await submitCrmLead({
+      data: { properties: payload as unknown as Record<string, string | number | boolean>, pipeline, formId: input.formId },
+    });
+  } catch (error) {
+    console.error("Lead submission failed; retained locally", error);
+    result = {
+      ok: false,
+      mode: "test",
+      action: "queued",
+      message: "We saved your request locally and will retry.",
+    };
+  }
+
+  trackAction(input.assessmentId || input.guideId ? "lead_submitted" : "contact_submitted", {
+    situation: input.values.situation,
+    city: input.values.city,
+    ...(input.guideId ? { leadMagnet: input.guideId, guideId: input.guideId } : {}),
+    ...(input.assessmentId ? { assessmentId: input.assessmentId } : {}),
+    ...(input.readinessLevel ? { readinessLevel: input.readinessLevel } : {}),
+    leadClassification: score.classification,
+    leadScore: score.points,
+    label: input.formId,
+  });
+
+  return { payload, score, pipeline, result };
+}
+
+const STORE_KEY = "lf.leads.v1";
+
+/** Retain the payload locally so nothing is lost if the CRM is unreachable. */
 export function queueLead(payload: CrmLeadPayload): void {
   if (typeof window === "undefined") return;
   try {
@@ -127,7 +237,7 @@ export function queueLead(payload: CrmLeadPayload): void {
     list.push(payload);
     window.localStorage.setItem(STORE_KEY, JSON.stringify(list.slice(-50)));
   } catch {
-    /* storage unavailable — submission is best-effort until CRM transport exists */
+    /* storage unavailable — submission already went to the CRM transport */
   }
 }
 
