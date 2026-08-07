@@ -11,6 +11,7 @@ test("dbg", async ({ page }) => {
   await page.getByRole("checkbox").last().check();
   await page.getByRole("button", { name: "Get Your Seller Strategy" }).click();
   await page.waitForTimeout(3000);
-  console.log("QUEUE", await page.evaluate(() => window.localStorage.getItem("lf.lead-queue.v1")));
+  console.log("LS", await page.evaluate(() => JSON.stringify(Object.fromEntries(Object.entries(localStorage).map(([k,v])=>[k,String(v).slice(0,200)])))));
+  console.log("ERRS", await page.locator("[role=alert], .text-destructive").allInnerTexts());
   console.log("BODY", (await page.locator("form").innerText()).slice(0,600));
 });
