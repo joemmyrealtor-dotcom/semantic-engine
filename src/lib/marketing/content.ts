@@ -822,7 +822,9 @@ export const PUBLIC_NAV: { label: string; to: string }[] = [
   { label: "Investing", to: "/investing" },
   { label: "Resources", to: "/resources" },
   { label: "Local", to: "/local-guides" },
-  { label: "Assessment", to: "/assessment" },
+  { label: "Guides", to: "/guides" },
+  { label: "Assessments", to: "/assessments" },
+
   { label: "About", to: "/about" },
   { label: "Contact", to: "/contact" },
 ];
@@ -841,7 +843,12 @@ export const PUBLIC_PATHS: string[] = [
 ];
 
 /** Public path prefixes for dynamic public routes (e.g. city guides). */
-export const PUBLIC_PATH_PREFIXES: string[] = ["/local-guides/"];
+export const PUBLIC_PATH_PREFIXES: string[] = [
+  "/local-guides/",
+  "/guides/",
+  "/assessments/",
+];
+
 
 export function isPublicPath(pathname: string): boolean {
   const clean = pathname.replace(/\/+$/, "") || "/";
