@@ -9,6 +9,8 @@
 
 import { readAttribution, readLatestAttribution } from "./attribution";
 import { analyticsAllowed } from "./consent";
+import { recordConversionEvent } from "./conversion-store";
+
 
 export type MarketingEventName =
   | "page_view"
