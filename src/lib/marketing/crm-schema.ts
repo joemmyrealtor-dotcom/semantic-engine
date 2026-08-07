@@ -47,6 +47,8 @@ export const CRM_CONTACT_PROPERTIES: CrmPropertyDefinition[] = [
   { name: "lf_timeline", label: "Timeline", type: "enumeration", group: "situation", description: "Stated decision timeline.", options: ["0-90", "3-6", "6-12", "researching"] },
   { name: "lf_motivation", label: "Motivation", type: "string", group: "situation", description: "Stated reason for the move." },
   { name: "lf_lead_magnet", label: "Lead magnet", type: "string", group: "situation", description: "Guide that produced the conversion." },
+  { name: "lf_guide_slug", label: "Guide slug", type: "string", group: "situation", description: "URL slug of the guide that produced the conversion." },
+
   { name: "lf_assessment_result", label: "Assessment result", type: "string", group: "situation", description: "Assessment identifier plus outcome summary." },
   { name: "lf_readiness_level", label: "Readiness level", type: "enumeration", group: "situation", description: "Assessment readiness classification.", options: ["Ready", "Nearly Ready", "Needs Planning", "Action Required"] },
 
