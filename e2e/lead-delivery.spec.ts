@@ -19,9 +19,9 @@ test.describe("lead delivery transport", () => {
   test("captures a guide lead, persists attribution, and queues delivery", async ({ page }) => {
     await page.goto(`${GUIDE}?utm_source=google&utm_medium=organic&utm_campaign=brea-guide`);
     await fillForm(page, "e2e.seller@example.com");
-    await page.getByRole("button", { name: /send|get the guide|request/i }).first().click();
+    await page.getByRole("button", { name: "Get Your Seller Strategy" }).first().click();
 
-    await expect(page.getByText(/on the way|thank|check your email/i).first()).toBeVisible();
+    await expect(page.getByTestId("guide-thank-you")).toBeVisible();
 
     const queue = await page.evaluate(() =>
       JSON.parse(window.localStorage.getItem("lf.lead-queue.v1") ?? "[]"),
@@ -36,7 +36,7 @@ test.describe("lead delivery transport", () => {
     // Duplicate submission of the same conversion must not enqueue twice.
     await page.reload();
     await fillForm(page, "e2e.seller@example.com");
-    await page.getByRole("button", { name: /send|get the guide|request/i }).first().click();
+    await page.getByRole("button", { name: "Get Your Seller Strategy" }).first().click();
     await page.waitForTimeout(500);
     const after = await page.evaluate(() =>
       JSON.parse(window.localStorage.getItem("lf.lead-queue.v1") ?? "[]"),
