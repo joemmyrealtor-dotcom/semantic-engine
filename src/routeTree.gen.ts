@@ -70,6 +70,7 @@ import { Route as AiPacksIdRouteImport } from './routes/ai-packs.$id'
 import { Route as AgentsIdRouteImport } from './routes/agents.$id'
 import { Route as AdminWorkspacesRouteImport } from './routes/admin.workspaces'
 import { Route as AdminMonitoringRouteImport } from './routes/admin.monitoring'
+import { Route as AdminLeadDeliveryRouteImport } from './routes/admin.lead-delivery'
 import { Route as AdminDeploymentRouteImport } from './routes/admin.deployment'
 import { Route as AdminCutoverRouteImport } from './routes/admin.cutover'
 import { Route as AdminBackupsRouteImport } from './routes/admin.backups'
@@ -381,6 +382,11 @@ const AdminMonitoringRoute = AdminMonitoringRouteImport.update({
   path: '/admin/monitoring',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminLeadDeliveryRoute = AdminLeadDeliveryRouteImport.update({
+  id: '/admin/lead-delivery',
+  path: '/admin/lead-delivery',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminDeploymentRoute = AdminDeploymentRouteImport.update({
   id: '/admin/deployment',
   path: '/admin/deployment',
@@ -445,6 +451,7 @@ export interface FileRoutesByFullPath {
   '/admin/backups': typeof AdminBackupsRoute
   '/admin/cutover': typeof AdminCutoverRoute
   '/admin/deployment': typeof AdminDeploymentRoute
+  '/admin/lead-delivery': typeof AdminLeadDeliveryRoute
   '/admin/monitoring': typeof AdminMonitoringRoute
   '/admin/workspaces': typeof AdminWorkspacesRoute
   '/agents/$id': typeof AgentsIdRoute
@@ -513,6 +520,7 @@ export interface FileRoutesByTo {
   '/admin/backups': typeof AdminBackupsRoute
   '/admin/cutover': typeof AdminCutoverRoute
   '/admin/deployment': typeof AdminDeploymentRoute
+  '/admin/lead-delivery': typeof AdminLeadDeliveryRoute
   '/admin/monitoring': typeof AdminMonitoringRoute
   '/admin/workspaces': typeof AdminWorkspacesRoute
   '/agents/$id': typeof AgentsIdRoute
@@ -582,6 +590,7 @@ export interface FileRoutesById {
   '/admin/backups': typeof AdminBackupsRoute
   '/admin/cutover': typeof AdminCutoverRoute
   '/admin/deployment': typeof AdminDeploymentRoute
+  '/admin/lead-delivery': typeof AdminLeadDeliveryRoute
   '/admin/monitoring': typeof AdminMonitoringRoute
   '/admin/workspaces': typeof AdminWorkspacesRoute
   '/agents/$id': typeof AgentsIdRoute
@@ -652,6 +661,7 @@ export interface FileRouteTypes {
     | '/admin/backups'
     | '/admin/cutover'
     | '/admin/deployment'
+    | '/admin/lead-delivery'
     | '/admin/monitoring'
     | '/admin/workspaces'
     | '/agents/$id'
@@ -720,6 +730,7 @@ export interface FileRouteTypes {
     | '/admin/backups'
     | '/admin/cutover'
     | '/admin/deployment'
+    | '/admin/lead-delivery'
     | '/admin/monitoring'
     | '/admin/workspaces'
     | '/agents/$id'
@@ -788,6 +799,7 @@ export interface FileRouteTypes {
     | '/admin/backups'
     | '/admin/cutover'
     | '/admin/deployment'
+    | '/admin/lead-delivery'
     | '/admin/monitoring'
     | '/admin/workspaces'
     | '/agents/$id'
@@ -857,6 +869,7 @@ export interface RootRouteChildren {
   AdminBackupsRoute: typeof AdminBackupsRoute
   AdminCutoverRoute: typeof AdminCutoverRoute
   AdminDeploymentRoute: typeof AdminDeploymentRoute
+  AdminLeadDeliveryRoute: typeof AdminLeadDeliveryRoute
   AdminMonitoringRoute: typeof AdminMonitoringRoute
   AdminWorkspacesRoute: typeof AdminWorkspacesRoute
   AgentsIdRoute: typeof AgentsIdRoute
@@ -1315,6 +1328,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminMonitoringRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/lead-delivery': {
+      id: '/admin/lead-delivery'
+      path: '/admin/lead-delivery'
+      fullPath: '/admin/lead-delivery'
+      preLoaderRoute: typeof AdminLeadDeliveryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/deployment': {
       id: '/admin/deployment'
       path: '/admin/deployment'
@@ -1415,6 +1435,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminBackupsRoute: AdminBackupsRoute,
   AdminCutoverRoute: AdminCutoverRoute,
   AdminDeploymentRoute: AdminDeploymentRoute,
+  AdminLeadDeliveryRoute: AdminLeadDeliveryRoute,
   AdminMonitoringRoute: AdminMonitoringRoute,
   AdminWorkspacesRoute: AdminWorkspacesRoute,
   AgentsIdRoute: AgentsIdRoute,
@@ -1446,3 +1467,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

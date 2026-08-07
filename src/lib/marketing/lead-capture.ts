@@ -10,7 +10,15 @@ import type { LeadQualification } from "./assessments";
 import { pipelineForSituation } from "./crm-schema";
 import { scoreLead, intentVisitCount, type LeadScore } from "./lead-scoring";
 import { trackAction } from "./analytics";
-import { submitCrmLead, type CrmSubmitResult } from "./lead-capture.functions";
+import { submitCrmLead } from "./lead-capture.functions";
+import {
+  enqueueDelivery,
+  flushQueue,
+  idempotencyKeyFor,
+  type LeadDelivery,
+  type Transport,
+} from "./lead-queue";
+
 
 export const TIMELINE_OPTIONS = [
   { value: "0-90", label: "Within 90 days" },
@@ -92,6 +100,11 @@ export interface CrmLeadPayload {
   hs_lead_source: string;
   hs_campaign: string;
   lf_original_source: string;
+  lf_original_medium: string;
+  lf_original_campaign: string;
+  lf_latest_landing_page: string;
+  lf_latest_referrer: string;
+
   utm_source: string;
   utm_medium: string;
   utm_campaign: string;
@@ -157,10 +170,15 @@ export function buildCrmLeadPayload(
     utm_campaign: last?.campaign ?? "(none)",
     utm_content: last?.content ?? "",
     utm_term: last?.term ?? "",
+    lf_original_medium: first?.medium ?? "none",
+    lf_original_campaign: first?.campaign ?? "(none)",
+    lf_latest_landing_page: last?.landingPage ?? "",
+    lf_latest_referrer: last?.referrer ?? "",
     lf_referrer: first?.referrer ?? "",
     lf_landing_page: first?.landingPage ?? "",
     lf_first_seen_at: first?.firstSeenAt ?? now,
     lf_submitted_at: now,
+
   };
 }
 
@@ -183,48 +201,68 @@ export interface LeadCaptureOutcome {
   payload: CrmLeadPayload;
   score: LeadScore;
   pipeline: string;
-  result: CrmSubmitResult;
+  delivery: LeadDelivery;
+  duplicate: boolean;
 }
 
+/** The transport used by the delivery queue: one HubSpot upsert per record. */
+export const hubspotTransport: Transport = record =>
+  submitCrmLead({
+    data: {
+      properties: record.payload as unknown as Record<string, string | number | boolean>,
+      pipeline: record.pipeline,
+      formId: record.formId,
+      idempotencyKey: record.idempotencyKey,
+    },
+  });
+
 /**
- * The single conversion entry point. Scores, maps, submits, queues, and
- * emits the analytics event — never duplicated per page.
+ * The single conversion entry point. Scores, maps, retains, enqueues,
+ * flushes, and emits exactly one analytics event.
  */
-export async function captureLead(input: LeadCaptureInput): Promise<LeadCaptureOutcome> {
+export async function captureLead(
+  input: LeadCaptureInput,
+  transport: Transport = hubspotTransport,
+): Promise<LeadCaptureOutcome> {
   const score = scoreLeadFor(input);
   const payload = buildCrmLeadPayload({ ...input, score });
   const pipeline = pipelineForSituation(input.values.situation).id;
 
   queueLead(payload);
 
-  let result: CrmSubmitResult;
-  try {
-    result = await submitCrmLead({
-      data: { properties: payload as unknown as Record<string, string | number | boolean>, pipeline, formId: input.formId },
-    });
-  } catch (error) {
-    console.error("Lead submission failed; retained locally", error);
-    result = {
-      ok: false,
-      mode: "test",
-      action: "queued",
-      message: "We saved your request locally and will retry.",
-    };
-  }
-
-  trackAction(input.assessmentId || input.guideId ? "lead_submitted" : "contact_submitted", {
-    situation: input.values.situation,
-    city: input.values.city,
-    ...(input.guideId ? { leadMagnet: input.guideId, guideId: input.guideId } : {}),
+  const idempotencyKey = idempotencyKeyFor({
+    email: input.values.email,
+    formId: input.formId,
+    ...(input.guideId ? { guideId: input.guideId } : {}),
     ...(input.assessmentId ? { assessmentId: input.assessmentId } : {}),
-    ...(input.readinessLevel ? { readinessLevel: input.readinessLevel } : {}),
-    leadClassification: score.classification,
-    leadScore: score.points,
-    label: input.formId,
+  });
+  const { record, duplicate } = enqueueDelivery({
+    payload,
+    pipeline,
+    formId: input.formId,
+    idempotencyKey,
   });
 
-  return { payload, score, pipeline, result };
+  // Flush this record plus anything left over from an earlier outage.
+  const flushed = await flushQueue(transport);
+  const delivery = flushed.find(r => r.id === record.id) ?? record;
+
+  if (!duplicate) {
+    trackAction(input.assessmentId || input.guideId ? "lead_submitted" : "contact_submitted", {
+      situation: input.values.situation,
+      city: input.values.city,
+      ...(input.guideId ? { leadMagnet: input.guideId, guideId: input.guideId } : {}),
+      ...(input.assessmentId ? { assessmentId: input.assessmentId } : {}),
+      ...(input.readinessLevel ? { readinessLevel: input.readinessLevel } : {}),
+      leadClassification: score.classification,
+      leadScore: score.points,
+      label: input.formId,
+    });
+  }
+
+  return { payload, score, pipeline, delivery, duplicate };
 }
+
 
 const STORE_KEY = "lf.leads.v1";
 

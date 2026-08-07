@@ -1,27 +1,44 @@
-// Task 24 — HubSpot transport (server side).
+// Task 25 — HubSpot transport (server side).
 //
-// One endpoint for every conversion surface. When the HubSpot connector is
-// linked the payload is upserted by email (duplicate-safe); otherwise the
-// call succeeds in "test mode" so forms keep working and nothing is lost.
+// One endpoint for every public lead flow. Behavior:
+//   - upsert contacts by email (never creates duplicates)
+//   - first-touch attribution is written once and never overwritten
+//   - latest-touch attribution is refreshed on every conversion
+//   - deals are only opened for qualified intent (see shouldCreateDeal)
+//   - failures are classified retryable vs permanent for the client queue
+//
+// With no HubSpot connection linked the call succeeds in "test" mode so the
+// public forms keep working and the local queue retains everything.
 
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { FIRST_TOUCH_PROPERTIES, shouldCreateDeal } from "./crm-schema";
 
 const payloadSchema = z.object({
   properties: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])),
   pipeline: z.string().max(60),
-  formId: z.string().max(80),
+  formId: z.string().max(120),
+  idempotencyKey: z.string().max(200),
 });
 
-export type CrmSubmitResult = {
+export type CrmSubmitAction = "created" | "updated" | "queued";
+
+export interface CrmSubmitResult {
   ok: boolean;
   mode: "hubspot" | "test";
-  action: "created" | "updated" | "queued";
+  action: CrmSubmitAction;
   contactId?: string;
+  dealId?: string;
+  retryable?: boolean;
+  status?: number;
   message?: string;
-};
+}
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/hubspot";
+
+function retryableStatus(status: number): boolean {
+  return status === 408 || status === 429 || status >= 500;
+}
 
 export const submitCrmLead = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => payloadSchema.parse(input))
@@ -34,7 +51,7 @@ export const submitCrmLead = createServerFn({ method: "POST" })
         ok: true,
         mode: "test",
         action: "queued",
-        message: "HubSpot is not connected yet; the lead was validated and queued locally.",
+        message: "HubSpot is not connected yet; the lead was validated and retained locally.",
       };
     }
 
@@ -43,52 +60,119 @@ export const submitCrmLead = createServerFn({ method: "POST" })
       "X-Connection-Api-Key": hubspotKey,
       "Content-Type": "application/json",
     };
-    const email = String(data.properties["email"] ?? "");
+    const email = String(data.properties["email"] ?? "").trim().toLowerCase();
+    if (!email) {
+      return { ok: false, mode: "hubspot", action: "queued", retryable: false, message: "Missing email" };
+    }
 
-    // Duplicate-safe: search by email, then patch or create.
+    const fail = (status: number, body: string): CrmSubmitResult => {
+      console.error(`HubSpot request failed [${status}]: ${body}`);
+      return {
+        ok: false,
+        mode: "hubspot",
+        action: "queued",
+        status,
+        retryable: retryableStatus(status),
+        message: `HubSpot request failed [${status}]: ${body.slice(0, 400)}`,
+      };
+    };
+
+    // 1. Look the contact up by email so we upsert instead of duplicating.
     const search = await fetch(`${GATEWAY_URL}/crm/v3/objects/contacts/search`, {
       method: "POST",
       headers,
       body: JSON.stringify({
-        filterGroups: [
-          { filters: [{ propertyName: "email", operator: "EQ", value: email }] },
-        ],
-        properties: ["email"],
+        filterGroups: [{ filters: [{ propertyName: "email", operator: "EQ", value: email }] }],
+        properties: ["email", "lf_delivery_key", ...FIRST_TOUCH_PROPERTIES],
         limit: 1,
       }),
     });
+    if (!search.ok) return fail(search.status, await search.text());
 
-    if (!search.ok) {
-      const body = await search.text();
-      console.error(`HubSpot search failed [${search.status}]: ${body}`);
-      throw new Error(`HubSpot search failed [${search.status}]: ${body}`);
+    const found = (await search.json()) as {
+      results?: { id: string; properties?: Record<string, string | null> }[];
+    };
+    const existing = found.results?.[0];
+
+    // Same conversion already delivered — do not write again.
+    if (existing?.properties?.["lf_delivery_key"] === data.idempotencyKey) {
+      return {
+        ok: true,
+        mode: "hubspot",
+        action: "updated",
+        contactId: existing.id,
+        message: "Already delivered (idempotent no-op).",
+      };
     }
 
-    const found = (await search.json()) as { results?: { id: string }[] };
-    const existingId = found.results?.[0]?.id;
+    // 2. Preserve first-touch attribution on existing contacts.
+    const properties: Record<string, string | number | boolean> = {
+      ...data.properties,
+      email,
+      lf_delivery_key: data.idempotencyKey,
+    };
+    if (existing) {
+      for (const key of FIRST_TOUCH_PROPERTIES) {
+        const stored = existing.properties?.[key];
+        if (stored) delete properties[key];
+      }
+    }
 
     const res = await fetch(
-      existingId
-        ? `${GATEWAY_URL}/crm/v3/objects/contacts/${existingId}`
+      existing
+        ? `${GATEWAY_URL}/crm/v3/objects/contacts/${existing.id}`
         : `${GATEWAY_URL}/crm/v3/objects/contacts`,
       {
-        method: existingId ? "PATCH" : "POST",
+        method: existing ? "PATCH" : "POST",
         headers,
-        body: JSON.stringify({ properties: data.properties }),
+        body: JSON.stringify({ properties }),
       },
     );
-
-    if (!res.ok) {
-      const body = await res.text();
-      console.error(`HubSpot upsert failed [${res.status}]: ${body}`);
-      throw new Error(`HubSpot upsert failed [${res.status}]: ${body}`);
-    }
+    if (!res.ok) return fail(res.status, await res.text());
 
     const contact = (await res.json()) as { id?: string };
+    const contactId = contact.id ?? existing?.id;
+
+    // 3. Promote to a deal only when intent justifies it.
+    let dealId: string | undefined;
+    const promote = shouldCreateDeal({
+      classification: String(data.properties["lf_lead_classification"] ?? ""),
+      consultationRequested: data.properties["lf_consultation_requested"] === true,
+      timeline: String(data.properties["lf_timeline"] ?? ""),
+    });
+    if (promote && contactId) {
+      const deal = await fetch(`${GATEWAY_URL}/crm/v3/objects/deals`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          properties: {
+            dealname: `${data.properties["firstname"] ?? "Lead"} — ${data.pipeline}`,
+            pipeline: data.pipeline,
+            lf_lead_classification: data.properties["lf_lead_classification"] ?? "",
+            lf_situation: data.properties["lf_situation"] ?? "",
+            lf_timeline: data.properties["lf_timeline"] ?? "",
+          },
+          associations: [
+            {
+              to: { id: contactId },
+              types: [{ associationCategory: "HUBSPOT_DEFINED", associationTypeId: 3 }],
+            },
+          ],
+        }),
+      });
+      if (deal.ok) {
+        dealId = ((await deal.json()) as { id?: string }).id;
+      } else {
+        // A contact was still created/updated; deal failure must not lose the lead.
+        console.error(`HubSpot deal creation failed [${deal.status}]: ${await deal.text()}`);
+      }
+    }
+
     return {
       ok: true,
       mode: "hubspot",
-      action: existingId ? "updated" : "created",
-      ...(contact.id ? { contactId: contact.id } : {}),
+      action: existing ? "updated" : "created",
+      ...(contactId ? { contactId } : {}),
+      ...(dealId ? { dealId } : {}),
     };
   });

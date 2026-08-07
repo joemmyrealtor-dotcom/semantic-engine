@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Library, Network, BookOpen, Wrench, ScrollText, Bot, Package, ShieldCheck, Database, PenTool, BookMarked, Briefcase, Sparkles, Workflow, Activity, Brain, LineChart, FileText, Plug, Code2, ScrollText as AuditIcon, Gauge, HardDrive, Users, Rocket, Scale } from "lucide-react";
+import { LayoutDashboard, Library, Network, BookOpen, Wrench, ScrollText, Bot, Package, ShieldCheck, Database, PenTool, BookMarked, Briefcase, Sparkles, Workflow, Activity, Brain, LineChart, FileText, Plug, Code2, ScrollText as AuditIcon, Gauge, Send, HardDrive, Users, Rocket, Scale } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const items = [
@@ -27,6 +27,8 @@ const items = [
   { to: "/data", label: "Import / Export", icon: Database },
   { to: "/admin/audit", label: "Audit Explorer", icon: AuditIcon },
   { to: "/admin/monitoring", label: "Monitoring", icon: Gauge },
+  { to: "/admin/lead-delivery", label: "Lead Delivery", icon: Send },
+
   { to: "/admin/backups", label: "Backups", icon: HardDrive },
   { to: "/admin/workspaces", label: "Workspaces", icon: Users },
   { to: "/admin/deployment", label: "Deployment", icon: Rocket },
