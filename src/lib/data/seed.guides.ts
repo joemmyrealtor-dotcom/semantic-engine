@@ -1688,5 +1688,150 @@ export const seedGuidePublications: PublicationBlueprint[] = ([
     ]),
   }),
 
+  guide({
+    id: "PL-216",
+    title: "Trusts, LLCs, and Partnerships for Real Estate: The Ownership Structure Guide",
+    audience: "Buyers, investors, and families who want to hold real estate inside a trust, LLC, partnership, or other legal structure",
+    purpose: "Explain the most common real estate ownership structures in plain language, with pros, cons, and when each one fits a buyer's goals.",
+    description:
+      "The deed records who owns the property, but the legal wrapper determines how the property is protected, taxed, managed, and passed on. This guide covers revocable and irrevocable trusts, land trusts, QPRTs, single-member and multi-member LLCs, series LLCs, family limited partnerships, and real estate syndication structures. Each chapter explains what the structure is, how it works, the real advantages, the hidden costs, and the questions to ask before you close.",
+    tags: ["trusts", "LLC", "partnership", "entity", "asset protection", "estate planning", "tax"],
+    chapters: chapters("CH-OS", [
+      {
+        title: "The Wrapper Decision: Why the Legal Structure Matters",
+        description:
+          "Most buyers focus on price, location, and financing. But the legal wrapper around the property — the trust, LLC, or partnership — can matter more than the interest rate over a thirty-year hold. The wrapper controls four things: liability exposure, tax treatment, transfer rules, and what happens at death or divorce. Mechanism: a buyer creates or uses a legal entity, then takes title in the name of that entity instead of as an individual. Pros: liability separation can protect personal assets from property-level claims; estate planning can be built into the structure; multiple owners can share control and profits through written agreements; and some structures create privacy or anonymity. Cons: setup costs, ongoing maintenance, lender restrictions, and tax complexity can erase the benefits if the structure is wrong for the goal; some structures trigger due-on-sale clauses or make refinancing difficult; and a poorly maintained entity can be pierced in court, destroying the liability shield. The right structure is the one that matches your risk, your timeline, your lender, and your exit plan. Ask your attorney and CPA: what is the total first-year and ongoing cost of this wrapper, and does my lender allow it.",
+        learningObjectives: [
+          "Identify the four core functions of a real estate ownership structure",
+          "Compare individual ownership to trust, LLC, and partnership ownership",
+          "Recognize when a structure adds cost without adding protection",
+          "List the professionals needed to set up and maintain each structure",
+        ],
+      },
+      {
+        title: "Revocable Living Trusts: The Probate-Avoidance Standard",
+        description:
+          "A revocable living trust is the most common real estate ownership structure for individual and family owners. Mechanism: a trust document names a trustee, beneficiaries, and successor trustees; the deed transfers title into the trust; the settlor usually retains full control and can amend or revoke the trust during life. Pros: property passes to beneficiaries without probate, saving time and court fees; the transfer is private, unlike a probate file; a successor trustee can step in immediately if the settlor becomes incapacitated; and it works seamlessly with a pour-over will. Cons: the trust must be funded, meaning the deed actually transfers title — an unfunded trust is just paper; it provides no creditor protection for the settlor because the trust is revocable; refinancing may require temporarily deeding the property out of the trust and back in; and transfer taxes or title-insurance endorsements can add closing friction. Fit: primary residences, family homes, and anyone with a coordinated estate plan. Ask your attorney: is the trust fully funded, who is the successor trustee, and what is the exact deed language to transfer title at or after closing.",
+        learningObjectives: [
+          "Explain how a revocable trust holds title and avoids probate",
+          "Distinguish between a trust document and a funded trust",
+          "Identify refinancing and title-insurance steps for trust-held property",
+          "Recognize that revocable trusts do not protect the settlor from creditors",
+        ],
+      },
+      {
+        title: "Irrevocable Trusts: Giving Away Control to Gain Protection",
+        description:
+          "An irrevocable trust removes the property from the grantor's personal estate and places it under the trust's control for named beneficiaries. Mechanism: once the deed is transferred, the grantor generally cannot take it back or change the terms; an independent trustee manages distributions according to the trust document. Pros: assets inside a properly structured irrevocable trust may be protected from the grantor's future creditors and lawsuits; the property may be excluded from the grantor's taxable estate for estate-tax purposes; and it can create a structured inheritance for children or grandchildren. Cons: loss of control is real and often permanent; the grantor may be unable to sell, refinance, or occupy the property without trustee and beneficiary consent; income tax rules can be complex depending on whether the trust is grantor or non-grantor; and transfers may trigger gift-tax reporting. Fit: high-net-worth individuals with estate-tax exposure, families with significant liability concerns, and owners with specific legacy goals. Ask your attorney: am I comfortable giving up control, and will this trust actually remove the asset from my taxable estate under current law.",
+        learningObjectives: [
+          "Describe the trade-off between control and protection in an irrevocable trust",
+          "Explain how irrevocable trusts may reduce estate-tax exposure and creditor risk",
+          "Identify gift-tax and income-tax consequences of irrevocable transfers",
+          "Assess whether loss of control is acceptable for the buyer's goals",
+        ],
+      },
+      {
+        title: "Land Trusts: Privacy With a Trustee",
+        description:
+          "A land trust is a specialized trust that holds title to real estate while keeping the beneficiary's identity out of the public record. Mechanism: title is held by a trustee, who follows the beneficiary's directions privately; the beneficiary retains control and can sell or transfer the beneficial interest without recording a new deed. Pros: public records show only the trustee, not the beneficiary, which creates privacy and may discourage frivolous litigation; transfers of the beneficial interest usually avoid transfer taxes and public recording in many jurisdictions; and the trustee handles title matters without exposing the beneficiary. Cons: land trusts are not recognized in every state; they do not provide liability protection by themselves — the beneficiary can still be sued personally; some lenders dislike land trusts because they obscure the true owner; and if not combined with an LLC, the privacy benefit can be undone by a subpoena or lawsuit. Fit: investors who want privacy, owners of multiple properties, and landlords who want to separate public title from beneficial ownership. Ask your attorney: is a land trust valid in my state, and should the beneficiary be an LLC to add liability protection.",
+        learningObjectives: [
+          "Explain how a land trust separates public title from private beneficial ownership",
+          "Identify the privacy benefits and the lack of built-in liability protection",
+          "Recognize state-by-state variation in land trust recognition",
+          "Describe how land trusts are often paired with LLCs for a complete structure",
+        ],
+      },
+      {
+        title: "Qualified Personal Residence Trusts: The Estate Freeze",
+        description:
+          "A QPRT allows a homeowner to transfer a personal residence into trust while retaining the right to live there for a set term. Mechanism: the grantor transfers the home to the QPRT and keeps the right to use it rent-free for a term of years; after the term ends, the home passes to the beneficiaries, though the grantor may continue living there at fair market rent. Pros: the property's gift-tax value is discounted because the grantor retains the use interest; if the grantor outlives the term, the residence is removed from the estate at a frozen value, which can save significant estate tax; and it works for both primary residences and vacation homes. Cons: if the grantor dies before the term ends, the property returns to the estate as if the QPRT never existed; the grantor loses ownership and control after the term; and the home must be used as a personal residence during the term. Fit: homeowners with estate-tax exposure who expect to outlive the trust term and want to freeze the home's value for transfer-tax purposes. Ask your attorney and CPA: what is the projected estate-tax savings, what happens if I die during the term, and can I afford to pay rent to my beneficiaries after the term expires.",
+        learningObjectives: [
+          "Explain how a QPRT splits a residence into a retained term and a remainder interest",
+          "Describe the estate-tax freeze effect and the mortality risk",
+          "Identify the rent-back requirement after the QPRT term ends",
+          "Assess whether a QPRT matches the buyer's estate-tax and life-expectancy profile",
+        ],
+      },
+      {
+        title: "Single-Member LLCs: The Simplest Liability Shield",
+        description:
+          "A single-member LLC is the most common structure for individual real estate investors. Mechanism: the LLC is a separate legal entity owned by one person; the deed transfers title to the LLC; the owner signs an operating agreement that governs the LLC. Pros: liability separation between the property and the owner's personal assets, such as a tenant slip-and-fall or a contractor dispute; clean tax treatment because the LLC is usually disregarded for federal income tax, meaning profits and losses flow to the owner's personal return; and easier transfer of ownership by selling membership interests rather than recording a deed. Cons: the liability shield can be pierced if the LLC is not properly maintained, capitalized, or respected as separate; residential lenders often refuse to make a primary-residence loan to an LLC, and transferring a mortgaged property into an LLC may trigger a due-on-sale clause; insurance may need to be rewritten in the LLC's name; and some states charge franchise taxes or annual fees. Fit: rental-property owners, fix-and-flip operators, and investors who want separation without partnership complexity. Ask your attorney and CPA: will my lender allow this, how do I maintain the LLC formally, and am I treating the LLC as separate from my personal finances.",
+        learningObjectives: [
+          "Explain how a single-member LLC separates liability from personal assets",
+          "Describe disregarded-entity tax treatment and flow-through reporting",
+          "Identify lender due-on-sale risks and refinancing obstacles",
+          "List the formalities that preserve the LLC liability shield",
+        ],
+      },
+      {
+        title: "Multi-Member LLCs: Partnership Structure With a Shield",
+        description:
+          "A multi-member LLC combines liability protection with flexible partnership-style governance. Mechanism: two or more members own the LLC; the operating agreement defines capital contributions, profit splits, management rights, voting rules, and exit procedures; the LLC holds title and is usually taxed as a partnership unless it elects corporation status. Pros: liability separation for all members; flexible economics, so members can split profits and losses differently from ownership percentages if the operating agreement is written correctly; centralized management through a manager or member votes; and easier admission of new members without changing the deed. Cons: partnership tax rules require K-1s and can complicate passive-loss limitations and self-employment tax; disagreements among members can deadlock the LLC if the operating agreement is vague; lenders may require personal guarantees from all members; and a member's divorce, bankruptcy, or death can trigger buyout clauses. Fit: small investment groups, family investment LLCs, and co-owners who want both liability protection and custom economics. Ask your attorney: does the operating agreement cover capital calls, deadlock, buyouts, and what happens if a member dies or gets divorced.",
+        learningObjectives: [
+          "Compare single-member and multi-member LLC structures",
+          "Explain how the operating agreement controls economics and governance",
+          "Identify partnership tax complexities and K-1 reporting requirements",
+          "Assess deadlock, buyout, and transfer risks in a multi-member LLC",
+        ],
+      },
+      {
+        title: "Series LLCs: Multiple Properties Under One Roof",
+        description:
+          "A series LLC is a parent LLC that contains legally separated cells, or series, each of which can own assets, incur liabilities, and operate independently. Mechanism: the master LLC is formed in a state that recognizes series LLCs, such as Delaware, Nevada, Illinois, or Texas; each series has its own name, records, and assets; creditors of one series generally cannot reach the assets of another series or the master LLC. Pros: administrative efficiency, because one entity filing covers multiple series; cost savings compared to forming a separate LLC for each property; and liability segregation between properties. Cons: series LLCs are not recognized in every state; the legal separation between series has not been fully tested in all jurisdictions; some lenders and title insurers are unfamiliar with the structure and may refuse to deal with it; and each series must maintain separate books and bank accounts to preserve separation. Fit: investors with multiple properties in states that recognize series LLCs. Ask your attorney: is my state a series-LLC state, and have the courts here confirmed that series separation is enforceable.",
+        learningObjectives: [
+          "Explain how a series LLC separates assets into independent cells",
+          "Identify states that recognize series LLCs and the legal uncertainty elsewhere",
+          "Describe the bookkeeping and banking separation required between series",
+          "Compare a series LLC to separate LLCs for each property",
+        ],
+      },
+      {
+        title: "Family Limited Partnerships: Control, Discounts, and Transfers",
+        description:
+          "A family limited partnership is a classic structure for transferring real estate wealth across generations while retaining control. Mechanism: the senior generation forms the partnership and contributes the property in exchange for a small general partnership interest and a large limited partnership interest; the general partners retain control and management; limited partnership interests are gifted or sold to children or trusts over time. Pros: the senior generation keeps control while transferring value; limited partnership interests may qualify for valuation discounts for lack of marketability and control, reducing gift and estate tax; and the partnership agreement can restrict transfers, preventing shares from leaving the family. Cons: the structure is complex and expensive to set up and maintain; gifts of limited partnership interests may require gift-tax returns; the IRS scrutinizes valuation discounts; and if the partnership is not respected as a real business entity, tax benefits can be challenged. Fit: families with substantial real estate holdings who want to transfer wealth gradually while keeping control. Ask your attorney and CPA: what is the projected valuation discount, and will the IRS respect the partnership as a legitimate business entity.",
+        learningObjectives: [
+          "Describe the general partner and limited partner roles in a family limited partnership",
+          "Explain valuation discounts and their gift-tax effect",
+          "Identify IRS scrutiny and the business-purpose requirement",
+          "Assess whether the control-and-transfer trade-off fits a family's goals",
+        ],
+      },
+      {
+        title: "General and Limited Partnerships: The Traditional Co-Ownership Format",
+        description:
+          "Before LLCs became common, real estate co-ownership was often organized as a general partnership or a limited partnership. Mechanism: in a general partnership, all partners share management and unlimited personal liability; in a limited partnership, at least one general partner manages the business and has unlimited liability, while limited partners contribute capital and share profits but do not manage. Pros: general partnerships are simple and require no state filing in many cases; limited partnerships can raise capital from passive investors without giving them control; and both have well-established tax and legal rules. Cons: general partners in a general partnership are personally liable for all partnership debts; limited partners who participate in management can lose their limited liability; and both structures are largely displaced by LLCs for new real estate ventures because LLCs offer the same tax benefits with better liability protection. Fit: legacy partnerships, certain syndications, and ventures where a specific partner must have unlimited liability for tax or regulatory reasons. Ask your attorney: why would I choose a partnership over an LLC for this property, and who bears the liability risk.",
+        learningObjectives: [
+          "Compare general partnerships to limited partnerships",
+          "Explain why unlimited liability makes general partnerships risky for real estate",
+          "Identify how limited partners can lose protection by participating in management",
+          "Describe why LLCs have largely replaced partnerships for new real estate ventures",
+        ],
+      },
+      {
+        title: "Tenancy-in-Common LLCs and Syndications",
+        description:
+          "Large or complex properties are sometimes purchased by a group of investors through a tenancy-in-common structure or a syndication LLC. Mechanism: in a tenancy-in-common arrangement, each investor owns a direct fractional interest in the deed and receives an individual deed of trust; in a syndication LLC, investors own membership interests in an LLC that holds the property, and the sponsor acts as manager. Pros: access to larger properties than any single investor could buy alone; diversification across multiple assets; professional management by a sponsor; and potential tax advantages such as 1031 exchange eligibility for TIC interests. Cons: lack of control for passive investors; sponsor fees, promote structures, and waterfall distributions can be opaque; TIC structures can be difficult to sell because all co-owners must agree on major decisions; and syndications are securities offerings that must comply with SEC rules. Fit: accredited investors, 1031 exchange buyers, and passive investors seeking real estate exposure without day-to-day management. Ask your attorney and CPA: am I buying real estate or a security, what are the total fees, and what is the exit strategy.",
+        learningObjectives: [
+          "Distinguish tenancy-in-common ownership from syndication LLC ownership",
+          "Explain the 1031 exchange potential of TIC interests",
+          "Identify sponsor fees, waterfalls, and SEC compliance issues",
+          "Assess the liquidity and control trade-offs for passive investors",
+        ],
+      },
+      {
+        title: "Choosing, Funding, and Maintaining the Right Structure",
+        description:
+          "The best structure is the one that survives your closing, your lender, your tax return, and your exit plan. Use this decision sequence. First, define the goal: probate avoidance, lawsuit protection, estate-tax reduction, privacy, multi-investor governance, or some combination. Second, check state law: not every trust or LLC variation is recognized where the property is located. Third, confirm lender consent: many residential loans require natural-person ownership, and a transfer to an entity can trigger a due-on-sale clause. Fourth, coordinate with insurance and title: the policy and the deed must match the entity name. Fifth, fund the structure properly: a trust or LLC that does not actually hold title provides no benefit. Sixth, maintain the formalities: separate bank accounts, records, meetings, and tax filings preserve the liability shield. Seventh, review the structure every few years or after major life events such as marriage, divorce, inheritance, or a large equity gain. The highest-quality structure is not the most exotic one; it is the one that you actually understand, maintain, and can explain to your heirs.",
+        learningObjectives: [
+          "Apply a seven-step framework to select a real estate ownership structure",
+          "Coordinate the structure with lender, title, insurance, and tax requirements",
+          "Explain why funding and maintenance are as important as the document itself",
+          "Schedule periodic reviews after major life or equity events",
+        ],
+      },
+    ]),
+  }),
+
 ] as unknown) as PublicationBlueprint[];
+
 
