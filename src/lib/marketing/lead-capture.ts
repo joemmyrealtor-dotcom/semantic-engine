@@ -92,6 +92,11 @@ export interface CrmLeadPayload {
   hs_lead_source: string;
   hs_campaign: string;
   lf_original_source: string;
+  lf_original_medium: string;
+  lf_original_campaign: string;
+  lf_latest_landing_page: string;
+  lf_latest_referrer: string;
+
   utm_source: string;
   utm_medium: string;
   utm_campaign: string;
@@ -157,10 +162,15 @@ export function buildCrmLeadPayload(
     utm_campaign: last?.campaign ?? "(none)",
     utm_content: last?.content ?? "",
     utm_term: last?.term ?? "",
+    lf_original_medium: first?.medium ?? "none",
+    lf_original_campaign: first?.campaign ?? "(none)",
+    lf_latest_landing_page: last?.landingPage ?? "",
+    lf_latest_referrer: last?.referrer ?? "",
     lf_referrer: first?.referrer ?? "",
     lf_landing_page: first?.landingPage ?? "",
     lf_first_seen_at: first?.firstSeenAt ?? now,
     lf_submitted_at: now,
+
   };
 }
 
