@@ -1565,4 +1565,128 @@ export const seedGuidePublications: PublicationBlueprint[] = ([
     ]),
   }),
 
+  guide({
+    id: "PL-215",
+    title: "How to Hold Title When You Buy: The Complete Guide to Ownership Structures, With Pros and Cons",
+    audience: "Buyers, couples, investors, and heirs deciding how a property should be owned after purchase",
+    purpose:
+      "Explain every common way to take title to real property — the mechanics, the survivorship rules, the tax and liability implications, and the hidden tripwires — so the ownership decision is made deliberately rather than by default.",
+    description:
+      "Most buyers spend more time choosing a paint color than choosing how they will own the property. Yet the way title is held controls what happens on death, divorce, lawsuit, bankruptcy, sale, and tax assessment. This guide walks through sole ownership, tenancy in common, joint tenancy, tenancy by the entirety, community property, community property with right of survivorship, living trusts, LLCs and other entities, life estates, and the hybrid structures that attorneys and title officers actually use. Each chapter covers the same decision matrix: how it works, the real advantages, the real disadvantages, who it fits, and the exact question to ask your attorney or title officer before closing. This is educational content, not legal advice; real estate title law is state-specific, and one conversation with a local real estate attorney is worth more than any national summary.",
+    tags: ["buyer", "title", "ownership", "tenancy", "joint tenancy", "trust", "LLC", "estate planning", "survivorship"],
+    chapters: chapters("CH-HT", [
+      {
+        title: "Title Is a Decision, Not a Default",
+        description:
+          "Before the deed is recorded, the grant deed or warranty deed will list a grantee — the buyer — and a vesting, which is the legal way title is held. That vesting is the operating system for the property. It decides whether a deceased owner's interest passes automatically to a survivor, whether a creditor can attach the entire property, whether a spouse must sign a sale, whether a step-up in tax basis applies, and whether probate will be required. The default is usually whatever the title officer types when the purchase contract says your name; that is not a strategy. The goal of this guide is to make the vesting conversation intentional, documented, and reviewed by the right professional before signing.",
+        learningObjectives: [
+          "Define vesting and explain why it is the operating system of ownership",
+          "List the five events where vesting controls the outcome: death, divorce, lawsuit, sale, and tax",
+          "Distinguish title from financing: you can be on the loan but not on title, or on title but not on the loan",
+          "Build a pre-closing checklist that includes attorney or title-officer review of vesting",
+        ],
+      },
+      {
+        title: "Sole Ownership: Simple, Exposed, and Fully in Your Control",
+        description:
+          "Sole ownership means one person holds title in their individual name. Mechanism: the deed conveys the property to one grantee only; there are no co-owners, no survivorship, and no automatic transfer. Pros: absolute control over sale, refinance, lease, and encumbrance; the cleanest structure for estate planning through a will or trust; and probate is the only path, so the estate plan is deliberately in charge. Cons: full exposure to personal creditors and lawsuits, because there is no co-owner's interest to complicate a levy; no survivorship, so the property generally passes through probate unless it is held in a trust or directed by a transfer-on-death instrument; and if a couple buys but only one spouse takes title, the omitted spouse may still have community-property or marital rights in community property or equitable-distribution states. Fit: single buyers, buyers whose estate plan already owns the property through a revocable trust, or investors who want direct control and accept the liability exposure. Ask your attorney: does my will or trust currently direct this property, and is my state a community-property, common-law, or equitable-distribution state.",
+        learningObjectives: [
+          "Explain why sole ownership gives the most control and the least structural protection",
+          "Identify the probate path for sole-owned property outside a trust",
+          "Recognize marital or community-property rights that may override sole title",
+          "Match sole ownership to buyers with direct control needs and adequate insurance or trust planning",
+        ],
+      },
+      {
+        title: "Tenancy in Common: The Flexible Partnership",
+        description:
+          "Tenancy in common is the default for unrelated co-owners. Mechanism: two or more people hold title together, each with a distinct, transferable, divisible share — which can be equal or unequal, such as fifty-fifty, seventy-thirty, or any other fraction. Each owner can sell, mortgage, or transfer their share without the others' consent, and there is no right of survivorship. When one tenant dies, their share passes to their heirs or devisees according to their estate plan. Pros: maximum flexibility for unrelated buyers, investors, and family members who want documented, unequal contributions; allows a business-like arrangement where one party can exit without forcing a sale; and pairs naturally with a written co-ownership agreement that governs expenses, occupancy, sale triggers, and buyout formulas. Cons: any tenant can force a partition sale if the relationship breaks down; a creditor of one tenant can attach that tenant's share, dragging the property into a forced sale or lien dispute; and there is no automatic survivorship, so the surviving tenants may end up owning with the deceased's heirs. Fit: investment partners, siblings inheriting together, or friends buying a second home. Ask your attorney: do we have a co-ownership agreement that covers sale triggers, buyout pricing, and what happens if one of us dies or stops paying.",
+        learningObjectives: [
+          "Describe divisible shares, transferability, and the lack of survivorship in tenancy in common",
+          "Explain how a co-ownership agreement turns tenancy in common into a workable business structure",
+          "Assess partition and creditor-attachment risks",
+          "Compare tenancy in common to joint tenancy for unrelated buyers",
+        ],
+      },
+      {
+        title: "Joint Tenancy With Right of Survivorship: The Automatic Handoff",
+        description:
+          "Joint tenancy creates equal ownership among two or more people and includes the right of survivorship. Mechanism: when one joint tenant dies, the surviving joint tenant or tenants automatically absorb the deceased's interest by operation of law, outside probate. To create it, the four unities must be present: the same interest, the same time, the same title, and the same possession. Pros: clean, automatic transfer to the survivor; no probate for the deceased's interest; and simplicity for couples and close family members who want the property to go to the survivor first. Cons: all owners must hold equal shares, so unequal contributions are structurally ignored; any tenant can sever the joint tenancy unilaterally by transferring their interest, converting it to a tenancy in common and destroying the survivorship; and the automatic transfer may conflict with a will or trust that directs the property elsewhere, which can create confusion or litigation. Fit: spouses, domestic partners, or family members who want simplicity and equal ownership. Ask your attorney: will joint tenancy override my will or trust, and can a single creditor of one joint tenant reach the whole property in my state.",
+        learningObjectives: [
+          "Define the four unities required to create joint tenancy",
+          "Explain how right of survivorship operates outside probate",
+          "Identify how a unilateral transfer severs joint tenancy and destroys survivorship",
+          "Recognize when joint tenancy conflicts with a will or trust",
+        ],
+      },
+      {
+        title: "Tenancy by the Entirety: The Married-Only Shield",
+        description:
+          "Tenancy by the entirety is a form of joint tenancy available only to married couples in roughly half of U.S. states. Mechanism: each spouse is treated as owning the whole property, not a divisible half; the property can only be transferred or encumbered with both spouses' consent. Pros: strong protection against creditors of one spouse, because a creditor generally cannot force a sale of property held by the entireties without the other spouse's consent; automatic right of survivorship; and divorce protection because neither spouse can unilaterally dispose of the asset. Cons: available only in states that recognize it and only while the marriage exists; divorce typically converts the tenancy to a tenancy in common, ending the creditor protection and survivorship; and it does not protect against joint creditors or federal tax liens. Fit: married couples in entireties states who want creditor protection and automatic survivorship. Ask your attorney: does my state recognize tenancy by the entirety, and does it protect against all creditors of one spouse or only specific classes.",
+        learningObjectives: [
+          "Explain the unity of person and the whole-property concept in tenancy by the entirety",
+          "Identify the creditor-protection and divorce-protection features",
+          "Recognize that divorce terminates the tenancy by the entirety",
+          "Verify state availability before relying on this structure",
+        ],
+      },
+      {
+        title: "Community Property and Community Property With Right of Survivorship",
+        description:
+          "Community property states — including California, Texas, Washington, Arizona, and others — treat property acquired during marriage as owned equally by both spouses, regardless of whose name is on title. Mechanism: each spouse owns an undivided one-half interest. Standard community property has no automatic survivorship; the deceased spouse's half passes according to their will or trust. Community property with right of survivorship adds the survivorship feature, so the surviving spouse takes the deceased spouse's interest automatically. Pros: potential double step-up in basis at the first death, which can reduce capital-gains tax when the survivor sells; equal ownership recognition for spousal contributions; and survivorship if the right-of-survivorship form is used. Cons: only available in community-property states and generally only for married couples; transfers or encumbrances may require both spouses; and the tax advantage depends on current law and proper documentation. Fit: married couples in community-property states who want the basis step-up and survivorship. Ask your attorney and CPA: will we get a full step-up in basis under our state's community-property rules, and should we record the right-of-survivorship form.",
+        learningObjectives: [
+          "Distinguish community property from community property with right of survivorship",
+          "Explain the potential double step-up in basis and its tax significance",
+          "Identify which states recognize community property and the spousal signature rules",
+          "Compare CPWROS to joint tenancy for married couples in community-property states",
+        ],
+      },
+      {
+        title: "Holding Title in a Revocable Living Trust",
+        description:
+          "A revocable living trust is a legal entity that holds title for the benefit of beneficiaries, managed by a trustee. Mechanism: the deed conveys the property to the trust; the trustee manages the asset according to the trust document, and the settlor typically retains the power to amend or revoke the trust during life. Pros: probate avoidance for the property, because the trust survives the settlor; privacy, because the trust terms do not become public court records; continuity of management if the settlor becomes incapacitated; and flexibility to name contingent beneficiaries and successor trustees. Cons: the trust must be properly funded, meaning the deed actually transfers title to the trust — a trust that does not own the asset is useless; refinancing can require temporarily removing the property from the trust, then re-deeding; and there is no automatic creditor protection for the settlor because the trust is revocable. Fit: buyers with a complete estate plan, blended families, owners who want privacy and probate avoidance, and anyone with minor or special-needs beneficiaries. Ask your attorney: is the trust already funded, who is the successor trustee, and what is the exact process to deed the property into the trust at or after closing.",
+        learningObjectives: [
+          "Explain how a revocable living trust holds title and avoids probate",
+          "Distinguish between having a trust document and actually funding the trust with the deed",
+          "Identify refinancing and title-insurance complexities for trust-held property",
+          "Recognize that revocable trusts do not provide creditor protection for the settlor",
+        ],
+      },
+      {
+        title: "LLCs, Partnerships, and Entity Ownership",
+        description:
+          "Holding property in an LLC, limited partnership, corporation, or other entity separates the asset from the owner's personal balance sheet. Mechanism: the deed conveys title to the entity; the entity's operating agreement or bylaws govern management, distributions, and transfers. Pros: liability shield for the owners against property-level claims, such as tenant injuries or environmental issues; clean structure for multiple investors; and estate planning flexibility for fractional transfers through membership interests. Cons: residential lenders often refuse to finance an LLC-owned primary residence; transferring a mortgaged property into an LLC may trigger a due-on-sale clause; insurance and tax treatment become more complex; and the liability shield can be pierced if the entity is not properly capitalized, maintained, or respected as separate. Fit: rental-property investors, fix-and-flip operators, commercial properties, and family limited partnerships. Ask your attorney and CPA: will my lender allow entity ownership, will the transfer trigger a due-on-sale clause, and am I maintaining the entity formalities that preserve the liability shield.",
+        learningObjectives: [
+          "Describe how LLCs and other entities hold title and provide liability separation",
+          "Identify lender and due-on-sale risks for residential property transferred to an entity",
+          "Explain the conditions under which a court may pierce the entity liability shield",
+          "Match entity ownership to investment and commercial property rather than primary residences",
+        ],
+      },
+      {
+        title: "Life Estates, Remainder Interests, and Hybrid Structures",
+        description:
+          "A life estate splits ownership between a life tenant, who has the right to use the property during life, and a remainderman, who takes full ownership at the life tenant's death. Mechanism: the deed reserves a life estate to the grantor and grants the remainder to named parties. Pros: probate avoidance for the remainder interest; the life tenant can remain in the home; and the transfer of the remainder may be completed for gift or Medicaid planning purposes when structured correctly. Cons: the life tenant usually cannot sell or mortgage without the remainderman's consent; the remainderman receives an interest immediately, which may have gift-tax consequences; and Medicaid look-back rules can complicate life-estate transfers if nursing-home care is a concern. Hybrid structures — such as a qualified personal residence trust or a transfer to a trust with a reserved life estate — require sophisticated planning. Fit: older owners transferring a family home to children while retaining occupancy, and families with specific estate or Medicaid planning goals. Ask your attorney and CPA: what are the gift-tax, estate-tax, and Medicaid implications of reserving a life estate, and can the remainderman block a future sale or refinance.",
+        learningObjectives: [
+          "Distinguish life estates from remainder interests and full ownership",
+          "Explain the life tenant's use rights and the remainderman's future interest",
+          "Identify gift-tax, Medicaid look-back, and sale-consent risks",
+          "Recognize when hybrid structures require specialized estate or elder-law counsel",
+        ],
+      },
+      {
+        title: "Choosing the Right Vesting: A Decision Framework",
+        description:
+          "The right title structure is the one that matches your relationship status, your liability exposure, your estate plan, your tax goals, and your state's law. Start with this sequence. First, who is buying: one person, a married couple, an unmarried couple, family members, or investors? Second, what is the primary goal: probate avoidance, creditor protection, automatic survivorship, flexibility, or liability shielding? Third, what does state law permit: community property, tenancy by the entirety, transfer-on-death deeds, or Lady Bird deeds? Fourth, what does the lender allow: many residential loans require the borrower to take title in an individual name or as a natural person, and may require a deed-in or deed-out of trust for refinancing. Fifth, what is the estate plan: a will, trust, or beneficiary deed that already controls where the property goes? Sixth, document the decision in a closing instruction letter to the title officer and confirm the deed before recording. The best title choice is the one that survives all six questions without contradiction. Ask your attorney and title officer: given my state, my lender, and my estate plan, what vesting gives me the cleanest outcome at death, sale, and lawsuit.",
+        learningObjectives: [
+          "Apply a six-question framework to select title vesting",
+          "Match relationship status, goals, and state law to the right structure",
+          "Coordinate vesting with the lender, estate plan, and title officer",
+          "Document the vesting decision in a closing instruction and verify the recorded deed",
+        ],
+      },
+    ]),
+  }),
+
 ] as unknown) as PublicationBlueprint[];
+
