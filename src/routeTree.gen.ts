@@ -38,7 +38,6 @@ import { Route as BuyersRouteImport } from './routes/buyers'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AttorneysRouteImport } from './routes/attorneys'
 import { Route as AttorneyPartnersRouteImport } from './routes/attorney-partners'
-import { Route as AssessmentRouteImport } from './routes/assessment'
 import { Route as AccessibilityRouteImport } from './routes/accessibility'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
@@ -217,11 +216,6 @@ const AttorneyPartnersRoute = AttorneyPartnersRouteImport.update({
   path: '/attorney-partners',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AssessmentRoute = AssessmentRouteImport.update({
-  id: '/assessment',
-  path: '/assessment',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AccessibilityRoute = AccessibilityRouteImport.update({
   id: '/accessibility',
   path: '/accessibility',
@@ -387,7 +381,6 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/accessibility': typeof AccessibilityRoute
-  '/assessment': typeof AssessmentRoute
   '/attorney-partners': typeof AttorneyPartnersRoute
   '/attorneys': typeof AttorneysRoute
   '/auth': typeof AuthRoute
@@ -451,7 +444,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/accessibility': typeof AccessibilityRoute
-  '/assessment': typeof AssessmentRoute
   '/attorney-partners': typeof AttorneyPartnersRoute
   '/attorneys': typeof AttorneysRoute
   '/auth': typeof AuthRoute
@@ -516,7 +508,6 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/accessibility': typeof AccessibilityRoute
-  '/assessment': typeof AssessmentRoute
   '/attorney-partners': typeof AttorneyPartnersRoute
   '/attorneys': typeof AttorneysRoute
   '/auth': typeof AuthRoute
@@ -582,7 +573,6 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/accessibility'
-    | '/assessment'
     | '/attorney-partners'
     | '/attorneys'
     | '/auth'
@@ -646,7 +636,6 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/accessibility'
-    | '/assessment'
     | '/attorney-partners'
     | '/attorneys'
     | '/auth'
@@ -710,7 +699,6 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/accessibility'
-    | '/assessment'
     | '/attorney-partners'
     | '/attorneys'
     | '/auth'
@@ -775,7 +763,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   AccessibilityRoute: typeof AccessibilityRoute
-  AssessmentRoute: typeof AssessmentRoute
   AttorneyPartnersRoute: typeof AttorneyPartnersRoute
   AttorneysRoute: typeof AttorneysRoute
   AuthRoute: typeof AuthRoute
@@ -1039,13 +1026,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AttorneyPartnersRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/assessment': {
-      id: '/assessment'
-      path: '/assessment'
-      fullPath: '/assessment'
-      preLoaderRoute: typeof AssessmentRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/accessibility': {
       id: '/accessibility'
       path: '/accessibility'
@@ -1301,7 +1281,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   AccessibilityRoute: AccessibilityRoute,
-  AssessmentRoute: AssessmentRoute,
   AttorneyPartnersRoute: AttorneyPartnersRoute,
   AttorneysRoute: AttorneysRoute,
   AuthRoute: AuthRoute,
