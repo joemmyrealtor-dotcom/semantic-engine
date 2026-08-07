@@ -193,48 +193,68 @@ export interface LeadCaptureOutcome {
   payload: CrmLeadPayload;
   score: LeadScore;
   pipeline: string;
-  result: CrmSubmitResult;
+  delivery: LeadDelivery;
+  duplicate: boolean;
 }
 
+/** The transport used by the delivery queue: one HubSpot upsert per record. */
+export const hubspotTransport: Transport = record =>
+  submitCrmLead({
+    data: {
+      properties: record.payload as unknown as Record<string, string | number | boolean>,
+      pipeline: record.pipeline,
+      formId: record.formId,
+      idempotencyKey: record.idempotencyKey,
+    },
+  });
+
 /**
- * The single conversion entry point. Scores, maps, submits, queues, and
- * emits the analytics event — never duplicated per page.
+ * The single conversion entry point. Scores, maps, retains, enqueues,
+ * flushes, and emits exactly one analytics event.
  */
-export async function captureLead(input: LeadCaptureInput): Promise<LeadCaptureOutcome> {
+export async function captureLead(
+  input: LeadCaptureInput,
+  transport: Transport = hubspotTransport,
+): Promise<LeadCaptureOutcome> {
   const score = scoreLeadFor(input);
   const payload = buildCrmLeadPayload({ ...input, score });
   const pipeline = pipelineForSituation(input.values.situation).id;
 
   queueLead(payload);
 
-  let result: CrmSubmitResult;
-  try {
-    result = await submitCrmLead({
-      data: { properties: payload as unknown as Record<string, string | number | boolean>, pipeline, formId: input.formId },
-    });
-  } catch (error) {
-    console.error("Lead submission failed; retained locally", error);
-    result = {
-      ok: false,
-      mode: "test",
-      action: "queued",
-      message: "We saved your request locally and will retry.",
-    };
-  }
-
-  trackAction(input.assessmentId || input.guideId ? "lead_submitted" : "contact_submitted", {
-    situation: input.values.situation,
-    city: input.values.city,
-    ...(input.guideId ? { leadMagnet: input.guideId, guideId: input.guideId } : {}),
+  const idempotencyKey = idempotencyKeyFor({
+    email: input.values.email,
+    formId: input.formId,
+    ...(input.guideId ? { guideId: input.guideId } : {}),
     ...(input.assessmentId ? { assessmentId: input.assessmentId } : {}),
-    ...(input.readinessLevel ? { readinessLevel: input.readinessLevel } : {}),
-    leadClassification: score.classification,
-    leadScore: score.points,
-    label: input.formId,
+  });
+  const { record, duplicate } = enqueueDelivery({
+    payload,
+    pipeline,
+    formId: input.formId,
+    idempotencyKey,
   });
 
-  return { payload, score, pipeline, result };
+  // Flush this record plus anything left over from an earlier outage.
+  const flushed = await flushQueue(transport);
+  const delivery = flushed.find(r => r.id === record.id) ?? record;
+
+  if (!duplicate) {
+    trackAction(input.assessmentId || input.guideId ? "lead_submitted" : "contact_submitted", {
+      situation: input.values.situation,
+      city: input.values.city,
+      ...(input.guideId ? { leadMagnet: input.guideId, guideId: input.guideId } : {}),
+      ...(input.assessmentId ? { assessmentId: input.assessmentId } : {}),
+      ...(input.readinessLevel ? { readinessLevel: input.readinessLevel } : {}),
+      leadClassification: score.classification,
+      leadScore: score.points,
+      label: input.formId,
+    });
+  }
+
+  return { payload, score, pipeline, delivery, duplicate };
 }
+
 
 const STORE_KEY = "lf.leads.v1";
 
