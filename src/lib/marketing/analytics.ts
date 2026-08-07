@@ -132,11 +132,13 @@ export function trackEvent(
 
   BUFFER.push(payload);
   if (BUFFER.length > MAX_BUFFER) BUFFER.shift();
+  recordConversionEvent(payload);
 
   if (typeof window !== "undefined" && analyticsAllowed()) {
     window.dataLayer = window.dataLayer || [];
     window.dataLayer.push(payload as unknown as Record<string, unknown>);
   }
+
   return payload;
 }
 
