@@ -38,15 +38,16 @@ import { Route as BuyersRouteImport } from './routes/buyers'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AttorneysRouteImport } from './routes/attorneys'
 import { Route as AttorneyPartnersRouteImport } from './routes/attorney-partners'
-import { Route as AssessmentRouteImport } from './routes/assessment'
 import { Route as AccessibilityRouteImport } from './routes/accessibility'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PublicationsIndexRouteImport } from './routes/publications.index'
 import { Route as LocalGuidesIndexRouteImport } from './routes/local-guides.index'
+import { Route as GuidesIndexRouteImport } from './routes/guides.index'
 import { Route as ConceptsIndexRouteImport } from './routes/concepts.index'
 import { Route as ClientToolkitsIndexRouteImport } from './routes/client-toolkits.index'
 import { Route as AutomationsIndexRouteImport } from './routes/automations.index'
+import { Route as AssessmentsIndexRouteImport } from './routes/assessments.index'
 import { Route as AiPacksIndexRouteImport } from './routes/ai-packs.index'
 import { Route as AgentsIndexRouteImport } from './routes/agents.index'
 import { Route as ReleasesIdRouteImport } from './routes/releases.$id'
@@ -56,12 +57,14 @@ import { Route as LocalGuidesCityRouteImport } from './routes/local-guides.$city
 import { Route as KnowledgeIdRouteImport } from './routes/knowledge.$id'
 import { Route as KnowledgeObjectsNewRouteImport } from './routes/knowledge-objects.new'
 import { Route as IntegrationsIdRouteImport } from './routes/integrations.$id'
+import { Route as GuidesSlugRouteImport } from './routes/guides.$slug'
 import { Route as FrameworksIdRouteImport } from './routes/frameworks.$id'
 import { Route as ConceptsIdRouteImport } from './routes/concepts.$id'
 import { Route as ClientToolsNewRouteImport } from './routes/client-tools.new'
 import { Route as ClientToolkitsIdRouteImport } from './routes/client-toolkits.$id'
 import { Route as AutomationsNewRouteImport } from './routes/automations.new'
 import { Route as AutomationsIdRouteImport } from './routes/automations.$id'
+import { Route as AssessmentsSlugRouteImport } from './routes/assessments.$slug'
 import { Route as AiPacksIdRouteImport } from './routes/ai-packs.$id'
 import { Route as AgentsIdRouteImport } from './routes/agents.$id'
 import { Route as AdminWorkspacesRouteImport } from './routes/admin.workspaces'
@@ -217,11 +220,6 @@ const AttorneyPartnersRoute = AttorneyPartnersRouteImport.update({
   path: '/attorney-partners',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AssessmentRoute = AssessmentRouteImport.update({
-  id: '/assessment',
-  path: '/assessment',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AccessibilityRoute = AccessibilityRouteImport.update({
   id: '/accessibility',
   path: '/accessibility',
@@ -247,6 +245,11 @@ const LocalGuidesIndexRoute = LocalGuidesIndexRouteImport.update({
   path: '/local-guides/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GuidesIndexRoute = GuidesIndexRouteImport.update({
+  id: '/guides/',
+  path: '/guides/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ConceptsIndexRoute = ConceptsIndexRouteImport.update({
   id: '/concepts/',
   path: '/concepts/',
@@ -260,6 +263,11 @@ const ClientToolkitsIndexRoute = ClientToolkitsIndexRouteImport.update({
 const AutomationsIndexRoute = AutomationsIndexRouteImport.update({
   id: '/automations/',
   path: '/automations/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AssessmentsIndexRoute = AssessmentsIndexRouteImport.update({
+  id: '/assessments/',
+  path: '/assessments/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AiPacksIndexRoute = AiPacksIndexRouteImport.update({
@@ -307,6 +315,11 @@ const IntegrationsIdRoute = IntegrationsIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => IntegrationsRoute,
 } as any)
+const GuidesSlugRoute = GuidesSlugRouteImport.update({
+  id: '/guides/$slug',
+  path: '/guides/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FrameworksIdRoute = FrameworksIdRouteImport.update({
   id: '/frameworks/$id',
   path: '/frameworks/$id',
@@ -335,6 +348,11 @@ const AutomationsNewRoute = AutomationsNewRouteImport.update({
 const AutomationsIdRoute = AutomationsIdRouteImport.update({
   id: '/automations/$id',
   path: '/automations/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AssessmentsSlugRoute = AssessmentsSlugRouteImport.update({
+  id: '/assessments/$slug',
+  path: '/assessments/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AiPacksIdRoute = AiPacksIdRouteImport.update({
@@ -387,7 +405,6 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/accessibility': typeof AccessibilityRoute
-  '/assessment': typeof AssessmentRoute
   '/attorney-partners': typeof AttorneyPartnersRoute
   '/attorneys': typeof AttorneysRoute
   '/auth': typeof AuthRoute
@@ -425,12 +442,14 @@ export interface FileRoutesByFullPath {
   '/admin/workspaces': typeof AdminWorkspacesRoute
   '/agents/$id': typeof AgentsIdRoute
   '/ai-packs/$id': typeof AiPacksIdRoute
+  '/assessments/$slug': typeof AssessmentsSlugRoute
   '/automations/$id': typeof AutomationsIdRoute
   '/automations/new': typeof AutomationsNewRoute
   '/client-toolkits/$id': typeof ClientToolkitsIdRoute
   '/client-tools/new': typeof ClientToolsNewRoute
   '/concepts/$id': typeof ConceptsIdRoute
   '/frameworks/$id': typeof FrameworksIdRoute
+  '/guides/$slug': typeof GuidesSlugRoute
   '/integrations/$id': typeof IntegrationsIdRoute
   '/knowledge-objects/new': typeof KnowledgeObjectsNewRoute
   '/knowledge/$id': typeof KnowledgeIdRoute
@@ -440,9 +459,11 @@ export interface FileRoutesByFullPath {
   '/releases/$id': typeof ReleasesIdRoute
   '/agents/': typeof AgentsIndexRoute
   '/ai-packs/': typeof AiPacksIndexRoute
+  '/assessments/': typeof AssessmentsIndexRoute
   '/automations/': typeof AutomationsIndexRoute
   '/client-toolkits/': typeof ClientToolkitsIndexRoute
   '/concepts/': typeof ConceptsIndexRoute
+  '/guides/': typeof GuidesIndexRoute
   '/local-guides/': typeof LocalGuidesIndexRoute
   '/publications/': typeof PublicationsIndexRoute
   '/api/public/v1/$': typeof ApiPublicV1SplatRoute
@@ -451,7 +472,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/accessibility': typeof AccessibilityRoute
-  '/assessment': typeof AssessmentRoute
   '/attorney-partners': typeof AttorneyPartnersRoute
   '/attorneys': typeof AttorneysRoute
   '/auth': typeof AuthRoute
@@ -489,12 +509,14 @@ export interface FileRoutesByTo {
   '/admin/workspaces': typeof AdminWorkspacesRoute
   '/agents/$id': typeof AgentsIdRoute
   '/ai-packs/$id': typeof AiPacksIdRoute
+  '/assessments/$slug': typeof AssessmentsSlugRoute
   '/automations/$id': typeof AutomationsIdRoute
   '/automations/new': typeof AutomationsNewRoute
   '/client-toolkits/$id': typeof ClientToolkitsIdRoute
   '/client-tools/new': typeof ClientToolsNewRoute
   '/concepts/$id': typeof ConceptsIdRoute
   '/frameworks/$id': typeof FrameworksIdRoute
+  '/guides/$slug': typeof GuidesSlugRoute
   '/integrations/$id': typeof IntegrationsIdRoute
   '/knowledge-objects/new': typeof KnowledgeObjectsNewRoute
   '/knowledge/$id': typeof KnowledgeIdRoute
@@ -504,9 +526,11 @@ export interface FileRoutesByTo {
   '/releases/$id': typeof ReleasesIdRoute
   '/agents': typeof AgentsIndexRoute
   '/ai-packs': typeof AiPacksIndexRoute
+  '/assessments': typeof AssessmentsIndexRoute
   '/automations': typeof AutomationsIndexRoute
   '/client-toolkits': typeof ClientToolkitsIndexRoute
   '/concepts': typeof ConceptsIndexRoute
+  '/guides': typeof GuidesIndexRoute
   '/local-guides': typeof LocalGuidesIndexRoute
   '/publications': typeof PublicationsIndexRoute
   '/api/public/v1/$': typeof ApiPublicV1SplatRoute
@@ -516,7 +540,6 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/accessibility': typeof AccessibilityRoute
-  '/assessment': typeof AssessmentRoute
   '/attorney-partners': typeof AttorneyPartnersRoute
   '/attorneys': typeof AttorneysRoute
   '/auth': typeof AuthRoute
@@ -554,12 +577,14 @@ export interface FileRoutesById {
   '/admin/workspaces': typeof AdminWorkspacesRoute
   '/agents/$id': typeof AgentsIdRoute
   '/ai-packs/$id': typeof AiPacksIdRoute
+  '/assessments/$slug': typeof AssessmentsSlugRoute
   '/automations/$id': typeof AutomationsIdRoute
   '/automations/new': typeof AutomationsNewRoute
   '/client-toolkits/$id': typeof ClientToolkitsIdRoute
   '/client-tools/new': typeof ClientToolsNewRoute
   '/concepts/$id': typeof ConceptsIdRoute
   '/frameworks/$id': typeof FrameworksIdRoute
+  '/guides/$slug': typeof GuidesSlugRoute
   '/integrations/$id': typeof IntegrationsIdRoute
   '/knowledge-objects/new': typeof KnowledgeObjectsNewRoute
   '/knowledge/$id': typeof KnowledgeIdRoute
@@ -569,9 +594,11 @@ export interface FileRoutesById {
   '/releases/$id': typeof ReleasesIdRoute
   '/agents/': typeof AgentsIndexRoute
   '/ai-packs/': typeof AiPacksIndexRoute
+  '/assessments/': typeof AssessmentsIndexRoute
   '/automations/': typeof AutomationsIndexRoute
   '/client-toolkits/': typeof ClientToolkitsIndexRoute
   '/concepts/': typeof ConceptsIndexRoute
+  '/guides/': typeof GuidesIndexRoute
   '/local-guides/': typeof LocalGuidesIndexRoute
   '/publications/': typeof PublicationsIndexRoute
   '/api/public/v1/$': typeof ApiPublicV1SplatRoute
@@ -582,7 +609,6 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/accessibility'
-    | '/assessment'
     | '/attorney-partners'
     | '/attorneys'
     | '/auth'
@@ -620,12 +646,14 @@ export interface FileRouteTypes {
     | '/admin/workspaces'
     | '/agents/$id'
     | '/ai-packs/$id'
+    | '/assessments/$slug'
     | '/automations/$id'
     | '/automations/new'
     | '/client-toolkits/$id'
     | '/client-tools/new'
     | '/concepts/$id'
     | '/frameworks/$id'
+    | '/guides/$slug'
     | '/integrations/$id'
     | '/knowledge-objects/new'
     | '/knowledge/$id'
@@ -635,9 +663,11 @@ export interface FileRouteTypes {
     | '/releases/$id'
     | '/agents/'
     | '/ai-packs/'
+    | '/assessments/'
     | '/automations/'
     | '/client-toolkits/'
     | '/concepts/'
+    | '/guides/'
     | '/local-guides/'
     | '/publications/'
     | '/api/public/v1/$'
@@ -646,7 +676,6 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/accessibility'
-    | '/assessment'
     | '/attorney-partners'
     | '/attorneys'
     | '/auth'
@@ -684,12 +713,14 @@ export interface FileRouteTypes {
     | '/admin/workspaces'
     | '/agents/$id'
     | '/ai-packs/$id'
+    | '/assessments/$slug'
     | '/automations/$id'
     | '/automations/new'
     | '/client-toolkits/$id'
     | '/client-tools/new'
     | '/concepts/$id'
     | '/frameworks/$id'
+    | '/guides/$slug'
     | '/integrations/$id'
     | '/knowledge-objects/new'
     | '/knowledge/$id'
@@ -699,9 +730,11 @@ export interface FileRouteTypes {
     | '/releases/$id'
     | '/agents'
     | '/ai-packs'
+    | '/assessments'
     | '/automations'
     | '/client-toolkits'
     | '/concepts'
+    | '/guides'
     | '/local-guides'
     | '/publications'
     | '/api/public/v1/$'
@@ -710,7 +743,6 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/accessibility'
-    | '/assessment'
     | '/attorney-partners'
     | '/attorneys'
     | '/auth'
@@ -748,12 +780,14 @@ export interface FileRouteTypes {
     | '/admin/workspaces'
     | '/agents/$id'
     | '/ai-packs/$id'
+    | '/assessments/$slug'
     | '/automations/$id'
     | '/automations/new'
     | '/client-toolkits/$id'
     | '/client-tools/new'
     | '/concepts/$id'
     | '/frameworks/$id'
+    | '/guides/$slug'
     | '/integrations/$id'
     | '/knowledge-objects/new'
     | '/knowledge/$id'
@@ -763,9 +797,11 @@ export interface FileRouteTypes {
     | '/releases/$id'
     | '/agents/'
     | '/ai-packs/'
+    | '/assessments/'
     | '/automations/'
     | '/client-toolkits/'
     | '/concepts/'
+    | '/guides/'
     | '/local-guides/'
     | '/publications/'
     | '/api/public/v1/$'
@@ -775,7 +811,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   AccessibilityRoute: typeof AccessibilityRoute
-  AssessmentRoute: typeof AssessmentRoute
   AttorneyPartnersRoute: typeof AttorneyPartnersRoute
   AttorneysRoute: typeof AttorneysRoute
   AuthRoute: typeof AuthRoute
@@ -813,12 +848,14 @@ export interface RootRouteChildren {
   AdminWorkspacesRoute: typeof AdminWorkspacesRoute
   AgentsIdRoute: typeof AgentsIdRoute
   AiPacksIdRoute: typeof AiPacksIdRoute
+  AssessmentsSlugRoute: typeof AssessmentsSlugRoute
   AutomationsIdRoute: typeof AutomationsIdRoute
   AutomationsNewRoute: typeof AutomationsNewRoute
   ClientToolkitsIdRoute: typeof ClientToolkitsIdRoute
   ClientToolsNewRoute: typeof ClientToolsNewRoute
   ConceptsIdRoute: typeof ConceptsIdRoute
   FrameworksIdRoute: typeof FrameworksIdRoute
+  GuidesSlugRoute: typeof GuidesSlugRoute
   KnowledgeObjectsNewRoute: typeof KnowledgeObjectsNewRoute
   LocalGuidesCityRoute: typeof LocalGuidesCityRoute
   PublicationsIdRoute: typeof PublicationsIdRoute
@@ -826,9 +863,11 @@ export interface RootRouteChildren {
   ReleasesIdRoute: typeof ReleasesIdRoute
   AgentsIndexRoute: typeof AgentsIndexRoute
   AiPacksIndexRoute: typeof AiPacksIndexRoute
+  AssessmentsIndexRoute: typeof AssessmentsIndexRoute
   AutomationsIndexRoute: typeof AutomationsIndexRoute
   ClientToolkitsIndexRoute: typeof ClientToolkitsIndexRoute
   ConceptsIndexRoute: typeof ConceptsIndexRoute
+  GuidesIndexRoute: typeof GuidesIndexRoute
   LocalGuidesIndexRoute: typeof LocalGuidesIndexRoute
   PublicationsIndexRoute: typeof PublicationsIndexRoute
   ApiPublicV1SplatRoute: typeof ApiPublicV1SplatRoute
@@ -1039,13 +1078,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AttorneyPartnersRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/assessment': {
-      id: '/assessment'
-      path: '/assessment'
-      fullPath: '/assessment'
-      preLoaderRoute: typeof AssessmentRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/accessibility': {
       id: '/accessibility'
       path: '/accessibility'
@@ -1081,6 +1113,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LocalGuidesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/guides/': {
+      id: '/guides/'
+      path: '/guides'
+      fullPath: '/guides/'
+      preLoaderRoute: typeof GuidesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/concepts/': {
       id: '/concepts/'
       path: '/concepts'
@@ -1100,6 +1139,13 @@ declare module '@tanstack/react-router' {
       path: '/automations'
       fullPath: '/automations/'
       preLoaderRoute: typeof AutomationsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/assessments/': {
+      id: '/assessments/'
+      path: '/assessments'
+      fullPath: '/assessments/'
+      preLoaderRoute: typeof AssessmentsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ai-packs/': {
@@ -1165,6 +1211,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IntegrationsIdRouteImport
       parentRoute: typeof IntegrationsRoute
     }
+    '/guides/$slug': {
+      id: '/guides/$slug'
+      path: '/guides/$slug'
+      fullPath: '/guides/$slug'
+      preLoaderRoute: typeof GuidesSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/frameworks/$id': {
       id: '/frameworks/$id'
       path: '/frameworks/$id'
@@ -1205,6 +1258,13 @@ declare module '@tanstack/react-router' {
       path: '/automations/$id'
       fullPath: '/automations/$id'
       preLoaderRoute: typeof AutomationsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/assessments/$slug': {
+      id: '/assessments/$slug'
+      path: '/assessments/$slug'
+      fullPath: '/assessments/$slug'
+      preLoaderRoute: typeof AssessmentsSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ai-packs/$id': {
@@ -1301,7 +1361,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   AccessibilityRoute: AccessibilityRoute,
-  AssessmentRoute: AssessmentRoute,
   AttorneyPartnersRoute: AttorneyPartnersRoute,
   AttorneysRoute: AttorneysRoute,
   AuthRoute: AuthRoute,
@@ -1339,12 +1398,14 @@ const rootRouteChildren: RootRouteChildren = {
   AdminWorkspacesRoute: AdminWorkspacesRoute,
   AgentsIdRoute: AgentsIdRoute,
   AiPacksIdRoute: AiPacksIdRoute,
+  AssessmentsSlugRoute: AssessmentsSlugRoute,
   AutomationsIdRoute: AutomationsIdRoute,
   AutomationsNewRoute: AutomationsNewRoute,
   ClientToolkitsIdRoute: ClientToolkitsIdRoute,
   ClientToolsNewRoute: ClientToolsNewRoute,
   ConceptsIdRoute: ConceptsIdRoute,
   FrameworksIdRoute: FrameworksIdRoute,
+  GuidesSlugRoute: GuidesSlugRoute,
   KnowledgeObjectsNewRoute: KnowledgeObjectsNewRoute,
   LocalGuidesCityRoute: LocalGuidesCityRoute,
   PublicationsIdRoute: PublicationsIdRoute,
@@ -1352,9 +1413,11 @@ const rootRouteChildren: RootRouteChildren = {
   ReleasesIdRoute: ReleasesIdRoute,
   AgentsIndexRoute: AgentsIndexRoute,
   AiPacksIndexRoute: AiPacksIndexRoute,
+  AssessmentsIndexRoute: AssessmentsIndexRoute,
   AutomationsIndexRoute: AutomationsIndexRoute,
   ClientToolkitsIndexRoute: ClientToolkitsIndexRoute,
   ConceptsIndexRoute: ConceptsIndexRoute,
+  GuidesIndexRoute: GuidesIndexRoute,
   LocalGuidesIndexRoute: LocalGuidesIndexRoute,
   PublicationsIndexRoute: PublicationsIndexRoute,
   ApiPublicV1SplatRoute: ApiPublicV1SplatRoute,
