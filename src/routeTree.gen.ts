@@ -9,22 +9,38 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as SellersRouteImport } from './routes/sellers'
+import { Route as ResourcesRouteImport } from './routes/resources'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RepositoryRouteImport } from './routes/repository'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as PromptsRouteImport } from './routes/prompts'
+import { Route as ProbateRouteImport } from './routes/probate'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as OperationsRouteImport } from './routes/operations'
+import { Route as LocalGuidesRouteImport } from './routes/local-guides'
 import { Route as KnowledgeRouteImport } from './routes/knowledge'
+import { Route as InvestingRouteImport } from './routes/investing'
 import { Route as IntegrationsRouteImport } from './routes/integrations'
+import { Route as InheritedPropertyRouteImport } from './routes/inherited-property'
+import { Route as HomeRouteImport } from './routes/home'
 import { Route as GraphRouteImport } from './routes/graph'
 import { Route as GovernanceRouteImport } from './routes/governance'
 import { Route as ExecutiveRouteImport } from './routes/executive'
+import { Route as DownsizingRouteImport } from './routes/downsizing'
+import { Route as DistressedPropertyRouteImport } from './routes/distressed-property'
+import { Route as DisclaimerRouteImport } from './routes/disclaimer'
 import { Route as DeveloperRouteImport } from './routes/developer'
 import { Route as DataRouteImport } from './routes/data'
+import { Route as ContactRouteImport } from './routes/contact'
+import { Route as BuyersRouteImport } from './routes/buyers'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AttorneysRouteImport } from './routes/attorneys'
 import { Route as AttorneyPartnersRouteImport } from './routes/attorney-partners'
+import { Route as AccessibilityRouteImport } from './routes/accessibility'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PublicationsIndexRouteImport } from './routes/publications.index'
 import { Route as ConceptsIndexRouteImport } from './routes/concepts.index'
@@ -54,9 +70,24 @@ import { Route as AdminBackupsRouteImport } from './routes/admin.backups'
 import { Route as AdminAuditRouteImport } from './routes/admin.audit'
 import { Route as ApiPublicV1SplatRouteImport } from './routes/api/public/v1/$'
 
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SellersRoute = SellersRouteImport.update({
+  id: '/sellers',
+  path: '/sellers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResourcesRoute = ResourcesRouteImport.update({
+  id: '/resources',
+  path: '/resources',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -79,9 +110,24 @@ const PromptsRoute = PromptsRouteImport.update({
   path: '/prompts',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProbateRoute = ProbateRouteImport.update({
+  id: '/probate',
+  path: '/probate',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OperationsRoute = OperationsRouteImport.update({
   id: '/operations',
   path: '/operations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LocalGuidesRoute = LocalGuidesRouteImport.update({
+  id: '/local-guides',
+  path: '/local-guides',
   getParentRoute: () => rootRouteImport,
 } as any)
 const KnowledgeRoute = KnowledgeRouteImport.update({
@@ -89,9 +135,24 @@ const KnowledgeRoute = KnowledgeRouteImport.update({
   path: '/knowledge',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InvestingRoute = InvestingRouteImport.update({
+  id: '/investing',
+  path: '/investing',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IntegrationsRoute = IntegrationsRouteImport.update({
   id: '/integrations',
   path: '/integrations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InheritedPropertyRoute = InheritedPropertyRouteImport.update({
+  id: '/inherited-property',
+  path: '/inherited-property',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HomeRoute = HomeRouteImport.update({
+  id: '/home',
+  path: '/home',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GraphRoute = GraphRouteImport.update({
@@ -109,6 +170,21 @@ const ExecutiveRoute = ExecutiveRouteImport.update({
   path: '/executive',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DownsizingRoute = DownsizingRouteImport.update({
+  id: '/downsizing',
+  path: '/downsizing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DistressedPropertyRoute = DistressedPropertyRouteImport.update({
+  id: '/distressed-property',
+  path: '/distressed-property',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DisclaimerRoute = DisclaimerRouteImport.update({
+  id: '/disclaimer',
+  path: '/disclaimer',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DeveloperRoute = DeveloperRouteImport.update({
   id: '/developer',
   path: '/developer',
@@ -117,6 +193,16 @@ const DeveloperRoute = DeveloperRouteImport.update({
 const DataRoute = DataRouteImport.update({
   id: '/data',
   path: '/data',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BuyersRoute = BuyersRouteImport.update({
+  id: '/buyers',
+  path: '/buyers',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -132,6 +218,16 @@ const AttorneysRoute = AttorneysRouteImport.update({
 const AttorneyPartnersRoute = AttorneyPartnersRouteImport.update({
   id: '/attorney-partners',
   path: '/attorney-partners',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccessibilityRoute = AccessibilityRouteImport.update({
+  id: '/accessibility',
+  path: '/accessibility',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -277,22 +373,38 @@ const ApiPublicV1SplatRoute = ApiPublicV1SplatRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/accessibility': typeof AccessibilityRoute
   '/attorney-partners': typeof AttorneyPartnersRoute
   '/attorneys': typeof AttorneysRoute
   '/auth': typeof AuthRoute
+  '/buyers': typeof BuyersRoute
+  '/contact': typeof ContactRoute
   '/data': typeof DataRoute
   '/developer': typeof DeveloperRoute
+  '/disclaimer': typeof DisclaimerRoute
+  '/distressed-property': typeof DistressedPropertyRoute
+  '/downsizing': typeof DownsizingRoute
   '/executive': typeof ExecutiveRoute
   '/governance': typeof GovernanceRoute
   '/graph': typeof GraphRoute
+  '/home': typeof HomeRoute
+  '/inherited-property': typeof InheritedPropertyRoute
   '/integrations': typeof IntegrationsRouteWithChildren
+  '/investing': typeof InvestingRoute
   '/knowledge': typeof KnowledgeRouteWithChildren
+  '/local-guides': typeof LocalGuidesRoute
   '/operations': typeof OperationsRoute
+  '/privacy': typeof PrivacyRoute
+  '/probate': typeof ProbateRoute
   '/prompts': typeof PromptsRoute
   '/reports': typeof ReportsRoute
   '/repository': typeof RepositoryRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/resources': typeof ResourcesRoute
+  '/sellers': typeof SellersRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/terms': typeof TermsRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/backups': typeof AdminBackupsRoute
   '/admin/cutover': typeof AdminCutoverRoute
@@ -323,22 +435,38 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/accessibility': typeof AccessibilityRoute
   '/attorney-partners': typeof AttorneyPartnersRoute
   '/attorneys': typeof AttorneysRoute
   '/auth': typeof AuthRoute
+  '/buyers': typeof BuyersRoute
+  '/contact': typeof ContactRoute
   '/data': typeof DataRoute
   '/developer': typeof DeveloperRoute
+  '/disclaimer': typeof DisclaimerRoute
+  '/distressed-property': typeof DistressedPropertyRoute
+  '/downsizing': typeof DownsizingRoute
   '/executive': typeof ExecutiveRoute
   '/governance': typeof GovernanceRoute
   '/graph': typeof GraphRoute
+  '/home': typeof HomeRoute
+  '/inherited-property': typeof InheritedPropertyRoute
   '/integrations': typeof IntegrationsRouteWithChildren
+  '/investing': typeof InvestingRoute
   '/knowledge': typeof KnowledgeRouteWithChildren
+  '/local-guides': typeof LocalGuidesRoute
   '/operations': typeof OperationsRoute
+  '/privacy': typeof PrivacyRoute
+  '/probate': typeof ProbateRoute
   '/prompts': typeof PromptsRoute
   '/reports': typeof ReportsRoute
   '/repository': typeof RepositoryRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/resources': typeof ResourcesRoute
+  '/sellers': typeof SellersRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/terms': typeof TermsRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/backups': typeof AdminBackupsRoute
   '/admin/cutover': typeof AdminCutoverRoute
@@ -370,22 +498,38 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/accessibility': typeof AccessibilityRoute
   '/attorney-partners': typeof AttorneyPartnersRoute
   '/attorneys': typeof AttorneysRoute
   '/auth': typeof AuthRoute
+  '/buyers': typeof BuyersRoute
+  '/contact': typeof ContactRoute
   '/data': typeof DataRoute
   '/developer': typeof DeveloperRoute
+  '/disclaimer': typeof DisclaimerRoute
+  '/distressed-property': typeof DistressedPropertyRoute
+  '/downsizing': typeof DownsizingRoute
   '/executive': typeof ExecutiveRoute
   '/governance': typeof GovernanceRoute
   '/graph': typeof GraphRoute
+  '/home': typeof HomeRoute
+  '/inherited-property': typeof InheritedPropertyRoute
   '/integrations': typeof IntegrationsRouteWithChildren
+  '/investing': typeof InvestingRoute
   '/knowledge': typeof KnowledgeRouteWithChildren
+  '/local-guides': typeof LocalGuidesRoute
   '/operations': typeof OperationsRoute
+  '/privacy': typeof PrivacyRoute
+  '/probate': typeof ProbateRoute
   '/prompts': typeof PromptsRoute
   '/reports': typeof ReportsRoute
   '/repository': typeof RepositoryRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/resources': typeof ResourcesRoute
+  '/sellers': typeof SellersRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/terms': typeof TermsRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/backups': typeof AdminBackupsRoute
   '/admin/cutover': typeof AdminCutoverRoute
@@ -418,22 +562,38 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/about'
+    | '/accessibility'
     | '/attorney-partners'
     | '/attorneys'
     | '/auth'
+    | '/buyers'
+    | '/contact'
     | '/data'
     | '/developer'
+    | '/disclaimer'
+    | '/distressed-property'
+    | '/downsizing'
     | '/executive'
     | '/governance'
     | '/graph'
+    | '/home'
+    | '/inherited-property'
     | '/integrations'
+    | '/investing'
     | '/knowledge'
+    | '/local-guides'
     | '/operations'
+    | '/privacy'
+    | '/probate'
     | '/prompts'
     | '/reports'
     | '/repository'
     | '/reset-password'
+    | '/resources'
+    | '/sellers'
     | '/sitemap.xml'
+    | '/terms'
     | '/admin/audit'
     | '/admin/backups'
     | '/admin/cutover'
@@ -464,22 +624,38 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/about'
+    | '/accessibility'
     | '/attorney-partners'
     | '/attorneys'
     | '/auth'
+    | '/buyers'
+    | '/contact'
     | '/data'
     | '/developer'
+    | '/disclaimer'
+    | '/distressed-property'
+    | '/downsizing'
     | '/executive'
     | '/governance'
     | '/graph'
+    | '/home'
+    | '/inherited-property'
     | '/integrations'
+    | '/investing'
     | '/knowledge'
+    | '/local-guides'
     | '/operations'
+    | '/privacy'
+    | '/probate'
     | '/prompts'
     | '/reports'
     | '/repository'
     | '/reset-password'
+    | '/resources'
+    | '/sellers'
     | '/sitemap.xml'
+    | '/terms'
     | '/admin/audit'
     | '/admin/backups'
     | '/admin/cutover'
@@ -510,22 +686,38 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/about'
+    | '/accessibility'
     | '/attorney-partners'
     | '/attorneys'
     | '/auth'
+    | '/buyers'
+    | '/contact'
     | '/data'
     | '/developer'
+    | '/disclaimer'
+    | '/distressed-property'
+    | '/downsizing'
     | '/executive'
     | '/governance'
     | '/graph'
+    | '/home'
+    | '/inherited-property'
     | '/integrations'
+    | '/investing'
     | '/knowledge'
+    | '/local-guides'
     | '/operations'
+    | '/privacy'
+    | '/probate'
     | '/prompts'
     | '/reports'
     | '/repository'
     | '/reset-password'
+    | '/resources'
+    | '/sellers'
     | '/sitemap.xml'
+    | '/terms'
     | '/admin/audit'
     | '/admin/backups'
     | '/admin/cutover'
@@ -557,22 +749,38 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AboutRoute: typeof AboutRoute
+  AccessibilityRoute: typeof AccessibilityRoute
   AttorneyPartnersRoute: typeof AttorneyPartnersRoute
   AttorneysRoute: typeof AttorneysRoute
   AuthRoute: typeof AuthRoute
+  BuyersRoute: typeof BuyersRoute
+  ContactRoute: typeof ContactRoute
   DataRoute: typeof DataRoute
   DeveloperRoute: typeof DeveloperRoute
+  DisclaimerRoute: typeof DisclaimerRoute
+  DistressedPropertyRoute: typeof DistressedPropertyRoute
+  DownsizingRoute: typeof DownsizingRoute
   ExecutiveRoute: typeof ExecutiveRoute
   GovernanceRoute: typeof GovernanceRoute
   GraphRoute: typeof GraphRoute
+  HomeRoute: typeof HomeRoute
+  InheritedPropertyRoute: typeof InheritedPropertyRoute
   IntegrationsRoute: typeof IntegrationsRouteWithChildren
+  InvestingRoute: typeof InvestingRoute
   KnowledgeRoute: typeof KnowledgeRouteWithChildren
+  LocalGuidesRoute: typeof LocalGuidesRoute
   OperationsRoute: typeof OperationsRoute
+  PrivacyRoute: typeof PrivacyRoute
+  ProbateRoute: typeof ProbateRoute
   PromptsRoute: typeof PromptsRoute
   ReportsRoute: typeof ReportsRoute
   RepositoryRoute: typeof RepositoryRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  ResourcesRoute: typeof ResourcesRoute
+  SellersRoute: typeof SellersRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  TermsRoute: typeof TermsRoute
   AdminAuditRoute: typeof AdminAuditRoute
   AdminBackupsRoute: typeof AdminBackupsRoute
   AdminCutoverRoute: typeof AdminCutoverRoute
@@ -602,11 +810,32 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sitemap.xml': {
       id: '/sitemap.xml'
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sellers': {
+      id: '/sellers'
+      path: '/sellers'
+      fullPath: '/sellers'
+      preLoaderRoute: typeof SellersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/resources': {
+      id: '/resources'
+      path: '/resources'
+      fullPath: '/resources'
+      preLoaderRoute: typeof ResourcesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -637,11 +866,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PromptsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/probate': {
+      id: '/probate'
+      path: '/probate'
+      fullPath: '/probate'
+      preLoaderRoute: typeof ProbateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/operations': {
       id: '/operations'
       path: '/operations'
       fullPath: '/operations'
       preLoaderRoute: typeof OperationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/local-guides': {
+      id: '/local-guides'
+      path: '/local-guides'
+      fullPath: '/local-guides'
+      preLoaderRoute: typeof LocalGuidesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/knowledge': {
@@ -651,11 +901,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof KnowledgeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/investing': {
+      id: '/investing'
+      path: '/investing'
+      fullPath: '/investing'
+      preLoaderRoute: typeof InvestingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/integrations': {
       id: '/integrations'
       path: '/integrations'
       fullPath: '/integrations'
       preLoaderRoute: typeof IntegrationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/inherited-property': {
+      id: '/inherited-property'
+      path: '/inherited-property'
+      fullPath: '/inherited-property'
+      preLoaderRoute: typeof InheritedPropertyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/home': {
+      id: '/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof HomeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/graph': {
@@ -679,6 +950,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ExecutiveRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/downsizing': {
+      id: '/downsizing'
+      path: '/downsizing'
+      fullPath: '/downsizing'
+      preLoaderRoute: typeof DownsizingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/distressed-property': {
+      id: '/distressed-property'
+      path: '/distressed-property'
+      fullPath: '/distressed-property'
+      preLoaderRoute: typeof DistressedPropertyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/disclaimer': {
+      id: '/disclaimer'
+      path: '/disclaimer'
+      fullPath: '/disclaimer'
+      preLoaderRoute: typeof DisclaimerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/developer': {
       id: '/developer'
       path: '/developer'
@@ -691,6 +983,20 @@ declare module '@tanstack/react-router' {
       path: '/data'
       fullPath: '/data'
       preLoaderRoute: typeof DataRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/buyers': {
+      id: '/buyers'
+      path: '/buyers'
+      fullPath: '/buyers'
+      preLoaderRoute: typeof BuyersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -712,6 +1018,20 @@ declare module '@tanstack/react-router' {
       path: '/attorney-partners'
       fullPath: '/attorney-partners'
       preLoaderRoute: typeof AttorneyPartnersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/accessibility': {
+      id: '/accessibility'
+      path: '/accessibility'
+      fullPath: '/accessibility'
+      preLoaderRoute: typeof AccessibilityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -939,22 +1259,38 @@ const KnowledgeRouteWithChildren = KnowledgeRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AboutRoute: AboutRoute,
+  AccessibilityRoute: AccessibilityRoute,
   AttorneyPartnersRoute: AttorneyPartnersRoute,
   AttorneysRoute: AttorneysRoute,
   AuthRoute: AuthRoute,
+  BuyersRoute: BuyersRoute,
+  ContactRoute: ContactRoute,
   DataRoute: DataRoute,
   DeveloperRoute: DeveloperRoute,
+  DisclaimerRoute: DisclaimerRoute,
+  DistressedPropertyRoute: DistressedPropertyRoute,
+  DownsizingRoute: DownsizingRoute,
   ExecutiveRoute: ExecutiveRoute,
   GovernanceRoute: GovernanceRoute,
   GraphRoute: GraphRoute,
+  HomeRoute: HomeRoute,
+  InheritedPropertyRoute: InheritedPropertyRoute,
   IntegrationsRoute: IntegrationsRouteWithChildren,
+  InvestingRoute: InvestingRoute,
   KnowledgeRoute: KnowledgeRouteWithChildren,
+  LocalGuidesRoute: LocalGuidesRoute,
   OperationsRoute: OperationsRoute,
+  PrivacyRoute: PrivacyRoute,
+  ProbateRoute: ProbateRoute,
   PromptsRoute: PromptsRoute,
   ReportsRoute: ReportsRoute,
   RepositoryRoute: RepositoryRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  ResourcesRoute: ResourcesRoute,
+  SellersRoute: SellersRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  TermsRoute: TermsRoute,
   AdminAuditRoute: AdminAuditRoute,
   AdminBackupsRoute: AdminBackupsRoute,
   AdminCutoverRoute: AdminCutoverRoute,
@@ -984,13 +1320,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
