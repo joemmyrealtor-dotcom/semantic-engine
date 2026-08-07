@@ -18,6 +18,10 @@ import { cn } from "@/lib/utils";
 import { PUBLIC_NAV, PUBLIC_LEGAL_NAV, type PublicPage } from "@/lib/marketing/content";
 import { BRAND, CORE_PROMISE, ENTRY_PATHS, TRUST_PROOF } from "@/lib/marketing/positioning";
 import { captureAttribution } from "@/lib/marketing/attribution";
+import { recordIntentVisit } from "@/lib/marketing/lead-scoring";
+import { trackEvent } from "@/lib/marketing/analytics";
+import { ConsentBanner } from "@/components/consent-banner";
+
 
 function PublicHeader() {
   return (
@@ -127,6 +131,9 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
   const [, setReady] = useState(false);
   useEffect(() => {
     captureAttribution();
+    const path = window.location.pathname;
+    recordIntentVisit(path);
+    trackEvent("page_view", { label: path, dedupeKey: `page_view|${path}` });
     setReady(true);
   }, []);
   return (
@@ -134,9 +141,11 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
       <PublicHeader />
       <main className="flex-1">{children}</main>
       <PublicFooter />
+      <ConsentBanner />
     </div>
   );
 }
+
 
 export function EntryPathGrid({ compact = false }: { compact?: boolean }) {
   return (

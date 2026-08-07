@@ -20,6 +20,7 @@ import { Route as PromptsRouteImport } from './routes/prompts'
 import { Route as ProbateRouteImport } from './routes/probate'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as OperationsRouteImport } from './routes/operations'
+import { Route as MarketingAnalyticsRouteImport } from './routes/marketing-analytics'
 import { Route as KnowledgeRouteImport } from './routes/knowledge'
 import { Route as InvestingRouteImport } from './routes/investing'
 import { Route as IntegrationsRouteImport } from './routes/integrations'
@@ -128,6 +129,11 @@ const PrivacyRoute = PrivacyRouteImport.update({
 const OperationsRoute = OperationsRouteImport.update({
   id: '/operations',
   path: '/operations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MarketingAnalyticsRoute = MarketingAnalyticsRouteImport.update({
+  id: '/marketing-analytics',
+  path: '/marketing-analytics',
   getParentRoute: () => rootRouteImport,
 } as any)
 const KnowledgeRoute = KnowledgeRouteImport.update({
@@ -423,6 +429,7 @@ export interface FileRoutesByFullPath {
   '/integrations': typeof IntegrationsRouteWithChildren
   '/investing': typeof InvestingRoute
   '/knowledge': typeof KnowledgeRouteWithChildren
+  '/marketing-analytics': typeof MarketingAnalyticsRoute
   '/operations': typeof OperationsRoute
   '/privacy': typeof PrivacyRoute
   '/probate': typeof ProbateRoute
@@ -490,6 +497,7 @@ export interface FileRoutesByTo {
   '/integrations': typeof IntegrationsRouteWithChildren
   '/investing': typeof InvestingRoute
   '/knowledge': typeof KnowledgeRouteWithChildren
+  '/marketing-analytics': typeof MarketingAnalyticsRoute
   '/operations': typeof OperationsRoute
   '/privacy': typeof PrivacyRoute
   '/probate': typeof ProbateRoute
@@ -558,6 +566,7 @@ export interface FileRoutesById {
   '/integrations': typeof IntegrationsRouteWithChildren
   '/investing': typeof InvestingRoute
   '/knowledge': typeof KnowledgeRouteWithChildren
+  '/marketing-analytics': typeof MarketingAnalyticsRoute
   '/operations': typeof OperationsRoute
   '/privacy': typeof PrivacyRoute
   '/probate': typeof ProbateRoute
@@ -627,6 +636,7 @@ export interface FileRouteTypes {
     | '/integrations'
     | '/investing'
     | '/knowledge'
+    | '/marketing-analytics'
     | '/operations'
     | '/privacy'
     | '/probate'
@@ -694,6 +704,7 @@ export interface FileRouteTypes {
     | '/integrations'
     | '/investing'
     | '/knowledge'
+    | '/marketing-analytics'
     | '/operations'
     | '/privacy'
     | '/probate'
@@ -761,6 +772,7 @@ export interface FileRouteTypes {
     | '/integrations'
     | '/investing'
     | '/knowledge'
+    | '/marketing-analytics'
     | '/operations'
     | '/privacy'
     | '/probate'
@@ -829,6 +841,7 @@ export interface RootRouteChildren {
   IntegrationsRoute: typeof IntegrationsRouteWithChildren
   InvestingRoute: typeof InvestingRoute
   KnowledgeRoute: typeof KnowledgeRouteWithChildren
+  MarketingAnalyticsRoute: typeof MarketingAnalyticsRoute
   OperationsRoute: typeof OperationsRoute
   PrivacyRoute: typeof PrivacyRoute
   ProbateRoute: typeof ProbateRoute
@@ -950,6 +963,13 @@ declare module '@tanstack/react-router' {
       path: '/operations'
       fullPath: '/operations'
       preLoaderRoute: typeof OperationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/marketing-analytics': {
+      id: '/marketing-analytics'
+      path: '/marketing-analytics'
+      fullPath: '/marketing-analytics'
+      preLoaderRoute: typeof MarketingAnalyticsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/knowledge': {
@@ -1379,6 +1399,7 @@ const rootRouteChildren: RootRouteChildren = {
   IntegrationsRoute: IntegrationsRouteWithChildren,
   InvestingRoute: InvestingRoute,
   KnowledgeRoute: KnowledgeRouteWithChildren,
+  MarketingAnalyticsRoute: MarketingAnalyticsRoute,
   OperationsRoute: OperationsRoute,
   PrivacyRoute: PrivacyRoute,
   ProbateRoute: ProbateRoute,
