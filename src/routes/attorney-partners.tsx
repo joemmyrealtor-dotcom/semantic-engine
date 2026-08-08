@@ -4,6 +4,8 @@ import { SectionTitle } from "@/components/ui-kit";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Scale, Home, FileHeart, Gavel, Users } from "lucide-react";
+import { publicMeta, canonicalLink } from "@/lib/marketing/seo";
+import { absoluteUrl } from "@/lib/marketing/site";
 
 export const Route = createFileRoute("/attorney-partners")({
   head: () => ({
