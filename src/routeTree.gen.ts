@@ -16,6 +16,7 @@ import { Route as ResourcesRouteImport } from './routes/resources'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RepositoryRouteImport } from './routes/repository'
 import { Route as ReportsRouteImport } from './routes/reports'
+import { Route as ReferRouteImport } from './routes/refer'
 import { Route as PromptsRouteImport } from './routes/prompts'
 import { Route as ProbateRouteImport } from './routes/probate'
 import { Route as PrivacyRouteImport } from './routes/privacy'
@@ -60,6 +61,7 @@ import { Route as KnowledgeObjectsNewRouteImport } from './routes/knowledge-obje
 import { Route as IntegrationsIdRouteImport } from './routes/integrations.$id'
 import { Route as GuidesSlugRouteImport } from './routes/guides.$slug'
 import { Route as FrameworksIdRouteImport } from './routes/frameworks.$id'
+import { Route as ForAudienceRouteImport } from './routes/for.$audience'
 import { Route as ConceptsIdRouteImport } from './routes/concepts.$id'
 import { Route as ClientToolsNewRouteImport } from './routes/client-tools.new'
 import { Route as ClientToolkitsIdRouteImport } from './routes/client-toolkits.$id'
@@ -111,6 +113,11 @@ const RepositoryRoute = RepositoryRouteImport.update({
 const ReportsRoute = ReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReferRoute = ReferRouteImport.update({
+  id: '/refer',
+  path: '/refer',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PromptsRoute = PromptsRouteImport.update({
@@ -333,6 +340,11 @@ const FrameworksIdRoute = FrameworksIdRouteImport.update({
   path: '/frameworks/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ForAudienceRoute = ForAudienceRouteImport.update({
+  id: '/for/$audience',
+  path: '/for/$audience',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ConceptsIdRoute = ConceptsIdRouteImport.update({
   id: '/concepts/$id',
   path: '/concepts/$id',
@@ -446,6 +458,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/probate': typeof ProbateRoute
   '/prompts': typeof PromptsRoute
+  '/refer': typeof ReferRoute
   '/reports': typeof ReportsRoute
   '/repository': typeof RepositoryRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -469,6 +482,7 @@ export interface FileRoutesByFullPath {
   '/client-toolkits/$id': typeof ClientToolkitsIdRoute
   '/client-tools/new': typeof ClientToolsNewRoute
   '/concepts/$id': typeof ConceptsIdRoute
+  '/for/$audience': typeof ForAudienceRoute
   '/frameworks/$id': typeof FrameworksIdRoute
   '/guides/$slug': typeof GuidesSlugRoute
   '/integrations/$id': typeof IntegrationsIdRoute
@@ -516,6 +530,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/probate': typeof ProbateRoute
   '/prompts': typeof PromptsRoute
+  '/refer': typeof ReferRoute
   '/reports': typeof ReportsRoute
   '/repository': typeof RepositoryRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -539,6 +554,7 @@ export interface FileRoutesByTo {
   '/client-toolkits/$id': typeof ClientToolkitsIdRoute
   '/client-tools/new': typeof ClientToolsNewRoute
   '/concepts/$id': typeof ConceptsIdRoute
+  '/for/$audience': typeof ForAudienceRoute
   '/frameworks/$id': typeof FrameworksIdRoute
   '/guides/$slug': typeof GuidesSlugRoute
   '/integrations/$id': typeof IntegrationsIdRoute
@@ -587,6 +603,7 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/probate': typeof ProbateRoute
   '/prompts': typeof PromptsRoute
+  '/refer': typeof ReferRoute
   '/reports': typeof ReportsRoute
   '/repository': typeof RepositoryRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -610,6 +627,7 @@ export interface FileRoutesById {
   '/client-toolkits/$id': typeof ClientToolkitsIdRoute
   '/client-tools/new': typeof ClientToolsNewRoute
   '/concepts/$id': typeof ConceptsIdRoute
+  '/for/$audience': typeof ForAudienceRoute
   '/frameworks/$id': typeof FrameworksIdRoute
   '/guides/$slug': typeof GuidesSlugRoute
   '/integrations/$id': typeof IntegrationsIdRoute
@@ -659,6 +677,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/probate'
     | '/prompts'
+    | '/refer'
     | '/reports'
     | '/repository'
     | '/reset-password'
@@ -682,6 +701,7 @@ export interface FileRouteTypes {
     | '/client-toolkits/$id'
     | '/client-tools/new'
     | '/concepts/$id'
+    | '/for/$audience'
     | '/frameworks/$id'
     | '/guides/$slug'
     | '/integrations/$id'
@@ -729,6 +749,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/probate'
     | '/prompts'
+    | '/refer'
     | '/reports'
     | '/repository'
     | '/reset-password'
@@ -752,6 +773,7 @@ export interface FileRouteTypes {
     | '/client-toolkits/$id'
     | '/client-tools/new'
     | '/concepts/$id'
+    | '/for/$audience'
     | '/frameworks/$id'
     | '/guides/$slug'
     | '/integrations/$id'
@@ -799,6 +821,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/probate'
     | '/prompts'
+    | '/refer'
     | '/reports'
     | '/repository'
     | '/reset-password'
@@ -822,6 +845,7 @@ export interface FileRouteTypes {
     | '/client-toolkits/$id'
     | '/client-tools/new'
     | '/concepts/$id'
+    | '/for/$audience'
     | '/frameworks/$id'
     | '/guides/$slug'
     | '/integrations/$id'
@@ -870,6 +894,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   ProbateRoute: typeof ProbateRoute
   PromptsRoute: typeof PromptsRoute
+  ReferRoute: typeof ReferRoute
   ReportsRoute: typeof ReportsRoute
   RepositoryRoute: typeof RepositoryRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -893,6 +918,7 @@ export interface RootRouteChildren {
   ClientToolkitsIdRoute: typeof ClientToolkitsIdRoute
   ClientToolsNewRoute: typeof ClientToolsNewRoute
   ConceptsIdRoute: typeof ConceptsIdRoute
+  ForAudienceRoute: typeof ForAudienceRoute
   FrameworksIdRoute: typeof FrameworksIdRoute
   GuidesSlugRoute: typeof GuidesSlugRoute
   KnowledgeObjectsNewRoute: typeof KnowledgeObjectsNewRoute
@@ -961,6 +987,13 @@ declare module '@tanstack/react-router' {
       path: '/reports'
       fullPath: '/reports'
       preLoaderRoute: typeof ReportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/refer': {
+      id: '/refer'
+      path: '/refer'
+      fullPath: '/refer'
+      preLoaderRoute: typeof ReferRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/prompts': {
@@ -1271,6 +1304,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FrameworksIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/for/$audience': {
+      id: '/for/$audience'
+      path: '/for/$audience'
+      fullPath: '/for/$audience'
+      preLoaderRoute: typeof ForAudienceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/concepts/$id': {
       id: '/concepts/$id'
       path: '/concepts/$id'
@@ -1444,6 +1484,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   ProbateRoute: ProbateRoute,
   PromptsRoute: PromptsRoute,
+  ReferRoute: ReferRoute,
   ReportsRoute: ReportsRoute,
   RepositoryRoute: RepositoryRoute,
   ResetPasswordRoute: ResetPasswordRoute,
@@ -1467,6 +1508,7 @@ const rootRouteChildren: RootRouteChildren = {
   ClientToolkitsIdRoute: ClientToolkitsIdRoute,
   ClientToolsNewRoute: ClientToolsNewRoute,
   ConceptsIdRoute: ConceptsIdRoute,
+  ForAudienceRoute: ForAudienceRoute,
   FrameworksIdRoute: FrameworksIdRoute,
   GuidesSlugRoute: GuidesSlugRoute,
   KnowledgeObjectsNewRoute: KnowledgeObjectsNewRoute,
@@ -1488,13 +1530,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
