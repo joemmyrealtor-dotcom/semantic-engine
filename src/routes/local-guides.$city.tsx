@@ -187,7 +187,19 @@ function CityGuideRoute() {
             Opportunity.
           </p>
         </div>
+
+        <ContentProvenance
+          kind="local guide"
+          basis={`Written from transaction and probate work in ${guide.city} and the surrounding ${guide.county} submarkets. Housing stock and process notes only — no performance claims and no community characterizations.`}
+        />
+
+        <RelatedResources
+          links={cityCluster(guide.slug)}
+          heading={`Situation plans for ${guide.city}`}
+          intro="Pick the plan that matches your situation, then come back for the local specifics."
+        />
       </article>
+
     </PublicShell>
   );
 }
