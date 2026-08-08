@@ -27,7 +27,7 @@ export const PROFESSIONAL_PAGES: Record<ProfessionalAudience, ProfessionalPage> 
     title: "For Attorneys",
     metaTitle: "For Attorneys | Property Support for Probate, Trust & Family Law",
     metaDescription:
-      "Property sequencing, valuation, and disposition support for Orange County probate, trust, estate-planning, and family-law practices. Free resource kit, no reciprocity required.",
+      "Property sequencing, valuation, and disposition support for Orange County probate, trust, estate, and family-law practices. Free resource kit, no reciprocity.",
     intro:
       "Your matter turns on an asset that cannot be divided, moved, or liquidated quickly. I handle the property side so the legal side is not waiting on it.",
     understanding: [
@@ -115,7 +115,7 @@ export const PROFESSIONAL_PAGES: Record<ProfessionalAudience, ProfessionalPage> 
     title: "For Financial Advisors",
     metaTitle: "For Financial Advisors | Modeling the Property on the Balance Sheet",
     metaDescription:
-      "Property equity analysis, hold-versus-sell frameworks, and disposition support for Orange County financial advisors. Free professional resource kit, no reciprocity required.",
+      "Property equity analysis, hold-versus-sell frameworks, and disposition support for Orange County financial advisors. Free professional resource kit.",
     intro:
       "The house is usually the largest position your client holds and the only one nobody has modeled. I can give you real numbers for it.",
     understanding: [
@@ -159,7 +159,7 @@ export const PROFESSIONAL_PAGES: Record<ProfessionalAudience, ProfessionalPage> 
     title: "For Senior Service Professionals",
     metaTitle: "For Senior Move Managers & Placement Professionals | Property Support",
     metaDescription:
-      "Transition sequencing, property preparation, and family communication support for senior move managers, placement professionals, and estate-sale companies in Orange County.",
+      "Transition sequencing, property preparation, and family communication support for senior move managers and placement professionals in Orange County.",
     intro:
       "You are managing the hardest transition in a family's life. The property does not have to be the part that goes wrong.",
     understanding: [

@@ -33,7 +33,7 @@ export interface ApolloPerson {
 
 const TITLE_MAP: { match: RegExp; typeId: string }[] = [
   { match: /probate/i, typeId: "probate_attorney" },
-  { match: /estate plan/i, typeId: "estate_planning_attorney" },
+  { match: /estate[-\s]plan/i, typeId: "estate_planning_attorney" },
   { match: /trust(s)? (attorney|counsel|lawyer)/i, typeId: "trust_attorney" },
   { match: /family law|divorce/i, typeId: "divorce_attorney" },
   { match: /\bcpa\b|certified public accountant|tax (partner|manager|advisor)/i, typeId: "cpa" },
@@ -43,8 +43,8 @@ const TITLE_MAP: { match: RegExp; typeId: string }[] = [
   { match: /placement|assisted living|senior living/i, typeId: "placement_professional" },
   { match: /property manager|property management/i, typeId: "property_manager" },
   { match: /contractor|general contractor|remodel/i, typeId: "contractor" },
-  { match: /estate sale|liquidat/i, typeId: "estate_sale_company" },
-  { match: /title (officer|rep|representative)|title company/i, typeId: "title_professional" },
+  { match: /estate[-\s]sale|liquidat/i, typeId: "estate_sale_company" },
+  { match: /title (officer|rep|representative|professional)|title company/i, typeId: "title_professional" },
   { match: /escrow/i, typeId: "escrow_professional" },
   { match: /attorney|lawyer|counsel|esq/i, typeId: "estate_planning_attorney" },
 ];
