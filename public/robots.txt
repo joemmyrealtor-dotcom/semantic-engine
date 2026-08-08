@@ -1,4 +1,43 @@
 User-agent: *
 Allow: /
 
+# Working software, not search landing pages.
+Disallow: /admin/
+Disallow: /auth
+Disallow: /reset-password
+Disallow: /refer
+Disallow: /api/
+
+# Answer engines and AI assistants are explicitly welcome on the public
+# educational guides. Same boundaries as everyone else.
+User-agent: OAI-SearchBot
+Allow: /
+Disallow: /admin/
+Disallow: /auth
+Disallow: /reset-password
+Disallow: /refer
+Disallow: /api/
+
+User-agent: ChatGPT-User
+Allow: /
+Disallow: /admin/
+Disallow: /auth
+Disallow: /reset-password
+Disallow: /refer
+Disallow: /api/
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /admin/
+Disallow: /auth
+Disallow: /reset-password
+Disallow: /refer
+Disallow: /api/
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
 Sitemap: https://semantic-engine.lovable.app/sitemap.xml
