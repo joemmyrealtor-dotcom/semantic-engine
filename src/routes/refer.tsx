@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { BRAND } from "@/lib/marketing/positioning";
+import { absoluteUrl } from "@/lib/marketing/site";
 import { trackAction } from "@/lib/marketing/analytics";
 import { PARTNER_TYPES } from "@/lib/partners/schema";
 import { REFERRAL_STANDARDS } from "@/lib/partners/pages";
