@@ -186,7 +186,19 @@ function GuideRoute() {
             <GuideLeadForm guide={guide} />
           </aside>
         </div>
+
+        <ContentProvenance
+          kind="guide"
+          basis={`Version ${guide.version} of guide ${guide.id}, written from documented Orange County transaction work and the publications it draws on (${guide.publicationIds.join(", ")}).`}
+        />
+
+        <RelatedResources
+          links={guideCluster(guide.situation, guide.assessmentSlug)}
+          heading="Related guidance"
+          intro="The situation plan behind this guide, the matching assessment, and local context."
+        />
       </article>
+
     </PublicShell>
   );
 }
