@@ -49,8 +49,19 @@ function PublicHome() {
         </div>
       </section>
 
+      <AnswerFirst
+        question="Where should I start with an Orange County property decision?"
+        answer="Start with your situation, not a home valuation. Selling, buying, probate, inherited property, downsizing, distress, and investment each carry different math, deadlines, and risks, so pick the path below and work its plan. Every path gives you the numbers on one page and a written sequence before you commit to anything."
+        points={[
+          "Pick the situation that matches yours — seven paths, seven plans.",
+          "Get value, carrying cost, payoff, tax exposure, and net proceeds on one page.",
+          "Leave with a written sequence, including what would change the recommendation.",
+        ]}
+      />
+
       <TrustProofBand />
       <EntryPathGrid />
+
 
       <section className="mx-auto max-w-3xl px-4 pb-16 md:px-6">
         <h2 className="font-serif text-2xl text-heritage">How this works</h2>
