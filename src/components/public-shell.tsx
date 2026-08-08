@@ -21,6 +21,12 @@ import { captureAttribution } from "@/lib/marketing/attribution";
 import { recordIntentVisit } from "@/lib/marketing/lead-scoring";
 import { trackEvent } from "@/lib/marketing/analytics";
 import { ConsentBanner } from "@/components/consent-banner";
+import { Breadcrumbs } from "@/components/breadcrumbs";
+import { AnswerFirst } from "@/components/answer-first";
+import { ContentProvenance } from "@/components/content-provenance";
+import { RelatedResources } from "@/components/related-resources";
+import { pillarCluster } from "@/lib/marketing/internal-links";
+import { publicCrumbs } from "@/lib/marketing/head";
 
 
 function PublicHeader() {
