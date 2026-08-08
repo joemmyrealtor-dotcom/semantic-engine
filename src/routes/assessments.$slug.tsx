@@ -3,7 +3,12 @@ import { Button } from "@/components/ui/button";
 import { PublicShell } from "@/components/public-shell";
 import { AssessmentRunner } from "@/components/assessment-runner";
 import { getAssessment, type AssessmentDefinition } from "@/lib/marketing/assessments";
-import { BRAND } from "@/lib/marketing/positioning";
+import { Breadcrumbs } from "@/components/breadcrumbs";
+import { AnswerFirst } from "@/components/answer-first";
+import { RelatedResources } from "@/components/related-resources";
+import { guideCluster } from "@/lib/marketing/internal-links";
+import { publicMeta, canonicalLink } from "@/lib/marketing/seo";
+import { jsonLdScript, siteGraph, breadcrumbGraph } from "@/lib/marketing/schema";
 
 export const Route = createFileRoute("/assessments/$slug")({
   loader: ({ params }) => {
