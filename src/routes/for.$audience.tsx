@@ -8,7 +8,9 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { CheckCircle2, Download, FileText, Handshake } from "lucide-react";
 import { PublicShell } from "@/components/public-shell";
 import { Button } from "@/components/ui/button";
-import { BRAND } from "@/lib/marketing/positioning";
+import { publicMeta, canonicalLink } from "@/lib/marketing/seo";
+import { jsonLdScript, siteGraph, breadcrumbGraph } from "@/lib/marketing/schema";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 import { trackAction } from "@/lib/marketing/analytics";
 import {
   PROFESSIONAL_AUDIENCES,
@@ -24,22 +26,24 @@ export const Route = createFileRoute("/for/$audience")({
   },
   head: ({ params }) => {
     const page = professionalPage(params.audience);
-    const url = `${BRAND.origin}/for/${params.audience}`;
+    const path = `/for/${params.audience}`;
     const title = page?.metaTitle ?? "For Professionals | Legacy Forge";
     const description =
       page?.metaDescription ??
       "Property decision support for attorneys, CPAs, fiduciaries, advisors, and senior service professionals in Orange County.";
     return {
-      meta: [
-        { title },
-        { name: "description", content: description },
-        { property: "og:title", content: title },
-        { property: "og:description", content: description },
-        { property: "og:type", content: "website" },
-        { property: "og:url", content: url },
-        { name: "twitter:card", content: "summary_large_image" },
+      meta: publicMeta({ path, title, description }),
+      links: [canonicalLink(path)],
+      scripts: [
+        jsonLdScript(siteGraph()),
+        jsonLdScript(
+          breadcrumbGraph([
+            { name: "Home", path: "/home" },
+            { name: "For professionals", path: "/for/attorneys" },
+            { name: page?.navLabel ?? params.audience, path },
+          ]),
+        ),
       ],
-      links: [{ rel: "canonical", href: url }],
     };
   },
   component: ProfessionalRoute,
@@ -71,7 +75,14 @@ function ProfessionalRoute() {
 
   return (
     <PublicShell>
-      <article className="mx-auto max-w-4xl px-4 py-12">
+      <Breadcrumbs
+        crumbs={[
+          { name: "Home", path: "/home" },
+          { name: "For professionals", path: "/for/attorneys" },
+          { name: page.navLabel, path: `/for/${page.audience}` },
+        ]}
+      />
+      <article className="mx-auto max-w-4xl px-4 py-8">
         <p className="text-[11px] uppercase tracking-[0.22em] text-gold">For professionals</p>
         <h1 className="mt-2 font-serif text-4xl text-heritage">{page.title}</h1>
         <p className="mt-4 text-lg text-muted-foreground">{page.intro}</p>

@@ -30,6 +30,7 @@ import { Route as HomeRouteImport } from './routes/home'
 import { Route as GraphRouteImport } from './routes/graph'
 import { Route as GovernanceRouteImport } from './routes/governance'
 import { Route as ExecutiveRouteImport } from './routes/executive'
+import { Route as EditorialPolicyRouteImport } from './routes/editorial-policy'
 import { Route as DownsizingRouteImport } from './routes/downsizing'
 import { Route as DistressedPropertyRouteImport } from './routes/distressed-property'
 import { Route as DisclaimerRouteImport } from './routes/disclaimer'
@@ -184,6 +185,11 @@ const GovernanceRoute = GovernanceRouteImport.update({
 const ExecutiveRoute = ExecutiveRouteImport.update({
   id: '/executive',
   path: '/executive',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EditorialPolicyRoute = EditorialPolicyRouteImport.update({
+  id: '/editorial-policy',
+  path: '/editorial-policy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DownsizingRoute = DownsizingRouteImport.update({
@@ -451,6 +457,7 @@ export interface FileRoutesByFullPath {
   '/disclaimer': typeof DisclaimerRoute
   '/distressed-property': typeof DistressedPropertyRoute
   '/downsizing': typeof DownsizingRoute
+  '/editorial-policy': typeof EditorialPolicyRoute
   '/executive': typeof ExecutiveRoute
   '/governance': typeof GovernanceRoute
   '/graph': typeof GraphRoute
@@ -524,6 +531,7 @@ export interface FileRoutesByTo {
   '/disclaimer': typeof DisclaimerRoute
   '/distressed-property': typeof DistressedPropertyRoute
   '/downsizing': typeof DownsizingRoute
+  '/editorial-policy': typeof EditorialPolicyRoute
   '/executive': typeof ExecutiveRoute
   '/governance': typeof GovernanceRoute
   '/graph': typeof GraphRoute
@@ -598,6 +606,7 @@ export interface FileRoutesById {
   '/disclaimer': typeof DisclaimerRoute
   '/distressed-property': typeof DistressedPropertyRoute
   '/downsizing': typeof DownsizingRoute
+  '/editorial-policy': typeof EditorialPolicyRoute
   '/executive': typeof ExecutiveRoute
   '/governance': typeof GovernanceRoute
   '/graph': typeof GraphRoute
@@ -673,6 +682,7 @@ export interface FileRouteTypes {
     | '/disclaimer'
     | '/distressed-property'
     | '/downsizing'
+    | '/editorial-policy'
     | '/executive'
     | '/governance'
     | '/graph'
@@ -746,6 +756,7 @@ export interface FileRouteTypes {
     | '/disclaimer'
     | '/distressed-property'
     | '/downsizing'
+    | '/editorial-policy'
     | '/executive'
     | '/governance'
     | '/graph'
@@ -819,6 +830,7 @@ export interface FileRouteTypes {
     | '/disclaimer'
     | '/distressed-property'
     | '/downsizing'
+    | '/editorial-policy'
     | '/executive'
     | '/governance'
     | '/graph'
@@ -893,6 +905,7 @@ export interface RootRouteChildren {
   DisclaimerRoute: typeof DisclaimerRoute
   DistressedPropertyRoute: typeof DistressedPropertyRoute
   DownsizingRoute: typeof DownsizingRoute
+  EditorialPolicyRoute: typeof EditorialPolicyRoute
   ExecutiveRoute: typeof ExecutiveRoute
   GovernanceRoute: typeof GovernanceRoute
   GraphRoute: typeof GraphRoute
@@ -1098,6 +1111,13 @@ declare module '@tanstack/react-router' {
       path: '/executive'
       fullPath: '/executive'
       preLoaderRoute: typeof ExecutiveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/editorial-policy': {
+      id: '/editorial-policy'
+      path: '/editorial-policy'
+      fullPath: '/editorial-policy'
+      preLoaderRoute: typeof EditorialPolicyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/downsizing': {
@@ -1491,6 +1511,7 @@ const rootRouteChildren: RootRouteChildren = {
   DisclaimerRoute: DisclaimerRoute,
   DistressedPropertyRoute: DistressedPropertyRoute,
   DownsizingRoute: DownsizingRoute,
+  EditorialPolicyRoute: EditorialPolicyRoute,
   ExecutiveRoute: ExecutiveRoute,
   GovernanceRoute: GovernanceRoute,
   GraphRoute: GraphRoute,

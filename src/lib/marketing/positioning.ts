@@ -4,6 +4,8 @@
 // audience entry paths. This module is the single source of truth for
 // public positioning copy; routes and components read from it.
 
+import { PUBLIC_SITE_ORIGIN } from "./site";
+
 export const CORE_PROMISE =
   "Make smarter real estate decisions. Protect your equity. Follow a clear plan.";
 
@@ -11,7 +13,8 @@ export const BRAND = {
   name: "Legacy Forge",
   publisher: "JM Advisory Press",
   advisor: "Joe Melendez",
-  origin: "https://semantic-engine.lovable.app",
+  /** Single source of truth lives in ./site.ts — never hard-code an origin. */
+  origin: PUBLIC_SITE_ORIGIN,
   serviceArea: [
     "La Habra",
     "Brea",

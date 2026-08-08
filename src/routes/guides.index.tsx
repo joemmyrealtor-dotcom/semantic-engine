@@ -1,49 +1,54 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { PublicShell } from "@/components/public-shell";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 import { GUIDES } from "@/lib/marketing/lead-magnets";
-import { BRAND } from "@/lib/marketing/positioning";
+import { publicMeta, canonicalLink } from "@/lib/marketing/seo";
+import { jsonLdScript, siteGraph, breadcrumbGraph } from "@/lib/marketing/schema";
+import { absoluteUrl } from "@/lib/marketing/site";
 
 const TITLE = "Free Real Estate Decision Guides | Legacy Forge";
 const DESC =
   "Six decision guides for sellers, buyers, heirs, downsizers, distressed owners, and owners weighing sell versus rent. Written to be used, not skimmed.";
-const URL = `${BRAND.origin}/guides`;
 
 export const Route = createFileRoute("/guides/")({
   head: () => ({
-    meta: [
-      { title: TITLE },
-      { name: "description", content: DESC },
-      { property: "og:title", content: TITLE },
-      { property: "og:description", content: DESC },
-      { property: "og:type", content: "website" },
-      { property: "og:url", content: URL },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-    links: [{ rel: "canonical", href: URL }],
+    meta: publicMeta({ path: "/guides", title: TITLE, description: DESC }),
+    links: [canonicalLink("/guides")],
     scripts: [
-      {
-        type: "application/ld+json",
-        children: JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "ItemList",
-          itemListElement: GUIDES.map((g, i) => ({
-            "@type": "ListItem",
-            position: i + 1,
-            name: g.title,
-            url: `${BRAND.origin}/guides/${g.slug}`,
-          })),
-        }),
-      },
+      jsonLdScript(siteGraph()),
+      jsonLdScript(
+        breadcrumbGraph([
+          { name: "Home", path: "/home" },
+          { name: "Guides", path: "/guides" },
+        ]),
+      ),
+      jsonLdScript({
+        "@context": "https://schema.org",
+        "@type": "ItemList",
+        itemListElement: GUIDES.map((g, i) => ({
+          "@type": "ListItem",
+          position: i + 1,
+          name: g.title,
+          url: absoluteUrl(`/guides/${g.slug}`),
+        })),
+      }),
     ],
   }),
   component: GuidesIndex,
+
 });
 
 function GuidesIndex() {
   return (
     <PublicShell>
-      <header className="mx-auto max-w-6xl px-4 pt-14 pb-8 md:px-6 md:pt-20">
+      <Breadcrumbs
+        crumbs={[
+          { name: "Home", path: "/home" },
+          { name: "Guides", path: "/guides" },
+        ]}
+      />
+      <header className="mx-auto max-w-6xl px-4 pt-8 pb-8 md:px-6 md:pt-12">
         <div className="text-[10px] uppercase tracking-[0.22em] text-gold">Guides</div>
         <h1 className="mt-3 max-w-3xl font-serif text-3xl leading-tight text-heritage md:text-5xl">
           Decision guides, not brochures

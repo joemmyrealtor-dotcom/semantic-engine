@@ -809,7 +809,89 @@ export const PUBLIC_PAGES: Record<string, PublicPage> = {
     ],
     faqs: [],
   },
+
+  // SEO/AEO hardening — visible editorial standards (E-E-A-T).
+  "editorial-policy": {
+    slug: "/editorial-policy",
+    navLabel: "Editorial policy",
+    metaTitle: "Editorial Policy — How This Content Is Written | Legacy Forge",
+    metaDescription:
+      "How Legacy Forge guides are written, sourced, reviewed, and corrected: named authorship, plain-language explanations, and clear limits on what education can do.",
+    eyebrow: "Editorial standards",
+    headline: "How this content is written, reviewed, and corrected",
+    subhead:
+      "Every guide on this site is written by a named person, grounded in documented process, and marked with its limits. This page explains the standard so you can judge the content on its merits.",
+    primaryCta: PRIMARY_CTA,
+    secondaryCta: SECONDARY_CTA,
+    valueProps: [
+      {
+        title: "Named authorship",
+        body: "Content is written by Joe Melendez and published by JM Advisory Press. There is no anonymous byline and no undisclosed syndication.",
+      },
+      {
+        title: "Experience-based",
+        body: "Guidance reflects real transaction work in Orange County — pricing, preparation, probate sequencing, and distressed timelines — not generic national copy.",
+      },
+      {
+        title: "Stated limits",
+        body: "Educational content is not legal, tax, or financial advice. Where a decision requires an attorney, CPA, or lender, the guide says so.",
+      },
+    ],
+    sections: [
+      {
+        heading: "How a guide gets written",
+        body: "Each guide starts from a real decision a client had to make. We write the decision path first — the questions, the sequence, and the trade-offs — and only then the explanation around it. If a section does not change what a reader should do next, it is cut.",
+        bullets: [
+          "Start from a documented decision, not a keyword.",
+          "Answer the primary question in the first paragraph.",
+          "Show the sequence, the trade-offs, and the walk-away conditions.",
+          "Cut anything that does not change a reader's next step.",
+        ],
+      },
+      {
+        heading: "Sourcing and verification",
+        body: "Process, timeline, and mechanics come from transaction and probate experience and from the governing documents involved. Where a rule varies by county, court, lender, or title company, the guide names the variable instead of asserting a single answer. We do not publish statistics, market figures, or legal thresholds we cannot verify.",
+        bullets: [
+          "County- and court-specific steps are labeled as such.",
+          "No invented statistics, prices, timelines, or success rates.",
+          "No testimonials, ratings, or outcomes are published on this site.",
+        ],
+      },
+      {
+        heading: "Review and correction",
+        body: "Guides are reviewed before publication and revised when the underlying process, form, or timeline changes. If you find something inaccurate or out of date, tell us and we will correct it or remove it. Corrections are made to the guide itself rather than buried in a note.",
+        bullets: [
+          "Report an error through the contact page and it will be reviewed.",
+          "Material changes result in a revised guide, not a patched footnote.",
+        ],
+      },
+      {
+        heading: "Independence and disclosure",
+        body: "Referrals to attorneys, CPAs, fiduciaries, and other professionals are made without referral fees. Content is not sponsored, and no third party pays for placement or coverage in any guide.",
+      },
+      {
+        heading: "Fair housing and non-advice",
+        body: "All content is written in accordance with fair housing law: we describe housing stock, process, and cost — never communities in terms of protected characteristics. Nothing on this site is legal, tax, or financial advice, and reading it does not create a client relationship.",
+      },
+    ],
+    faqs: [
+      {
+        q: "Who writes the guides on this site?",
+        a: "Joe Melendez writes the guides, and JM Advisory Press publishes them. Authorship is shown on each guide rather than left anonymous.",
+      },
+      {
+        q: "Is this legal or tax advice?",
+        a: "No. The guides are educational. They are written to help you ask better questions and sequence decisions, but legal, tax, and lending questions belong with your attorney, CPA, or lender.",
+      },
+      {
+        q: "How do I report an error?",
+        a: "Use the contact page and describe the issue. Errors are reviewed, and the guide is corrected or removed rather than left standing.",
+      },
+    ],
+    legal: true,
+  },
 };
+
 
 export const PUBLIC_NAV: { label: string; to: string }[] = [
   { label: "Home", to: "/home" },
@@ -835,6 +917,7 @@ export const PUBLIC_LEGAL_NAV: { label: string; to: string }[] = [
   { label: "Terms", to: "/terms" },
   { label: "Accessibility", to: "/accessibility" },
   { label: "Disclaimer", to: "/disclaimer" },
+  { label: "Editorial policy", to: "/editorial-policy" },
 ];
 
 /** Paths that render the public marketing shell instead of the console. */

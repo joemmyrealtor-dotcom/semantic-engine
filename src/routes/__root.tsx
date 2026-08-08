@@ -5,6 +5,8 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppShell } from "@/components/app-shell";
 import { isPublicPath } from "@/lib/marketing/content";
+import { INTERNAL_ROBOTS } from "@/lib/marketing/seo";
+import { BRAND } from "@/lib/marketing/positioning";
 import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
@@ -40,12 +42,17 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
+    // SEO/AEO indexation boundary: the governed console and every internal
+    // operator surface default to noindex. Public marketing routes override
+    // `robots` with an explicit index directive (meta merges by name).
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Legacy Platform v2.0 — JM Advisory Press" },
       { name: "description", content: "The Legacy Project Digital Knowledge Platform: canonical concepts, frameworks, publications, and governed releases." },
       { name: "author", content: "JM Advisory Press" },
+      { name: "robots", content: INTERNAL_ROBOTS },
+      { property: "og:site_name", content: BRAND.name },
       { property: "og:title", content: "Legacy Platform v2.0" },
       { property: "og:description", content: "Canonical knowledge, governed publishing, and release management for JM Advisory Press." },
       { property: "og:type", content: "website" },

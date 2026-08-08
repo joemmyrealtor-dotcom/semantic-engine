@@ -1,53 +1,28 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { PublicShell, EntryPathGrid, TrustProofBand } from "@/components/public-shell";
+import { AnswerFirst } from "@/components/answer-first";
+import { ContentProvenance } from "@/components/content-provenance";
 import { BRAND, CORE_PROMISE } from "@/lib/marketing/positioning";
+import { publicMeta, canonicalLink } from "@/lib/marketing/seo";
+import { jsonLdScript, siteGraph, breadcrumbGraph } from "@/lib/marketing/schema";
 
 const TITLE = "Orange County Real Estate Guidance — Sellers, Buyers, Probate | Legacy Forge";
 const DESCRIPTION =
   "Make smarter real estate decisions, protect your equity, and follow a clear plan. Guides and advisory for Orange County sellers, buyers, executors, heirs, downsizers, and investors.";
-const URL = `${BRAND.origin}/home`;
 
 export const Route = createFileRoute("/home")({
   head: () => ({
-    meta: [
-      { title: TITLE },
-      { name: "description", content: DESCRIPTION },
-      { property: "og:title", content: TITLE },
-      { property: "og:description", content: DESCRIPTION },
-      { property: "og:type", content: "website" },
-      { property: "og:url", content: URL },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-    links: [{ rel: "canonical", href: URL }],
+    meta: publicMeta({ path: "/home", title: TITLE, description: DESCRIPTION }),
+    links: [canonicalLink("/home")],
     scripts: [
-      {
-        type: "application/ld+json",
-        children: JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "RealEstateAgent",
-          name: `${BRAND.advisor} — ${BRAND.name}`,
-          url: URL,
-          parentOrganization: { "@type": "Organization", name: BRAND.publisher },
-          areaServed: BRAND.serviceArea.map(a => ({
-            "@type": "City",
-            name: a,
-            addressRegion: "CA",
-          })),
-          knowsAbout: [
-            "Residential real estate",
-            "Probate sales",
-            "Inherited property",
-            "Downsizing",
-            "Short sales and foreclosure alternatives",
-            "1031 exchanges",
-          ],
-        }),
-      },
+      jsonLdScript(siteGraph()),
+      jsonLdScript(breadcrumbGraph([{ name: "Home", path: "/home" }])),
     ],
   }),
   component: PublicHome,
 });
+
 
 function PublicHome() {
   return (
@@ -74,8 +49,19 @@ function PublicHome() {
         </div>
       </section>
 
+      <AnswerFirst
+        question="Where should I start with an Orange County property decision?"
+        answer="Start with your situation, not a home valuation. Selling, buying, probate, inherited property, downsizing, distress, and investment each carry different math, deadlines, and risks, so pick the path below and work its plan. Every path gives you the numbers on one page and a written sequence before you commit to anything."
+        points={[
+          "Pick the situation that matches yours — seven paths, seven plans.",
+          "Get value, carrying cost, payoff, tax exposure, and net proceeds on one page.",
+          "Leave with a written sequence, including what would change the recommendation.",
+        ]}
+      />
+
       <TrustProofBand />
       <EntryPathGrid />
+
 
       <section className="mx-auto max-w-3xl px-4 pb-16 md:px-6">
         <h2 className="font-serif text-2xl text-heritage">How this works</h2>
@@ -106,6 +92,11 @@ function PublicHome() {
           ))}
         </ol>
       </section>
+
+      <ContentProvenance
+        kind="site"
+        basis="Written from documented Orange County transaction, probate, and distressed-property work, plus the governing documents involved in each decision."
+      />
     </PublicShell>
   );
 }

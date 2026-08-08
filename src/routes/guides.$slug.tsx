@@ -8,6 +8,13 @@ import { getGuide, type GuideDefinition } from "@/lib/marketing/lead-magnets";
 import { getAssessment } from "@/lib/marketing/assessments";
 import { BRAND } from "@/lib/marketing/positioning";
 import { trackEvent } from "@/lib/marketing/analytics";
+import { publicMeta, canonicalLink } from "@/lib/marketing/seo";
+import { jsonLdScript, siteGraph, breadcrumbGraph, articleGraph } from "@/lib/marketing/schema";
+import { Breadcrumbs } from "@/components/breadcrumbs";
+import { AnswerFirst } from "@/components/answer-first";
+import { ContentProvenance } from "@/components/content-provenance";
+import { RelatedResources } from "@/components/related-resources";
+import { guideCluster } from "@/lib/marketing/internal-links";
 
 export const Route = createFileRoute("/guides/$slug")({
   loader: ({ params }) => {
@@ -19,35 +26,36 @@ export const Route = createFileRoute("/guides/$slug")({
     const guide = loaderData?.guide;
     if (!guide) {
       return {
-        meta: [{ title: "Guide unavailable | Legacy Forge" }, { name: "robots", content: "noindex" }],
+        meta: [{ title: "Guide unavailable | Legacy Forge" }, { name: "robots", content: "noindex,nofollow" }],
       };
     }
-    const url = `${BRAND.origin}/guides/${guide.slug}`;
+    const path = `/guides/${guide.slug}`;
     return {
-      meta: [
-        { title: guide.metaTitle },
-        { name: "description", content: guide.metaDescription },
-        { property: "og:title", content: guide.metaTitle },
-        { property: "og:description", content: guide.metaDescription },
-        { property: "og:type", content: "article" },
-        { property: "og:url", content: url },
-        { name: "twitter:card", content: "summary_large_image" },
-      ],
-      links: [{ rel: "canonical", href: url }],
+      meta: publicMeta({
+        path,
+        title: guide.metaTitle,
+        description: guide.metaDescription,
+        type: "article",
+      }),
+      links: [canonicalLink(path)],
       scripts: [
-        {
-          type: "application/ld+json",
-          children: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "Article",
+        jsonLdScript(siteGraph()),
+        jsonLdScript(
+          breadcrumbGraph([
+            { name: "Home", path: "/home" },
+            { name: "Guides", path: "/guides" },
+            { name: guide.title, path },
+          ]),
+        ),
+        jsonLdScript(
+          articleGraph({
+            path,
             headline: guide.title,
             description: guide.metaDescription,
-            author: { "@type": "Person", name: BRAND.advisor },
-            publisher: { "@type": "Organization", name: BRAND.publisher },
-            version: guide.version,
-            url,
+            about: [guide.audience, guide.promise],
+            isPartOfPath: "/guides",
           }),
-        },
+        ),
       ],
     };
   },
@@ -79,7 +87,14 @@ function GuideRoute() {
   return (
     <PublicShell>
       <article>
-        <header className="mx-auto max-w-6xl px-4 pt-14 pb-10 md:px-6 md:pt-20">
+        <Breadcrumbs
+          crumbs={[
+            { name: "Home", path: "/home" },
+            { name: "Guides", path: "/guides" },
+            { name: guide.title, path: `/guides/${guide.slug}` },
+          ]}
+        />
+        <header className="mx-auto max-w-6xl px-4 pt-8 pb-8 md:px-6 md:pt-12">
           <div className="text-[10px] uppercase tracking-[0.22em] text-gold">
             Guide {guide.id} · v{guide.version} · {guide.audience}
           </div>
@@ -91,7 +106,16 @@ function GuideRoute() {
           </p>
         </header>
 
+        <div className="mb-8">
+          <AnswerFirst
+            question={`What does the ${guide.title} help you decide?`}
+            answer={guide.description}
+            points={guide.checklist.slice(0, 3)}
+          />
+        </div>
+
         <div className="mx-auto grid max-w-6xl gap-10 px-4 pb-8 md:px-6 lg:grid-cols-[minmax(0,1fr)_380px]">
+
           <div>
             {guide.sections.map(s => (
               <section key={s.heading} className="mb-10">
@@ -162,7 +186,19 @@ function GuideRoute() {
             <GuideLeadForm guide={guide} />
           </aside>
         </div>
+
+        <ContentProvenance
+          kind="guide"
+          basis={`Version ${guide.version} of guide ${guide.id}, written from documented Orange County transaction work and the publications it draws on (${guide.publicationIds.join(", ")}).`}
+        />
+
+        <RelatedResources
+          links={guideCluster(guide.situation, guide.assessmentSlug)}
+          heading="Related guidance"
+          intro="The situation plan behind this guide, the matching assessment, and local context."
+        />
       </article>
+
     </PublicShell>
   );
 }
