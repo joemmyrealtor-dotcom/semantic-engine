@@ -27,16 +27,18 @@ const DESCRIPTION =
 
 export const Route = createFileRoute("/refer")({
   head: () => ({
+    // Private professional workflow, not an organic landing page.
     meta: [
       { title: TITLE },
       { name: "description", content: DESCRIPTION },
+      { name: "robots", content: "noindex,follow" },
       { property: "og:title", content: TITLE },
       { property: "og:description", content: DESCRIPTION },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: `${BRAND.origin}/refer` },
+      { property: "og:url", content: absoluteUrl("/refer") },
       { name: "twitter:card", content: "summary_large_image" },
     ],
-    links: [{ rel: "canonical", href: `${BRAND.origin}/refer` }],
+    links: [{ rel: "canonical", href: absoluteUrl("/refer") }],
   }),
   component: ReferRoute,
 });
