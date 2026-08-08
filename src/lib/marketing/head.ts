@@ -1,53 +1,38 @@
 // Shared head() builder for public marketing routes.
+//
+// SEO/AEO hardening: every public page gets one canonical origin, an
+// explicit index directive, complete OG/Twitter metadata with a branded
+// share card, the shared entity graph, breadcrumbs that mirror the visible
+// trail, and FAQ schema that mirrors visible Q&A only.
 
 import { PUBLIC_PAGES } from "./content";
-import { BRAND } from "./positioning";
+import { publicMeta, canonicalLink } from "./seo";
+import { breadcrumbGraph, faqGraph, jsonLdScript, siteGraph, type Crumb } from "./schema";
+
+/** Visible + structured breadcrumb trail for a registry page. */
+export function publicCrumbs(key: string): Crumb[] {
+  const page = PUBLIC_PAGES[key];
+  if (!page) return [{ name: "Home", path: "/home" }];
+  return [
+    { name: "Home", path: "/home" },
+    { name: page.navLabel, path: page.slug },
+  ];
+}
 
 export function publicHead(key: string) {
   const page = PUBLIC_PAGES[key];
   if (!page) throw new Error(`Unknown public page: ${key}`);
-  const url = `${BRAND.origin}${page.slug}`;
-  const scripts: { type: string; children: string }[] = [];
 
-  if (page.faqs.length > 0) {
-    scripts.push({
-      type: "application/ld+json",
-      children: JSON.stringify({
-        "@context": "https://schema.org",
-        "@type": "FAQPage",
-        mainEntity: page.faqs.map(f => ({
-          "@type": "Question",
-          name: f.q,
-          acceptedAnswer: { "@type": "Answer", text: f.a },
-        })),
-      }),
-    });
-  }
-
-  scripts.push({
-    type: "application/ld+json",
-    children: JSON.stringify({
-      "@context": "https://schema.org",
-      "@type": "BreadcrumbList",
-      itemListElement: [
-        { "@type": "ListItem", position: 1, name: "Home", item: `${BRAND.origin}/home` },
-        { "@type": "ListItem", position: 2, name: page.navLabel, item: url },
-      ],
-    }),
-  });
+  const scripts = [jsonLdScript(siteGraph()), jsonLdScript(breadcrumbGraph(publicCrumbs(key)))];
+  if (page.faqs.length > 0) scripts.push(jsonLdScript(faqGraph(page.slug, page.faqs)));
 
   return {
-    meta: [
-      { title: page.metaTitle },
-      { name: "description", content: page.metaDescription },
-      { property: "og:title", content: page.metaTitle },
-      { property: "og:description", content: page.metaDescription },
-      { property: "og:type", content: "website" },
-      { property: "og:url", content: url },
-      { name: "twitter:card", content: "summary_large_image" },
-      ...(page.legal ? [{ name: "robots", content: "index,follow" }] : []),
-    ],
-    links: [{ rel: "canonical", href: url }],
+    meta: publicMeta({
+      path: page.slug,
+      title: page.metaTitle,
+      description: page.metaDescription,
+    }),
+    links: [canonicalLink(page.slug)],
     scripts,
   };
 }
