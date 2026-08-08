@@ -92,6 +92,11 @@ function PublicHome() {
           ))}
         </ol>
       </section>
+
+      <ContentProvenance
+        kind="site"
+        basis="Written from documented Orange County transaction, probate, and distressed-property work, plus the governing documents involved in each decision."
+      />
     </PublicShell>
   );
 }
