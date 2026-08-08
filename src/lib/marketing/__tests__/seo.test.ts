@@ -127,7 +127,9 @@ describe("entity graph", () => {
       description: "Model your real number before you list.",
     }) as Record<string, unknown>;
     expect(article["@type"]).toBe("Article");
-    expect(article["mainEntityOfPage"]).toBe(absoluteUrl("/guides/seller-net-proceeds"));
+    expect(article["mainEntityOfPage"]).toMatchObject({
+      "@id": absoluteUrl("/guides/seller-net-proceeds"),
+    });
     expect(article["author"]).toBeTruthy();
     expect(article["publisher"]).toBeTruthy();
   });
