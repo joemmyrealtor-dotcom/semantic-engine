@@ -75,7 +75,14 @@ function ProfessionalRoute() {
 
   return (
     <PublicShell>
-      <article className="mx-auto max-w-4xl px-4 py-12">
+      <Breadcrumbs
+        crumbs={[
+          { name: "Home", path: "/home" },
+          { name: "For professionals", path: "/for/attorneys" },
+          { name: page.navLabel, path: `/for/${page.audience}` },
+        ]}
+      />
+      <article className="mx-auto max-w-4xl px-4 py-8">
         <p className="text-[11px] uppercase tracking-[0.22em] text-gold">For professionals</p>
         <h1 className="mt-2 font-serif text-4xl text-heritage">{page.title}</h1>
         <p className="mt-4 text-lg text-muted-foreground">{page.intro}</p>
