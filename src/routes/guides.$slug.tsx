@@ -19,35 +19,36 @@ export const Route = createFileRoute("/guides/$slug")({
     const guide = loaderData?.guide;
     if (!guide) {
       return {
-        meta: [{ title: "Guide unavailable | Legacy Forge" }, { name: "robots", content: "noindex" }],
+        meta: [{ title: "Guide unavailable | Legacy Forge" }, { name: "robots", content: "noindex,nofollow" }],
       };
     }
-    const url = `${BRAND.origin}/guides/${guide.slug}`;
+    const path = `/guides/${guide.slug}`;
     return {
-      meta: [
-        { title: guide.metaTitle },
-        { name: "description", content: guide.metaDescription },
-        { property: "og:title", content: guide.metaTitle },
-        { property: "og:description", content: guide.metaDescription },
-        { property: "og:type", content: "article" },
-        { property: "og:url", content: url },
-        { name: "twitter:card", content: "summary_large_image" },
-      ],
-      links: [{ rel: "canonical", href: url }],
+      meta: publicMeta({
+        path,
+        title: guide.metaTitle,
+        description: guide.metaDescription,
+        type: "article",
+      }),
+      links: [canonicalLink(path)],
       scripts: [
-        {
-          type: "application/ld+json",
-          children: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "Article",
+        jsonLdScript(siteGraph()),
+        jsonLdScript(
+          breadcrumbGraph([
+            { name: "Home", path: "/home" },
+            { name: "Guides", path: "/guides" },
+            { name: guide.title, path },
+          ]),
+        ),
+        jsonLdScript(
+          articleGraph({
+            path,
             headline: guide.title,
             description: guide.metaDescription,
-            author: { "@type": "Person", name: BRAND.advisor },
-            publisher: { "@type": "Organization", name: BRAND.publisher },
-            version: guide.version,
-            url,
+            about: [guide.audience, guide.promise],
+            isPartOfPath: "/guides",
           }),
-        },
+        ),
       ],
     };
   },
