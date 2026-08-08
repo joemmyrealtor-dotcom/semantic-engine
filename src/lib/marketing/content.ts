@@ -917,6 +917,7 @@ export const PUBLIC_LEGAL_NAV: { label: string; to: string }[] = [
   { label: "Terms", to: "/terms" },
   { label: "Accessibility", to: "/accessibility" },
   { label: "Disclaimer", to: "/disclaimer" },
+  { label: "Editorial policy", to: "/editorial-policy" },
 ];
 
 /** Paths that render the public marketing shell instead of the console. */
