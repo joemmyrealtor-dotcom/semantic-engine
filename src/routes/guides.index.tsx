@@ -42,7 +42,13 @@ export const Route = createFileRoute("/guides/")({
 function GuidesIndex() {
   return (
     <PublicShell>
-      <header className="mx-auto max-w-6xl px-4 pt-14 pb-8 md:px-6 md:pt-20">
+      <Breadcrumbs
+        crumbs={[
+          { name: "Home", path: "/home" },
+          { name: "Guides", path: "/guides" },
+        ]}
+      />
+      <header className="mx-auto max-w-6xl px-4 pt-8 pb-8 md:px-6 md:pt-12">
         <div className="text-[10px] uppercase tracking-[0.22em] text-gold">Guides</div>
         <h1 className="mt-3 max-w-3xl font-serif text-3xl leading-tight text-heritage md:text-5xl">
           Decision guides, not brochures
