@@ -1,53 +1,28 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { PublicShell, EntryPathGrid, TrustProofBand } from "@/components/public-shell";
+import { AnswerFirst } from "@/components/answer-first";
+import { ContentProvenance } from "@/components/content-provenance";
 import { BRAND, CORE_PROMISE } from "@/lib/marketing/positioning";
+import { publicMeta, canonicalLink } from "@/lib/marketing/seo";
+import { jsonLdScript, siteGraph, breadcrumbGraph } from "@/lib/marketing/schema";
 
 const TITLE = "Orange County Real Estate Guidance — Sellers, Buyers, Probate | Legacy Forge";
 const DESCRIPTION =
   "Make smarter real estate decisions, protect your equity, and follow a clear plan. Guides and advisory for Orange County sellers, buyers, executors, heirs, downsizers, and investors.";
-const URL = `${BRAND.origin}/home`;
 
 export const Route = createFileRoute("/home")({
   head: () => ({
-    meta: [
-      { title: TITLE },
-      { name: "description", content: DESCRIPTION },
-      { property: "og:title", content: TITLE },
-      { property: "og:description", content: DESCRIPTION },
-      { property: "og:type", content: "website" },
-      { property: "og:url", content: URL },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-    links: [{ rel: "canonical", href: URL }],
+    meta: publicMeta({ path: "/home", title: TITLE, description: DESCRIPTION }),
+    links: [canonicalLink("/home")],
     scripts: [
-      {
-        type: "application/ld+json",
-        children: JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "RealEstateAgent",
-          name: `${BRAND.advisor} — ${BRAND.name}`,
-          url: URL,
-          parentOrganization: { "@type": "Organization", name: BRAND.publisher },
-          areaServed: BRAND.serviceArea.map(a => ({
-            "@type": "City",
-            name: a,
-            addressRegion: "CA",
-          })),
-          knowsAbout: [
-            "Residential real estate",
-            "Probate sales",
-            "Inherited property",
-            "Downsizing",
-            "Short sales and foreclosure alternatives",
-            "1031 exchanges",
-          ],
-        }),
-      },
+      jsonLdScript(siteGraph()),
+      jsonLdScript(breadcrumbGraph([{ name: "Home", path: "/home" }])),
     ],
   }),
   component: PublicHome,
 });
+
 
 function PublicHome() {
   return (
