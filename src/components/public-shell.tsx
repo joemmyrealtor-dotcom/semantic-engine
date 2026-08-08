@@ -201,10 +201,19 @@ export function TrustProofBand() {
 }
 
 /** Standard renderer for a content-driven public page. */
-export function MarketingPage({ page }: { page: PublicPage }) {
+export function MarketingPage({ page, pageKey }: { page: PublicPage; pageKey?: string }) {
+  const entry = ENTRY_PATHS.find(e => e.to === page.slug);
+  const crumbs = pageKey
+    ? publicCrumbs(pageKey)
+    : [
+        { name: "Home", path: "/home" },
+        { name: page.navLabel, path: page.slug },
+      ];
+
   return (
     <article>
-      <header className="mx-auto max-w-6xl px-4 pt-14 pb-10 md:px-6 md:pt-20">
+      <Breadcrumbs crumbs={crumbs} />
+      <header className="mx-auto max-w-6xl px-4 pt-8 pb-10 md:px-6 md:pt-12">
         <div className="text-[10px] uppercase tracking-[0.22em] text-gold">{page.eyebrow}</div>
         <h1 className="mt-3 max-w-3xl font-serif text-3xl leading-tight text-heritage md:text-5xl">
           {page.headline}
@@ -219,6 +228,15 @@ export function MarketingPage({ page }: { page: PublicPage }) {
           </Button>
         </div>
       </header>
+
+      {entry && (
+        <AnswerFirst
+          question={entry.question}
+          answer={page.subhead}
+          points={page.sections[0]?.bullets?.slice(0, 3)}
+        />
+      )}
+
 
       {page.valueProps.length > 0 && (
         <section aria-label="Key points" className="border-y border-border bg-card">
