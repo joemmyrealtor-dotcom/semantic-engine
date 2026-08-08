@@ -7,16 +7,13 @@ import { Scale, Home, FileHeart, Gavel, Users } from "lucide-react";
 
 export const Route = createFileRoute("/attorney-partners")({
   head: () => ({
-    meta: [
-      { title: "Attorneys — Legacy Platform for Legal Practices" },
-      { name: "description", content: "Legacy Forge for attorneys: client-ready legacy, estate and family documentation systems for real estate, probate, divorce and family law practices." },
-      { property: "og:title", content: "Attorneys — Legacy Platform for Legal Practices" },
-      { property: "og:description", content: "Marketing toolkits, client education packs and structured documentation workflows built for real estate, probate, divorce and family law attorneys." },
-      { property: "og:type", content: "website" },
-      { property: "og:url", content: "https://semantic-engine.lovable.app/attorney-partners" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-    links: [{ rel: "canonical", href: "https://semantic-engine.lovable.app/attorney-partners" }],
+    meta: publicMeta({
+      path: "/attorney-partners",
+      title: "Attorneys — Legacy Platform for Legal Practices",
+      description:
+        "Legacy Forge for attorneys: client-ready legacy, estate and family documentation systems for real estate, probate, divorce and family law practices.",
+    }),
+    links: [canonicalLink("/attorney-partners")],
     scripts: [
       {
         type: "application/ld+json",
