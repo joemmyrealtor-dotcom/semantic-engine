@@ -25,7 +25,12 @@ export type MarketingEventName =
   | "phone_clicked"
   | "email_clicked"
   | "referral_partner_clicked"
+  | "partner_page_viewed"
+  | "partner_kit_requested"
+  | "partner_referral_started"
+  | "partner_referral_submitted"
   | "lead_submitted";
+
 
 /** Legacy names kept working; mapped onto the canonical schema. */
 const ALIASES: Record<string, MarketingEventName> = {
