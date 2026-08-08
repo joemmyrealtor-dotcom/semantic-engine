@@ -8,6 +8,13 @@ import { getGuide, type GuideDefinition } from "@/lib/marketing/lead-magnets";
 import { getAssessment } from "@/lib/marketing/assessments";
 import { BRAND } from "@/lib/marketing/positioning";
 import { trackEvent } from "@/lib/marketing/analytics";
+import { publicMeta, canonicalLink } from "@/lib/marketing/seo";
+import { jsonLdScript, siteGraph, breadcrumbGraph, articleGraph } from "@/lib/marketing/schema";
+import { Breadcrumbs } from "@/components/breadcrumbs";
+import { AnswerFirst } from "@/components/answer-first";
+import { ContentProvenance } from "@/components/content-provenance";
+import { RelatedResources } from "@/components/related-resources";
+import { guideCluster } from "@/lib/marketing/internal-links";
 
 export const Route = createFileRoute("/guides/$slug")({
   loader: ({ params }) => {
