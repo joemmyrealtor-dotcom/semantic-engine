@@ -1,26 +1,39 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { PublicShell } from "@/components/public-shell";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 import { ASSESSMENTS } from "@/lib/marketing/assessments";
-import { BRAND } from "@/lib/marketing/positioning";
+import { publicMeta, canonicalLink } from "@/lib/marketing/seo";
+import { jsonLdScript, siteGraph, breadcrumbGraph } from "@/lib/marketing/schema";
+import { absoluteUrl } from "@/lib/marketing/site";
 
 const TITLE = "Real Estate Readiness Assessments | Legacy Forge";
 const DESC =
   "Six situation-specific assessments — seller, buyer, probate, downsizing, distressed property, and investor — each producing priorities, risks, and a next action.";
-const URL = `${BRAND.origin}/assessments`;
+
+const CRUMBS = [
+  { name: "Home", path: "/home" },
+  { name: "Assessments", path: "/assessments" },
+];
 
 export const Route = createFileRoute("/assessments/")({
   head: () => ({
-    meta: [
-      { title: TITLE },
-      { name: "description", content: DESC },
-      { property: "og:title", content: TITLE },
-      { property: "og:description", content: DESC },
-      { property: "og:type", content: "website" },
-      { property: "og:url", content: URL },
-      { name: "twitter:card", content: "summary_large_image" },
+    meta: publicMeta({ path: "/assessments", title: TITLE, description: DESC }),
+    links: [canonicalLink("/assessments")],
+    scripts: [
+      jsonLdScript(siteGraph()),
+      jsonLdScript(breadcrumbGraph(CRUMBS)),
+      jsonLdScript({
+        "@context": "https://schema.org",
+        "@type": "ItemList",
+        itemListElement: ASSESSMENTS.map((a, i) => ({
+          "@type": "ListItem",
+          position: i + 1,
+          name: a.title,
+          url: absoluteUrl(`/assessments/${a.slug}`),
+        })),
+      }),
     ],
-    links: [{ rel: "canonical", href: URL }],
   }),
   component: AssessmentsIndex,
 });
@@ -28,7 +41,9 @@ export const Route = createFileRoute("/assessments/")({
 function AssessmentsIndex() {
   return (
     <PublicShell>
-      <header className="mx-auto max-w-6xl px-4 pt-14 pb-8 md:px-6 md:pt-20">
+      <Breadcrumbs crumbs={CRUMBS} />
+      <header className="mx-auto max-w-6xl px-4 pt-8 pb-8 md:px-6 md:pt-12">
+
         <div className="text-[10px] uppercase tracking-[0.22em] text-gold">Assessments</div>
         <h1 className="mt-3 max-w-3xl font-serif text-3xl leading-tight text-heritage md:text-5xl">
           Find out where you actually stand
