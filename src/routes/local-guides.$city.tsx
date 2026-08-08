@@ -80,7 +80,14 @@ function CityGuideRoute() {
   return (
     <PublicShell>
       <article>
-        <header className="mx-auto max-w-6xl px-4 pt-14 pb-10 md:px-6 md:pt-20">
+        <Breadcrumbs
+          crumbs={[
+            { name: "Home", path: "/home" },
+            { name: "Local guides", path: "/local-guides" },
+            { name: guide.city, path: `/local-guides/${guide.slug}` },
+          ]}
+        />
+        <header className="mx-auto max-w-6xl px-4 pt-8 pb-8 md:px-6 md:pt-12">
           <div className="text-[10px] uppercase tracking-[0.22em] text-gold">
             {guide.county} · Local guide
           </div>
@@ -97,6 +104,16 @@ function CityGuideRoute() {
             </Button>
           </div>
         </header>
+
+        <div className="mb-8">
+          <AnswerFirst
+            question={`What should you know before selling or buying in ${guide.city}?`}
+            answer={guide.intro}
+            points={guide.marketNotes.slice(0, 3)}
+          />
+        </div>
+
+
 
         <section aria-label="Market notes" className="border-y border-border bg-card">
           <div className="mx-auto max-w-6xl px-4 py-12 md:px-6">
