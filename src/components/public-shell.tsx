@@ -298,6 +298,22 @@ export function MarketingPage({ page, pageKey }: { page: PublicPage; pageKey?: s
           </section>
         )}
       </div>
+
+      {!page.legal && (
+        <ContentProvenance
+          kind="page"
+          basis="Written from documented Orange County transaction, probate, and distressed-property work, plus the governing documents involved in each decision."
+        />
+      )}
+
+      {entry && (
+        <RelatedResources
+          links={pillarCluster(entry.id)}
+          heading={`More for ${entry.label.toLowerCase()}`}
+          intro="The guide, the assessment, and the local context that go with this plan."
+        />
+      )}
+
     </article>
   );
 }
