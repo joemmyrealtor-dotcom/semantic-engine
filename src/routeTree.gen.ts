@@ -72,6 +72,7 @@ import { Route as AiPacksIdRouteImport } from './routes/ai-packs.$id'
 import { Route as AgentsIdRouteImport } from './routes/agents.$id'
 import { Route as AdminWorkspacesRouteImport } from './routes/admin.workspaces'
 import { Route as AdminRecoveryRouteImport } from './routes/admin.recovery'
+import { Route as AdminPartnersRouteImport } from './routes/admin.partners'
 import { Route as AdminMonitoringRouteImport } from './routes/admin.monitoring'
 import { Route as AdminLeadDeliveryRouteImport } from './routes/admin.lead-delivery'
 import { Route as AdminDeploymentRouteImport } from './routes/admin.deployment'
@@ -395,6 +396,11 @@ const AdminRecoveryRoute = AdminRecoveryRouteImport.update({
   path: '/admin/recovery',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminPartnersRoute = AdminPartnersRouteImport.update({
+  id: '/admin/partners',
+  path: '/admin/partners',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminMonitoringRoute = AdminMonitoringRouteImport.update({
   id: '/admin/monitoring',
   path: '/admin/monitoring',
@@ -472,6 +478,7 @@ export interface FileRoutesByFullPath {
   '/admin/deployment': typeof AdminDeploymentRoute
   '/admin/lead-delivery': typeof AdminLeadDeliveryRoute
   '/admin/monitoring': typeof AdminMonitoringRoute
+  '/admin/partners': typeof AdminPartnersRoute
   '/admin/recovery': typeof AdminRecoveryRoute
   '/admin/workspaces': typeof AdminWorkspacesRoute
   '/agents/$id': typeof AgentsIdRoute
@@ -544,6 +551,7 @@ export interface FileRoutesByTo {
   '/admin/deployment': typeof AdminDeploymentRoute
   '/admin/lead-delivery': typeof AdminLeadDeliveryRoute
   '/admin/monitoring': typeof AdminMonitoringRoute
+  '/admin/partners': typeof AdminPartnersRoute
   '/admin/recovery': typeof AdminRecoveryRoute
   '/admin/workspaces': typeof AdminWorkspacesRoute
   '/agents/$id': typeof AgentsIdRoute
@@ -617,6 +625,7 @@ export interface FileRoutesById {
   '/admin/deployment': typeof AdminDeploymentRoute
   '/admin/lead-delivery': typeof AdminLeadDeliveryRoute
   '/admin/monitoring': typeof AdminMonitoringRoute
+  '/admin/partners': typeof AdminPartnersRoute
   '/admin/recovery': typeof AdminRecoveryRoute
   '/admin/workspaces': typeof AdminWorkspacesRoute
   '/agents/$id': typeof AgentsIdRoute
@@ -691,6 +700,7 @@ export interface FileRouteTypes {
     | '/admin/deployment'
     | '/admin/lead-delivery'
     | '/admin/monitoring'
+    | '/admin/partners'
     | '/admin/recovery'
     | '/admin/workspaces'
     | '/agents/$id'
@@ -763,6 +773,7 @@ export interface FileRouteTypes {
     | '/admin/deployment'
     | '/admin/lead-delivery'
     | '/admin/monitoring'
+    | '/admin/partners'
     | '/admin/recovery'
     | '/admin/workspaces'
     | '/agents/$id'
@@ -835,6 +846,7 @@ export interface FileRouteTypes {
     | '/admin/deployment'
     | '/admin/lead-delivery'
     | '/admin/monitoring'
+    | '/admin/partners'
     | '/admin/recovery'
     | '/admin/workspaces'
     | '/agents/$id'
@@ -908,6 +920,7 @@ export interface RootRouteChildren {
   AdminDeploymentRoute: typeof AdminDeploymentRoute
   AdminLeadDeliveryRoute: typeof AdminLeadDeliveryRoute
   AdminMonitoringRoute: typeof AdminMonitoringRoute
+  AdminPartnersRoute: typeof AdminPartnersRoute
   AdminRecoveryRoute: typeof AdminRecoveryRoute
   AdminWorkspacesRoute: typeof AdminWorkspacesRoute
   AgentsIdRoute: typeof AgentsIdRoute
@@ -1381,6 +1394,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRecoveryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/partners': {
+      id: '/admin/partners'
+      path: '/admin/partners'
+      fullPath: '/admin/partners'
+      preLoaderRoute: typeof AdminPartnersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/monitoring': {
       id: '/admin/monitoring'
       path: '/admin/monitoring'
@@ -1498,6 +1518,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminDeploymentRoute: AdminDeploymentRoute,
   AdminLeadDeliveryRoute: AdminLeadDeliveryRoute,
   AdminMonitoringRoute: AdminMonitoringRoute,
+  AdminPartnersRoute: AdminPartnersRoute,
   AdminRecoveryRoute: AdminRecoveryRoute,
   AdminWorkspacesRoute: AdminWorkspacesRoute,
   AgentsIdRoute: AgentsIdRoute,

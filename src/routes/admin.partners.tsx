@@ -80,8 +80,9 @@ function PartnersDashboard() {
     <>
       <PageHeader
         title="Referral Partners"
-        subtitle="Apollo research, relationship stages, and referral performance. Outreach is draft-only."
+        description="Apollo research, relationship stages, and referral performance. Outreach is draft-only."
       />
+
       <PageBody>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <KpiCard label="Partners" value={dash.totalPartners} hint={`${dash.reachable} reachable`} />
