@@ -24,11 +24,11 @@ export const Route = createFileRoute("/attorney-partners")({
           "@type": "Service",
           name: "Legacy Forge for Attorneys",
           serviceType: "Legacy and estate documentation systems for law firms",
-          url: "https://semantic-engine.lovable.app/attorney-partners",
+          url: absoluteUrl("/attorney-partners"),
           provider: {
             "@type": "Organization",
             name: "JM Advisory Press",
-            url: "https://semantic-engine.lovable.app",
+            url: absoluteUrl("/"),
           },
           areaServed: "US",
           audience: {
