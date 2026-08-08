@@ -5,6 +5,8 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppShell } from "@/components/app-shell";
 import { isPublicPath } from "@/lib/marketing/content";
+import { INTERNAL_ROBOTS } from "@/lib/marketing/seo";
+import { BRAND } from "@/lib/marketing/positioning";
 import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
