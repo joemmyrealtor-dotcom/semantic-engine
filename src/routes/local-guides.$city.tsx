@@ -2,8 +2,15 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PublicShell } from "@/components/public-shell";
+import { Breadcrumbs } from "@/components/breadcrumbs";
+import { AnswerFirst } from "@/components/answer-first";
+import { ContentProvenance } from "@/components/content-provenance";
+import { RelatedResources } from "@/components/related-resources";
+import { cityCluster } from "@/lib/marketing/internal-links";
 import { CITY_GUIDES, cityJsonLd, getCityGuide, type CityGuide } from "@/lib/marketing/cities";
 import { BRAND } from "@/lib/marketing/positioning";
+import { publicMeta, canonicalLink } from "@/lib/marketing/seo";
+import { jsonLdScript, siteGraph, breadcrumbGraph, faqGraph } from "@/lib/marketing/schema";
 
 export const Route = createFileRoute("/local-guides/$city")({
   loader: ({ params }) => {
@@ -15,38 +22,37 @@ export const Route = createFileRoute("/local-guides/$city")({
     const guide = loaderData?.guide;
     if (!guide) {
       return {
-        meta: [{ title: "Guide unavailable | Legacy Forge" }, { name: "robots", content: "noindex" }],
+        meta: [
+          { title: "Guide unavailable | Legacy Forge" },
+          { name: "robots", content: "noindex,nofollow" },
+        ],
       };
     }
-    const url = `${BRAND.origin}/local-guides/${guide.slug}`;
+    const path = `/local-guides/${guide.slug}`;
     return {
-      meta: [
-        { title: guide.metaTitle },
-        { name: "description", content: guide.metaDescription },
-        { property: "og:title", content: guide.metaTitle },
-        { property: "og:description", content: guide.metaDescription },
-        { property: "og:type", content: "website" },
-        { property: "og:url", content: url },
-        { name: "twitter:card", content: "summary_large_image" },
-      ],
-      links: [{ rel: "canonical", href: url }],
+      meta: publicMeta({
+        path,
+        title: guide.metaTitle,
+        description: guide.metaDescription,
+      }),
+      links: [canonicalLink(path)],
       scripts: [
+        // Site entity graph is emitted once here; the city page itself
+        // describes an area served, never a local storefront.
+        jsonLdScript(siteGraph([guide.city, guide.county])),
+        jsonLdScript(
+          breadcrumbGraph([
+            { name: "Home", path: "/home" },
+            { name: "Local guides", path: "/local-guides" },
+            { name: guide.city, path },
+          ]),
+        ),
         { type: "application/ld+json", children: JSON.stringify(cityJsonLd(guide)) },
-        {
-          type: "application/ld+json",
-          children: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "FAQPage",
-            mainEntity: guide.faqs.map(f => ({
-              "@type": "Question",
-              name: f.q,
-              acceptedAnswer: { "@type": "Answer", text: f.a },
-            })),
-          }),
-        },
+        ...(guide.faqs.length > 0 ? [jsonLdScript(faqGraph(path, guide.faqs))] : []),
       ],
     };
   },
+
   notFoundComponent: CityNotFound,
   component: CityGuideRoute,
 });
