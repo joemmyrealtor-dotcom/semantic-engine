@@ -17,22 +17,24 @@ export const Route = createFileRoute("/assessments/$slug")({
       return {
         meta: [
           { title: "Assessment unavailable | Legacy Forge" },
-          { name: "robots", content: "noindex" },
+          { name: "robots", content: "noindex,nofollow" },
         ],
       };
     }
-    const url = `${BRAND.origin}/assessments/${a.slug}`;
+    const path = `/assessments/${a.slug}`;
     return {
-      meta: [
-        { title: a.metaTitle },
-        { name: "description", content: a.metaDescription },
-        { property: "og:title", content: a.metaTitle },
-        { property: "og:description", content: a.metaDescription },
-        { property: "og:type", content: "website" },
-        { property: "og:url", content: url },
-        { name: "twitter:card", content: "summary_large_image" },
+      meta: publicMeta({ path, title: a.metaTitle, description: a.metaDescription }),
+      links: [canonicalLink(path)],
+      scripts: [
+        jsonLdScript(siteGraph()),
+        jsonLdScript(
+          breadcrumbGraph([
+            { name: "Home", path: "/home" },
+            { name: "Assessments", path: "/assessments" },
+            { name: a.title, path },
+          ]),
+        ),
       ],
-      links: [{ rel: "canonical", href: url }],
     };
   },
   notFoundComponent: AssessmentNotFound,
@@ -56,7 +58,14 @@ function AssessmentRoute() {
   const { assessment } = Route.useLoaderData() as { assessment: AssessmentDefinition };
   return (
     <PublicShell>
-      <header className="mx-auto max-w-3xl px-4 pt-14 pb-8 md:px-6 md:pt-20">
+      <Breadcrumbs
+        crumbs={[
+          { name: "Home", path: "/home" },
+          { name: "Assessments", path: "/assessments" },
+          { name: assessment.title, path: `/assessments/${assessment.slug}` },
+        ]}
+      />
+      <header className="mx-auto max-w-3xl px-4 pt-8 pb-8 md:px-6 md:pt-12">
         <div className="text-[10px] uppercase tracking-[0.22em] text-gold">
           {assessment.id} · {assessment.audience}
         </div>
@@ -65,7 +74,19 @@ function AssessmentRoute() {
         </h1>
         <p className="mt-4 text-muted-foreground">{assessment.description}</p>
       </header>
+
+      <AnswerFirst
+        question={`What does the ${assessment.title} tell you?`}
+        answer={`${assessment.description} It takes a few minutes, runs entirely in your browser, and returns a readiness level, your top priorities, the risks in your answers, and a recommended next action. No email is required to see your result.`}
+      />
+
       <AssessmentRunner assessment={assessment} />
+
+      <RelatedResources
+        links={guideCluster(assessment.situation)}
+        heading="Read the guidance behind this assessment"
+      />
     </PublicShell>
   );
 }
+
