@@ -9,6 +9,9 @@ import { CheckCircle2, Download, FileText, Handshake } from "lucide-react";
 import { PublicShell } from "@/components/public-shell";
 import { Button } from "@/components/ui/button";
 import { BRAND } from "@/lib/marketing/positioning";
+import { publicMeta, canonicalLink } from "@/lib/marketing/seo";
+import { jsonLdScript, siteGraph, breadcrumbGraph } from "@/lib/marketing/schema";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 import { trackAction } from "@/lib/marketing/analytics";
 import {
   PROFESSIONAL_AUDIENCES,
