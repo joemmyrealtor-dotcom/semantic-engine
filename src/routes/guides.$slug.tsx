@@ -87,7 +87,14 @@ function GuideRoute() {
   return (
     <PublicShell>
       <article>
-        <header className="mx-auto max-w-6xl px-4 pt-14 pb-10 md:px-6 md:pt-20">
+        <Breadcrumbs
+          crumbs={[
+            { name: "Home", path: "/home" },
+            { name: "Guides", path: "/guides" },
+            { name: guide.title, path: `/guides/${guide.slug}` },
+          ]}
+        />
+        <header className="mx-auto max-w-6xl px-4 pt-8 pb-8 md:px-6 md:pt-12">
           <div className="text-[10px] uppercase tracking-[0.22em] text-gold">
             Guide {guide.id} · v{guide.version} · {guide.audience}
           </div>
@@ -99,7 +106,16 @@ function GuideRoute() {
           </p>
         </header>
 
+        <div className="mb-8">
+          <AnswerFirst
+            question={`What does the ${guide.title} help you decide?`}
+            answer={guide.description}
+            points={guide.checklist.slice(0, 3)}
+          />
+        </div>
+
         <div className="mx-auto grid max-w-6xl gap-10 px-4 pb-8 md:px-6 lg:grid-cols-[minmax(0,1fr)_380px]">
+
           <div>
             {guide.sections.map(s => (
               <section key={s.heading} className="mb-10">
