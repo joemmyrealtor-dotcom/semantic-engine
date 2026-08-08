@@ -24,22 +24,24 @@ export const Route = createFileRoute("/for/$audience")({
   },
   head: ({ params }) => {
     const page = professionalPage(params.audience);
-    const url = `${BRAND.origin}/for/${params.audience}`;
+    const path = `/for/${params.audience}`;
     const title = page?.metaTitle ?? "For Professionals | Legacy Forge";
     const description =
       page?.metaDescription ??
       "Property decision support for attorneys, CPAs, fiduciaries, advisors, and senior service professionals in Orange County.";
     return {
-      meta: [
-        { title },
-        { name: "description", content: description },
-        { property: "og:title", content: title },
-        { property: "og:description", content: description },
-        { property: "og:type", content: "website" },
-        { property: "og:url", content: url },
-        { name: "twitter:card", content: "summary_large_image" },
+      meta: publicMeta({ path, title, description }),
+      links: [canonicalLink(path)],
+      scripts: [
+        jsonLdScript(siteGraph()),
+        jsonLdScript(
+          breadcrumbGraph([
+            { name: "Home", path: "/home" },
+            { name: "For professionals", path: "/for/attorneys" },
+            { name: page?.navLabel ?? params.audience, path },
+          ]),
+        ),
       ],
-      links: [{ rel: "canonical", href: url }],
     };
   },
   component: ProfessionalRoute,
