@@ -36,6 +36,7 @@ import { Route as DistressedPropertyRouteImport } from './routes/distressed-prop
 import { Route as DisclaimerRouteImport } from './routes/disclaimer'
 import { Route as DeveloperRouteImport } from './routes/developer'
 import { Route as DataRouteImport } from './routes/data'
+import { Route as ContentEngineRouteImport } from './routes/content-engine'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as BuyersRouteImport } from './routes/buyers'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -217,6 +218,11 @@ const DeveloperRoute = DeveloperRouteImport.update({
 const DataRoute = DataRouteImport.update({
   id: '/data',
   path: '/data',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContentEngineRoute = ContentEngineRouteImport.update({
+  id: '/content-engine',
+  path: '/content-engine',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactRoute = ContactRouteImport.update({
@@ -464,6 +470,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/buyers': typeof BuyersRoute
   '/contact': typeof ContactRoute
+  '/content-engine': typeof ContentEngineRoute
   '/data': typeof DataRoute
   '/developer': typeof DeveloperRoute
   '/disclaimer': typeof DisclaimerRoute
@@ -540,6 +547,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/buyers': typeof BuyersRoute
   '/contact': typeof ContactRoute
+  '/content-engine': typeof ContentEngineRoute
   '/data': typeof DataRoute
   '/developer': typeof DeveloperRoute
   '/disclaimer': typeof DisclaimerRoute
@@ -617,6 +625,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/buyers': typeof BuyersRoute
   '/contact': typeof ContactRoute
+  '/content-engine': typeof ContentEngineRoute
   '/data': typeof DataRoute
   '/developer': typeof DeveloperRoute
   '/disclaimer': typeof DisclaimerRoute
@@ -695,6 +704,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/buyers'
     | '/contact'
+    | '/content-engine'
     | '/data'
     | '/developer'
     | '/disclaimer'
@@ -771,6 +781,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/buyers'
     | '/contact'
+    | '/content-engine'
     | '/data'
     | '/developer'
     | '/disclaimer'
@@ -847,6 +858,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/buyers'
     | '/contact'
+    | '/content-engine'
     | '/data'
     | '/developer'
     | '/disclaimer'
@@ -924,6 +936,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   BuyersRoute: typeof BuyersRoute
   ContactRoute: typeof ContactRoute
+  ContentEngineRoute: typeof ContentEngineRoute
   DataRoute: typeof DataRoute
   DeveloperRoute: typeof DeveloperRoute
   DisclaimerRoute: typeof DisclaimerRoute
@@ -1179,6 +1192,13 @@ declare module '@tanstack/react-router' {
       path: '/data'
       fullPath: '/data'
       preLoaderRoute: typeof DataRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/content-engine': {
+      id: '/content-engine'
+      path: '/content-engine'
+      fullPath: '/content-engine'
+      preLoaderRoute: typeof ContentEngineRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contact': {
@@ -1546,6 +1566,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   BuyersRoute: BuyersRoute,
   ContactRoute: ContactRoute,
+  ContentEngineRoute: ContentEngineRoute,
   DataRoute: DataRoute,
   DeveloperRoute: DeveloperRoute,
   DisclaimerRoute: DisclaimerRoute,
