@@ -155,7 +155,7 @@ const CLUSTER_CONTENT: Partial<Record<ClusterId, ClusterFramework>> = {
         a: "No. The question is whether targeted work returns more than it costs in that submarket. Some homes sell better as-is to a buyer who plans the renovation anyway.",
       },
     ],
-    referralAudience: "cpas",
+    referralAudience: "cpas-fiduciaries",
     nextStep: "Get the keep, rent, and sell math on one page before the next family conversation.",
   },
 
