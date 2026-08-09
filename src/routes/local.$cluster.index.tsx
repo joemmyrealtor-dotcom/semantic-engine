@@ -2,7 +2,7 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { PublicShell } from "@/components/public-shell";
 import { LocalPageView, localCrumbs } from "@/components/local-page-view";
-import { getLocalHub, citiesForCluster } from "@/lib/marketing/local-pages";
+import { getLocalHub, citiesForCluster, type LocalPageSpec } from "@/lib/marketing/local-pages";
 import { publicMeta, canonicalLink } from "@/lib/marketing/seo";
 import { jsonLdScript, siteGraph, breadcrumbGraph, faqGraph, articleGraph } from "@/lib/marketing/schema";
 
@@ -58,7 +58,7 @@ function HubNotFound() {
 }
 
 function LocalClusterHub() {
-  const { spec, cities } = Route.useLoaderData();
+  const { spec, cities } = Route.useLoaderData() as { spec: LocalPageSpec; cities: LocalPageSpec[] };
   return (
     <PublicShell>
       <LocalPageView spec={spec} />
