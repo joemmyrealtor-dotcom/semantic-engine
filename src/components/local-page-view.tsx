@@ -196,7 +196,7 @@ export function LocalPageView({ spec }: { spec: LocalPageSpec }) {
               {hub && hub.path !== spec.path && (
                 <li>
                   <Link
-                    to="/local/$cluster"
+                    to="/local/$cluster/"
                     params={{ cluster: spec.cluster }}
                     className="rounded-md border border-border px-3 py-1.5 text-sm text-muted-foreground hover:border-gold hover:text-heritage"
                   >
