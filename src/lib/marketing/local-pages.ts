@@ -453,6 +453,7 @@ function buildSpec(cluster: ClusterId, geography: GeographyId): LocalPageSpec | 
   const framework = CLUSTER_CONTENT[cluster];
   const clusterMeta = CLUSTERS.find(c => c.id === cluster);
   const geo = GEOGRAPHIES.find(g => g.id === geography);
+
   if (!framework || !clusterMeta || !geo) return null;
 
   const level: "hub" | "city" = geo.citySlug === null ? "hub" : "city";
