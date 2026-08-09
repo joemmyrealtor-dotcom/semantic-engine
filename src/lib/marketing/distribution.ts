@@ -9,6 +9,7 @@
 import { absoluteUrl } from "./site";
 import { BRAND } from "./positioning";
 import type { AnswerRecord } from "./answers";
+import type { LocalPageSpec } from "./local-pages";
 
 export type Channel = "seo" | "linkedin" | "facebook" | "x" | "youtube" | "email";
 
