@@ -84,6 +84,7 @@ import { Route as AdminCutoverRouteImport } from './routes/admin.cutover'
 import { Route as AdminBackupsRouteImport } from './routes/admin.backups'
 import { Route as AdminAuditRouteImport } from './routes/admin.audit'
 import { Route as LocalClusterIndexRouteImport } from './routes/local.$cluster.index'
+import { Route as LocalClusterCityRouteImport } from './routes/local.$cluster.$city'
 import { Route as ApiPublicV1SplatRouteImport } from './routes/api/public/v1/$'
 
 const TermsRoute = TermsRouteImport.update({
@@ -461,6 +462,11 @@ const LocalClusterIndexRoute = LocalClusterIndexRouteImport.update({
   path: '/local/$cluster/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LocalClusterCityRoute = LocalClusterCityRouteImport.update({
+  id: '/local/$cluster/$city',
+  path: '/local/$cluster/$city',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicV1SplatRoute = ApiPublicV1SplatRouteImport.update({
   id: '/api/public/v1/$',
   path: '/api/public/v1/$',
@@ -542,6 +548,7 @@ export interface FileRoutesByFullPath {
   '/guides/': typeof GuidesIndexRoute
   '/local-guides/': typeof LocalGuidesIndexRoute
   '/publications/': typeof PublicationsIndexRoute
+  '/local/$cluster/$city': typeof LocalClusterCityRoute
   '/local/$cluster/': typeof LocalClusterIndexRoute
   '/api/public/v1/$': typeof ApiPublicV1SplatRoute
 }
@@ -620,6 +627,7 @@ export interface FileRoutesByTo {
   '/guides': typeof GuidesIndexRoute
   '/local-guides': typeof LocalGuidesIndexRoute
   '/publications': typeof PublicationsIndexRoute
+  '/local/$cluster/$city': typeof LocalClusterCityRoute
   '/local/$cluster': typeof LocalClusterIndexRoute
   '/api/public/v1/$': typeof ApiPublicV1SplatRoute
 }
@@ -699,6 +707,7 @@ export interface FileRoutesById {
   '/guides/': typeof GuidesIndexRoute
   '/local-guides/': typeof LocalGuidesIndexRoute
   '/publications/': typeof PublicationsIndexRoute
+  '/local/$cluster/$city': typeof LocalClusterCityRoute
   '/local/$cluster/': typeof LocalClusterIndexRoute
   '/api/public/v1/$': typeof ApiPublicV1SplatRoute
 }
@@ -779,6 +788,7 @@ export interface FileRouteTypes {
     | '/guides/'
     | '/local-guides/'
     | '/publications/'
+    | '/local/$cluster/$city'
     | '/local/$cluster/'
     | '/api/public/v1/$'
   fileRoutesByTo: FileRoutesByTo
@@ -857,6 +867,7 @@ export interface FileRouteTypes {
     | '/guides'
     | '/local-guides'
     | '/publications'
+    | '/local/$cluster/$city'
     | '/local/$cluster'
     | '/api/public/v1/$'
   id:
@@ -935,6 +946,7 @@ export interface FileRouteTypes {
     | '/guides/'
     | '/local-guides/'
     | '/publications/'
+    | '/local/$cluster/$city'
     | '/local/$cluster/'
     | '/api/public/v1/$'
   fileRoutesById: FileRoutesById
@@ -1012,6 +1024,7 @@ export interface RootRouteChildren {
   GuidesIndexRoute: typeof GuidesIndexRoute
   LocalGuidesIndexRoute: typeof LocalGuidesIndexRoute
   PublicationsIndexRoute: typeof PublicationsIndexRoute
+  LocalClusterCityRoute: typeof LocalClusterCityRoute
   LocalClusterIndexRoute: typeof LocalClusterIndexRoute
   ApiPublicV1SplatRoute: typeof ApiPublicV1SplatRoute
 }
@@ -1543,6 +1556,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LocalClusterIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/local/$cluster/$city': {
+      id: '/local/$cluster/$city'
+      path: '/local/$cluster/$city'
+      fullPath: '/local/$cluster/$city'
+      preLoaderRoute: typeof LocalClusterCityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/v1/$': {
       id: '/api/public/v1/$'
       path: '/api/public/v1/$'
@@ -1650,6 +1670,7 @@ const rootRouteChildren: RootRouteChildren = {
   GuidesIndexRoute: GuidesIndexRoute,
   LocalGuidesIndexRoute: LocalGuidesIndexRoute,
   PublicationsIndexRoute: PublicationsIndexRoute,
+  LocalClusterCityRoute: LocalClusterCityRoute,
   LocalClusterIndexRoute: LocalClusterIndexRoute,
   ApiPublicV1SplatRoute: ApiPublicV1SplatRoute,
 }
