@@ -10,6 +10,7 @@
 import { CITY_GUIDES } from "./cities";
 import { GUIDES } from "./lead-magnets";
 import { ASSESSMENTS } from "./assessments";
+import { ANSWERS } from "./answers";
 import { PROFESSIONAL_AUDIENCES } from "@/lib/partners/pages";
 
 /** Static public pages that should rank. Ordered roughly by priority. */
@@ -24,6 +25,7 @@ export const INDEXABLE_STATIC_PATHS: string[] = [
   "/investing",
   "/resources",
   "/guides",
+  "/answers",
   "/assessments",
   "/local-guides",
   "/about",
@@ -48,6 +50,7 @@ export function indexablePaths(): string[] {
     ...INDEXABLE_STATIC_PATHS,
     ...PROFESSIONAL_AUDIENCES.map(a => `/for/${a}`),
     ...GUIDES.map(g => `/guides/${g.slug}`),
+    ...ANSWERS.map(a => `/answers/${a.slug}`),
     ...ASSESSMENTS.map(a => `/assessments/${a.slug}`),
     ...CITY_GUIDES.map(c => `/local-guides/${c.slug}`),
   ];

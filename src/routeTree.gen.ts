@@ -36,6 +36,7 @@ import { Route as DistressedPropertyRouteImport } from './routes/distressed-prop
 import { Route as DisclaimerRouteImport } from './routes/disclaimer'
 import { Route as DeveloperRouteImport } from './routes/developer'
 import { Route as DataRouteImport } from './routes/data'
+import { Route as ContentEngineRouteImport } from './routes/content-engine'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as BuyersRouteImport } from './routes/buyers'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -51,6 +52,7 @@ import { Route as ConceptsIndexRouteImport } from './routes/concepts.index'
 import { Route as ClientToolkitsIndexRouteImport } from './routes/client-toolkits.index'
 import { Route as AutomationsIndexRouteImport } from './routes/automations.index'
 import { Route as AssessmentsIndexRouteImport } from './routes/assessments.index'
+import { Route as AnswersIndexRouteImport } from './routes/answers.index'
 import { Route as AiPacksIndexRouteImport } from './routes/ai-packs.index'
 import { Route as AgentsIndexRouteImport } from './routes/agents.index'
 import { Route as ReleasesIdRouteImport } from './routes/releases.$id'
@@ -69,6 +71,7 @@ import { Route as ClientToolkitsIdRouteImport } from './routes/client-toolkits.$
 import { Route as AutomationsNewRouteImport } from './routes/automations.new'
 import { Route as AutomationsIdRouteImport } from './routes/automations.$id'
 import { Route as AssessmentsSlugRouteImport } from './routes/assessments.$slug'
+import { Route as AnswersSlugRouteImport } from './routes/answers.$slug'
 import { Route as AiPacksIdRouteImport } from './routes/ai-packs.$id'
 import { Route as AgentsIdRouteImport } from './routes/agents.$id'
 import { Route as AdminWorkspacesRouteImport } from './routes/admin.workspaces'
@@ -217,6 +220,11 @@ const DataRoute = DataRouteImport.update({
   path: '/data',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ContentEngineRoute = ContentEngineRouteImport.update({
+  id: '/content-engine',
+  path: '/content-engine',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
   path: '/contact',
@@ -290,6 +298,11 @@ const AutomationsIndexRoute = AutomationsIndexRouteImport.update({
 const AssessmentsIndexRoute = AssessmentsIndexRouteImport.update({
   id: '/assessments/',
   path: '/assessments/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AnswersIndexRoute = AnswersIndexRouteImport.update({
+  id: '/answers/',
+  path: '/answers/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AiPacksIndexRoute = AiPacksIndexRouteImport.update({
@@ -382,6 +395,11 @@ const AssessmentsSlugRoute = AssessmentsSlugRouteImport.update({
   path: '/assessments/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AnswersSlugRoute = AnswersSlugRouteImport.update({
+  id: '/answers/$slug',
+  path: '/answers/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AiPacksIdRoute = AiPacksIdRouteImport.update({
   id: '/ai-packs/$id',
   path: '/ai-packs/$id',
@@ -452,6 +470,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/buyers': typeof BuyersRoute
   '/contact': typeof ContactRoute
+  '/content-engine': typeof ContentEngineRoute
   '/data': typeof DataRoute
   '/developer': typeof DeveloperRoute
   '/disclaimer': typeof DisclaimerRoute
@@ -490,6 +509,7 @@ export interface FileRoutesByFullPath {
   '/admin/workspaces': typeof AdminWorkspacesRoute
   '/agents/$id': typeof AgentsIdRoute
   '/ai-packs/$id': typeof AiPacksIdRoute
+  '/answers/$slug': typeof AnswersSlugRoute
   '/assessments/$slug': typeof AssessmentsSlugRoute
   '/automations/$id': typeof AutomationsIdRoute
   '/automations/new': typeof AutomationsNewRoute
@@ -508,6 +528,7 @@ export interface FileRoutesByFullPath {
   '/releases/$id': typeof ReleasesIdRoute
   '/agents/': typeof AgentsIndexRoute
   '/ai-packs/': typeof AiPacksIndexRoute
+  '/answers/': typeof AnswersIndexRoute
   '/assessments/': typeof AssessmentsIndexRoute
   '/automations/': typeof AutomationsIndexRoute
   '/client-toolkits/': typeof ClientToolkitsIndexRoute
@@ -526,6 +547,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/buyers': typeof BuyersRoute
   '/contact': typeof ContactRoute
+  '/content-engine': typeof ContentEngineRoute
   '/data': typeof DataRoute
   '/developer': typeof DeveloperRoute
   '/disclaimer': typeof DisclaimerRoute
@@ -564,6 +586,7 @@ export interface FileRoutesByTo {
   '/admin/workspaces': typeof AdminWorkspacesRoute
   '/agents/$id': typeof AgentsIdRoute
   '/ai-packs/$id': typeof AiPacksIdRoute
+  '/answers/$slug': typeof AnswersSlugRoute
   '/assessments/$slug': typeof AssessmentsSlugRoute
   '/automations/$id': typeof AutomationsIdRoute
   '/automations/new': typeof AutomationsNewRoute
@@ -582,6 +605,7 @@ export interface FileRoutesByTo {
   '/releases/$id': typeof ReleasesIdRoute
   '/agents': typeof AgentsIndexRoute
   '/ai-packs': typeof AiPacksIndexRoute
+  '/answers': typeof AnswersIndexRoute
   '/assessments': typeof AssessmentsIndexRoute
   '/automations': typeof AutomationsIndexRoute
   '/client-toolkits': typeof ClientToolkitsIndexRoute
@@ -601,6 +625,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/buyers': typeof BuyersRoute
   '/contact': typeof ContactRoute
+  '/content-engine': typeof ContentEngineRoute
   '/data': typeof DataRoute
   '/developer': typeof DeveloperRoute
   '/disclaimer': typeof DisclaimerRoute
@@ -639,6 +664,7 @@ export interface FileRoutesById {
   '/admin/workspaces': typeof AdminWorkspacesRoute
   '/agents/$id': typeof AgentsIdRoute
   '/ai-packs/$id': typeof AiPacksIdRoute
+  '/answers/$slug': typeof AnswersSlugRoute
   '/assessments/$slug': typeof AssessmentsSlugRoute
   '/automations/$id': typeof AutomationsIdRoute
   '/automations/new': typeof AutomationsNewRoute
@@ -657,6 +683,7 @@ export interface FileRoutesById {
   '/releases/$id': typeof ReleasesIdRoute
   '/agents/': typeof AgentsIndexRoute
   '/ai-packs/': typeof AiPacksIndexRoute
+  '/answers/': typeof AnswersIndexRoute
   '/assessments/': typeof AssessmentsIndexRoute
   '/automations/': typeof AutomationsIndexRoute
   '/client-toolkits/': typeof ClientToolkitsIndexRoute
@@ -677,6 +704,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/buyers'
     | '/contact'
+    | '/content-engine'
     | '/data'
     | '/developer'
     | '/disclaimer'
@@ -715,6 +743,7 @@ export interface FileRouteTypes {
     | '/admin/workspaces'
     | '/agents/$id'
     | '/ai-packs/$id'
+    | '/answers/$slug'
     | '/assessments/$slug'
     | '/automations/$id'
     | '/automations/new'
@@ -733,6 +762,7 @@ export interface FileRouteTypes {
     | '/releases/$id'
     | '/agents/'
     | '/ai-packs/'
+    | '/answers/'
     | '/assessments/'
     | '/automations/'
     | '/client-toolkits/'
@@ -751,6 +781,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/buyers'
     | '/contact'
+    | '/content-engine'
     | '/data'
     | '/developer'
     | '/disclaimer'
@@ -789,6 +820,7 @@ export interface FileRouteTypes {
     | '/admin/workspaces'
     | '/agents/$id'
     | '/ai-packs/$id'
+    | '/answers/$slug'
     | '/assessments/$slug'
     | '/automations/$id'
     | '/automations/new'
@@ -807,6 +839,7 @@ export interface FileRouteTypes {
     | '/releases/$id'
     | '/agents'
     | '/ai-packs'
+    | '/answers'
     | '/assessments'
     | '/automations'
     | '/client-toolkits'
@@ -825,6 +858,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/buyers'
     | '/contact'
+    | '/content-engine'
     | '/data'
     | '/developer'
     | '/disclaimer'
@@ -863,6 +897,7 @@ export interface FileRouteTypes {
     | '/admin/workspaces'
     | '/agents/$id'
     | '/ai-packs/$id'
+    | '/answers/$slug'
     | '/assessments/$slug'
     | '/automations/$id'
     | '/automations/new'
@@ -881,6 +916,7 @@ export interface FileRouteTypes {
     | '/releases/$id'
     | '/agents/'
     | '/ai-packs/'
+    | '/answers/'
     | '/assessments/'
     | '/automations/'
     | '/client-toolkits/'
@@ -900,6 +936,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   BuyersRoute: typeof BuyersRoute
   ContactRoute: typeof ContactRoute
+  ContentEngineRoute: typeof ContentEngineRoute
   DataRoute: typeof DataRoute
   DeveloperRoute: typeof DeveloperRoute
   DisclaimerRoute: typeof DisclaimerRoute
@@ -938,6 +975,7 @@ export interface RootRouteChildren {
   AdminWorkspacesRoute: typeof AdminWorkspacesRoute
   AgentsIdRoute: typeof AgentsIdRoute
   AiPacksIdRoute: typeof AiPacksIdRoute
+  AnswersSlugRoute: typeof AnswersSlugRoute
   AssessmentsSlugRoute: typeof AssessmentsSlugRoute
   AutomationsIdRoute: typeof AutomationsIdRoute
   AutomationsNewRoute: typeof AutomationsNewRoute
@@ -954,6 +992,7 @@ export interface RootRouteChildren {
   ReleasesIdRoute: typeof ReleasesIdRoute
   AgentsIndexRoute: typeof AgentsIndexRoute
   AiPacksIndexRoute: typeof AiPacksIndexRoute
+  AnswersIndexRoute: typeof AnswersIndexRoute
   AssessmentsIndexRoute: typeof AssessmentsIndexRoute
   AutomationsIndexRoute: typeof AutomationsIndexRoute
   ClientToolkitsIndexRoute: typeof ClientToolkitsIndexRoute
@@ -1155,6 +1194,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DataRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/content-engine': {
+      id: '/content-engine'
+      path: '/content-engine'
+      fullPath: '/content-engine'
+      preLoaderRoute: typeof ContentEngineRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/contact': {
       id: '/contact'
       path: '/contact'
@@ -1258,6 +1304,13 @@ declare module '@tanstack/react-router' {
       path: '/assessments'
       fullPath: '/assessments/'
       preLoaderRoute: typeof AssessmentsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/answers/': {
+      id: '/answers/'
+      path: '/answers'
+      fullPath: '/answers/'
+      preLoaderRoute: typeof AnswersIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ai-packs/': {
@@ -1386,6 +1439,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AssessmentsSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/answers/$slug': {
+      id: '/answers/$slug'
+      path: '/answers/$slug'
+      fullPath: '/answers/$slug'
+      preLoaderRoute: typeof AnswersSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ai-packs/$id': {
       id: '/ai-packs/$id'
       path: '/ai-packs/$id'
@@ -1506,6 +1566,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   BuyersRoute: BuyersRoute,
   ContactRoute: ContactRoute,
+  ContentEngineRoute: ContentEngineRoute,
   DataRoute: DataRoute,
   DeveloperRoute: DeveloperRoute,
   DisclaimerRoute: DisclaimerRoute,
@@ -1544,6 +1605,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminWorkspacesRoute: AdminWorkspacesRoute,
   AgentsIdRoute: AgentsIdRoute,
   AiPacksIdRoute: AiPacksIdRoute,
+  AnswersSlugRoute: AnswersSlugRoute,
   AssessmentsSlugRoute: AssessmentsSlugRoute,
   AutomationsIdRoute: AutomationsIdRoute,
   AutomationsNewRoute: AutomationsNewRoute,
@@ -1560,6 +1622,7 @@ const rootRouteChildren: RootRouteChildren = {
   ReleasesIdRoute: ReleasesIdRoute,
   AgentsIndexRoute: AgentsIndexRoute,
   AiPacksIndexRoute: AiPacksIndexRoute,
+  AnswersIndexRoute: AnswersIndexRoute,
   AssessmentsIndexRoute: AssessmentsIndexRoute,
   AutomationsIndexRoute: AutomationsIndexRoute,
   ClientToolkitsIndexRoute: ClientToolkitsIndexRoute,

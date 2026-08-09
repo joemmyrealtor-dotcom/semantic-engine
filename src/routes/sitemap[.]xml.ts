@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { CITY_GUIDES } from "@/lib/marketing/cities";
 import { GUIDES } from "@/lib/marketing/lead-magnets";
 import { ASSESSMENTS } from "@/lib/marketing/assessments";
+import { ANSWERS } from "@/lib/marketing/answers";
 import { PROFESSIONAL_AUDIENCES } from "@/lib/partners/pages";
 import { INDEXABLE_STATIC_PATHS } from "@/lib/marketing/indexation";
 import { PUBLIC_SITE_ORIGIN } from "@/lib/marketing/site";
@@ -32,6 +33,7 @@ const STATIC_META: Record<string, { changefreq: SitemapEntry["changefreq"]; prio
   "/investing": { changefreq: "weekly", priority: "0.8" },
   "/resources": { changefreq: "weekly", priority: "0.8" },
   "/guides": { changefreq: "weekly", priority: "0.9" },
+  "/answers": { changefreq: "weekly", priority: "0.9" },
   "/assessments": { changefreq: "monthly", priority: "0.9" },
   "/local-guides": { changefreq: "weekly", priority: "0.8" },
   "/about": { changefreq: "monthly", priority: "0.6" },
@@ -59,6 +61,11 @@ export function sitemapEntries(): SitemapEntry[] {
       path: `/guides/${g.slug}`,
       changefreq: "monthly" as const,
       priority: "0.8",
+    })),
+    ...ANSWERS.map(a => ({
+      path: `/answers/${a.slug}`,
+      changefreq: "monthly" as const,
+      priority: "0.7",
     })),
     ...ASSESSMENTS.map(a => ({
       path: `/assessments/${a.slug}`,

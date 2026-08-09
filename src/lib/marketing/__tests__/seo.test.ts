@@ -13,6 +13,7 @@ import { siteGraph, breadcrumbGraph, articleGraph, faqGraph } from "../schema";
 import { PUBLIC_SITE_ORIGIN, absoluteUrl, ENTITY_ID } from "../site";
 import { GUIDES } from "../lead-magnets";
 import { ASSESSMENTS } from "../assessments";
+import { ANSWERS } from "@/lib/marketing/answers";
 import { CITY_GUIDES } from "../cities";
 import { PROFESSIONAL_AUDIENCES } from "@/lib/partners/pages";
 
@@ -56,6 +57,7 @@ describe("indexation boundary", () => {
       INDEXABLE_STATIC_PATHS.length +
         PROFESSIONAL_AUDIENCES.length +
         GUIDES.length +
+        ANSWERS.length +
         ASSESSMENTS.length +
         CITY_GUIDES.length,
     );
