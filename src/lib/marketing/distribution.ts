@@ -51,7 +51,7 @@ const DISCLAIMER =
   "Educational only — not legal, tax, or financial advice. Equal Housing Opportunity.";
 
 function clamp(text: string, limit: number): string {
-  const clean = text.replace(/\s+/g, " ").trim();
+  const clean = text.replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim();
   return clean.length <= limit ? clean : `${clean.slice(0, limit - 1).trimEnd()}…`;
 }
 
