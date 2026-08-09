@@ -15,7 +15,7 @@ import { RelatedResources } from "@/components/related-resources";
 import type { RelatedLink } from "@/lib/marketing/internal-links";
 import { GUIDES } from "@/lib/marketing/lead-magnets";
 import { ASSESSMENTS } from "@/lib/marketing/assessments";
-import { AUDIENCE_LABEL } from "@/lib/partners/pages";
+import { PROFESSIONAL_PAGES } from "@/lib/partners/pages";
 import { citiesForCluster, getLocalHub, type LocalPageSpec } from "@/lib/marketing/local-pages";
 
 export function localCrumbs(spec: LocalPageSpec) {
@@ -58,7 +58,7 @@ function engagementLinks(spec: LocalPageSpec): RelatedLink[] {
     kind: "pillar",
   });
   links.push({
-    label: `Working with ${AUDIENCE_LABEL[spec.referralAudience] ?? "professional partners"}`,
+    label: `Working with ${PROFESSIONAL_PAGES[spec.referralAudience].navLabel.toLowerCase()}`,
     to: `/for/${spec.referralAudience}`,
     description: "How we coordinate with the professionals already advising you.",
     kind: "hub",
