@@ -449,10 +449,22 @@ function localConsiderationsFor(geographyId: GeographyId, place: string): { note
   };
 }
 
+/**
+ * Share- and SERP-safe title. Clamping the question alone can truncate two
+ * different pages down to the same string, so the place always survives.
+ */
+function localMetaTitle(question: string, place: string): string {
+  const base = clampMeta(question, 60);
+  if (base.toLowerCase().includes(place.toLowerCase())) return base;
+  const suffix = ` — ${place}`;
+  return `${clampMeta(question, 60 - suffix.length)}${suffix}`;
+}
+
 function buildSpec(cluster: ClusterId, geography: GeographyId): LocalPageSpec | null {
   const framework = CLUSTER_CONTENT[cluster];
   const clusterMeta = CLUSTERS.find(c => c.id === cluster);
   const geo = GEOGRAPHIES.find(g => g.id === geography);
+
   if (!framework || !clusterMeta || !geo) return null;
 
   const level: "hub" | "city" = geo.citySlug === null ? "hub" : "city";
@@ -476,7 +488,7 @@ function buildSpec(cluster: ClusterId, geography: GeographyId): LocalPageSpec | 
     path,
     place,
     question,
-    metaTitle: clampMeta(`${question} | Legacy Forge`, 60),
+    metaTitle: localMetaTitle(question, place),
     metaDescription: clampMeta(framework.directAnswer(place), 155),
     directAnswer: framework.directAnswer(place),
     keyFactors: framework.keyFactors,

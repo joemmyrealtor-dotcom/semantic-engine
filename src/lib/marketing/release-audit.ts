@@ -9,6 +9,9 @@ import { canonicalOriginStatus, PUBLIC_SITE_ORIGIN } from "./site";
 import { INDEXABLE_STATIC_PATHS, NON_INDEXABLE_PUBLIC_PATHS, indexablePaths } from "./indexation";
 import { LOCAL_PAGES } from "./local-pages";
 import { ANSWERS } from "./answers";
+import { blockingCannibalization } from "./cannibalization";
+import { missingIntentRecords } from "./intent-map";
+import { buildQualityGate } from "./quality-gate";
 
 export type AuditStatus = "PASS" | "BLOCKED" | "REVIEW";
 
@@ -51,6 +54,9 @@ export function buildReleaseAudit(now: Date = new Date()): ReleaseAudit {
   const duplicates = paths.filter((p, i) => paths.indexOf(p) !== i);
   const leaked = NON_INDEXABLE_PUBLIC_PATHS.filter(p => paths.includes(p));
   const thin = thinLocalPages();
+  const cannibalBlockers = blockingCannibalization();
+  const intentGaps = missingIntentRecords();
+  const quality = buildQualityGate(now);
 
   const checks: AuditCheck[] = [
     {
@@ -103,6 +109,30 @@ export function buildReleaseAudit(now: Date = new Date()): ReleaseAudit {
       label: "Search Console, Bing, GA4, and Business Profile connected",
       status: "REVIEW",
       detail: "External operator step — verify after the production domain is live.",
+      launchCritical: true,
+    },
+    {
+      id: "T17-8",
+      label: "No unresolved cannibalization between indexable URLs",
+      status: cannibalBlockers.length === 0 ? "PASS" : "REVIEW",
+      detail:
+        cannibalBlockers.length === 0
+          ? `${paths.length} URLs compared; no CONSOLIDATE or REDIRECT verdicts outstanding`
+          : `${cannibalBlockers.length} pages flagged for consolidation or redirect (advisory; no action applied)`,
+      launchCritical: false,
+    },
+    {
+      id: "T17-9",
+      label: "Every indexable URL has a canonical search intent record",
+      status: intentGaps.length === 0 ? "PASS" : "BLOCKED",
+      detail: intentGaps.length === 0 ? "Search intent map covers the full sitemap" : intentGaps.join(", "),
+      launchCritical: true,
+    },
+    {
+      id: "T17-10",
+      label: "Content quality gate: pages are launch-eligible",
+      status: quality.fail === 0 ? (quality.review === 0 ? "PASS" : "REVIEW") : "BLOCKED",
+      detail: `${quality.launchEligible}/${quality.pages.length} launch-eligible · ${quality.pass} PASS · ${quality.review} REVIEW · ${quality.fail} FAIL`,
       launchCritical: true,
     },
   ];

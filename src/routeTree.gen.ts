@@ -77,6 +77,7 @@ import { Route as AiPacksIdRouteImport } from './routes/ai-packs.$id'
 import { Route as AgentsIdRouteImport } from './routes/agents.$id'
 import { Route as AdminWorkspacesRouteImport } from './routes/admin.workspaces'
 import { Route as AdminSeoReadinessRouteImport } from './routes/admin.seo-readiness'
+import { Route as AdminSearchAuthorityRouteImport } from './routes/admin.search-authority'
 import { Route as AdminRecoveryRouteImport } from './routes/admin.recovery'
 import { Route as AdminPartnersRouteImport } from './routes/admin.partners'
 import { Route as AdminMonitoringRouteImport } from './routes/admin.monitoring'
@@ -429,6 +430,11 @@ const AdminSeoReadinessRoute = AdminSeoReadinessRouteImport.update({
   path: '/admin/seo-readiness',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminSearchAuthorityRoute = AdminSearchAuthorityRouteImport.update({
+  id: '/admin/search-authority',
+  path: '/admin/search-authority',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminRecoveryRoute = AdminRecoveryRouteImport.update({
   id: '/admin/recovery',
   path: '/admin/recovery',
@@ -530,6 +536,7 @@ export interface FileRoutesByFullPath {
   '/admin/monitoring': typeof AdminMonitoringRoute
   '/admin/partners': typeof AdminPartnersRoute
   '/admin/recovery': typeof AdminRecoveryRoute
+  '/admin/search-authority': typeof AdminSearchAuthorityRoute
   '/admin/seo-readiness': typeof AdminSeoReadinessRoute
   '/admin/workspaces': typeof AdminWorkspacesRoute
   '/agents/$id': typeof AgentsIdRoute
@@ -611,6 +618,7 @@ export interface FileRoutesByTo {
   '/admin/monitoring': typeof AdminMonitoringRoute
   '/admin/partners': typeof AdminPartnersRoute
   '/admin/recovery': typeof AdminRecoveryRoute
+  '/admin/search-authority': typeof AdminSearchAuthorityRoute
   '/admin/seo-readiness': typeof AdminSeoReadinessRoute
   '/admin/workspaces': typeof AdminWorkspacesRoute
   '/agents/$id': typeof AgentsIdRoute
@@ -693,6 +701,7 @@ export interface FileRoutesById {
   '/admin/monitoring': typeof AdminMonitoringRoute
   '/admin/partners': typeof AdminPartnersRoute
   '/admin/recovery': typeof AdminRecoveryRoute
+  '/admin/search-authority': typeof AdminSearchAuthorityRoute
   '/admin/seo-readiness': typeof AdminSeoReadinessRoute
   '/admin/workspaces': typeof AdminWorkspacesRoute
   '/agents/$id': typeof AgentsIdRoute
@@ -776,6 +785,7 @@ export interface FileRouteTypes {
     | '/admin/monitoring'
     | '/admin/partners'
     | '/admin/recovery'
+    | '/admin/search-authority'
     | '/admin/seo-readiness'
     | '/admin/workspaces'
     | '/agents/$id'
@@ -857,6 +867,7 @@ export interface FileRouteTypes {
     | '/admin/monitoring'
     | '/admin/partners'
     | '/admin/recovery'
+    | '/admin/search-authority'
     | '/admin/seo-readiness'
     | '/admin/workspaces'
     | '/agents/$id'
@@ -938,6 +949,7 @@ export interface FileRouteTypes {
     | '/admin/monitoring'
     | '/admin/partners'
     | '/admin/recovery'
+    | '/admin/search-authority'
     | '/admin/seo-readiness'
     | '/admin/workspaces'
     | '/agents/$id'
@@ -1020,6 +1032,7 @@ export interface RootRouteChildren {
   AdminMonitoringRoute: typeof AdminMonitoringRoute
   AdminPartnersRoute: typeof AdminPartnersRoute
   AdminRecoveryRoute: typeof AdminRecoveryRoute
+  AdminSearchAuthorityRoute: typeof AdminSearchAuthorityRoute
   AdminSeoReadinessRoute: typeof AdminSeoReadinessRoute
   AdminWorkspacesRoute: typeof AdminWorkspacesRoute
   AgentsIdRoute: typeof AgentsIdRoute
@@ -1533,6 +1546,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSeoReadinessRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/search-authority': {
+      id: '/admin/search-authority'
+      path: '/admin/search-authority'
+      fullPath: '/admin/search-authority'
+      preLoaderRoute: typeof AdminSearchAuthorityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/recovery': {
       id: '/admin/recovery'
       path: '/admin/recovery'
@@ -1682,6 +1702,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminMonitoringRoute: AdminMonitoringRoute,
   AdminPartnersRoute: AdminPartnersRoute,
   AdminRecoveryRoute: AdminRecoveryRoute,
+  AdminSearchAuthorityRoute: AdminSearchAuthorityRoute,
   AdminSeoReadinessRoute: AdminSeoReadinessRoute,
   AdminWorkspacesRoute: AdminWorkspacesRoute,
   AgentsIdRoute: AgentsIdRoute,
