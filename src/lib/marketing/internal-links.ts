@@ -94,6 +94,12 @@ export function guideCluster(situation: EntryPathId, assessmentSlug?: string): R
     });
   }
   links.push(...cityLinksFor(situation, 3));
+  links.push({
+    label: "Seller and buyer questions, answered",
+    to: "/answers",
+    description: "Sixty of the questions people actually ask, each answered directly.",
+    kind: "hub",
+  });
   return links;
 }
 
