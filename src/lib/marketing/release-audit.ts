@@ -105,6 +105,30 @@ export function buildReleaseAudit(now: Date = new Date()): ReleaseAudit {
       detail: "External operator step — verify after the production domain is live.",
       launchCritical: true,
     },
+    {
+      id: "T17-8",
+      label: "No unresolved cannibalization between indexable URLs",
+      status: cannibalBlockers.length === 0 ? "PASS" : "REVIEW",
+      detail:
+        cannibalBlockers.length === 0
+          ? `${paths.length} URLs compared; no CONSOLIDATE or REDIRECT verdicts outstanding`
+          : `${cannibalBlockers.length} pages flagged for consolidation or redirect (advisory; no action applied)`,
+      launchCritical: false,
+    },
+    {
+      id: "T17-9",
+      label: "Every indexable URL has a canonical search intent record",
+      status: intentGaps.length === 0 ? "PASS" : "BLOCKED",
+      detail: intentGaps.length === 0 ? "Search intent map covers the full sitemap" : intentGaps.join(", "),
+      launchCritical: true,
+    },
+    {
+      id: "T17-10",
+      label: "Content quality gate: pages are launch-eligible",
+      status: quality.fail === 0 ? (quality.review === 0 ? "PASS" : "REVIEW") : "BLOCKED",
+      detail: `${quality.launchEligible}/${quality.pages.length} launch-eligible · ${quality.pass} PASS · ${quality.review} REVIEW · ${quality.fail} FAIL`,
+      launchCritical: true,
+    },
   ];
 
   const blocked = checks.some(c => c.status === "BLOCKED");
