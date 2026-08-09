@@ -460,6 +460,13 @@ function buildSpec(cluster: ClusterId, geography: GeographyId): LocalPageSpec | 
   const place = geo.label;
   const question = framework.question(place);
   const { notes, neighborhoods } = localConsiderationsFor(geography, place);
+  // Cluster-specific local lens: the same city facts read differently
+  // depending on the situation, so each page states that link explicitly
+  // rather than repeating a shared city block.
+  const lens = [
+    `In ${place}, the ${clusterMeta.label.toLowerCase()} question usually turns on this first: ${framework.keyFactors[0]}`,
+    `Before anything else in ${place}: ${framework.decisionPath[0]}`,
+  ];
   const cityFaqs = CITY_GUIDES.find(c => c.slug === geography)?.faqs ?? [];
 
   return {
@@ -476,7 +483,7 @@ function buildSpec(cluster: ClusterId, geography: GeographyId): LocalPageSpec | 
     scenarios: framework.scenarios,
     decisionPath: framework.decisionPath,
     costTiming: framework.costTiming,
-    localConsiderations: notes,
+    localConsiderations: [...lens, ...notes],
     neighborhoods,
     paa: [...framework.paa, ...cityFaqs].slice(0, 5),
     guideSlug: clusterMeta.guideSlug,
