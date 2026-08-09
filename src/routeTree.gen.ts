@@ -83,6 +83,7 @@ import { Route as AdminDeploymentRouteImport } from './routes/admin.deployment'
 import { Route as AdminCutoverRouteImport } from './routes/admin.cutover'
 import { Route as AdminBackupsRouteImport } from './routes/admin.backups'
 import { Route as AdminAuditRouteImport } from './routes/admin.audit'
+import { Route as LocalClusterIndexRouteImport } from './routes/local.$cluster.index'
 import { Route as ApiPublicV1SplatRouteImport } from './routes/api/public/v1/$'
 
 const TermsRoute = TermsRouteImport.update({
@@ -455,6 +456,11 @@ const AdminAuditRoute = AdminAuditRouteImport.update({
   path: '/admin/audit',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LocalClusterIndexRoute = LocalClusterIndexRouteImport.update({
+  id: '/local/$cluster/',
+  path: '/local/$cluster/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicV1SplatRoute = ApiPublicV1SplatRouteImport.update({
   id: '/api/public/v1/$',
   path: '/api/public/v1/$',
@@ -536,6 +542,7 @@ export interface FileRoutesByFullPath {
   '/guides/': typeof GuidesIndexRoute
   '/local-guides/': typeof LocalGuidesIndexRoute
   '/publications/': typeof PublicationsIndexRoute
+  '/local/$cluster/': typeof LocalClusterIndexRoute
   '/api/public/v1/$': typeof ApiPublicV1SplatRoute
 }
 export interface FileRoutesByTo {
@@ -613,6 +620,7 @@ export interface FileRoutesByTo {
   '/guides': typeof GuidesIndexRoute
   '/local-guides': typeof LocalGuidesIndexRoute
   '/publications': typeof PublicationsIndexRoute
+  '/local/$cluster': typeof LocalClusterIndexRoute
   '/api/public/v1/$': typeof ApiPublicV1SplatRoute
 }
 export interface FileRoutesById {
@@ -691,6 +699,7 @@ export interface FileRoutesById {
   '/guides/': typeof GuidesIndexRoute
   '/local-guides/': typeof LocalGuidesIndexRoute
   '/publications/': typeof PublicationsIndexRoute
+  '/local/$cluster/': typeof LocalClusterIndexRoute
   '/api/public/v1/$': typeof ApiPublicV1SplatRoute
 }
 export interface FileRouteTypes {
@@ -770,6 +779,7 @@ export interface FileRouteTypes {
     | '/guides/'
     | '/local-guides/'
     | '/publications/'
+    | '/local/$cluster/'
     | '/api/public/v1/$'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -847,6 +857,7 @@ export interface FileRouteTypes {
     | '/guides'
     | '/local-guides'
     | '/publications'
+    | '/local/$cluster'
     | '/api/public/v1/$'
   id:
     | '__root__'
@@ -924,6 +935,7 @@ export interface FileRouteTypes {
     | '/guides/'
     | '/local-guides/'
     | '/publications/'
+    | '/local/$cluster/'
     | '/api/public/v1/$'
   fileRoutesById: FileRoutesById
 }
@@ -1000,6 +1012,7 @@ export interface RootRouteChildren {
   GuidesIndexRoute: typeof GuidesIndexRoute
   LocalGuidesIndexRoute: typeof LocalGuidesIndexRoute
   PublicationsIndexRoute: typeof PublicationsIndexRoute
+  LocalClusterIndexRoute: typeof LocalClusterIndexRoute
   ApiPublicV1SplatRoute: typeof ApiPublicV1SplatRoute
 }
 
@@ -1523,6 +1536,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAuditRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/local/$cluster/': {
+      id: '/local/$cluster/'
+      path: '/local/$cluster'
+      fullPath: '/local/$cluster/'
+      preLoaderRoute: typeof LocalClusterIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/v1/$': {
       id: '/api/public/v1/$'
       path: '/api/public/v1/$'
@@ -1630,18 +1650,9 @@ const rootRouteChildren: RootRouteChildren = {
   GuidesIndexRoute: GuidesIndexRoute,
   LocalGuidesIndexRoute: LocalGuidesIndexRoute,
   PublicationsIndexRoute: PublicationsIndexRoute,
+  LocalClusterIndexRoute: LocalClusterIndexRoute,
   ApiPublicV1SplatRoute: ApiPublicV1SplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
