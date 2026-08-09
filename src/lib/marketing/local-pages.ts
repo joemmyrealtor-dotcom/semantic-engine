@@ -476,7 +476,7 @@ function buildSpec(cluster: ClusterId, geography: GeographyId): LocalPageSpec | 
     path,
     place,
     question,
-    metaTitle: clampMeta(`${question} | Legacy Forge`, 60),
+    metaTitle: localMetaTitle(question, place),
     metaDescription: clampMeta(framework.directAnswer(place), 155),
     directAnswer: framework.directAnswer(place),
     keyFactors: framework.keyFactors,
