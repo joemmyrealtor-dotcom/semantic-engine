@@ -69,6 +69,7 @@ import { Route as ClientToolkitsIdRouteImport } from './routes/client-toolkits.$
 import { Route as AutomationsNewRouteImport } from './routes/automations.new'
 import { Route as AutomationsIdRouteImport } from './routes/automations.$id'
 import { Route as AssessmentsSlugRouteImport } from './routes/assessments.$slug'
+import { Route as AnswersSlugRouteImport } from './routes/answers.$slug'
 import { Route as AiPacksIdRouteImport } from './routes/ai-packs.$id'
 import { Route as AgentsIdRouteImport } from './routes/agents.$id'
 import { Route as AdminWorkspacesRouteImport } from './routes/admin.workspaces'
@@ -382,6 +383,11 @@ const AssessmentsSlugRoute = AssessmentsSlugRouteImport.update({
   path: '/assessments/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AnswersSlugRoute = AnswersSlugRouteImport.update({
+  id: '/answers/$slug',
+  path: '/answers/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AiPacksIdRoute = AiPacksIdRouteImport.update({
   id: '/ai-packs/$id',
   path: '/ai-packs/$id',
@@ -490,6 +496,7 @@ export interface FileRoutesByFullPath {
   '/admin/workspaces': typeof AdminWorkspacesRoute
   '/agents/$id': typeof AgentsIdRoute
   '/ai-packs/$id': typeof AiPacksIdRoute
+  '/answers/$slug': typeof AnswersSlugRoute
   '/assessments/$slug': typeof AssessmentsSlugRoute
   '/automations/$id': typeof AutomationsIdRoute
   '/automations/new': typeof AutomationsNewRoute
@@ -564,6 +571,7 @@ export interface FileRoutesByTo {
   '/admin/workspaces': typeof AdminWorkspacesRoute
   '/agents/$id': typeof AgentsIdRoute
   '/ai-packs/$id': typeof AiPacksIdRoute
+  '/answers/$slug': typeof AnswersSlugRoute
   '/assessments/$slug': typeof AssessmentsSlugRoute
   '/automations/$id': typeof AutomationsIdRoute
   '/automations/new': typeof AutomationsNewRoute
@@ -639,6 +647,7 @@ export interface FileRoutesById {
   '/admin/workspaces': typeof AdminWorkspacesRoute
   '/agents/$id': typeof AgentsIdRoute
   '/ai-packs/$id': typeof AiPacksIdRoute
+  '/answers/$slug': typeof AnswersSlugRoute
   '/assessments/$slug': typeof AssessmentsSlugRoute
   '/automations/$id': typeof AutomationsIdRoute
   '/automations/new': typeof AutomationsNewRoute
@@ -715,6 +724,7 @@ export interface FileRouteTypes {
     | '/admin/workspaces'
     | '/agents/$id'
     | '/ai-packs/$id'
+    | '/answers/$slug'
     | '/assessments/$slug'
     | '/automations/$id'
     | '/automations/new'
@@ -789,6 +799,7 @@ export interface FileRouteTypes {
     | '/admin/workspaces'
     | '/agents/$id'
     | '/ai-packs/$id'
+    | '/answers/$slug'
     | '/assessments/$slug'
     | '/automations/$id'
     | '/automations/new'
@@ -863,6 +874,7 @@ export interface FileRouteTypes {
     | '/admin/workspaces'
     | '/agents/$id'
     | '/ai-packs/$id'
+    | '/answers/$slug'
     | '/assessments/$slug'
     | '/automations/$id'
     | '/automations/new'
@@ -938,6 +950,7 @@ export interface RootRouteChildren {
   AdminWorkspacesRoute: typeof AdminWorkspacesRoute
   AgentsIdRoute: typeof AgentsIdRoute
   AiPacksIdRoute: typeof AiPacksIdRoute
+  AnswersSlugRoute: typeof AnswersSlugRoute
   AssessmentsSlugRoute: typeof AssessmentsSlugRoute
   AutomationsIdRoute: typeof AutomationsIdRoute
   AutomationsNewRoute: typeof AutomationsNewRoute
@@ -1386,6 +1399,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AssessmentsSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/answers/$slug': {
+      id: '/answers/$slug'
+      path: '/answers/$slug'
+      fullPath: '/answers/$slug'
+      preLoaderRoute: typeof AnswersSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ai-packs/$id': {
       id: '/ai-packs/$id'
       path: '/ai-packs/$id'
@@ -1544,6 +1564,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminWorkspacesRoute: AdminWorkspacesRoute,
   AgentsIdRoute: AgentsIdRoute,
   AiPacksIdRoute: AiPacksIdRoute,
+  AnswersSlugRoute: AnswersSlugRoute,
   AssessmentsSlugRoute: AssessmentsSlugRoute,
   AutomationsIdRoute: AutomationsIdRoute,
   AutomationsNewRoute: AutomationsNewRoute,
@@ -1572,13 +1593,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
