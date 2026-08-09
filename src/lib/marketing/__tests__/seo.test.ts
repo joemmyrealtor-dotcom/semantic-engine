@@ -15,6 +15,7 @@ import { GUIDES } from "../lead-magnets";
 import { ASSESSMENTS } from "../assessments";
 import { ANSWERS } from "@/lib/marketing/answers";
 import { CITY_GUIDES } from "../cities";
+import { LOCAL_PAGES } from "../local-pages";
 import { PROFESSIONAL_AUDIENCES } from "@/lib/partners/pages";
 
 describe("canonical origin", () => {
