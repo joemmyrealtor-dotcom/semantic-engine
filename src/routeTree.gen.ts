@@ -51,6 +51,7 @@ import { Route as ConceptsIndexRouteImport } from './routes/concepts.index'
 import { Route as ClientToolkitsIndexRouteImport } from './routes/client-toolkits.index'
 import { Route as AutomationsIndexRouteImport } from './routes/automations.index'
 import { Route as AssessmentsIndexRouteImport } from './routes/assessments.index'
+import { Route as AnswersIndexRouteImport } from './routes/answers.index'
 import { Route as AiPacksIndexRouteImport } from './routes/ai-packs.index'
 import { Route as AgentsIndexRouteImport } from './routes/agents.index'
 import { Route as ReleasesIdRouteImport } from './routes/releases.$id'
@@ -293,6 +294,11 @@ const AssessmentsIndexRoute = AssessmentsIndexRouteImport.update({
   path: '/assessments/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AnswersIndexRoute = AnswersIndexRouteImport.update({
+  id: '/answers/',
+  path: '/answers/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AiPacksIndexRoute = AiPacksIndexRouteImport.update({
   id: '/ai-packs/',
   path: '/ai-packs/',
@@ -515,6 +521,7 @@ export interface FileRoutesByFullPath {
   '/releases/$id': typeof ReleasesIdRoute
   '/agents/': typeof AgentsIndexRoute
   '/ai-packs/': typeof AiPacksIndexRoute
+  '/answers/': typeof AnswersIndexRoute
   '/assessments/': typeof AssessmentsIndexRoute
   '/automations/': typeof AutomationsIndexRoute
   '/client-toolkits/': typeof ClientToolkitsIndexRoute
@@ -590,6 +597,7 @@ export interface FileRoutesByTo {
   '/releases/$id': typeof ReleasesIdRoute
   '/agents': typeof AgentsIndexRoute
   '/ai-packs': typeof AiPacksIndexRoute
+  '/answers': typeof AnswersIndexRoute
   '/assessments': typeof AssessmentsIndexRoute
   '/automations': typeof AutomationsIndexRoute
   '/client-toolkits': typeof ClientToolkitsIndexRoute
@@ -666,6 +674,7 @@ export interface FileRoutesById {
   '/releases/$id': typeof ReleasesIdRoute
   '/agents/': typeof AgentsIndexRoute
   '/ai-packs/': typeof AiPacksIndexRoute
+  '/answers/': typeof AnswersIndexRoute
   '/assessments/': typeof AssessmentsIndexRoute
   '/automations/': typeof AutomationsIndexRoute
   '/client-toolkits/': typeof ClientToolkitsIndexRoute
@@ -743,6 +752,7 @@ export interface FileRouteTypes {
     | '/releases/$id'
     | '/agents/'
     | '/ai-packs/'
+    | '/answers/'
     | '/assessments/'
     | '/automations/'
     | '/client-toolkits/'
@@ -818,6 +828,7 @@ export interface FileRouteTypes {
     | '/releases/$id'
     | '/agents'
     | '/ai-packs'
+    | '/answers'
     | '/assessments'
     | '/automations'
     | '/client-toolkits'
@@ -893,6 +904,7 @@ export interface FileRouteTypes {
     | '/releases/$id'
     | '/agents/'
     | '/ai-packs/'
+    | '/answers/'
     | '/assessments/'
     | '/automations/'
     | '/client-toolkits/'
@@ -967,6 +979,7 @@ export interface RootRouteChildren {
   ReleasesIdRoute: typeof ReleasesIdRoute
   AgentsIndexRoute: typeof AgentsIndexRoute
   AiPacksIndexRoute: typeof AiPacksIndexRoute
+  AnswersIndexRoute: typeof AnswersIndexRoute
   AssessmentsIndexRoute: typeof AssessmentsIndexRoute
   AutomationsIndexRoute: typeof AutomationsIndexRoute
   ClientToolkitsIndexRoute: typeof ClientToolkitsIndexRoute
@@ -1271,6 +1284,13 @@ declare module '@tanstack/react-router' {
       path: '/assessments'
       fullPath: '/assessments/'
       preLoaderRoute: typeof AssessmentsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/answers/': {
+      id: '/answers/'
+      path: '/answers'
+      fullPath: '/answers/'
+      preLoaderRoute: typeof AnswersIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ai-packs/': {
@@ -1581,6 +1601,7 @@ const rootRouteChildren: RootRouteChildren = {
   ReleasesIdRoute: ReleasesIdRoute,
   AgentsIndexRoute: AgentsIndexRoute,
   AiPacksIndexRoute: AiPacksIndexRoute,
+  AnswersIndexRoute: AnswersIndexRoute,
   AssessmentsIndexRoute: AssessmentsIndexRoute,
   AutomationsIndexRoute: AutomationsIndexRoute,
   ClientToolkitsIndexRoute: ClientToolkitsIndexRoute,
