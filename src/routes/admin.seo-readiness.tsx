@@ -43,7 +43,7 @@ function SeoReadinessPanel() {
     <>
       <PageHeader
         title="SEO/AEO Release Readiness"
-        subtitle="Task 17 — canonical identity, indexation boundary, and local content quality."
+        description="Task 17 — canonical identity, indexation boundary, and local content quality."
       />
       <PageBody>
         <div className="flex flex-wrap items-center gap-3">

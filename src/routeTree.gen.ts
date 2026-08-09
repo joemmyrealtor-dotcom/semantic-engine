@@ -76,6 +76,7 @@ import { Route as AnswersSlugRouteImport } from './routes/answers.$slug'
 import { Route as AiPacksIdRouteImport } from './routes/ai-packs.$id'
 import { Route as AgentsIdRouteImport } from './routes/agents.$id'
 import { Route as AdminWorkspacesRouteImport } from './routes/admin.workspaces'
+import { Route as AdminSeoReadinessRouteImport } from './routes/admin.seo-readiness'
 import { Route as AdminRecoveryRouteImport } from './routes/admin.recovery'
 import { Route as AdminPartnersRouteImport } from './routes/admin.partners'
 import { Route as AdminMonitoringRouteImport } from './routes/admin.monitoring'
@@ -423,6 +424,11 @@ const AdminWorkspacesRoute = AdminWorkspacesRouteImport.update({
   path: '/admin/workspaces',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminSeoReadinessRoute = AdminSeoReadinessRouteImport.update({
+  id: '/admin/seo-readiness',
+  path: '/admin/seo-readiness',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminRecoveryRoute = AdminRecoveryRouteImport.update({
   id: '/admin/recovery',
   path: '/admin/recovery',
@@ -524,6 +530,7 @@ export interface FileRoutesByFullPath {
   '/admin/monitoring': typeof AdminMonitoringRoute
   '/admin/partners': typeof AdminPartnersRoute
   '/admin/recovery': typeof AdminRecoveryRoute
+  '/admin/seo-readiness': typeof AdminSeoReadinessRoute
   '/admin/workspaces': typeof AdminWorkspacesRoute
   '/agents/$id': typeof AgentsIdRoute
   '/ai-packs/$id': typeof AiPacksIdRoute
@@ -604,6 +611,7 @@ export interface FileRoutesByTo {
   '/admin/monitoring': typeof AdminMonitoringRoute
   '/admin/partners': typeof AdminPartnersRoute
   '/admin/recovery': typeof AdminRecoveryRoute
+  '/admin/seo-readiness': typeof AdminSeoReadinessRoute
   '/admin/workspaces': typeof AdminWorkspacesRoute
   '/agents/$id': typeof AgentsIdRoute
   '/ai-packs/$id': typeof AiPacksIdRoute
@@ -685,6 +693,7 @@ export interface FileRoutesById {
   '/admin/monitoring': typeof AdminMonitoringRoute
   '/admin/partners': typeof AdminPartnersRoute
   '/admin/recovery': typeof AdminRecoveryRoute
+  '/admin/seo-readiness': typeof AdminSeoReadinessRoute
   '/admin/workspaces': typeof AdminWorkspacesRoute
   '/agents/$id': typeof AgentsIdRoute
   '/ai-packs/$id': typeof AiPacksIdRoute
@@ -767,6 +776,7 @@ export interface FileRouteTypes {
     | '/admin/monitoring'
     | '/admin/partners'
     | '/admin/recovery'
+    | '/admin/seo-readiness'
     | '/admin/workspaces'
     | '/agents/$id'
     | '/ai-packs/$id'
@@ -847,6 +857,7 @@ export interface FileRouteTypes {
     | '/admin/monitoring'
     | '/admin/partners'
     | '/admin/recovery'
+    | '/admin/seo-readiness'
     | '/admin/workspaces'
     | '/agents/$id'
     | '/ai-packs/$id'
@@ -927,6 +938,7 @@ export interface FileRouteTypes {
     | '/admin/monitoring'
     | '/admin/partners'
     | '/admin/recovery'
+    | '/admin/seo-readiness'
     | '/admin/workspaces'
     | '/agents/$id'
     | '/ai-packs/$id'
@@ -1008,6 +1020,7 @@ export interface RootRouteChildren {
   AdminMonitoringRoute: typeof AdminMonitoringRoute
   AdminPartnersRoute: typeof AdminPartnersRoute
   AdminRecoveryRoute: typeof AdminRecoveryRoute
+  AdminSeoReadinessRoute: typeof AdminSeoReadinessRoute
   AdminWorkspacesRoute: typeof AdminWorkspacesRoute
   AgentsIdRoute: typeof AgentsIdRoute
   AiPacksIdRoute: typeof AiPacksIdRoute
@@ -1513,6 +1526,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminWorkspacesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/seo-readiness': {
+      id: '/admin/seo-readiness'
+      path: '/admin/seo-readiness'
+      fullPath: '/admin/seo-readiness'
+      preLoaderRoute: typeof AdminSeoReadinessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/recovery': {
       id: '/admin/recovery'
       path: '/admin/recovery'
@@ -1662,6 +1682,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminMonitoringRoute: AdminMonitoringRoute,
   AdminPartnersRoute: AdminPartnersRoute,
   AdminRecoveryRoute: AdminRecoveryRoute,
+  AdminSeoReadinessRoute: AdminSeoReadinessRoute,
   AdminWorkspacesRoute: AdminWorkspacesRoute,
   AgentsIdRoute: AgentsIdRoute,
   AiPacksIdRoute: AiPacksIdRoute,
