@@ -66,3 +66,42 @@ export const SOCIAL_CARD = {
 
 export const SITE_LOCALE = "en_US";
 export const SITE_LANGUAGE = "en-US";
+
+/**
+ * Task 17 launch gate — the canonical entity must not be the Lovable
+ * hostname. Search engines, AI crawlers, social platforms, and backlinks all
+ * learn whatever origin we publish, and that identity is expensive to move
+ * later. Production must set PUBLIC_SITE_ORIGIN / VITE_PUBLIC_SITE_ORIGIN to
+ * the final Legacy Forge domain before anything is published.
+ */
+export const PROVISIONAL_ORIGIN_HOSTS = ["lovable.app", "lovableproject.com"] as const;
+
+export function isProvisionalOrigin(origin: string = PUBLIC_SITE_ORIGIN): boolean {
+  const host = origin.replace(/^https?:\/\//, "").split("/")[0]!.toLowerCase();
+  return PROVISIONAL_ORIGIN_HOSTS.some(h => host === h || host.endsWith(`.${h}`));
+}
+
+export interface CanonicalOriginStatus {
+  origin: string;
+  configured: boolean;
+  provisional: boolean;
+  /** PASS only when a non-provisional origin is explicitly configured. */
+  status: "PASS" | "BLOCKED";
+  detail: string;
+}
+
+export function canonicalOriginStatus(origin: string = PUBLIC_SITE_ORIGIN): CanonicalOriginStatus {
+  const configured = origin !== FALLBACK_SITE_ORIGIN;
+  const provisional = isProvisionalOrigin(origin);
+  return {
+    origin,
+    configured,
+    provisional,
+    status: !provisional && configured ? "PASS" : "BLOCKED",
+    detail: provisional
+      ? `Canonical identity is still the provisional host ${origin}. Set PUBLIC_SITE_ORIGIN to the final Legacy Forge domain before publication.`
+      : configured
+        ? `Canonical identity is ${origin}.`
+        : `No origin configured; falling back to ${origin}.`,
+  };
+}

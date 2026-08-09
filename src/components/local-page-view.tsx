@@ -5,6 +5,7 @@
 // costs → local context → PAA → engagement paths) is identical everywhere and
 // can be verified by a single test.
 
+import { useEffect } from "react";
 import { Link } from "@tanstack/react-router";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ import type { RelatedLink } from "@/lib/marketing/internal-links";
 import { GUIDES } from "@/lib/marketing/lead-magnets";
 import { ASSESSMENTS } from "@/lib/marketing/assessments";
 import { PROFESSIONAL_PAGES } from "@/lib/partners/pages";
+import { trackEvent } from "@/lib/marketing/analytics";
 import { citiesForCluster, getLocalHub, type LocalPageSpec } from "@/lib/marketing/local-pages";
 
 export function localCrumbs(spec: LocalPageSpec) {
@@ -77,6 +79,15 @@ function engagementLinks(spec: LocalPageSpec): RelatedLink[] {
 export function LocalPageView({ spec }: { spec: LocalPageSpec }) {
   const siblings = citiesForCluster(spec.cluster).filter(p => p.path !== spec.path);
   const hub = getLocalHub(spec.cluster);
+
+  useEffect(() => {
+    trackEvent("local_guide_viewed", {
+      city: spec.geography,
+      situation: spec.cluster,
+      label: spec.path,
+      dedupeKey: `local_page_view|${spec.path}`,
+    });
+  }, [spec.geography, spec.cluster, spec.path]);
 
   return (
     <article>
@@ -177,10 +188,33 @@ export function LocalPageView({ spec }: { spec: LocalPageSpec }) {
           <p className="mt-2 text-sm text-muted-foreground">{spec.nextStep}</p>
           <div className="mt-5 flex flex-wrap gap-3">
             <Button asChild size="lg">
-              <Link to="/contact">Book a {spec.place} strategy call</Link>
+              <Link
+                to="/contact"
+                onClick={() =>
+                  trackEvent("consultation_clicked", {
+                    city: spec.geography,
+                    situation: spec.cluster,
+                    label: spec.path,
+                    dedupeKey: `consultation|${spec.path}`,
+                  })
+                }
+              >
+                Book a {spec.place} strategy call
+              </Link>
             </Button>
             <Button asChild size="lg" variant="outline">
-              <Link to="/assessments/$slug" params={{ slug: spec.assessmentSlug }}>
+              <Link
+                to="/assessments/$slug"
+                params={{ slug: spec.assessmentSlug }}
+                onClick={() =>
+                  trackEvent("assessment_started", {
+                    assessmentId: spec.assessmentSlug,
+                    city: spec.geography,
+                    situation: spec.cluster,
+                    dedupeKey: `assessment_start|${spec.path}`,
+                  })
+                }
+              >
                 Take the {spec.clusterLabel.toLowerCase()} assessment
               </Link>
             </Button>
