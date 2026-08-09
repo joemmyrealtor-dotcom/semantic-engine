@@ -51,6 +51,9 @@ export function buildReleaseAudit(now: Date = new Date()): ReleaseAudit {
   const duplicates = paths.filter((p, i) => paths.indexOf(p) !== i);
   const leaked = NON_INDEXABLE_PUBLIC_PATHS.filter(p => paths.includes(p));
   const thin = thinLocalPages();
+  const cannibalBlockers = blockingCannibalization();
+  const intentGaps = missingIntentRecords();
+  const quality = buildQualityGate(now);
 
   const checks: AuditCheck[] = [
     {
