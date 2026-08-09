@@ -46,6 +46,7 @@ import { Route as AccessibilityRouteImport } from './routes/accessibility'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PublicationsIndexRouteImport } from './routes/publications.index'
+import { Route as LocalIndexRouteImport } from './routes/local.index'
 import { Route as LocalGuidesIndexRouteImport } from './routes/local-guides.index'
 import { Route as GuidesIndexRouteImport } from './routes/guides.index'
 import { Route as ConceptsIndexRouteImport } from './routes/concepts.index'
@@ -270,6 +271,11 @@ const IndexRoute = IndexRouteImport.update({
 const PublicationsIndexRoute = PublicationsIndexRouteImport.update({
   id: '/publications/',
   path: '/publications/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LocalIndexRoute = LocalIndexRouteImport.update({
+  id: '/local/',
+  path: '/local/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LocalGuidesIndexRoute = LocalGuidesIndexRouteImport.update({
@@ -547,6 +553,7 @@ export interface FileRoutesByFullPath {
   '/concepts/': typeof ConceptsIndexRoute
   '/guides/': typeof GuidesIndexRoute
   '/local-guides/': typeof LocalGuidesIndexRoute
+  '/local/': typeof LocalIndexRoute
   '/publications/': typeof PublicationsIndexRoute
   '/local/$cluster/$city': typeof LocalClusterCityRoute
   '/local/$cluster/': typeof LocalClusterIndexRoute
@@ -626,6 +633,7 @@ export interface FileRoutesByTo {
   '/concepts': typeof ConceptsIndexRoute
   '/guides': typeof GuidesIndexRoute
   '/local-guides': typeof LocalGuidesIndexRoute
+  '/local': typeof LocalIndexRoute
   '/publications': typeof PublicationsIndexRoute
   '/local/$cluster/$city': typeof LocalClusterCityRoute
   '/local/$cluster': typeof LocalClusterIndexRoute
@@ -706,6 +714,7 @@ export interface FileRoutesById {
   '/concepts/': typeof ConceptsIndexRoute
   '/guides/': typeof GuidesIndexRoute
   '/local-guides/': typeof LocalGuidesIndexRoute
+  '/local/': typeof LocalIndexRoute
   '/publications/': typeof PublicationsIndexRoute
   '/local/$cluster/$city': typeof LocalClusterCityRoute
   '/local/$cluster/': typeof LocalClusterIndexRoute
@@ -787,6 +796,7 @@ export interface FileRouteTypes {
     | '/concepts/'
     | '/guides/'
     | '/local-guides/'
+    | '/local/'
     | '/publications/'
     | '/local/$cluster/$city'
     | '/local/$cluster/'
@@ -866,6 +876,7 @@ export interface FileRouteTypes {
     | '/concepts'
     | '/guides'
     | '/local-guides'
+    | '/local'
     | '/publications'
     | '/local/$cluster/$city'
     | '/local/$cluster'
@@ -945,6 +956,7 @@ export interface FileRouteTypes {
     | '/concepts/'
     | '/guides/'
     | '/local-guides/'
+    | '/local/'
     | '/publications/'
     | '/local/$cluster/$city'
     | '/local/$cluster/'
@@ -1023,6 +1035,7 @@ export interface RootRouteChildren {
   ConceptsIndexRoute: typeof ConceptsIndexRoute
   GuidesIndexRoute: typeof GuidesIndexRoute
   LocalGuidesIndexRoute: typeof LocalGuidesIndexRoute
+  LocalIndexRoute: typeof LocalIndexRoute
   PublicationsIndexRoute: typeof PublicationsIndexRoute
   LocalClusterCityRoute: typeof LocalClusterCityRoute
   LocalClusterIndexRoute: typeof LocalClusterIndexRoute
@@ -1288,6 +1301,13 @@ declare module '@tanstack/react-router' {
       path: '/publications'
       fullPath: '/publications/'
       preLoaderRoute: typeof PublicationsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/local/': {
+      id: '/local/'
+      path: '/local'
+      fullPath: '/local/'
+      preLoaderRoute: typeof LocalIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/local-guides/': {
@@ -1669,6 +1689,7 @@ const rootRouteChildren: RootRouteChildren = {
   ConceptsIndexRoute: ConceptsIndexRoute,
   GuidesIndexRoute: GuidesIndexRoute,
   LocalGuidesIndexRoute: LocalGuidesIndexRoute,
+  LocalIndexRoute: LocalIndexRoute,
   PublicationsIndexRoute: PublicationsIndexRoute,
   LocalClusterCityRoute: LocalClusterCityRoute,
   LocalClusterIndexRoute: LocalClusterIndexRoute,
