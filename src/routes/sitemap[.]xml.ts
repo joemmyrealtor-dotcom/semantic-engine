@@ -4,6 +4,7 @@ import { GUIDES } from "@/lib/marketing/lead-magnets";
 import { ASSESSMENTS } from "@/lib/marketing/assessments";
 import { ANSWERS } from "@/lib/marketing/answers";
 import { PROFESSIONAL_AUDIENCES } from "@/lib/partners/pages";
+import { LOCAL_PAGES } from "@/lib/marketing/local-pages";
 import { INDEXABLE_STATIC_PATHS } from "@/lib/marketing/indexation";
 import { PUBLIC_SITE_ORIGIN } from "@/lib/marketing/site";
 import type {} from "@tanstack/react-start";
@@ -76,6 +77,11 @@ export function sitemapEntries(): SitemapEntry[] {
       path: `/local-guides/${c.slug}`,
       changefreq: "weekly" as const,
       priority: "0.7",
+    })),
+    ...LOCAL_PAGES.map(p => ({
+      path: p.path,
+      changefreq: "monthly" as const,
+      priority: p.level === "hub" ? "0.8" : "0.7",
     })),
   ];
 }

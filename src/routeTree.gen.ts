@@ -46,6 +46,7 @@ import { Route as AccessibilityRouteImport } from './routes/accessibility'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PublicationsIndexRouteImport } from './routes/publications.index'
+import { Route as LocalIndexRouteImport } from './routes/local.index'
 import { Route as LocalGuidesIndexRouteImport } from './routes/local-guides.index'
 import { Route as GuidesIndexRouteImport } from './routes/guides.index'
 import { Route as ConceptsIndexRouteImport } from './routes/concepts.index'
@@ -83,6 +84,8 @@ import { Route as AdminDeploymentRouteImport } from './routes/admin.deployment'
 import { Route as AdminCutoverRouteImport } from './routes/admin.cutover'
 import { Route as AdminBackupsRouteImport } from './routes/admin.backups'
 import { Route as AdminAuditRouteImport } from './routes/admin.audit'
+import { Route as LocalClusterIndexRouteImport } from './routes/local.$cluster.index'
+import { Route as LocalClusterCityRouteImport } from './routes/local.$cluster.$city'
 import { Route as ApiPublicV1SplatRouteImport } from './routes/api/public/v1/$'
 
 const TermsRoute = TermsRouteImport.update({
@@ -270,6 +273,11 @@ const PublicationsIndexRoute = PublicationsIndexRouteImport.update({
   path: '/publications/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LocalIndexRoute = LocalIndexRouteImport.update({
+  id: '/local/',
+  path: '/local/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LocalGuidesIndexRoute = LocalGuidesIndexRouteImport.update({
   id: '/local-guides/',
   path: '/local-guides/',
@@ -455,6 +463,16 @@ const AdminAuditRoute = AdminAuditRouteImport.update({
   path: '/admin/audit',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LocalClusterIndexRoute = LocalClusterIndexRouteImport.update({
+  id: '/local/$cluster/',
+  path: '/local/$cluster/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LocalClusterCityRoute = LocalClusterCityRouteImport.update({
+  id: '/local/$cluster/$city',
+  path: '/local/$cluster/$city',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicV1SplatRoute = ApiPublicV1SplatRouteImport.update({
   id: '/api/public/v1/$',
   path: '/api/public/v1/$',
@@ -535,7 +553,10 @@ export interface FileRoutesByFullPath {
   '/concepts/': typeof ConceptsIndexRoute
   '/guides/': typeof GuidesIndexRoute
   '/local-guides/': typeof LocalGuidesIndexRoute
+  '/local/': typeof LocalIndexRoute
   '/publications/': typeof PublicationsIndexRoute
+  '/local/$cluster/$city': typeof LocalClusterCityRoute
+  '/local/$cluster/': typeof LocalClusterIndexRoute
   '/api/public/v1/$': typeof ApiPublicV1SplatRoute
 }
 export interface FileRoutesByTo {
@@ -612,7 +633,10 @@ export interface FileRoutesByTo {
   '/concepts': typeof ConceptsIndexRoute
   '/guides': typeof GuidesIndexRoute
   '/local-guides': typeof LocalGuidesIndexRoute
+  '/local': typeof LocalIndexRoute
   '/publications': typeof PublicationsIndexRoute
+  '/local/$cluster/$city': typeof LocalClusterCityRoute
+  '/local/$cluster': typeof LocalClusterIndexRoute
   '/api/public/v1/$': typeof ApiPublicV1SplatRoute
 }
 export interface FileRoutesById {
@@ -690,7 +714,10 @@ export interface FileRoutesById {
   '/concepts/': typeof ConceptsIndexRoute
   '/guides/': typeof GuidesIndexRoute
   '/local-guides/': typeof LocalGuidesIndexRoute
+  '/local/': typeof LocalIndexRoute
   '/publications/': typeof PublicationsIndexRoute
+  '/local/$cluster/$city': typeof LocalClusterCityRoute
+  '/local/$cluster/': typeof LocalClusterIndexRoute
   '/api/public/v1/$': typeof ApiPublicV1SplatRoute
 }
 export interface FileRouteTypes {
@@ -769,7 +796,10 @@ export interface FileRouteTypes {
     | '/concepts/'
     | '/guides/'
     | '/local-guides/'
+    | '/local/'
     | '/publications/'
+    | '/local/$cluster/$city'
+    | '/local/$cluster/'
     | '/api/public/v1/$'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -846,7 +876,10 @@ export interface FileRouteTypes {
     | '/concepts'
     | '/guides'
     | '/local-guides'
+    | '/local'
     | '/publications'
+    | '/local/$cluster/$city'
+    | '/local/$cluster'
     | '/api/public/v1/$'
   id:
     | '__root__'
@@ -923,7 +956,10 @@ export interface FileRouteTypes {
     | '/concepts/'
     | '/guides/'
     | '/local-guides/'
+    | '/local/'
     | '/publications/'
+    | '/local/$cluster/$city'
+    | '/local/$cluster/'
     | '/api/public/v1/$'
   fileRoutesById: FileRoutesById
 }
@@ -999,7 +1035,10 @@ export interface RootRouteChildren {
   ConceptsIndexRoute: typeof ConceptsIndexRoute
   GuidesIndexRoute: typeof GuidesIndexRoute
   LocalGuidesIndexRoute: typeof LocalGuidesIndexRoute
+  LocalIndexRoute: typeof LocalIndexRoute
   PublicationsIndexRoute: typeof PublicationsIndexRoute
+  LocalClusterCityRoute: typeof LocalClusterCityRoute
+  LocalClusterIndexRoute: typeof LocalClusterIndexRoute
   ApiPublicV1SplatRoute: typeof ApiPublicV1SplatRoute
 }
 
@@ -1264,6 +1303,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicationsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/local/': {
+      id: '/local/'
+      path: '/local'
+      fullPath: '/local/'
+      preLoaderRoute: typeof LocalIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/local-guides/': {
       id: '/local-guides/'
       path: '/local-guides'
@@ -1523,6 +1569,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAuditRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/local/$cluster/': {
+      id: '/local/$cluster/'
+      path: '/local/$cluster'
+      fullPath: '/local/$cluster/'
+      preLoaderRoute: typeof LocalClusterIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/local/$cluster/$city': {
+      id: '/local/$cluster/$city'
+      path: '/local/$cluster/$city'
+      fullPath: '/local/$cluster/$city'
+      preLoaderRoute: typeof LocalClusterCityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/v1/$': {
       id: '/api/public/v1/$'
       path: '/api/public/v1/$'
@@ -1629,7 +1689,10 @@ const rootRouteChildren: RootRouteChildren = {
   ConceptsIndexRoute: ConceptsIndexRoute,
   GuidesIndexRoute: GuidesIndexRoute,
   LocalGuidesIndexRoute: LocalGuidesIndexRoute,
+  LocalIndexRoute: LocalIndexRoute,
   PublicationsIndexRoute: PublicationsIndexRoute,
+  LocalClusterCityRoute: LocalClusterCityRoute,
+  LocalClusterIndexRoute: LocalClusterIndexRoute,
   ApiPublicV1SplatRoute: ApiPublicV1SplatRoute,
 }
 export const routeTree = rootRouteImport

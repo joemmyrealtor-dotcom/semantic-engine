@@ -8,6 +8,7 @@ import { CITY_GUIDES } from "./cities";
 import { GUIDES } from "./lead-magnets";
 import { ASSESSMENTS } from "./assessments";
 import { ENTRY_PATHS, type EntryPathId } from "./positioning";
+import { LOCAL_PAGES } from "./local-pages";
 
 export interface RelatedLink {
   /** Descriptive anchor text — never "learn more". */
@@ -64,12 +65,27 @@ export function cityLinksFor(situation: EntryPathId, limit = 6): RelatedLink[] {
     }));
 }
 
+/** Local wave-one pages that belong to this situation's pillar. */
+export function localSituationLinks(situation: EntryPathId, limit = 3): RelatedLink[] {
+  const entry = ENTRY_PATHS.find(e => e.id === situation);
+  if (!entry) return [];
+  return LOCAL_PAGES.filter(p => p.pillarPath === entry.to)
+    .slice(0, limit)
+    .map(p => ({
+      label: p.question,
+      to: p.path,
+      description: `${p.clusterLabel} decisions specific to ${p.place}.`,
+      kind: "city" as const,
+    }));
+}
+
 /** Pillar-page cluster: guides, assessment, and the local guides it serves. */
 export function pillarCluster(situation: EntryPathId): RelatedLink[] {
   return [
     ...guideLinksFor(situation),
     ...assessmentLinksFor(situation),
     ...cityLinksFor(situation, 4),
+    ...localSituationLinks(situation, 2),
     {
       label: "All Orange County local guides",
       to: "/local-guides",
@@ -114,6 +130,16 @@ export function cityCluster(citySlug: string): RelatedLink[] {
     description: e.promiseLine,
     kind: "pillar" as const,
   }));
+  links.push(
+    ...LOCAL_PAGES.filter(p => p.geography === citySlug)
+      .slice(0, 3)
+      .map(p => ({
+        label: p.question,
+        to: p.path,
+        description: `${p.clusterLabel} decisions specific to ${p.place}.`,
+        kind: "city" as const,
+      })),
+  );
   links.push({
     label: "Every Orange County submarket we cover",
     to: "/local-guides",
