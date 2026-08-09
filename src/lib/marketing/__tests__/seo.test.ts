@@ -59,7 +59,8 @@ describe("indexation boundary", () => {
         GUIDES.length +
         ANSWERS.length +
         ASSESSMENTS.length +
-        CITY_GUIDES.length,
+        CITY_GUIDES.length +
+        LOCAL_PAGES.length,
     );
   });
 
