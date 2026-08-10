@@ -106,8 +106,10 @@ function SearchAuthorityPanel() {
               <li key={f.path} className="rounded-lg border border-border bg-card p-3">
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge variant={tone(f.verdict)}>{f.verdict}</Badge>
+                  <Badge variant={f.severity === "CRITICAL" ? "destructive" : "outline"}>{f.severity}</Badge>
                   <code className="text-xs">{f.path}</code>
                 </div>
+
                 <p className="mt-1 text-xs text-muted-foreground">
                   {f.reason} Competing with: {f.competitors.slice(0, 3).join(", ") || "—"}
                 </p>
