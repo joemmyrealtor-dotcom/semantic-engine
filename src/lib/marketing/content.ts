@@ -29,7 +29,13 @@ export interface PublicPage {
   valueProps: { title: string; body: string }[];
   sections: PublicSection[];
   faqs: PublicFaq[];
+  /**
+   * Where a local topic hub owns the Orange County version of this situation,
+   * the statewide pillar hands the visitor across instead of competing with it.
+   */
+  localHandoff?: { cluster: string; label: string; blurb: string };
   legal?: boolean;
+
 }
 
 const CTA = { primaryCta: PRIMARY_CTA, secondaryCta: SECONDARY_CTA };
