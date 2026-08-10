@@ -291,6 +291,19 @@ export function MarketingPage({ page, pageKey }: { page: PublicPage; pageKey?: s
           </section>
         )}
 
+        {page.localHandoff && (
+          <section className="mt-14 rounded-lg border border-border bg-background p-6">
+            <h2 className="font-serif text-xl text-heritage">{page.localHandoff.label}</h2>
+            <p className="mt-2 text-sm text-muted-foreground">{page.localHandoff.blurb}</p>
+            <Button asChild variant="outline" className="mt-4">
+              <Link to="/local/$cluster" params={{ cluster: page.localHandoff.cluster }}>
+                Open the Orange County hub
+              </Link>
+            </Button>
+          </section>
+        )}
+
+
         {!page.legal && (
           <section className="mt-14 rounded-lg border border-border bg-card p-6">
             <h2 className="font-serif text-xl text-heritage">{CORE_PROMISE}</h2>
