@@ -401,7 +401,14 @@ export const PUBLIC_PAGES: Record<string, PublicPage> = {
         a: "Options exist right up to the trustee's sale date, but they shrink fast. The strongest position is before the notice of default is recorded, and the meaningful work becomes far harder after the notice of trustee's sale.",
       },
     ],
+    localHandoff: {
+      cluster: "distressed-property",
+      label: "Orange County distressed property help",
+      blurb:
+        "This page explains the options under California law. If your property is in Orange County, the local hub covers trustee-sale timelines, county recording practice, and the servicers and attorneys who actually work these files here.",
+    },
   },
+
 
   investing: {
     slug: "/investing",
