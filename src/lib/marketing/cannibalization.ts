@@ -12,6 +12,21 @@ import { absoluteUrl } from "./site";
 
 export type CannibalVerdict = "KEEP" | "DIFFERENTIATE" | "CONSOLIDATE" | "NOINDEX" | "REDIRECT";
 
+/**
+ * How much a flagged overlap actually matters. A DIFFERENTIATE finding is not
+ * uniformly serious: two pages sharing a head term with matching geography are
+ * a real conflict, while a loose thematic overlap between a statewide
+ * explainer and a city page is tolerable and needs no action before launch.
+ */
+export type CannibalizationSeverity = "CRITICAL" | "MATERIAL" | "ACCEPTABLE" | "NONE";
+
+const SEVERITY_RANK: Record<CannibalizationSeverity, number> = {
+  NONE: 0,
+  ACCEPTABLE: 1,
+  MATERIAL: 2,
+  CRITICAL: 3,
+};
+
 const VERDICT_SEVERITY: Record<CannibalVerdict, number> = {
   KEEP: 0,
   DIFFERENTIATE: 1,
@@ -19,6 +34,7 @@ const VERDICT_SEVERITY: Record<CannibalVerdict, number> = {
   NOINDEX: 3,
   REDIRECT: 4,
 };
+
 
 const STOP = new Set([
   "the", "a", "an", "and", "or", "of", "to", "in", "for", "on", "with", "my", "your", "i",
@@ -49,6 +65,7 @@ export interface CannibalPair {
   a: string;
   b: string;
   verdict: CannibalVerdict;
+  severity: CannibalizationSeverity;
   titleSimilarity: number;
   h1Similarity: number;
   semanticOverlap: number;
@@ -65,6 +82,7 @@ export interface CannibalFinding {
   path: string;
   pageType: string;
   verdict: CannibalVerdict;
+  severity: CannibalizationSeverity;
   competitors: string[];
   reason: string;
 }
@@ -75,9 +93,11 @@ export interface CannibalReport {
   pairs: CannibalPair[];
   findings: CannibalFinding[];
   counts: Record<CannibalVerdict, number>;
+  severityCounts: Record<CannibalizationSeverity, number>;
   /** No automatic action is taken — always false in this build. */
   actionsApplied: boolean;
 }
+
 
 function semanticText(r: SearchIntentRecord): string {
   return [r.title, r.h1, r.primaryKeyword, ...r.secondaryKeywords, r.place ?? ""].join(" ");
@@ -126,10 +146,25 @@ function comparePair(a: SearchIntentRecord, b: SearchIntentRecord): CannibalPair
     reason = "Both pages compete for links from the same hub.";
   }
 
+  const severity: CannibalizationSeverity =
+    verdict === "KEEP"
+      ? "NONE"
+      : verdict === "REDIRECT" || verdict === "CONSOLIDATE"
+        ? "CRITICAL"
+        : samePrimaryKeyword || (semanticOverlap >= 0.6 && sameGeography)
+          ? "CRITICAL"
+          : (semanticOverlap >= 0.5 && sameGeography) ||
+              (titleSimilarity >= 0.7 && sameGeography) ||
+              (internalLinkCompetition && sameePrimaryIntent)
+            ? "MATERIAL"
+            : "ACCEPTABLE";
+
+
   return {
     a: a.path,
     b: b.path,
     verdict,
+    severity,
     titleSimilarity: round(titleSimilarity),
     h1Similarity: round(h1Similarity),
     semanticOverlap: round(semanticOverlap),
@@ -157,8 +192,12 @@ export function buildCannibalizationReport(now: Date = new Date()): CannibalRepo
     }
   }
 
-  const byPath = new Map<string, { verdict: CannibalVerdict; competitors: Set<string>; reason: string }>();
-  for (const r of records) byPath.set(r.path, { verdict: "KEEP", competitors: new Set(), reason: "No competing page found." });
+  const byPath = new Map<
+    string,
+    { verdict: CannibalVerdict; severity: CannibalizationSeverity; competitors: Set<string>; reason: string }
+  >();
+  for (const r of records)
+    byPath.set(r.path, { verdict: "KEEP", severity: "NONE", competitors: new Set(), reason: "No competing page found." });
 
   for (const pair of pairs) {
     const a = records.find(r => r.path === pair.a)!;
@@ -177,6 +216,10 @@ export function buildCannibalizationReport(now: Date = new Date()): CannibalRepo
         entry.verdict = verdict;
         entry.reason = pair.reason;
       }
+      // A downgraded verdict on the stronger page still carries the pair's
+      // measured seriousness, so severity is tracked independently.
+      const pairSeverity = page === weaker ? pair.severity : pair.severity === "CRITICAL" ? "MATERIAL" : pair.severity;
+      if (SEVERITY_RANK[pairSeverity] > SEVERITY_RANK[entry.severity]) entry.severity = pairSeverity;
     }
   }
 
@@ -187,6 +230,7 @@ export function buildCannibalizationReport(now: Date = new Date()): CannibalRepo
       path: r.path,
       pageType: r.pageType,
       verdict: entry.verdict,
+      severity: entry.severity,
       competitors: [...entry.competitors].sort(),
       reason: entry.reason,
     };
@@ -197,15 +241,27 @@ export function buildCannibalizationReport(now: Date = new Date()): CannibalRepo
     { KEEP: 0, DIFFERENTIATE: 0, CONSOLIDATE: 0, NOINDEX: 0, REDIRECT: 0 } as Record<CannibalVerdict, number>,
   );
 
+  const severityCounts = findings.reduce(
+    (acc, f) => ({ ...acc, [f.severity]: acc[f.severity] + 1 }),
+    { NONE: 0, ACCEPTABLE: 0, MATERIAL: 0, CRITICAL: 0 } as Record<CannibalizationSeverity, number>,
+  );
+
   return {
     generatedAt: now.toISOString(),
     comparedUrls: records.length,
     pairs,
     findings,
     counts,
+    severityCounts,
     actionsApplied: false,
   };
 }
+
+/** DIFFERENTIATE findings that are serious enough to warrant pre-launch work. */
+export function materialCannibalization(report = buildCannibalizationReport()): CannibalFinding[] {
+  return report.findings.filter(f => f.verdict !== "KEEP" && (f.severity === "CRITICAL" || f.severity === "MATERIAL"));
+}
+
 
 /** Pages that must be resolved by hand before launch. */
 export function blockingCannibalization(report = buildCannibalizationReport()): CannibalFinding[] {

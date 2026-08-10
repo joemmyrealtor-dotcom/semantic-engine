@@ -17,7 +17,7 @@ import { ga4PiiReview } from "./discovery-readiness";
 import { INDEXABLE_STATIC_PATHS, NON_INDEXABLE_PUBLIC_PATHS, indexablePaths } from "./indexation";
 import { LOCAL_PAGES } from "./local-pages";
 import { ANSWERS } from "./answers";
-import { blockingCannibalization } from "./cannibalization";
+import { blockingCannibalization, buildCannibalizationReport } from "./cannibalization";
 import { missingIntentRecords } from "./intent-map";
 import { buildQualityGate } from "./quality-gate";
 
@@ -62,7 +62,10 @@ export function buildReleaseAudit(now: Date = new Date()): ReleaseAudit {
   const duplicates = paths.filter((p, i) => paths.indexOf(p) !== i);
   const leaked = NON_INDEXABLE_PUBLIC_PATHS.filter(p => paths.includes(p));
   const thin = thinLocalPages();
-  const cannibalBlockers = blockingCannibalization();
+  const cannibalReport = buildCannibalizationReport(now);
+  const cannibalBlockers = blockingCannibalization(cannibalReport);
+  const cannibalSeverity = cannibalReport.severityCounts;
+
   const intentGaps = missingIntentRecords();
   const quality = buildQualityGate(now);
   const domain = buildDomainPackage(now);
@@ -129,12 +132,15 @@ export function buildReleaseAudit(now: Date = new Date()): ReleaseAudit {
       status:
         authorityAudit.counts.CONSOLIDATE + authorityAudit.counts.REDIRECT + authorityAudit.counts.NOINDEX > 0
           ? "BLOCKED"
-          : cannibalBlockers.length === 0
-            ? "PASS"
+          : cannibalBlockers.length === 0 && cannibalSeverity.CRITICAL === 0
+            ? cannibalSeverity.MATERIAL === 0
+              ? "PASS"
+              : "REVIEW"
             : "REVIEW",
-      detail: `${authorityAudit.urls.length} URLs stated — KEEP ${authorityAudit.counts.KEEP} · IMPROVE ${authorityAudit.counts.IMPROVE} · REVIEW ${authorityAudit.counts.REVIEW} · CONSOLIDATE ${authorityAudit.counts.CONSOLIDATE} · NOINDEX ${authorityAudit.counts.NOINDEX} · REDIRECT ${authorityAudit.counts.REDIRECT}. Advisory only; nothing executed.`,
+      detail: `${authorityAudit.urls.length} URLs stated — KEEP ${authorityAudit.counts.KEEP} · IMPROVE ${authorityAudit.counts.IMPROVE} · REVIEW ${authorityAudit.counts.REVIEW} · CONSOLIDATE ${authorityAudit.counts.CONSOLIDATE} · NOINDEX ${authorityAudit.counts.NOINDEX} · REDIRECT ${authorityAudit.counts.REDIRECT}. Overlap severity — CRITICAL ${cannibalSeverity.CRITICAL} · MATERIAL ${cannibalSeverity.MATERIAL} · ACCEPTABLE ${cannibalSeverity.ACCEPTABLE}. Advisory only; nothing executed.`,
       launchCritical: true,
     },
+
     {
       id: "T17-6",
       label: "PII-safe analytics",

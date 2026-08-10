@@ -29,7 +29,13 @@ export interface PublicPage {
   valueProps: { title: string; body: string }[];
   sections: PublicSection[];
   faqs: PublicFaq[];
+  /**
+   * Where a local topic hub owns the Orange County version of this situation,
+   * the statewide pillar hands the visitor across instead of competing with it.
+   */
+  localHandoff?: { cluster: string; label: string; blurb: string };
   legal?: boolean;
+
 }
 
 const CTA = { primaryCta: PRIMARY_CTA, secondaryCta: SECONDARY_CTA };
@@ -163,9 +169,10 @@ export const PUBLIC_PAGES: Record<string, PublicPage> = {
   probate: {
     slug: "/probate",
     navLabel: "Probate",
-    metaTitle: "Probate Real Estate in Orange County — Executor's Guide | Legacy Forge",
+    metaTitle: "Probate Real Estate in California — What an Executor May Do | Legacy Forge",
     metaDescription:
-      "What an executor or administrator can and cannot do with real property, court confirmation, IAEA authority, notices, and timing. Orange County probate sales.",
+      "Letters, independent administration authority, court confirmation and overbid, required notices, and date-of-death value — the statewide rules an executor works under.",
+
     eyebrow: "For executors and administrators",
     headline: "Understand your authority before you list anything.",
     subhead:
@@ -219,14 +226,22 @@ export const PUBLIC_PAGES: Record<string, PublicPage> = {
         a: "Usually not. Most probate properties sell in present condition with full disclosure of what is known. Spending estate funds on improvements requires a defensible reason that the improvement will return more than it costs.",
       },
     ],
+    localHandoff: {
+      cluster: "probate",
+      label: "Orange County probate real estate help",
+      blurb:
+        "This page explains the authority and the process under California probate law. If the estate's property sits in Orange County, the local hub covers the county's court practice, hearing timing, and the attorneys and appraisers who work these cases here.",
+    },
   },
+
 
   "inherited-property": {
     slug: "/inherited-property",
     navLabel: "Inherited Property",
-    metaTitle: "I Inherited a House — Keep, Rent, or Sell? | Legacy Forge",
+    metaTitle: "I Inherited a House in California — Keep, Rent, or Sell? | Legacy Forge",
     metaDescription:
-      "Stepped-up basis, carrying costs, co-owner disagreements, and the real math behind keeping, renting, or selling an inherited property in California.",
+      "Stepped-up basis, carrying costs, co-owner disagreements, and the real math behind keeping, renting, or selling an inherited property under California rules.",
+
     eyebrow: "For heirs and families",
     headline: "Keep it, rent it, or sell it — see the real math first.",
     subhead:
@@ -274,7 +289,14 @@ export const PUBLIC_PAGES: Record<string, PublicPage> = {
         a: "Yes. Most inherited properties sell in present condition. The right question is whether targeted cleanup and access improvements would return more than they cost, which depends on the property and the buyer pool.",
       },
     ],
+    localHandoff: {
+      cluster: "inherited-property",
+      label: "Orange County inherited property help",
+      blurb:
+        "This page covers the statewide math: basis, carrying costs, and co-owner decisions. If the property is in Orange County, the local hub adds submarket rents, sale timelines, and the professionals who handle these estates here.",
+    },
   },
+
 
   downsizing: {
     slug: "/downsizing",
@@ -339,9 +361,10 @@ export const PUBLIC_PAGES: Record<string, PublicPage> = {
   "distressed-property": {
     slug: "/distressed-property",
     navLabel: "Distressed Property",
-    metaTitle: "Behind on Payments? Foreclosure, Short Sale, and Workout Options | Legacy Forge",
+    metaTitle: "Foreclosure, Short Sale, and Workout Options in California | Legacy Forge",
     metaDescription:
-      "Compare foreclosure, short sale, loan modification, forbearance, deed in lieu, and selling with equity. Understand your options while you still have all of them.",
+      "How California's foreclosure timeline works, and what reinstatement, modification, forbearance, deed in lieu, short sale, or selling with equity each actually cost you.",
+
     eyebrow: "For homeowners under pressure",
     headline: "Get the real options on the table while you still have all of them.",
     subhead:
@@ -395,7 +418,14 @@ export const PUBLIC_PAGES: Record<string, PublicPage> = {
         a: "Options exist right up to the trustee's sale date, but they shrink fast. The strongest position is before the notice of default is recorded, and the meaningful work becomes far harder after the notice of trustee's sale.",
       },
     ],
+    localHandoff: {
+      cluster: "distressed-property",
+      label: "Orange County distressed property help",
+      blurb:
+        "This page explains the options under California law. If your property is in Orange County, the local hub covers trustee-sale timelines, county recording practice, and the servicers and attorneys who actually work these files here.",
+    },
   },
+
 
   investing: {
     slug: "/investing",
