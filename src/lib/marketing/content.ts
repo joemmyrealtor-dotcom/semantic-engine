@@ -169,9 +169,10 @@ export const PUBLIC_PAGES: Record<string, PublicPage> = {
   probate: {
     slug: "/probate",
     navLabel: "Probate",
-    metaTitle: "Probate Real Estate in Orange County — Executor's Guide | Legacy Forge",
+    metaTitle: "Probate Real Estate in California — What an Executor May Do | Legacy Forge",
     metaDescription:
-      "What an executor or administrator can and cannot do with real property, court confirmation, IAEA authority, notices, and timing. Orange County probate sales.",
+      "Letters, independent administration authority, court confirmation and overbid, required notices, and date-of-death value — the statewide rules an executor works under.",
+
     eyebrow: "For executors and administrators",
     headline: "Understand your authority before you list anything.",
     subhead:
