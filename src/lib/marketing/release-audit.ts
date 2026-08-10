@@ -129,12 +129,15 @@ export function buildReleaseAudit(now: Date = new Date()): ReleaseAudit {
       status:
         authorityAudit.counts.CONSOLIDATE + authorityAudit.counts.REDIRECT + authorityAudit.counts.NOINDEX > 0
           ? "BLOCKED"
-          : cannibalBlockers.length === 0
-            ? "PASS"
+          : cannibalBlockers.length === 0 && cannibalSeverity.CRITICAL === 0
+            ? cannibalSeverity.MATERIAL === 0
+              ? "PASS"
+              : "REVIEW"
             : "REVIEW",
-      detail: `${authorityAudit.urls.length} URLs stated — KEEP ${authorityAudit.counts.KEEP} · IMPROVE ${authorityAudit.counts.IMPROVE} · REVIEW ${authorityAudit.counts.REVIEW} · CONSOLIDATE ${authorityAudit.counts.CONSOLIDATE} · NOINDEX ${authorityAudit.counts.NOINDEX} · REDIRECT ${authorityAudit.counts.REDIRECT}. Advisory only; nothing executed.`,
+      detail: `${authorityAudit.urls.length} URLs stated — KEEP ${authorityAudit.counts.KEEP} · IMPROVE ${authorityAudit.counts.IMPROVE} · REVIEW ${authorityAudit.counts.REVIEW} · CONSOLIDATE ${authorityAudit.counts.CONSOLIDATE} · NOINDEX ${authorityAudit.counts.NOINDEX} · REDIRECT ${authorityAudit.counts.REDIRECT}. Overlap severity — CRITICAL ${cannibalSeverity.CRITICAL} · MATERIAL ${cannibalSeverity.MATERIAL} · ACCEPTABLE ${cannibalSeverity.ACCEPTABLE}. Advisory only; nothing executed.`,
       launchCritical: true,
     },
+
     {
       id: "T17-6",
       label: "PII-safe analytics",
