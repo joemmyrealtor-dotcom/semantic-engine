@@ -17,7 +17,7 @@ import { ga4PiiReview } from "./discovery-readiness";
 import { INDEXABLE_STATIC_PATHS, NON_INDEXABLE_PUBLIC_PATHS, indexablePaths } from "./indexation";
 import { LOCAL_PAGES } from "./local-pages";
 import { ANSWERS } from "./answers";
-import { blockingCannibalization } from "./cannibalization";
+import { blockingCannibalization, buildCannibalizationReport } from "./cannibalization";
 import { missingIntentRecords } from "./intent-map";
 import { buildQualityGate } from "./quality-gate";
 
