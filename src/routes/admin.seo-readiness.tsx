@@ -100,7 +100,7 @@ function SeoReadinessPanel() {
           <Row
             status={domain.status}
             label={`Canonical host — ${domain.origin}`}
-            note={`${domain.redirects.length} redirects prepared · ${domain.leaks.length} provisional-hostname leaks across ${domain.leakSurfaces.length} surfaces · HTTPS enforced · ${domain.hostPolicy.canonicalHost} canonical`}
+            note={`${domain.redirects.length} redirects prepared · ${domain.leaks.length} provisional-hostname leaks across ${domain.leakSurfaces.length} surfaces · HTTPS enforced · ${domain.hostPolicy.canonicalHostForm} canonical`}
           />
           {domain.blockers.map(b => (
             <Row key={b} status="BLOCKED" label="Domain blocker" note={b} />
