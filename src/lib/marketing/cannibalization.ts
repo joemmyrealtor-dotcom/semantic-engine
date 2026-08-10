@@ -262,8 +262,31 @@ export function materialCannibalization(report = buildCannibalizationReport()): 
   return report.findings.filter(f => f.verdict !== "KEEP" && (f.severity === "CRITICAL" || f.severity === "MATERIAL"));
 }
 
-
-/** Pages that must be resolved by hand before launch. */
-export function blockingCannibalization(report = buildCannibalizationReport()): CannibalFinding[] {
-  return report.findings.filter(f => f.verdict === "REDIRECT" || f.verdict === "CONSOLIDATE");
+/** CRITICAL findings. Owner policy: these are release blockers, not advisories. */
+export function criticalCannibalization(report = buildCannibalizationReport()): CannibalFinding[] {
+  return report.findings.filter(f => f.severity === "CRITICAL");
 }
+
+/**
+ * Owner-accepted disposition of the residual MATERIAL band. A 126-page topic
+ * network will always carry semantic overlap; what matters is that each page
+ * owns a distinct job in the search journey. MATERIAL is therefore documented
+ * advisory review, not a blocker.
+ */
+export const MATERIAL_OVERLAP_ACCEPTANCE =
+  "MATERIAL overlap is accepted as intentional topic-network density: each page retains a distinct primary query, intent, title, H1, opening answer, and CTA. Reviewed as advisory; no action executed.";
+
+/**
+ * Pages that must be resolved by hand before launch: any structural verdict
+ * (REDIRECT / CONSOLIDATE / NOINDEX) or any CRITICAL severity finding.
+ */
+export function blockingCannibalization(report = buildCannibalizationReport()): CannibalFinding[] {
+  return report.findings.filter(
+    f =>
+      f.verdict === "REDIRECT" ||
+      f.verdict === "CONSOLIDATE" ||
+      f.verdict === "NOINDEX" ||
+      f.severity === "CRITICAL",
+  );
+}
+

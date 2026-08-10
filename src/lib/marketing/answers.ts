@@ -185,3 +185,90 @@ export function metaDescriptionFor(answer: AnswerRecord): string {
   const text = answer.shortAnswer.replace(/\s+/g, " ").trim();
   return text.length > 155 ? `${text.slice(0, 154).trimEnd()}…` : text;
 }
+
+/**
+ * The job an answer page does in the search journey.
+ *
+ * Two questions can sit in the same editorial cluster and still serve
+ * completely different searchers: "should I sell without an agent?" is a
+ * choice being weighed before the listing exists, while "what do I do if my
+ * listing expires?" is a recovery search after one failed. Deriving the facet
+ * from the question shape — rather than inheriting the cluster label — gives
+ * each page its own intent, funnel stage, keyword set, framing, and CTA, which
+ * is what keeps cluster siblings out of each other's SERP.
+ */
+export type AnswerFacetId = "choice" | "recovery" | "cost" | "process" | "timing";
+
+export interface AnswerFacet {
+  id: AnswerFacetId;
+  /** Search intent this page is written for. */
+  intent: "informational" | "commercial";
+  funnelStage: "awareness" | "consideration" | "decision";
+  /** Heading over the direct answer — the page's opening promise. */
+  answerLabel: string;
+  /** Heading over the supporting body. */
+  detailLabel: string;
+  /** The page's own next step, distinct per facet. */
+  cta: string;
+  /** Keyword modifiers that do not collide with sibling facets. */
+  modifiers: string[];
+}
+
+const FACETS: Record<AnswerFacetId, AnswerFacet> = {
+  choice: {
+    id: "choice",
+    intent: "commercial",
+    funnelStage: "consideration",
+    answerLabel: "The short answer",
+    detailLabel: "How to weigh it",
+    cta: "Compare your options in the guide",
+    modifiers: ["pros and cons", "is it worth it"],
+  },
+  recovery: {
+    id: "recovery",
+    intent: "informational",
+    funnelStage: "decision",
+    answerLabel: "What to do first",
+    detailLabel: "The recovery sequence",
+    cta: "Run the readiness assessment before you relist",
+    modifiers: ["what to do next", "how to fix it"],
+  },
+  cost: {
+    id: "cost",
+    intent: "informational",
+    funnelStage: "consideration",
+    answerLabel: "The number, first",
+    detailLabel: "What moves the number",
+    cta: "Estimate your net with the guide worksheet",
+    modifiers: ["cost breakdown", "how much"],
+  },
+  timing: {
+    id: "timing",
+    intent: "informational",
+    funnelStage: "awareness",
+    answerLabel: "The short answer",
+    detailLabel: "What sets the timeline",
+    cta: "See the timeline in the situation guide",
+    modifiers: ["how long", "timeline"],
+  },
+  process: {
+    id: "process",
+    intent: "informational",
+    funnelStage: "awareness",
+    answerLabel: "Short answer",
+    detailLabel: "What drives the answer",
+    cta: "Take the readiness assessment",
+    modifiers: ["step by step", "explained"],
+  },
+};
+
+export function answerFacet(answer: AnswerRecord): AnswerFacet {
+  const q = answer.question.toLowerCase();
+  if (/^(what do i do if|what happens if|what if)\b/.test(q) || /\bexpires?\b|\bfell through\b|\bfails?\b/.test(q))
+    return FACETS.recovery;
+  if (/^(should i|do i need|is it worth|am i better off|can i just)\b/.test(q)) return FACETS.choice;
+  if (/\bhow much\b|\bcost\b|\bfees?\b|\bwalk away with\b|\bnet\b/.test(q)) return FACETS.cost;
+  if (/\bhow long\b|\bwhen (should|do|can)\b|\btimeline\b/.test(q)) return FACETS.timing;
+  return FACETS.process;
+}
+

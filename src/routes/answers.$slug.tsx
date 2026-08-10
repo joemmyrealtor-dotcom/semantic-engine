@@ -7,6 +7,7 @@ import { RelatedResources } from "@/components/related-resources";
 import { Button } from "@/components/ui/button";
 import {
   getAnswer,
+  answerFacet,
   localAnglesFor,
   metaDescriptionFor,
   metaTitleFor,
@@ -68,6 +69,7 @@ export const Route = createFileRoute("/answers/$slug")({
 
 function AnswerPage() {
   const { answer } = Route.useLoaderData();
+  const facet = answerFacet(answer);
   const locals = localAnglesFor(answer);
   const siblings = answersByAudience(answer.audience)
     .filter(a => a.cluster === answer.cluster && a.slug !== answer.slug)
@@ -92,14 +94,15 @@ function AnswerPage() {
         </h1>
       </header>
 
-      <AnswerFirst question="Short answer" answer={answer.shortAnswer} />
+      <AnswerFirst question={facet.answerLabel} answer={answer.shortAnswer} />
 
       {answer.detail && (
         <section className="mx-auto max-w-3xl px-4 py-8 md:px-6">
-          <h2 className="font-serif text-2xl text-heritage">What drives the answer</h2>
+          <h2 className="font-serif text-2xl text-heritage">{facet.detailLabel}</h2>
           <p className="mt-3 leading-relaxed text-foreground/90">{answer.detail}</p>
         </section>
       )}
+
 
       {locals.length > 0 && (
         <section className="mx-auto max-w-3xl px-4 pb-8 md:px-6">
@@ -143,15 +146,28 @@ function AnswerPage() {
       <section className="mx-auto max-w-3xl px-4 pb-8 md:px-6">
         <div className="flex flex-wrap gap-3">
           <Button asChild>
-            <Link to="/guides/$slug" params={{ slug: answer.guideSlug }}>
-              Read the full {answer.audience} guide
+            <Link
+              to={facet.id === "recovery" ? "/assessments/$slug" : "/guides/$slug"}
+              params={{
+                slug: facet.id === "recovery" ? answer.assessmentSlug : answer.guideSlug,
+              }}
+            >
+              {facet.cta}
             </Link>
           </Button>
           <Button asChild variant="outline">
-            <Link to="/assessments/$slug" params={{ slug: answer.assessmentSlug }}>
-              Take the readiness assessment
+            <Link
+              to={facet.id === "recovery" ? "/guides/$slug" : "/assessments/$slug"}
+              params={{
+                slug: facet.id === "recovery" ? answer.guideSlug : answer.assessmentSlug,
+              }}
+            >
+              {facet.id === "recovery"
+                ? `Read the full ${answer.audience} guide`
+                : "Take the readiness assessment"}
             </Link>
           </Button>
+
         </div>
       </section>
 

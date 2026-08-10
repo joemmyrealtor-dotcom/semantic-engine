@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { indexableRecords, intentMap, missingIntentRecords, orphanIntentRecords, getIntentRecord } from "../intent-map";
-import { buildCannibalizationReport, similarity } from "../cannibalization";
+import {
+  blockingCannibalization,
+  buildCannibalizationReport,
+  criticalCannibalization,
+  similarity,
+} from "../cannibalization";
+import { buildReleaseAudit } from "../release-audit";
 import { authorityIssues, buildAuthorityGraph, linkEquityDistribution, linkPlanFor, tierFor } from "../authority";
 import { evidenceIntegrity, evidenceLedger } from "../search-evidence";
 import { searchConsoleStatus, summarizeByPage } from "../search-console";
@@ -288,5 +294,65 @@ describe("30/60/90 review framework", () => {
       indexed: true,
     });
     expect(result.decision).toBe("EXPAND_SUPPORTING_CONTENT");
+  });
+});
+
+describe("critical cannibalization resolution", () => {
+  const report = buildCannibalizationReport();
+
+  it("carries zero CRITICAL severity findings", () => {
+    expect(report.severityCounts.CRITICAL).toBe(0);
+  });
+
+  it("carries zero structural verdicts", () => {
+    expect(report.counts.CONSOLIDATE).toBe(0);
+    expect(report.counts.REDIRECT).toBe(0);
+    expect(report.counts.NOINDEX).toBe(0);
+  });
+
+  it("has no canonical conflicts", () => {
+    expect(report.pairs.filter(p => p.canonicalConflict)).toHaveLength(0);
+  });
+
+  it("treats CRITICAL findings as blocking", () => {
+    expect(blockingCannibalization(report)).toHaveLength(0);
+    expect(criticalCannibalization(report)).toHaveLength(0);
+  });
+
+  it("never applies actions automatically", () => {
+    expect(report.actionsApplied).toBe(false);
+  });
+
+  it("separates the local decision hub from the city research index", () => {
+    const records = indexableRecords();
+    const hub = records.find(r => r.path === "/local")!;
+    const index = records.find(r => r.path === "/local-guides")!;
+    expect(hub.intent).not.toBe(index.intent);
+    expect(hub.funnelStage).not.toBe(index.funnelStage);
+    expect(hub.primaryKeyword).not.toBe(index.primaryKeyword);
+    expect(hub.title).not.toBe(index.title);
+    expect(hub.h1).not.toBe(index.h1);
+    expect(hub.cta).not.toBe(index.cta);
+    expect(index.parentHub).toBe("/local");
+  });
+
+  it("gives cluster siblings distinct facets, keywords, and CTAs", () => {
+    const records = indexableRecords();
+    const choice = records.find(r => r.path === "/answers/seller-should-i-sell-without-an-agent")!;
+    const recovery = records.find(
+      r => r.path === "/answers/seller-what-do-i-do-if-my-listing-expires-without",
+    )!;
+    expect(choice.intent).not.toBe(recovery.intent);
+    expect(choice.funnelStage).not.toBe(recovery.funnelStage);
+    expect(choice.cta).not.toBe(recovery.cta);
+    expect(choice.secondaryKeywords).not.toEqual(recovery.secondaryKeywords);
+    expect(choice.h1).not.toBe(recovery.h1);
+  });
+
+  it("keeps the T17-5 gate blocking on any CRITICAL finding", () => {
+    const audit = buildReleaseAudit();
+    const gate = audit.checks.find(c => c.id === "T17-5")!;
+    expect(gate.status).toBe(report.severityCounts.CRITICAL === 0 ? "PASS" : "BLOCKED");
+    expect(gate.detail).toContain("CRITICAL 0 (blocking)");
   });
 });

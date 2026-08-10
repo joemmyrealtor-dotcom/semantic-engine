@@ -7,7 +7,7 @@
 // Nothing here is an observed search metric. Keywords are declared targets,
 // not measured demand; measured demand lives in search-evidence.ts.
 
-import { ANSWERS, metaTitleFor } from "./answers";
+import { ANSWERS, answerFacet, metaTitleFor } from "./answers";
 import { ASSESSMENTS } from "./assessments";
 import { CITY_GUIDES } from "./cities";
 import { indexablePaths, NON_INDEXABLE_PUBLIC_PATHS } from "./indexation";
@@ -27,6 +27,7 @@ export type PageType =
   | "local-hub"
   | "local-topic-hub"
   | "local-city"
+  | "local-market-index"
   | "city-guide"
   | "guide"
   | "answer"
@@ -143,30 +144,47 @@ function staticRecords(): SearchIntentRecord[] {
       supportingPages: ASSESSMENTS.map(a => `/assessments/${a.slug}`),
       schemaTypes: [...BASE_SCHEMA, "ItemList"],
     }),
+    // Parent of the two local surfaces. /local owns the DECISION query — a
+    // person with a situation looking for help in a place. It is commercial,
+    // county-level, and hands off to city situation pages.
     record({
       path: "/local",
       pageType: "local-hub",
       title: "Orange County situation guides by city",
+      h1: "Local situation pages",
       primaryKeyword: "orange county real estate help by city",
+      secondaryKeywords: ["probate help orange county", "inherited property help orange county"],
       intent: "commercial",
       geographicIntent: "county",
       place: "Orange County",
       funnelStage: "consideration",
-      supportingPages: LOCAL_PAGES.filter(p => p.level === "hub").map(p => p.path),
+      supportingPages: [
+        ...LOCAL_PAGES.filter(p => p.level === "hub").map(p => p.path),
+        "/local-guides",
+      ],
       schemaTypes: [...BASE_SCHEMA, "ItemList"],
     }),
+    // Child of /local, and deliberately NOT a second "help in Orange County"
+    // page. It owns the RESEARCH query — what a single city's housing market
+    // is doing — so it is informational, city-scoped, and carries no county
+    // place token that would collide with the parent hub.
     record({
       path: "/local-guides",
-      pageType: "local-hub",
-      title: "City market guides",
-      primaryKeyword: "orange county city real estate guides",
-      geographicIntent: "county",
-      place: "Orange County",
+      pageType: "local-market-index",
+      title: "City housing market briefings",
+      h1: "City housing market briefings",
+      primaryKeyword: "city housing market briefing",
+      secondaryKeywords: ["la habra housing market", "brea housing market", "fullerton housing market"],
+      intent: "informational",
+      geographicIntent: "city",
+      place: null,
       funnelStage: "awareness",
       parentHub: "/local",
       supportingPages: CITY_GUIDES.map(c => `/local-guides/${c.slug}`),
+      cta: "Read the briefing for your city",
       schemaTypes: [...BASE_SCHEMA, "ItemList"],
     }),
+
     record({
       path: "/about",
       pageType: "trust",
@@ -310,25 +328,31 @@ function guideRecords(): SearchIntentRecord[] {
 }
 
 function answerRecords(): SearchIntentRecord[] {
-  return ANSWERS.map(answer =>
-    record({
+  return ANSWERS.map(answer => {
+    // Facet, not cluster. Inheriting the cluster label gave every sibling the
+    // same secondary keywords, intent, stage, and CTA, which is what put two
+    // representation questions into a critical overlap.
+    const facet = answerFacet(answer);
+    const stem = answer.question.toLowerCase().replace(/[?"']/g, "").replace(/^(what|how|should|do|can|is|when|why)\s+/i, "").trim();
+    return record({
       path: `/answers/${answer.slug}`,
       pageType: "answer",
       title: metaTitleFor(answer),
       h1: answer.question,
       primaryKeyword: answer.question.toLowerCase().replace(/[?"']/g, "").trim(),
-      secondaryKeywords: [answer.cluster.toLowerCase()],
-      intent: "informational",
-      funnelStage: "awareness",
+      secondaryKeywords: facet.modifiers.map(m => `${stem} ${m}`.slice(0, 70)),
+      intent: facet.intent,
+      funnelStage: facet.funnelStage,
       parentHub: "/answers",
       supportingPages: [`/${answer.situation}`, `/guides/${answer.guideSlug}`],
       guideSlug: answer.guideSlug,
       assessmentSlug: answer.assessmentSlug,
-      cta: "Take the readiness assessment",
+      cta: facet.cta,
       schemaTypes: [...BASE_SCHEMA, "Article", "FAQPage"],
-    }),
-  );
+    });
+  });
 }
+
 
 function assessmentRecords(): SearchIntentRecord[] {
   return ASSESSMENTS.map(a =>
