@@ -345,9 +345,10 @@ export const PUBLIC_PAGES: Record<string, PublicPage> = {
   "distressed-property": {
     slug: "/distressed-property",
     navLabel: "Distressed Property",
-    metaTitle: "Behind on Payments? Foreclosure, Short Sale, and Workout Options | Legacy Forge",
+    metaTitle: "Foreclosure, Short Sale, and Workout Options in California | Legacy Forge",
     metaDescription:
-      "Compare foreclosure, short sale, loan modification, forbearance, deed in lieu, and selling with equity. Understand your options while you still have all of them.",
+      "How California's foreclosure timeline works, and what reinstatement, modification, forbearance, deed in lieu, short sale, or selling with equity each actually cost you.",
+
     eyebrow: "For homeowners under pressure",
     headline: "Get the real options on the table while you still have all of them.",
     subhead:
