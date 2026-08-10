@@ -15,12 +15,18 @@ function PublicMarketingRoute() {
     <PublicShell>
       <section aria-labelledby="cities" className="mx-auto max-w-6xl px-4 pt-14 md:px-6">
         <h2 id="cities" className="font-serif text-2xl text-heritage md:text-3xl">
-          Orange County submarkets
+          City housing market briefings
         </h2>
         <p className="mt-2 max-w-2xl text-muted-foreground">
-          Each guide covers what actually changes the outcome in that city: buyer pool, housing
-          stock, probate venue, and condition strategy.
+          Each briefing covers how that city&rsquo;s market is behaving right now: pricing bands,
+          absorption, buyer pool, and housing stock. Working through probate, an inherited property,
+          a divorce, or a distressed sale?{" "}
+          <Link to="/local" className="text-heritage underline underline-offset-4">
+            Start at the Orange County situation pages
+          </Link>{" "}
+          instead — this section is research, not case help.
         </p>
+
         <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {CITY_GUIDES.map(c => (
             <Link

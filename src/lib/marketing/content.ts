@@ -544,13 +544,14 @@ export const PUBLIC_PAGES: Record<string, PublicPage> = {
   "local-guides": {
     slug: "/local-guides",
     navLabel: "Local Guides",
-    metaTitle: "Orange County Local Market Guides — La Habra, Brea, Fullerton | Legacy Forge",
+    metaTitle: "City Housing Market Briefings — La Habra, Brea, Fullerton | Legacy Forge",
     metaDescription:
-      "Local market intelligence for La Habra, Brea, Fullerton, Whittier, La Mirada, Yorba Linda, Orange, and greater Orange County.",
-    eyebrow: "Local market intelligence",
-    headline: "Real estate is national news and local reality.",
+      "What each city's housing market is actually doing: pricing, absorption, buyer pool, and housing stock, briefed city by city. For help with a specific situation, start at the local situation pages.",
+    eyebrow: "City market briefings",
+    headline: "Market conditions, read one city at a time.",
     subhead:
-      "Rates and headlines are the same everywhere. Inventory, buyer pools, school boundaries, assessment patterns, and days on market are not.",
+      "This is the research layer, not the help layer. Rates and headlines are the same everywhere; inventory, buyer pools, school boundaries, assessment patterns, and days on market are not. Bring a situation instead, and the local situation pages are the right starting point.",
+
     ...CTA,
     valueProps: [
       {

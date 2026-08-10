@@ -17,7 +17,11 @@ import { ga4PiiReview } from "./discovery-readiness";
 import { INDEXABLE_STATIC_PATHS, NON_INDEXABLE_PUBLIC_PATHS, indexablePaths } from "./indexation";
 import { LOCAL_PAGES } from "./local-pages";
 import { ANSWERS } from "./answers";
-import { blockingCannibalization, buildCannibalizationReport } from "./cannibalization";
+import {
+  blockingCannibalization,
+  buildCannibalizationReport,
+  MATERIAL_OVERLAP_ACCEPTANCE,
+} from "./cannibalization";
 import { missingIntentRecords } from "./intent-map";
 import { buildQualityGate } from "./quality-gate";
 
@@ -65,6 +69,7 @@ export function buildReleaseAudit(now: Date = new Date()): ReleaseAudit {
   const cannibalReport = buildCannibalizationReport(now);
   const cannibalBlockers = blockingCannibalization(cannibalReport);
   const cannibalSeverity = cannibalReport.severityCounts;
+  const canonicalConflicts = cannibalReport.pairs.filter(p => p.canonicalConflict).length;
 
   const intentGaps = missingIntentRecords();
   const quality = buildQualityGate(now);
@@ -129,17 +134,20 @@ export function buildReleaseAudit(now: Date = new Date()): ReleaseAudit {
     {
       id: "T17-5",
       label: "Cannibalization audit",
+      // Owner policy: CRITICAL is a release blocker unless explicitly resolved
+      // or waived with evidence. MATERIAL is documented advisory review and
+      // does not hold the gate. ACCEPTABLE and NONE are clean.
       status:
-        authorityAudit.counts.CONSOLIDATE + authorityAudit.counts.REDIRECT + authorityAudit.counts.NOINDEX > 0
+        authorityAudit.counts.CONSOLIDATE + authorityAudit.counts.REDIRECT + authorityAudit.counts.NOINDEX > 0 ||
+        cannibalSeverity.CRITICAL > 0 ||
+        cannibalBlockers.length > 0 ||
+        canonicalConflicts > 0
           ? "BLOCKED"
-          : cannibalBlockers.length === 0 && cannibalSeverity.CRITICAL === 0
-            ? cannibalSeverity.MATERIAL === 0
-              ? "PASS"
-              : "REVIEW"
-            : "REVIEW",
-      detail: `${authorityAudit.urls.length} URLs stated — KEEP ${authorityAudit.counts.KEEP} · IMPROVE ${authorityAudit.counts.IMPROVE} · REVIEW ${authorityAudit.counts.REVIEW} · CONSOLIDATE ${authorityAudit.counts.CONSOLIDATE} · NOINDEX ${authorityAudit.counts.NOINDEX} · REDIRECT ${authorityAudit.counts.REDIRECT}. Overlap severity — CRITICAL ${cannibalSeverity.CRITICAL} · MATERIAL ${cannibalSeverity.MATERIAL} · ACCEPTABLE ${cannibalSeverity.ACCEPTABLE}. Advisory only; nothing executed.`,
+          : "PASS",
+      detail: `${authorityAudit.urls.length} URLs stated — KEEP ${authorityAudit.counts.KEEP} · IMPROVE ${authorityAudit.counts.IMPROVE} · REVIEW ${authorityAudit.counts.REVIEW} · CONSOLIDATE ${authorityAudit.counts.CONSOLIDATE} · NOINDEX ${authorityAudit.counts.NOINDEX} · REDIRECT ${authorityAudit.counts.REDIRECT}. Overlap severity — CRITICAL ${cannibalSeverity.CRITICAL} (blocking) · MATERIAL ${cannibalSeverity.MATERIAL} (advisory) · ACCEPTABLE ${cannibalSeverity.ACCEPTABLE}. Canonical conflicts ${canonicalConflicts}. ${MATERIAL_OVERLAP_ACCEPTANCE} actionsApplied: ${cannibalReport.actionsApplied}.`,
       launchCritical: true,
     },
+
 
     {
       id: "T17-6",
