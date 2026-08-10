@@ -65,6 +65,7 @@ export interface CannibalPair {
   a: string;
   b: string;
   verdict: CannibalVerdict;
+  severity: CannibalizationSeverity;
   titleSimilarity: number;
   h1Similarity: number;
   semanticOverlap: number;
@@ -81,6 +82,7 @@ export interface CannibalFinding {
   path: string;
   pageType: string;
   verdict: CannibalVerdict;
+  severity: CannibalizationSeverity;
   competitors: string[];
   reason: string;
 }
@@ -91,9 +93,11 @@ export interface CannibalReport {
   pairs: CannibalPair[];
   findings: CannibalFinding[];
   counts: Record<CannibalVerdict, number>;
+  severityCounts: Record<CannibalizationSeverity, number>;
   /** No automatic action is taken — always false in this build. */
   actionsApplied: boolean;
 }
+
 
 function semanticText(r: SearchIntentRecord): string {
   return [r.title, r.h1, r.primaryKeyword, ...r.secondaryKeywords, r.place ?? ""].join(" ");
