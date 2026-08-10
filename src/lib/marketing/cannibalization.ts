@@ -149,7 +149,7 @@ function comparePair(a: SearchIntentRecord, b: SearchIntentRecord): CannibalPair
   const severity: CannibalizationSeverity =
     verdict === "KEEP"
       ? "NONE"
-      : verdict === "REDIRECT" || verdict === "CONSOLIDATE" || verdict === "NOINDEX"
+      : verdict === "REDIRECT" || verdict === "CONSOLIDATE"
         ? "CRITICAL"
         : samePrimaryKeyword || (semanticOverlap >= 0.6 && sameGeography)
           ? "CRITICAL"
@@ -158,6 +158,7 @@ function comparePair(a: SearchIntentRecord, b: SearchIntentRecord): CannibalPair
               (internalLinkCompetition && sameePrimaryIntent)
             ? "MATERIAL"
             : "ACCEPTABLE";
+
 
   return {
     a: a.path,
