@@ -99,8 +99,8 @@ function SeoReadinessPanel() {
         <ul className="space-y-3">
           <Row
             status={domain.status}
-            label={`Canonical host — ${domain.canonicalHost}`}
-            note={`${domain.redirects.length} redirects prepared · ${domain.leaks.length} provisional-hostname leaks across ${domain.leakSurfaces.length} surfaces · HTTPS enforced, ${domain.hostPolicy}`}
+            label={`Canonical host — ${domain.origin}`}
+            note={`${domain.redirects.length} redirects prepared · ${domain.leaks.length} provisional-hostname leaks across ${domain.leakSurfaces.length} surfaces · HTTPS enforced · ${domain.hostPolicy.canonicalHost} canonical`}
           />
           {domain.blockers.map(b => (
             <Row key={b} status="BLOCKED" label="Domain blocker" note={b} />
@@ -114,8 +114,8 @@ function SeoReadinessPanel() {
               key={section.id}
               status={section.state}
               label={section.title}
-              note={`${section.items.filter(i => i.done).length}/${section.items.length} steps complete — next: ${
-                section.items.find(i => !i.done)?.label ?? "nothing outstanding"
+              note={`${section.checklist.length} prepared steps · ${section.summary}${
+                section.blockers.length ? ` · ${section.blockers.join(" ")}` : ""
               }`}
             />
           ))}
