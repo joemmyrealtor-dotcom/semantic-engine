@@ -280,7 +280,14 @@ export const PUBLIC_PAGES: Record<string, PublicPage> = {
         a: "Yes. Most inherited properties sell in present condition. The right question is whether targeted cleanup and access improvements would return more than they cost, which depends on the property and the buyer pool.",
       },
     ],
+    localHandoff: {
+      cluster: "inherited-property",
+      label: "Orange County inherited property help",
+      blurb:
+        "This page covers the statewide math: basis, carrying costs, and co-owner decisions. If the property is in Orange County, the local hub adds submarket rents, sale timelines, and the professionals who handle these estates here.",
+    },
   },
+
 
   downsizing: {
     slug: "/downsizing",
