@@ -12,6 +12,21 @@ import { absoluteUrl } from "./site";
 
 export type CannibalVerdict = "KEEP" | "DIFFERENTIATE" | "CONSOLIDATE" | "NOINDEX" | "REDIRECT";
 
+/**
+ * How much a flagged overlap actually matters. A DIFFERENTIATE finding is not
+ * uniformly serious: two pages sharing a head term with matching geography are
+ * a real conflict, while a loose thematic overlap between a statewide
+ * explainer and a city page is tolerable and needs no action before launch.
+ */
+export type CannibalizationSeverity = "CRITICAL" | "MATERIAL" | "ACCEPTABLE" | "NONE";
+
+const SEVERITY_RANK: Record<CannibalizationSeverity, number> = {
+  NONE: 0,
+  ACCEPTABLE: 1,
+  MATERIAL: 2,
+  CRITICAL: 3,
+};
+
 const VERDICT_SEVERITY: Record<CannibalVerdict, number> = {
   KEEP: 0,
   DIFFERENTIATE: 1,
@@ -19,6 +34,7 @@ const VERDICT_SEVERITY: Record<CannibalVerdict, number> = {
   NOINDEX: 3,
   REDIRECT: 4,
 };
+
 
 const STOP = new Set([
   "the", "a", "an", "and", "or", "of", "to", "in", "for", "on", "with", "my", "your", "i",
