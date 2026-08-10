@@ -227,29 +227,40 @@ function pillarRecords(): SearchIntentRecord[] {
     const guide = GUIDES.find(g => g.situation === entry.id) ?? null;
     const assessment = ASSESSMENTS.find(a => a.situation === entry.id) ?? null;
     const localChildren = LOCAL_PAGES.filter(p => p.pillarPath === entry.to).map(p => p.path);
+    const localHub = LOCAL_PAGES.find(p => p.pillarPath === entry.to && p.level === "hub")?.path ?? null;
+    const topic = entry.id.replace(/-/g, " ");
+    // Where a local topic hub exists it owns the Orange County commercial query.
+    // The pillar then holds the statewide, explanatory query so the two never
+    // compete for the same result.
+    const statewide = localHub !== null;
     return record({
       path: entry.to,
       pageType: "situation-pillar",
       title: entry.question,
       h1: entry.label.replace(/^I'm |^I /, "").replace(/^./, c => c.toUpperCase()),
-      primaryKeyword: `${entry.id.replace(/-/g, " ")} orange county`,
-      secondaryKeywords: [entry.id.replace(/-/g, " "), `${entry.id.replace(/-/g, " ")} help california`],
-      intent: "commercial",
-      geographicIntent: "county",
-      place: "Orange County",
-      funnelStage: "consideration",
+      primaryKeyword: statewide ? `${topic} california explained` : `${topic} orange county`,
+      secondaryKeywords: statewide
+        ? [`how ${topic} works california`, `${topic} process steps`, `${topic} checklist`]
+        : [topic, `${topic} help california`],
+      intent: statewide ? "informational" : "commercial",
+      geographicIntent: statewide ? "none" : "county",
+      place: statewide ? null : "Orange County",
+      funnelStage: statewide ? "awareness" : "consideration",
       parentHub: "/home",
       supportingPages: [
         ...(guide ? [`/guides/${guide.slug}`] : []),
         ...(assessment ? [`/assessments/${assessment.slug}`] : []),
-        ...localChildren.slice(0, 4),
+        ...(localHub ? [localHub] : []),
+        ...localChildren.filter(p => p !== localHub).slice(0, 3),
       ],
       guideSlug: guide?.slug ?? null,
       assessmentSlug: assessment?.slug ?? null,
+      cta: statewide ? "Download the situation guide" : "Book a strategy call",
       schemaTypes: [...BASE_SCHEMA, "FAQPage", "ItemList"],
     });
   });
 }
+
 
 function localRecords(): SearchIntentRecord[] {
   return LOCAL_PAGES.map(page => {
