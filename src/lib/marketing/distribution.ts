@@ -11,17 +11,19 @@ import { BRAND } from "./positioning";
 import type { AnswerRecord } from "./answers";
 import type { LocalPageSpec } from "./local-pages";
 
-export type Channel = "seo" | "linkedin" | "facebook" | "x" | "youtube" | "email";
+export type Channel = "seo" | "linkedin" | "facebook" | "instagram" | "x" | "youtube" | "email" | "partner";
 
-export const CHANNELS: Channel[] = ["seo", "linkedin", "facebook", "x", "youtube", "email"];
+export const CHANNELS: Channel[] = ["seo", "linkedin", "facebook", "instagram", "x", "youtube", "email", "partner"];
 
 export const CHANNEL_LABEL: Record<Channel, string> = {
   seo: "Answer page (SEO/AEO)",
   linkedin: "LinkedIn",
   facebook: "Facebook",
+  instagram: "Instagram",
   x: "X",
   youtube: "YouTube Short",
   email: "Email",
+  partner: "Referral-partner communication",
 };
 
 /** Hard caps enforced on generated drafts. */
@@ -29,9 +31,11 @@ export const CHANNEL_LIMITS: Record<Channel, number> = {
   seo: 4000,
   linkedin: 2800,
   facebook: 1800,
+  instagram: 2200,
   x: 280,
   youtube: 1200,
   email: 2200,
+  partner: 2400,
 };
 
 export interface DistributionAsset {
@@ -89,6 +93,12 @@ export function assetsFor(answer: AnswerRecord): DistributionAsset[] {
       cta: "Read the full answer",
     },
     {
+      channel: "instagram",
+      title: clamp(answer.question, 120),
+      body: `${answer.question}\n\n${short}\n\nFull answer linked in bio: ${url}\n\n${DISCLAIMER}`,
+      cta: "Full answer in bio",
+    },
+    {
       channel: "x",
       title: answer.question,
       body: `${answer.question} ${clamp(short, 180)} ${url}`,
@@ -111,6 +121,12 @@ export function assetsFor(answer: AnswerRecord): DistributionAsset[] {
       title: clamp(answer.question, 70),
       body: `${short}\n\n${clamp(answer.detail, 900)}\n\nFull answer: ${url}\n\n— ${BRAND.advisor}, ${BRAND.publisher}\n${DISCLAIMER}`,
       cta: "Read the full answer",
+    },
+    {
+      channel: "partner",
+      title: clamp(answer.question, 90),
+      body: `A client-facing answer you are welcome to forward:\n\n${answer.question}\n${short}\n\nCanonical version, dated and sourced: ${url}\n\nNo compensation is attached to referrals. ${DISCLAIMER}`,
+      cta: "Forward to a client who is asking this",
     },
   ];
 
@@ -159,6 +175,12 @@ export function localAssetsFor(spec: LocalPageSpec): DistributionAsset[] {
       cta: "Read the local breakdown",
     },
     {
+      channel: "instagram",
+      title: clamp(spec.question, 120),
+      body: `${spec.question}\n\n${short}\n\nWritten for ${spec.place}. Full page linked in bio: ${url}\n\n${DISCLAIMER}`,
+      cta: "Local page in bio",
+    },
+    {
       channel: "x",
       title: spec.question,
       body: `${spec.question} ${clamp(short, 170)} ${url}`,
@@ -182,6 +204,12 @@ export function localAssetsFor(spec: LocalPageSpec): DistributionAsset[] {
       title: clamp(spec.question, 70),
       body: `${short}\n\n${spec.decisionPath.map((s, i) => `${i + 1}. ${s}`).join("\n")}\n\nFull page: ${url}\n\n— ${BRAND.advisor}, ${BRAND.publisher}\n${DISCLAIMER}`,
       cta: "Read the full page",
+    },
+    {
+      channel: "partner",
+      title: clamp(`${spec.clusterLabel} — ${spec.place}`, 90),
+      body: `For clients in ${spec.place}:\n\n${spec.question}\n${short}\n\nDecision path and costs: ${url}\n\nNo compensation is attached to referrals. ${DISCLAIMER}`,
+      cta: "Forward to a client in this situation",
     },
   ];
 

@@ -55,7 +55,7 @@ function LocalIndex() {
           return (
             <section key={hub.path} className="mb-10">
               <h2 className="font-serif text-2xl text-heritage">
-                <Link to="/local/$cluster/" params={{ cluster: hub.cluster }} className="hover:underline">
+                <Link to="/local/$cluster" params={{ cluster: hub.cluster }} className="hover:underline">
                   {hub.clusterLabel} in Orange County
                 </Link>
               </h2>
