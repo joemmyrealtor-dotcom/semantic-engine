@@ -85,7 +85,7 @@ export interface Ga4ConversionRow {
 }
 
 function findSpec(ga4Name: string): Ga4EventSpec | undefined {
-  return GA4_EVENTS.find(e => e.ga4 === ga4Name);
+  return GA4_EVENTS.find(e => e.ga4 === ga4Name) ?? GA4_EVENTS.find(e => e.internal === ga4Name);
 }
 
 export function ga4ConversionMap(): Ga4ConversionRow[] {

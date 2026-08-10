@@ -19,9 +19,14 @@ describe("production domain package", () => {
   });
 
   it("plans redirects away from the provisional host", () => {
-    const redirects = provisionalHostRedirects();
-    expect(redirects.length).toBeGreaterThan(0);
-    for (const r of redirects) expect(r.status).toBe(301);
+    const redirects = provisionalHostRedirects("https://legacyforge.com");
+    expect(redirects.length).toBe(3);
+    for (const r of redirects) {
+      expect(r.status).toBe(301);
+      expect(r.applied).toBe(false);
+      expect(r.to.startsWith("https://legacyforge.com")).toBe(true);
+    }
+    expect(provisionalHostRedirects()).toEqual([]);
   });
 
   it("detects every provisional hostname still emitted", () => {

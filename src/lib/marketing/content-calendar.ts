@@ -44,10 +44,12 @@ const WEEK_PATTERN: { dayOffset: number; kind: SlotKind; channel: Channel }[] = 
   { dayOffset: 2, kind: "answer", channel: "seo" },
   { dayOffset: 2, kind: "answer", channel: "x" },
   { dayOffset: 3, kind: "local", channel: "facebook" },
+  { dayOffset: 3, kind: "local", channel: "instagram" },
   { dayOffset: 4, kind: "answer", channel: "seo" },
   { dayOffset: 4, kind: "answer", channel: "email" },
   { dayOffset: 5, kind: "guide", channel: "linkedin" },
   { dayOffset: 6, kind: "assessment", channel: "facebook" },
+  { dayOffset: 6, kind: "answer", channel: "partner" },
 ];
 
 export interface ContentPlan {
