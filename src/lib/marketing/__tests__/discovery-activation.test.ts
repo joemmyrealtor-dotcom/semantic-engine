@@ -85,7 +85,7 @@ describe("sitewide authority audit", () => {
   });
 
   it("never executes a change", () => {
-    expect(report.advisoryOnly).toBe(true);
+    expect(report.executed).toBe(false);
   });
 });
 
