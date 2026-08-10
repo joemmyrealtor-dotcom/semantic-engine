@@ -238,9 +238,10 @@ export const PUBLIC_PAGES: Record<string, PublicPage> = {
   "inherited-property": {
     slug: "/inherited-property",
     navLabel: "Inherited Property",
-    metaTitle: "I Inherited a House — Keep, Rent, or Sell? | Legacy Forge",
+    metaTitle: "I Inherited a House in California — Keep, Rent, or Sell? | Legacy Forge",
     metaDescription:
-      "Stepped-up basis, carrying costs, co-owner disagreements, and the real math behind keeping, renting, or selling an inherited property in California.",
+      "Stepped-up basis, carrying costs, co-owner disagreements, and the real math behind keeping, renting, or selling an inherited property under California rules.",
+
     eyebrow: "For heirs and families",
     headline: "Keep it, rent it, or sell it — see the real math first.",
     subhead:
