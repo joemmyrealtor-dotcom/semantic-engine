@@ -225,7 +225,14 @@ export const PUBLIC_PAGES: Record<string, PublicPage> = {
         a: "Usually not. Most probate properties sell in present condition with full disclosure of what is known. Spending estate funds on improvements requires a defensible reason that the improvement will return more than it costs.",
       },
     ],
+    localHandoff: {
+      cluster: "probate",
+      label: "Orange County probate real estate help",
+      blurb:
+        "This page explains the authority and the process under California probate law. If the estate's property sits in Orange County, the local hub covers the county's court practice, hearing timing, and the attorneys and appraisers who work these cases here.",
+    },
   },
+
 
   "inherited-property": {
     slug: "/inherited-property",
