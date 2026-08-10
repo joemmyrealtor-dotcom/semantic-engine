@@ -95,8 +95,11 @@ function SearchAuthorityPanel() {
           ))}
         </div>
         <p className="mt-2 text-xs text-muted-foreground">
-          No redirects, deletions, or index changes have been applied. Verdicts are advisory until authorized.
+          Severity — CRITICAL {cannibal.severityCounts.CRITICAL} · MATERIAL {cannibal.severityCounts.MATERIAL} ·
+          ACCEPTABLE {cannibal.severityCounts.ACCEPTABLE}. No redirects, deletions, or index changes have been
+          applied. Verdicts are advisory until authorized.
         </p>
+
         {flagged.length > 0 && (
           <ul className="mt-3 space-y-2">
             {flagged.slice(0, 25).map(f => (
