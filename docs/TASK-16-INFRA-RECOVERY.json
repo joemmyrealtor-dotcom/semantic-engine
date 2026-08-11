@@ -195,7 +195,19 @@
     "secretsOrPiiInEvidence": false,
     "teardown": "isolated target destroyed; app instance terminated",
     "productionInventoryUnchanged": true,
-    "result": "PASS"
+    "result": "PASS",
+    "ownerReview": {
+      "reviewedAt": "2026-08-11T20:04Z",
+      "status": "USER-REPORTED VERIFIED",
+      "productionClearing": false,
+      "freeze": "2026-08-11T20:04Z",
+      "freezeUnlessChanges": [
+        "database schema version or structure",
+        "migration system behaviour",
+        "deployment architecture",
+        "recovery tooling or snapshot format"
+      ]
+    }
   },
   "recoveryTimings": {
     "databaseRestoreRtoSeconds": 0.265,
@@ -204,8 +216,10 @@
     "note": "kept separate by design; not to be combined"
   },
   "i2SubCapabilities": {
-    "logicalRestoreMechanics": "PASS",
-    "applicationBootAgainstRestore": "PASS",
-    "pitr": "BLOCKED-OPERATOR"
+    "logicalRestoreMechanics": "PASS — frozen 2026-08-11T20:04Z",
+    "applicationBootAgainstRestore": "PASS — frozen 2026-08-11T20:04Z",
+    "pitr": "BLOCKED-OPERATOR",
+    "freezeDirective": "Do not rerun the logical restore or application-boot drill unless database schema, migration system, deployment architecture, or recovery tooling materially changes.",
+    "nextSmallestBlocker": "I3/I4 vault confirmation"
   }
 }

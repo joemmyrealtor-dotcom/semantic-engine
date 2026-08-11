@@ -61,16 +61,20 @@ an application restore RTO of **0.248 s** and remains CLOSED AND ACCEPTED.
 
 ## 5. Remaining blockers to close Task 16
 
-- **I2** — platform point-in-time restore into a *separate* non-production project remains
-  BLOCKED-OPERATOR. Logical restore mechanics are PASS (`TASK-16-I2-RESTORE-DRILL.md`, RTO
-  0.265 s, full content-hash parity) and application boot against the restored target is PASS
-  (`TASK-16-I2-APP-BOOT-DRILL.md`, Application Recovery RTO 11.524 s, zero post-boot drift).
+- **I2** — **FROZEN 2026-08-11T20:04Z (USER-REPORTED VERIFIED).** Logical restore mechanics
+  PASS (`DR-I2-20260811T173051Z`, RTO 0.265 s, full content-hash parity) and application boot
+  against the restored target PASS (`DR-I2BOOT-20260811T190919Z`, healthy in 1.62 s, 7/7 public
+  reads, permission-gated read verified, zero post-boot drift, Application Recovery RTO 11.524 s).
+  Do not rerun unless database schema, migration system, deployment architecture, or recovery
+  tooling materially changes. Platform PITR into a separate non-production project remains
+  BLOCKED-OPERATOR as a distinct tracked capability.
 - **I3/I4** — owner confirms a vault entry exists for every owner-set variable and secret
-  (inventories complete in `TASK-16-I3-I4-ENV-SECRETS.md`).
+  (inventories complete in `TASK-16-I3-I4-ENV-SECRETS.md`). **Next smallest blocker.**
 - **I6/I7** — depends on domain registration; held with T17-1/T17-10.
 
 Task 16 remains **PARTIAL** — not PASS, not owner-accepted, not production-clearing.
-It moves to PASS when I2, I3, and I4 are fully evidenced. I6/I7 close with the domain track.
+It moves to PASS when I2 PITR is resolved or accepted-dispositioned, I3/I4 vault-confirmed,
+and I6/I7 close with the domain track.
 
 ## 6. Companion evidence
 
