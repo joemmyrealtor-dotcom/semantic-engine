@@ -1,0 +1,1 @@
+DROP SCHEMA IF EXISTS dr_verify CASCADE;
