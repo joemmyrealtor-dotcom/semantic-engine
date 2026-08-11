@@ -61,8 +61,18 @@ an application restore RTO of **0.248 s** and remains CLOSED AND ACCEPTED.
 
 ## 5. Remaining blockers to close Task 16
 
-- **I2** — operator-run destructive restore into a non-production target, with start/finish timestamps and a post-restore integrity check.
-- **I3/I4** — owner confirms a vault entry exists for every owner-set variable and secret.
+- **I2** — platform point-in-time restore into a *separate* non-production project, plus an
+  application boot against that restored target. The logical non-production restore is evidenced
+  (`TASK-16-I2-RESTORE-DRILL.md`, RTO 0.265 s, full content-hash parity).
+- **I3/I4** — owner confirms a vault entry exists for every owner-set variable and secret
+  (inventories complete in `TASK-16-I3-I4-ENV-SECRETS.md`).
 - **I6/I7** — depends on domain registration; held with T17-1/T17-10.
 
-Task 16 moves to PASS when I2, I3, and I4 are evidenced. I6/I7 close with the domain track.
+Task 16 remains **PARTIAL** — not PASS, not owner-accepted, not production-clearing.
+It moves to PASS when I2, I3, and I4 are fully evidenced. I6/I7 close with the domain track.
+
+## 6. Companion evidence
+
+- `docs/TASK-16-I2-RESTORE-DRILL.md` — non-production restore drill `DR-I2-20260811T173051Z`
+- `docs/TASK-16-I3-I4-ENV-SECRETS.md` — environment-variable and secrets recovery inventories
+
