@@ -30,7 +30,7 @@ an application restore RTO of **0.248 s** and remains CLOSED AND ACCEPTED.
 | # | Capability | Status | Evidence / gap |
 | --- | --- | --- | --- |
 | I1 | Production database backup | PASS (platform-managed) | Managed backups on the Cloud backend; logical snapshot fingerprint captured above |
-| I2 | Database restore (non-production) | PARTIAL | Drill `DR-I2-20260811T173051Z` restored 21 tables / 62 policies / 26 rows into an isolated non-production target with full content-hash parity; measured restore RTO **0.265 s**; production untouched. Application-boot-against-restore and platform PITR remain BLOCKED-OPERATOR. See `TASK-16-I2-RESTORE-DRILL.md` |
+| I2 | Database restore (non-production) | PARTIAL | Restore mechanics **PASS** (`DR-I2-20260811T173051Z`: 21 tables / 62 policies / 26 rows, full content-hash parity, restore RTO **0.265 s**). Application boot against the restored target **PASS** (`DR-I2BOOT-20260811T190919Z`: healthy in 1.62 s, 7/7 public reads, permission-gated read verified, zero post-boot drift, Application Recovery RTO **11.524 s**). Platform PITR remains BLOCKED-OPERATOR. See `TASK-16-I2-RESTORE-DRILL.md`, `TASK-16-I2-APP-BOOT-DRILL.md` |
 | I3 | Environment-variable recovery | REVIEW | Full inventory with classification, custodian, recovery and verification per variable in `TASK-16-I3-I4-ENV-SECRETS.md`. Awaiting owner vault confirmation for owner-set variables |
 | I4 | Secrets recovery procedure | REVIEW | Secret inventory, ownership and rotation/recovery procedure in `TASK-16-I3-I4-ENV-SECRETS.md`; non-exposure verified. Awaiting owner vault confirmation and a secret-restore test in a non-production target |
 | I5 | Failed deployment rollback | PASS | Publish history retains prior builds; rollback point `BL-20260721T165326Z-postremediation` retained |
@@ -61,9 +61,10 @@ an application restore RTO of **0.248 s** and remains CLOSED AND ACCEPTED.
 
 ## 5. Remaining blockers to close Task 16
 
-- **I2** — platform point-in-time restore into a *separate* non-production project, plus an
-  application boot against that restored target. The logical non-production restore is evidenced
-  (`TASK-16-I2-RESTORE-DRILL.md`, RTO 0.265 s, full content-hash parity).
+- **I2** — platform point-in-time restore into a *separate* non-production project remains
+  BLOCKED-OPERATOR. Logical restore mechanics are PASS (`TASK-16-I2-RESTORE-DRILL.md`, RTO
+  0.265 s, full content-hash parity) and application boot against the restored target is PASS
+  (`TASK-16-I2-APP-BOOT-DRILL.md`, Application Recovery RTO 11.524 s, zero post-boot drift).
 - **I3/I4** — owner confirms a vault entry exists for every owner-set variable and secret
   (inventories complete in `TASK-16-I3-I4-ENV-SECRETS.md`).
 - **I6/I7** — depends on domain registration; held with T17-1/T17-10.
@@ -74,5 +75,6 @@ It moves to PASS when I2, I3, and I4 are fully evidenced. I6/I7 close with the d
 ## 6. Companion evidence
 
 - `docs/TASK-16-I2-RESTORE-DRILL.md` — non-production restore drill `DR-I2-20260811T173051Z`
+- `docs/TASK-16-I2-APP-BOOT-DRILL.md` — application boot against restore `DR-I2BOOT-20260811T190919Z`
 - `docs/TASK-16-I3-I4-ENV-SECRETS.md` — environment-variable and secrets recovery inventories
 

@@ -35,7 +35,7 @@ Production was never dropped, truncated, altered, or written to.
 | 5 | Policy count matches | PASS | 62 restored policies vs 62 in production |
 | 6 | Row / data integrity | PASS | 26 rows source → 26 rows restored; per-table MD5 content hash equality for all 21 tables (`all_match = true`) |
 | 7 | Restored-set fingerprint | PASS | `1ec8b5b5dc7ae12dfe53c89cfd8d886c` (MD5 over per-table content hashes, table-ordered) |
-| 8 | Application starts against restored target | NOT EXERCISED | Requires an operator-run app instance bound to a separate project/connection string; the managed platform does not permit repointing the app at an alternate target |
+| 8 | Application starts against restored target | PASS | Exercised separately in `DR-I2BOOT-20260811T190919Z` — see `TASK-16-I2-APP-BOOT-DRILL.md` (healthy in 1.62 s, 7/7 public reads, permission-gated read verified, zero post-boot drift) |
 | 9 | Measured restore RTO | PASS | Start 2026-08-11T17:30:51.208Z, finish 2026-08-11T17:30:51.473Z → **0.265 s** |
 | 10 | Original production untouched | PASS | Read-only against `public`; post-drill inventory unchanged (21 tables / 21 RLS / 62 policies / 26 rows) |
 
@@ -57,8 +57,8 @@ copy of production data persists outside the production schema.
 
 I2 remains **PARTIAL**, not PASS:
 
-- Check 8 (application boot against the restored target) is **BLOCKED-OPERATOR** — it needs a
-  separate non-production project provisioned by the platform owner.
+- Check 8 (application boot against the restored target) is now **PASS** via
+  `DR-I2BOOT-20260811T190919Z`.
 - A platform point-in-time restore (as opposed to this logical restore) is still owner-only and
   unmeasured.
 
