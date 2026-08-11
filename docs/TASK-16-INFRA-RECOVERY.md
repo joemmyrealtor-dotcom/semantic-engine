@@ -30,9 +30,9 @@ an application restore RTO of **0.248 s** and remains CLOSED AND ACCEPTED.
 | # | Capability | Status | Evidence / gap |
 | --- | --- | --- | --- |
 | I1 | Production database backup | PASS (platform-managed) | Managed backups on the Cloud backend; logical snapshot fingerprint captured above |
-| I2 | Database restore (destructive) | BLOCKED-OPERATOR | Requires a point-in-time restore executed by the platform owner into a non-production target; cannot be exercised from the app |
-| I3 | Environment-variable recovery | REVIEW | Full inventory below; recovery = re-set values from the owner's password vault. No vault entry confirmed yet |
-| I4 | Secrets recovery procedure | REVIEW | Service-role key and DB password are not retrievable on the managed platform; recovery path is rotation, not restore. Documented in §4 |
+| I2 | Database restore (non-production) | PARTIAL | Drill `DR-I2-20260811T173051Z` restored 21 tables / 62 policies / 26 rows into an isolated non-production target with full content-hash parity; measured restore RTO **0.265 s**; production untouched. Application-boot-against-restore and platform PITR remain BLOCKED-OPERATOR. See `TASK-16-I2-RESTORE-DRILL.md` |
+| I3 | Environment-variable recovery | REVIEW | Full inventory with classification, custodian, recovery and verification per variable in `TASK-16-I3-I4-ENV-SECRETS.md`. Awaiting owner vault confirmation for owner-set variables |
+| I4 | Secrets recovery procedure | REVIEW | Secret inventory, ownership and rotation/recovery procedure in `TASK-16-I3-I4-ENV-SECRETS.md`; non-exposure verified. Awaiting owner vault confirmation and a secret-restore test in a non-production target |
 | I5 | Failed deployment rollback | PASS | Publish history retains prior builds; rollback point `BL-20260721T165326Z-postremediation` retained |
 | I6 | DNS recovery plan | BLOCKED | No registrar account exists yet for `legacyforgerealestate.com` (NXDOMAIN, no NS delegation as of 2026-08-11T17:22Z) |
 | I7 | Certificate / domain recovery | BLOCKED | Depends on I6; TLS is platform-issued once the domain is bound |
