@@ -30,16 +30,16 @@ an application restore RTO of **0.248 s** and remains CLOSED AND ACCEPTED.
 | # | Capability | Status | Evidence / gap |
 | --- | --- | --- | --- |
 | I1 | Production database backup | PASS (platform-managed) | Managed backups on the Cloud backend; logical snapshot fingerprint captured above |
-| I2 | Database restore (destructive) | BLOCKED-OPERATOR | Requires a point-in-time restore executed by the platform owner into a non-production target; cannot be exercised from the app |
-| I3 | Environment-variable recovery | REVIEW | Full inventory below; recovery = re-set values from the owner's password vault. No vault entry confirmed yet |
-| I4 | Secrets recovery procedure | REVIEW | Service-role key and DB password are not retrievable on the managed platform; recovery path is rotation, not restore. Documented in §4 |
+| I2 | Database restore (non-production) | PARTIAL | Drill `DR-I2-20260811T173051Z` restored 21 tables / 62 policies / 26 rows into an isolated non-production target with full content-hash parity; measured restore RTO **0.265 s**; production untouched. Application-boot-against-restore and platform PITR remain BLOCKED-OPERATOR. See `TASK-16-I2-RESTORE-DRILL.md` |
+| I3 | Environment-variable recovery | REVIEW | Full inventory with classification, custodian, recovery and verification per variable in `TASK-16-I3-I4-ENV-SECRETS.md`. Awaiting owner vault confirmation for owner-set variables |
+| I4 | Secrets recovery procedure | REVIEW | Secret inventory, ownership and rotation/recovery procedure in `TASK-16-I3-I4-ENV-SECRETS.md`; non-exposure verified. Awaiting owner vault confirmation and a secret-restore test in a non-production target |
 | I5 | Failed deployment rollback | PASS | Publish history retains prior builds; rollback point `BL-20260721T165326Z-postremediation` retained |
 | I6 | DNS recovery plan | BLOCKED | No registrar account exists yet for `legacyforgerealestate.com` (NXDOMAIN, no NS delegation as of 2026-08-11T17:22Z) |
 | I7 | Certificate / domain recovery | BLOCKED | Depends on I6; TLS is platform-issued once the domain is bound |
 | I8 | Hosting outage recovery | ACCEPTED-RISK | Single-provider hosting; recovery = provider status monitoring + published-build redeploy. No secondary provider by design |
 | I9 | Rollback to last-known-good build | PASS | Last-known-good = published GA build; rollback evidence retained |
 | I10 | Measured infrastructure RPO | PARTIAL | Logical snapshot RPO 0 s; platform PITR RPO must be confirmed by the operator (I2) |
-| I11 | Measured infrastructure RTO | PARTIAL | Snapshot-verify RTO ~10 s; destructive-restore RTO unmeasured pending I2 |
+| I11 | Measured infrastructure RTO | PARTIAL | Snapshot-verify RTO ~10 s; non-production logical restore RTO 0.265 s; platform PITR restore RTO unmeasured pending I2 |
 
 ## 3. Environment-variable recovery inventory
 
@@ -61,8 +61,18 @@ an application restore RTO of **0.248 s** and remains CLOSED AND ACCEPTED.
 
 ## 5. Remaining blockers to close Task 16
 
-- **I2** — operator-run destructive restore into a non-production target, with start/finish timestamps and a post-restore integrity check.
-- **I3/I4** — owner confirms a vault entry exists for every owner-set variable and secret.
+- **I2** — platform point-in-time restore into a *separate* non-production project, plus an
+  application boot against that restored target. The logical non-production restore is evidenced
+  (`TASK-16-I2-RESTORE-DRILL.md`, RTO 0.265 s, full content-hash parity).
+- **I3/I4** — owner confirms a vault entry exists for every owner-set variable and secret
+  (inventories complete in `TASK-16-I3-I4-ENV-SECRETS.md`).
 - **I6/I7** — depends on domain registration; held with T17-1/T17-10.
 
-Task 16 moves to PASS when I2, I3, and I4 are evidenced. I6/I7 close with the domain track.
+Task 16 remains **PARTIAL** — not PASS, not owner-accepted, not production-clearing.
+It moves to PASS when I2, I3, and I4 are fully evidenced. I6/I7 close with the domain track.
+
+## 6. Companion evidence
+
+- `docs/TASK-16-I2-RESTORE-DRILL.md` — non-production restore drill `DR-I2-20260811T173051Z`
+- `docs/TASK-16-I3-I4-ENV-SECRETS.md` — environment-variable and secrets recovery inventories
+

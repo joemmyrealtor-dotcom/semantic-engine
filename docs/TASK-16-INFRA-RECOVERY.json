@@ -23,6 +23,25 @@
     "rtoSeconds": 10,
     "result": "PASS"
   },
+  "nonProdRestoreDrill": {
+    "id": "DR-I2-20260811T173051Z",
+    "type": "logical-restore-into-isolated-non-production-target",
+    "startedAt": "2026-08-11T17:30:51.208Z",
+    "finishedAt": "2026-08-11T17:30:51.473Z",
+    "rtoSeconds": 0.265,
+    "tables": { "source": 21, "restored": 21, "missing": 0 },
+    "rlsEnabled": { "source": 21, "restored": 21 },
+    "policies": { "source": 62, "restored": 62 },
+    "rows": { "source": 26, "restored": 26 },
+    "contentHashParity": "ALL_MATCH",
+    "restoredFingerprint": "1ec8b5b5dc7ae12dfe53c89cfd8d886c",
+    "schemaVersion": 10,
+    "productionUntouched": true,
+    "apiExposureOfRestoredTarget": "none",
+    "applicationBootAgainstRestore": "BLOCKED-OPERATOR",
+    "teardown": "dr_verify schema dropped after evidence capture",
+    "result": "PASS-with-residual-gap"
+  },
   "priorApplicationDrill": {
     "baseline": "BL-APPDRILL-20260727T153835212Z",
     "rtoSeconds": 0.248,
@@ -30,7 +49,7 @@
   },
   "matrix": [
     { "id": "I1",  "capability": "Production database backup",        "status": "PASS" },
-    { "id": "I2",  "capability": "Database restore (destructive)",    "status": "BLOCKED-OPERATOR" },
+    { "id": "I2",  "capability": "Database restore (non-production)", "status": "PARTIAL" },
     { "id": "I3",  "capability": "Environment-variable recovery",     "status": "REVIEW" },
     { "id": "I4",  "capability": "Secrets recovery procedure",        "status": "REVIEW" },
     { "id": "I5",  "capability": "Failed deployment rollback",        "status": "PASS" },
@@ -41,6 +60,10 @@
     { "id": "I10", "capability": "Measured infrastructure RPO",       "status": "PARTIAL" },
     { "id": "I11", "capability": "Measured infrastructure RTO",       "status": "PARTIAL" }
   ],
+  "companionEvidence": [
+    "docs/TASK-16-I2-RESTORE-DRILL.md",
+    "docs/TASK-16-I3-I4-ENV-SECRETS.md"
+  ],
   "domainControl": {
     "domain": "legacyforgerealestate.com",
     "checkedAt": "2026-08-11T17:22Z",
@@ -49,5 +72,7 @@
     "expectedTxt": "legacy-forge-verification=9ddef8dac41fc2afd1111a8948695e19",
     "result": "DOMAIN_CONTROL_UNVERIFIED"
   },
-  "summary": { "PASS": 3, "REVIEW": 2, "PARTIAL": 2, "BLOCKED": 2, "BLOCKED-OPERATOR": 1, "ACCEPTED-RISK": 1 }
+  "summary": { "PASS": 3, "REVIEW": 2, "PARTIAL": 3, "BLOCKED": 2, "ACCEPTED-RISK": 1 },
+  "ownerAccepted": false,
+  "productionClearing": false
 }
