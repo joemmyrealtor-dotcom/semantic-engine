@@ -1,0 +1,53 @@
+{
+  "reportVersion": "1.0",
+  "task": "TASK-16",
+  "title": "Infrastructure Recovery Proof",
+  "generatedAt": "2026-08-11T17:22:26Z",
+  "status": "PARTIAL",
+  "drill": {
+    "id": "DR-INFRA-20260811T172226Z",
+    "type": "logical-snapshot-capture-and-integrity-verification",
+    "destructive": false,
+    "backupTimestamp": "2026-08-11T17:22:16.917706Z",
+    "restoreStart": "2026-08-11T17:22:26.902335Z",
+    "restoreCompletion": "2026-08-11T17:22:27Z",
+    "integrityCheck": {
+      "algorithm": "sha256",
+      "value": "55bafd0d2383c383f4b59f5494b6e4863a0612b8e3d44de313ba9488bde1d3a0",
+      "md5": "78d6bc52763755029de87bd2af263319",
+      "result": "MATCH"
+    },
+    "snapshotScope": { "tables": 21, "rlsEnabledTables": 21, "policies": 62, "liveRows": 26, "databaseSize": "13 MB" },
+    "serviceResume": "immediate-no-interruption",
+    "rpoSeconds": 0,
+    "rtoSeconds": 10,
+    "result": "PASS"
+  },
+  "priorApplicationDrill": {
+    "baseline": "BL-APPDRILL-20260727T153835212Z",
+    "rtoSeconds": 0.248,
+    "status": "CLOSED_ACCEPTED"
+  },
+  "matrix": [
+    { "id": "I1",  "capability": "Production database backup",        "status": "PASS" },
+    { "id": "I2",  "capability": "Database restore (destructive)",    "status": "BLOCKED-OPERATOR" },
+    { "id": "I3",  "capability": "Environment-variable recovery",     "status": "REVIEW" },
+    { "id": "I4",  "capability": "Secrets recovery procedure",        "status": "REVIEW" },
+    { "id": "I5",  "capability": "Failed deployment rollback",        "status": "PASS" },
+    { "id": "I6",  "capability": "DNS recovery plan",                 "status": "BLOCKED" },
+    { "id": "I7",  "capability": "Certificate/domain recovery",       "status": "BLOCKED" },
+    { "id": "I8",  "capability": "Hosting outage recovery",           "status": "ACCEPTED-RISK" },
+    { "id": "I9",  "capability": "Rollback to last-known-good build", "status": "PASS" },
+    { "id": "I10", "capability": "Measured infrastructure RPO",       "status": "PARTIAL" },
+    { "id": "I11", "capability": "Measured infrastructure RTO",       "status": "PARTIAL" }
+  ],
+  "domainControl": {
+    "domain": "legacyforgerealestate.com",
+    "checkedAt": "2026-08-11T17:22Z",
+    "nsLookup": "NXDOMAIN",
+    "txtLookup": "NXDOMAIN",
+    "expectedTxt": "legacy-forge-verification=9ddef8dac41fc2afd1111a8948695e19",
+    "result": "DOMAIN_CONTROL_UNVERIFIED"
+  },
+  "summary": { "PASS": 3, "REVIEW": 2, "PARTIAL": 2, "BLOCKED": 2, "BLOCKED-OPERATOR": 1, "ACCEPTED-RISK": 1 }
+}
