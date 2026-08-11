@@ -39,7 +39,7 @@ an application restore RTO of **0.248 s** and remains CLOSED AND ACCEPTED.
 | I8 | Hosting outage recovery | ACCEPTED-RISK | Single-provider hosting; recovery = provider status monitoring + published-build redeploy. No secondary provider by design |
 | I9 | Rollback to last-known-good build | PASS | Last-known-good = published GA build; rollback evidence retained |
 | I10 | Measured infrastructure RPO | PARTIAL | Logical snapshot RPO 0 s; platform PITR RPO must be confirmed by the operator (I2) |
-| I11 | Measured infrastructure RTO | PARTIAL | Snapshot-verify RTO ~10 s; destructive-restore RTO unmeasured pending I2 |
+| I11 | Measured infrastructure RTO | PARTIAL | Snapshot-verify RTO ~10 s; non-production logical restore RTO 0.265 s; platform PITR restore RTO unmeasured pending I2 |
 
 ## 3. Environment-variable recovery inventory
 
