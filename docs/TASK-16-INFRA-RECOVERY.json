@@ -17,7 +17,13 @@
       "md5": "78d6bc52763755029de87bd2af263319",
       "result": "MATCH"
     },
-    "snapshotScope": { "tables": 21, "rlsEnabledTables": 21, "policies": 62, "liveRows": 26, "databaseSize": "13 MB" },
+    "snapshotScope": {
+      "tables": 21,
+      "rlsEnabledTables": 21,
+      "policies": 62,
+      "liveRows": 26,
+      "databaseSize": "13 MB"
+    },
     "serviceResume": "immediate-no-interruption",
     "rpoSeconds": 0,
     "rtoSeconds": 10,
@@ -29,16 +35,29 @@
     "startedAt": "2026-08-11T17:30:51.208Z",
     "finishedAt": "2026-08-11T17:30:51.473Z",
     "rtoSeconds": 0.265,
-    "tables": { "source": 21, "restored": 21, "missing": 0 },
-    "rlsEnabled": { "source": 21, "restored": 21 },
-    "policies": { "source": 62, "restored": 62 },
-    "rows": { "source": 26, "restored": 26 },
+    "tables": {
+      "source": 21,
+      "restored": 21,
+      "missing": 0
+    },
+    "rlsEnabled": {
+      "source": 21,
+      "restored": 21
+    },
+    "policies": {
+      "source": 62,
+      "restored": 62
+    },
+    "rows": {
+      "source": 26,
+      "restored": 26
+    },
     "contentHashParity": "ALL_MATCH",
     "restoredFingerprint": "1ec8b5b5dc7ae12dfe53c89cfd8d886c",
     "schemaVersion": 10,
     "productionUntouched": true,
     "apiExposureOfRestoredTarget": "none",
-    "applicationBootAgainstRestore": "BLOCKED-OPERATOR",
+    "applicationBootAgainstRestore": "PASS (DR-I2BOOT-20260811T190919Z)",
     "teardown": "dr_verify schema dropped after evidence capture",
     "result": "PASS-with-residual-gap"
   },
@@ -48,21 +67,66 @@
     "status": "CLOSED_ACCEPTED"
   },
   "matrix": [
-    { "id": "I1",  "capability": "Production database backup",        "status": "PASS" },
-    { "id": "I2",  "capability": "Database restore (non-production)", "status": "PARTIAL" },
-    { "id": "I3",  "capability": "Environment-variable recovery",     "status": "REVIEW" },
-    { "id": "I4",  "capability": "Secrets recovery procedure",        "status": "REVIEW" },
-    { "id": "I5",  "capability": "Failed deployment rollback",        "status": "PASS" },
-    { "id": "I6",  "capability": "DNS recovery plan",                 "status": "BLOCKED" },
-    { "id": "I7",  "capability": "Certificate/domain recovery",       "status": "BLOCKED" },
-    { "id": "I8",  "capability": "Hosting outage recovery",           "status": "ACCEPTED-RISK" },
-    { "id": "I9",  "capability": "Rollback to last-known-good build", "status": "PASS" },
-    { "id": "I10", "capability": "Measured infrastructure RPO",       "status": "PARTIAL" },
-    { "id": "I11", "capability": "Measured infrastructure RTO",       "status": "PARTIAL" }
+    {
+      "id": "I1",
+      "capability": "Production database backup",
+      "status": "PASS"
+    },
+    {
+      "id": "I2",
+      "capability": "Database restore (non-production)",
+      "status": "PARTIAL"
+    },
+    {
+      "id": "I3",
+      "capability": "Environment-variable recovery",
+      "status": "REVIEW"
+    },
+    {
+      "id": "I4",
+      "capability": "Secrets recovery procedure",
+      "status": "REVIEW"
+    },
+    {
+      "id": "I5",
+      "capability": "Failed deployment rollback",
+      "status": "PASS"
+    },
+    {
+      "id": "I6",
+      "capability": "DNS recovery plan",
+      "status": "BLOCKED"
+    },
+    {
+      "id": "I7",
+      "capability": "Certificate/domain recovery",
+      "status": "BLOCKED"
+    },
+    {
+      "id": "I8",
+      "capability": "Hosting outage recovery",
+      "status": "ACCEPTED-RISK"
+    },
+    {
+      "id": "I9",
+      "capability": "Rollback to last-known-good build",
+      "status": "PASS"
+    },
+    {
+      "id": "I10",
+      "capability": "Measured infrastructure RPO",
+      "status": "PARTIAL"
+    },
+    {
+      "id": "I11",
+      "capability": "Measured infrastructure RTO",
+      "status": "PARTIAL"
+    }
   ],
   "companionEvidence": [
     "docs/TASK-16-I2-RESTORE-DRILL.md",
-    "docs/TASK-16-I3-I4-ENV-SECRETS.md"
+    "docs/TASK-16-I3-I4-ENV-SECRETS.md",
+    "docs/TASK-16-I2-APP-BOOT-DRILL.md"
   ],
   "domainControl": {
     "domain": "legacyforgerealestate.com",
@@ -72,7 +136,76 @@
     "expectedTxt": "legacy-forge-verification=9ddef8dac41fc2afd1111a8948695e19",
     "result": "DOMAIN_CONTROL_UNVERIFIED"
   },
-  "summary": { "PASS": 3, "REVIEW": 2, "PARTIAL": 3, "BLOCKED": 2, "ACCEPTED-RISK": 1 },
+  "summary": {
+    "PASS": 3,
+    "REVIEW": 2,
+    "PARTIAL": 3,
+    "BLOCKED": 2,
+    "ACCEPTED-RISK": 1
+  },
   "ownerAccepted": false,
-  "productionClearing": false
+  "productionClearing": false,
+  "appBootAgainstRestoreDrill": {
+    "id": "DR-I2BOOT-20260811T190919Z",
+    "executedAt": "2026-08-11T19:09:19Z",
+    "type": "application-boot-and-verification-against-isolated-restored-target",
+    "productionCredentialsUsed": false,
+    "targetPubliclyExposed": false,
+    "preBoot": {
+      "schemaVersion": 10,
+      "collections": 35,
+      "records": 234,
+      "fingerprintMd5": "39ea74eef582ffc33d27df1adb616c89",
+      "fingerprintSha256": "bb23c2c32170a36ebd944ce11734829fae1ab81181e682da0d3defe0693177ad",
+      "matchesSourceSnapshot": true
+    },
+    "postBoot": {
+      "schemaVersion": 10,
+      "collections": 35,
+      "records": 234,
+      "fingerprintMd5": "39ea74eef582ffc33d27df1adb616c89",
+      "identicalToPreBoot": true,
+      "drift": []
+    },
+    "healthy": true,
+    "healthySeconds": 1.62,
+    "publicReadPaths": {
+      "checked": 7,
+      "passed": 7,
+      "paths": [
+        "/",
+        "/guides",
+        "/answers",
+        "/repository",
+        "/publications",
+        "/local",
+        "/attorneys"
+      ]
+    },
+    "permissionGatedReadPath": {
+      "path": "/admin/audit",
+      "signedOutBlocked": true,
+      "authenticatedReadable": true,
+      "credential": "non-production test actor bridge (DEV+VITE_E2E only)"
+    },
+    "destructiveMigrationDrift": false,
+    "unexpectedReseed": false,
+    "migrationWarnings": [],
+    "pageErrors": [],
+    "secretsOrPiiInEvidence": false,
+    "teardown": "isolated target destroyed; app instance terminated",
+    "productionInventoryUnchanged": true,
+    "result": "PASS"
+  },
+  "recoveryTimings": {
+    "databaseRestoreRtoSeconds": 0.265,
+    "applicationRecoveryRtoSeconds": 11.524,
+    "restoreToHealthySeconds": 2.475,
+    "note": "kept separate by design; not to be combined"
+  },
+  "i2SubCapabilities": {
+    "logicalRestoreMechanics": "PASS",
+    "applicationBootAgainstRestore": "PASS",
+    "pitr": "BLOCKED-OPERATOR"
+  }
 }
