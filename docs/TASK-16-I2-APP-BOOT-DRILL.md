@@ -80,3 +80,45 @@ different mechanisms and different clocks.
 | **Task 16 overall** | **PARTIAL** — pending PITR, I3/I4 vault confirmation, and the domain track |
 
 This drill does not clear production and is not owner-accepted.
+
+## 6. Freeze directive
+
+**I2 is FROZEN as of 2026-08-11T20:04Z.** Do not rerun the logical restore or application-boot
+drill unless one of the following materially changes:
+
+- database schema version or structure,
+- migration system behaviour,
+- deployment architecture,
+- recovery tooling or snapshot format.
+
+The application proved it can boot against a restored dataset without corrupting, reseeding, or
+drifting from the restored state — a materially stronger claim than backup-only recovery. Both
+sub-capabilities (logical restore mechanics, application boot against restore) are frozen PASS.
+PITR remains BLOCKED-OPERATOR as a separate, tracked capability.
+
+## 7. Owner-recorded verification summary
+
+| Check | Result |
+| --- | --- |
+| I2 Logical Restore Mechanics | PASS — frozen |
+| I2 Application Boot Against Restore | PASS — frozen |
+| Database Restore RTO | 0.265 s |
+| Application Recovery RTO | 11.524 s |
+| Pre/post fingerprint drift | none |
+| Public read-path checks | 7/7 PASS |
+| Permission-gated read behavior | PASS |
+| Migration/reseed drift | none |
+| Secret/PII leakage | none reported |
+| Isolated target cleanup | PASS |
+| Production post-drill inventory | unchanged |
+| I2 PITR | BLOCKED-OPERATOR |
+| I3 / I4 | REVIEW |
+| I6 / I7 | domain-dependent |
+| Task 16 overall | PARTIAL |
+
+The fastest remaining publication path is almost entirely Owner/operator work: close I3/I4 via
+vault confirmation, connect GitHub (Task 14), configure branch protection (Task 15), register
+and verify the domain, run the T17-1/T17-10 atomic migration, close T17-9 crawl readiness, close
+domain-dependent I6/I7, resolve or accept-disposition PITR, run the Task 16 final classification,
+close T17-7 and the full Task 17 release audit, then Task 18 only after explicit launch
+authorization. The next smallest blocker is I3/I4 vault confirmation.
