@@ -39,13 +39,13 @@ domain registration and is tracked under T17-1/T17-10, not under I3.
 
 ## 3. I4 — Secrets confirmation
 
-| Secret | Class | Store of record | Custodian | Recovery = restore or rotate | Verification method | Verified at | Result |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| Database service-role key | Platform-managed, not retrievable | Managed platform secret store | Platform | **Rotate** (restore impossible by design) | Service-role server path succeeds after rotation + redeploy | 2026-08-12T14:19:36Z | PASS |
-| Database password | Platform-managed, not retrievable | Managed platform secret store | Platform | **Rotate** | Platform reports healthy connection post-rotation | 2026-08-12T14:19:36Z | PASS |
-| Platform gateway key (`LOVABLE_API_KEY`) | Platform-managed | Managed platform secret store | Platform | **Rotate** | Presence probe = PRESENT; gateway credential verification endpoint | 2026-08-12T14:19:36Z | PASS |
-| CRM transport token (`HUBSPOT_API_KEY`) | Owner-supplied | Owner password vault → project runtime secret | Owner | **Restore** from vault; re-issue from vendor if absent | Absence probe = ABSENT; transport is fail-closed and reports "not configured" | 2026-08-12T14:19:36Z | NOT-PROVISIONED — transport disabled, fail-closed; required only when CRM delivery is enabled |
-| Partner credential (`APOLLO_API_KEY`) | Owner-supplied | Owner password vault → project runtime secret | Owner | **Restore** from vault; re-issue if absent | Absence probe = ABSENT; connector is fail-closed | 2026-08-12T14:19:36Z | NOT-PROVISIONED — connector disabled, fail-closed; required only when partner sync is enabled |
+| Secret | Class | Required? | Store of record | Custodian | Recovery = restore or rotate | Verification method | Verified at | Result |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Database service-role key | Platform-managed, not retrievable | Required | Managed platform secret store | Platform | **Rotate** (restore impossible by design) | Service-role server path succeeds after rotation + redeploy | 2026-08-12T14:19:36Z | PASS |
+| Database password | Platform-managed, not retrievable | Required | Managed platform secret store | Platform | **Rotate** | Platform reports healthy connection post-rotation | 2026-08-12T14:19:36Z | PASS |
+| Platform gateway key (`LOVABLE_API_KEY`) | Platform-managed | Required | Managed platform secret store | Platform | **Rotate** | Presence probe = PRESENT; gateway credential verification endpoint | 2026-08-12T14:19:36Z | PASS |
+| CRM transport token (`HUBSPOT_API_KEY`) | Owner-supplied | Optional now; required when CRM delivery is enabled | Owner password vault → project runtime secret | Owner | **Restore** from vault; re-issue from vendor if absent | Absence probe = ABSENT; transport is fail-closed and reports "not configured" | 2026-08-12T14:19:36Z | NOT-PROVISIONED — transport disabled, fail-closed |
+| Partner credential (`APOLLO_API_KEY`) | Owner-supplied | Optional now; required when partner sync is enabled | Owner password vault → project runtime secret | Owner | **Restore** from vault; re-issue if absent | Absence probe = ABSENT; connector is fail-closed | 2026-08-12T14:19:36Z | NOT-PROVISIONED — connector disabled, fail-closed |
 
 **I4 required set:** 3 of 3 currently-required secrets PASS. The two owner-supplied integration
 credentials are **not provisioned and not required** in the current configuration — both call
