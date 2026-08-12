@@ -49,5 +49,8 @@ artifact. Only names, classifications, custodians, and procedures are recorded.
 | No secret values echoed to CI logs | PASS (CI workflow prints no env dumps) |
 | Secret restored into a non-production verification target | NOT EXERCISED — requires the separate non-production project from I2 check 8 |
 
-**I4 status:** REVIEW → closes to PASS when the owner confirms vault entries for both
-owner-supplied secrets and completes a secret-restore verification in the non-production target.
+**I4 status:** **PASS** — confirmed 2026-08-12T14:19:36Z by `VC-I3I4-20260812T141936Z`
+(see `TASK-16-I3-I4-VAULT-CONFIRMATION.md`). 3/3 currently-required secrets verified
+(platform-managed, rotate-only). The two owner-supplied integration credentials are
+NOT-PROVISIONED and fail closed; they become required — with a vault entry and restore
+verification — only when CRM delivery or partner sync is enabled.
