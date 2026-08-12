@@ -70,6 +70,9 @@ an application restore RTO of **0.248 s** and remains CLOSED AND ACCEPTED.
   BLOCKED-OPERATOR as a distinct tracked capability.
 - **I3/I4** — **CLOSED PASS 2026-08-12T14:19:36Z** by vault confirmation
   `VC-I3I4-20260812T141936Z` (evidence-only, non-destructive, no values recorded).
+  **Owner-confirmed PASS 2026-08-12T15:04Z.** `HUBSPOT_API_KEY` and `APOLLO_API_KEY`
+  remain NOT-PROVISIONED and fail-closed; they become required recovery items (and must
+  receive vault + restore verification) only when those integrations are activated.
 - **I6/I7** — depends on domain registration; held with T17-1/T17-10. **Next blockers, both
   Owner-side:** GitHub connection (unlocks Tasks 14/15) and final-domain registration
   (unlocks T17-1/T17-10, then I6/I7).
@@ -77,6 +80,27 @@ an application restore RTO of **0.248 s** and remains CLOSED AND ACCEPTED.
 Task 16 remains **PARTIAL** — not PASS, not owner-accepted, not production-clearing.
 It moves to PASS when I2 PITR is resolved or accepted-dispositioned and I6/I7 close with the
 domain track.
+
+## 6. Locked release sequence (Owner-confirmed 2026-08-12T15:04Z)
+
+I2 frozen PASS. I3/I4 closed PASS. No production-clearing effect.
+
+Parallel Owner tracks (start now):
+- GitHub connection → first observable Actions run → close Task 14 → configure/verify
+  branch protection → close Task 15.
+- Register `legacyforgerealestate.com` → supply registrar evidence → add + verify TXT
+  `legacy-forge-verification=9ddef8dac41fc2afd1111a8948695e19` → atomic T17-1/T17-10
+  migration → close T17-9 → close I6/I7.
+
+PITR disposition: run platform PITR drill when operator access permits; if the platform
+prevents a safe separate-target drill, preserve BLOCKED-OPERATOR and handle its final
+disposition explicitly in Task 17 rather than treating it as passed.
+
+Full path once GitHub + domain evidence arrive:
+Task 14 → Task 15 → T17-1/T17-10 → T17-9 → I6/I7 → Task 16 final classification →
+T17-7 → full Task 17 audit → explicit Owner authorization → Task 18 launch.
+
+Feature development is paused; the project stays focused on these remaining release gates.
 
 ## 6. Companion evidence
 
