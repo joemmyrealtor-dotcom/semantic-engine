@@ -18,9 +18,9 @@ artifact. Only names, classifications, custodians, and procedures are recorded.
 | `RATE_LIMIT_ADAPTER` | Required in production (`supabase`) | Owner-set | Owner | Re-set to `supabase` | H1 gate verifier reports adapter = supabase; absence fails closed |
 | `DEMO_API_KEY` | Must remain **unset** in production | n/a | Owner | Confirm absence after any environment rebuild | Deployment check asserts the variable is not present |
 
-**I3 status:** REVIEW → closes to PASS when the owner confirms a vault entry exists for every
-owner-set row (`PUBLIC_SITE_ORIGIN`, `RATE_LIMIT_ADAPTER`) and attests the `DEMO_API_KEY`
-absence check.
+**I3 status:** **PASS** — confirmed 2026-08-12T14:19:36Z by `VC-I3I4-20260812T141936Z`
+(see `TASK-16-I3-I4-VAULT-CONFIRMATION.md`). 6/6 required-now variables verified;
+`PUBLIC_SITE_ORIGIN` is deferred to domain cutover and tracked under T17-1/T17-10.
 
 ## 2. I4 — Secrets inventory
 
