@@ -22,15 +22,15 @@ package or anywhere in the repository.
 
 ## 2. I3 — Environment-variable confirmation
 
-| Variable | Classification | Store of record | Custodian | Recovery procedure | Verification method | Verified at | Result |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| `VITE_SUPABASE_URL` | Non-secret, platform-generated | Platform build env | Platform | Automatic re-injection on rebuild | Presence probe + resolved backend host at boot | 2026-08-12T14:19:36Z | PASS |
-| `VITE_SUPABASE_PUBLISHABLE_KEY` | Publishable, platform-generated | Platform build env | Platform | Automatic re-injection on rebuild | Presence probe + anonymous public read succeeds | 2026-08-12T14:19:36Z | PASS |
-| `VITE_SUPABASE_PROJECT_ID` | Non-secret, platform-generated | Platform build env | Platform | Automatic re-injection on rebuild | Presence probe + matches backend URL host | 2026-08-12T14:19:36Z | PASS |
-| `SUPABASE_URL` | Non-secret, platform-generated | Platform server runtime binding | Platform | Re-bind runtime env | Presence probe in server runtime | 2026-08-12T14:19:36Z | PASS |
-| `RATE_LIMIT_ADAPTER` | Non-secret, owner-set | Project runtime env | Owner | Re-set to `supabase`; fail-closed if absent in production | Presence probe = `supabase`; H1 verifier reports adapter = supabase | 2026-08-12T14:19:36Z | PASS |
-| `DEMO_API_KEY` | Must remain **unset** in production | n/a (negative control) | Owner | Confirm absence after every environment rebuild | Absence probe = ABSENT | 2026-08-12T14:19:36Z | PASS (absent) |
-| `PUBLIC_SITE_ORIGIN` / `VITE_PUBLIC_SITE_ORIGIN` | Non-secret, owner-set | Project runtime env; final value held by Owner | Owner | Re-enter the final origin at domain cutover | 126-URL canonical/sitemap/OG resolution matrix | — | DEFERRED — not required before domain cutover (T17-1/T17-10) |
+| Variable | Classification | Required? | Store of record | Custodian | Recovery procedure | Verification method | Verified at | Result |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `VITE_SUPABASE_URL` | Non-secret, platform-generated | Required | Platform build env | Platform | Automatic re-injection on rebuild | Presence probe + resolved backend host at boot | 2026-08-12T14:19:36Z | PASS |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Publishable, platform-generated | Required | Platform build env | Platform | Automatic re-injection on rebuild | Presence probe + anonymous public read succeeds | 2026-08-12T14:19:36Z | PASS |
+| `VITE_SUPABASE_PROJECT_ID` | Non-secret, platform-generated | Required | Platform build env | Platform | Automatic re-injection on rebuild | Presence probe + matches backend URL host | 2026-08-12T14:19:36Z | PASS |
+| `SUPABASE_URL` | Non-secret, platform-generated | Required (server) | Platform server runtime binding | Platform | Re-bind runtime env | Presence probe in server runtime | 2026-08-12T14:19:36Z | PASS |
+| `RATE_LIMIT_ADAPTER` | Non-secret, owner-set | Required (production) | Project runtime env | Owner | Re-set to `supabase`; fail-closed if absent in production | Presence probe = `supabase`; H1 verifier reports adapter = supabase | 2026-08-12T14:19:36Z | PASS |
+| `DEMO_API_KEY` | Must remain **unset** in production | Required ABSENT | n/a (negative control) | Owner | Confirm absence after every environment rebuild | Absence probe = ABSENT | 2026-08-12T14:19:36Z | PASS (absent) |
+| `PUBLIC_SITE_ORIGIN` / `VITE_PUBLIC_SITE_ORIGIN` | Non-secret, owner-set | Optional now; required at domain cutover | Project runtime env; final value held by Owner | Owner | Re-enter the final origin at domain cutover | 126-URL canonical/sitemap/OG resolution matrix | — | DEFERRED — not required before domain cutover (T17-1/T17-10) |
 
 **I3 required set:** 6 of 6 required-now variables PASS. The single deferred row is gated on
 domain registration and is tracked under T17-1/T17-10, not under I3.
