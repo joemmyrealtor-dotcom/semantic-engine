@@ -68,17 +68,20 @@ an application restore RTO of **0.248 s** and remains CLOSED AND ACCEPTED.
   Do not rerun unless database schema, migration system, deployment architecture, or recovery
   tooling materially changes. Platform PITR into a separate non-production project remains
   BLOCKED-OPERATOR as a distinct tracked capability.
-- **I3/I4** — owner confirms a vault entry exists for every owner-set variable and secret
-  (inventories complete in `TASK-16-I3-I4-ENV-SECRETS.md`). **Next smallest blocker.**
-- **I6/I7** — depends on domain registration; held with T17-1/T17-10.
+- **I3/I4** — **CLOSED PASS 2026-08-12T14:19:36Z** by vault confirmation
+  `VC-I3I4-20260812T141936Z` (evidence-only, non-destructive, no values recorded).
+- **I6/I7** — depends on domain registration; held with T17-1/T17-10. **Next blockers, both
+  Owner-side:** GitHub connection (unlocks Tasks 14/15) and final-domain registration
+  (unlocks T17-1/T17-10, then I6/I7).
 
 Task 16 remains **PARTIAL** — not PASS, not owner-accepted, not production-clearing.
-It moves to PASS when I2 PITR is resolved or accepted-dispositioned, I3/I4 vault-confirmed,
-and I6/I7 close with the domain track.
+It moves to PASS when I2 PITR is resolved or accepted-dispositioned and I6/I7 close with the
+domain track.
 
 ## 6. Companion evidence
 
 - `docs/TASK-16-I2-RESTORE-DRILL.md` — non-production restore drill `DR-I2-20260811T173051Z`
 - `docs/TASK-16-I2-APP-BOOT-DRILL.md` — application boot against restore `DR-I2BOOT-20260811T190919Z`
 - `docs/TASK-16-I3-I4-ENV-SECRETS.md` — environment-variable and secrets recovery inventories
+- `docs/TASK-16-I3-I4-VAULT-CONFIRMATION.md` — I3/I4 vault confirmation `VC-I3I4-20260812T141936Z`
 
