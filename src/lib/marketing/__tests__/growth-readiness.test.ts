@@ -10,9 +10,24 @@ import {
 } from "../proof-operations";
 import { buildAcquisitionCadence, SPHERE_MIN_GAP_DAYS, WEEKLY_QUOTA } from "../acquisition-cadence";
 import { buildGrowthMeasurement, GROWTH_METRICS } from "../growth-metrics";
-import { NINETY_DAY_TARGETS, compareTargets } from "../growth-targets";
-import { CAMPAIGN_ASSETS, buildCampaignReadiness, campaignViolations } from "../acquisition-campaigns";
-import { PAID_BLUEPRINTS, PAID_PREREQUISITES, buildPaidReadiness } from "../paid-readiness";
+import { NINETY_DAY_TARGETS, RECALIBRATION_RULE, RECALIBRATION_WINDOW_DAYS, TARGET_LABEL, compareTargets } from "../growth-targets";
+import {
+  CAMPAIGN_ASSETS,
+  REQUIRED_SEGMENTS,
+  REQUIRED_TRACKS,
+  buildCampaignReadiness,
+  campaignViolations,
+} from "../acquisition-campaigns";
+import { PAID_BLUEPRINTS, PAID_PREREQUISITES, SEARCH_CLUSTERS, buildPaidReadiness } from "../paid-readiness";
+import {
+  AUDIENCE_FUNNELS,
+  FUNNEL_STAGE_KEYS,
+  REQUIRED_AUDIENCE_CLASSES,
+  buildAcquisitionFunnel,
+  governedPaths,
+  validateFunnel,
+} from "../acquisition-funnel";
+import { indexablePaths } from "../indexation";
 import { CLASSIFICATION_STAGE, FUNNEL_STAGES, buildFunnelMap, funnelLeaks } from "../funnel-map";
 
 describe("brand operating system", () => {
@@ -147,12 +162,37 @@ describe("campaign drafts", () => {
     expect(buildCampaignReadiness().activated).toBe(0);
   });
 
-  it("covers pre-launch, launch, reactivation, and partner phases", () => {
+  it("covers pre-launch, launch, education, reactivation, partner, and post-launch phases", () => {
     const { byPhase } = buildCampaignReadiness();
     expect(byPhase["pre-launch"]).toBeGreaterThan(0);
     expect(byPhase.launch).toBeGreaterThan(0);
+    expect(byPhase.education).toBeGreaterThan(0);
     expect(byPhase.reactivation).toBeGreaterThan(0);
     expect(byPhase["referral-partner"]).toBeGreaterThan(0);
+    expect(byPhase["post-launch"]).toBeGreaterThan(0);
+  });
+
+  it("covers every required Task 37 track", () => {
+    const report = buildCampaignReadiness();
+    expect(report.missingTracks).toEqual([]);
+    for (const track of REQUIRED_TRACKS) expect(report.byTrack[track]).toBeGreaterThan(0);
+  });
+
+  it("covers every required audience segment", () => {
+    const report = buildCampaignReadiness();
+    expect(report.missingSegments).toEqual([]);
+    for (const segment of REQUIRED_SEGMENTS) expect(report.bySegment[segment]).toBeGreaterThan(0);
+  });
+
+  it("carries a deterministic testable timeline with a 14-day pre-launch run-up and launch day", () => {
+    const report = buildCampaignReadiness(new Date("2026-01-01T00:00:00.000Z"));
+    const again = buildCampaignReadiness(new Date("2026-06-01T00:00:00.000Z"));
+    expect(report.timeline).toEqual(again.timeline);
+    const offsets = report.timeline.map(t => t.dayOffset);
+    expect(Math.min(...offsets)).toBe(-14);
+    expect(offsets).toContain(0);
+    expect(Math.max(...offsets)).toBeGreaterThanOrEqual(30);
+    expect(report.timeline.every(t => Number.isInteger(t.dayOffset))).toBe(true);
   });
 });
 
@@ -200,5 +240,174 @@ describe("acquisition funnel map", () => {
   it("detects a broken stage", () => {
     const broken = FUNNEL_STAGES.map(s => (s.id === "awareness" ? { ...s, entryPaths: [], ctaPath: "" } : s));
     expect(funnelLeaks(broken).some(l => l.severity === "BLOCKER")).toBe(true);
+  });
+});
+
+
+describe("Task 36 canonical targets", () => {
+  it("matches the authorized target set exactly", () => {
+    const byId = Object.fromEntries(NINETY_DAY_TARGETS.map(t => [t.metricId, t]));
+    expect(byId["qualified_visitors"]!.target).toBe(1500);
+    expect(byId["guide_downloads"]!.target).toBe(150);
+    expect(byId["assessment_completions"]!.target).toBe(75);
+    expect(byId["qualified_leads"]!.target).toBe(40);
+    expect(byId["consultation_requests"]!.target).toBe(20);
+    expect(byId["signed_clients"]!.target).toBe(10);
+    expect(byId["referral_relationships"]!.target).toBe(10);
+    expect(NINETY_DAY_TARGETS).toHaveLength(8);
+  });
+
+  it("keeps closed/pending as an explicit 3–5 range", () => {
+    const closed = NINETY_DAY_TARGETS.find(t => t.metricId === "closed_or_pending")!;
+    expect(closed.isRange).toBe(true);
+    expect(closed.target).toBe(3);
+    expect(closed.targetMax).toBe(5);
+    expect(closed.display).toBe("3–5");
+  });
+
+  it("labels every target TARGET and carries the 30-day recalibration rule", () => {
+    expect(NINETY_DAY_TARGETS.every(t => t.status === "TARGET")).toBe(true);
+    expect(TARGET_LABEL).toMatch(/TARGET/);
+    expect(RECALIBRATION_WINDOW_DAYS).toBe(30);
+    expect(RECALIBRATION_RULE).toMatch(/30 days/);
+    expect(RECALIBRATION_RULE).toMatch(/operational benchmark/i);
+    for (const c of compareTargets([], NINETY_DAY_TARGETS)) {
+      expect(c.label_kind).toBe(TARGET_LABEL);
+      expect(c.recalibration).toBe(RECALIBRATION_RULE);
+    }
+  });
+
+  it("never compares the qualified-visitor target to raw sessions", () => {
+    const qualified = NINETY_DAY_TARGETS.find(t => t.metricId === "qualified_visitors")!;
+    expect(qualified.measurable).toBe(false);
+    expect(NINETY_DAY_TARGETS.some(t => t.metricId === "sessions")).toBe(false);
+    const comparisons = compareTargets(
+      [{ id: "sessions", status: "MEASURED", value: 9999 }, { id: "qualified_visitors", status: "MEASURED", value: 9999 }],
+      NINETY_DAY_TARGETS,
+    );
+    const qc = comparisons.find(c => c.metricId === "qualified_visitors")!;
+    expect(qc.status).toBe("TARGET_ONLY");
+    expect(qc.actual).toBeUndefined();
+  });
+
+  it("registers qualified_visitors as a distinct, uninstrumented metric", () => {
+    const spec = GROWTH_METRICS.find(m => m.id === "qualified_visitors")!;
+    expect(spec.system).toBe("not-instrumented");
+    const reading = buildGrowthMeasurement().readings.find(r => r.id === "qualified_visitors")!;
+    expect(reading.status).not.toBe("MEASURED");
+    expect(reading.value).toBeUndefined();
+    expect(GROWTH_METRICS.some(m => m.id === "referral_relationships")).toBe(true);
+    expect(GROWTH_METRICS.some(m => m.id === "closed_or_pending")).toBe(true);
+  });
+});
+
+describe("Task 33 paid measurement readiness", () => {
+  it("covers the five high-intent Google clusters with full blueprint fields", () => {
+    expect(SEARCH_CLUSTERS.map(c => c.id).sort()).toEqual(
+      ["distressed-preforeclosure", "downsizing", "equity-sell-vs-rent", "probate-inherited", "seller-intent"],
+    );
+    const governed = new Set(governedPaths());
+    for (const c of SEARCH_CLUSTERS) {
+      expect(c.objective.length).toBeGreaterThan(0);
+      expect(c.destinations.length).toBeGreaterThan(0);
+      for (const d of c.destinations) expect(governed.has(d)).toBe(true);
+      expect(c.primaryConversionAction.length).toBeGreaterThan(0);
+      expect(c.negativeConcepts.length).toBeGreaterThan(0);
+      expect(c.budgetGuardrail).toMatch(/No budget is authorized/);
+      expect(c.stopConditions.length).toBeGreaterThan(0);
+      expect(c.measurementPrerequisites.length).toBeGreaterThan(0);
+      expect(c.status).toBe("BLOCKED");
+      expect(c.activated).toBe(false);
+    }
+  });
+
+  it("designs Google enhanced conversions around Data Manager / API-compatible first-party measurement", () => {
+    const google = PAID_BLUEPRINTS.find(b => b.platform === "google-search")!;
+    expect(google.measurement).toMatch(/Data Manager/);
+    expect(google.measurement).toMatch(/first-party/i);
+    expect(google.measurement).toMatch(/not a deprecated legacy-only offline click-ID import/i);
+    expect(google.measurement).toMatch(/Nothing is connected/i);
+  });
+
+  it("keeps Meta on future Conversions API + CRM quality signals, disconnected", () => {
+    const meta = PAID_BLUEPRINTS.find(b => b.platform === "meta")!;
+    expect(meta.measurement).toMatch(/Conversions API/);
+    expect(meta.measurement).toMatch(/CRM lead-quality signals/i);
+    expect(meta.measurement).toMatch(/not connected or sent today/i);
+    expect(meta.activated).toBe(false);
+  });
+
+  it("uses platform-specific housing compliance wording", () => {
+    const google = PAID_BLUEPRINTS.find(b => b.platform === "google-search")!;
+    const meta = PAID_BLUEPRINTS.find(b => b.platform === "meta")!;
+    expect(google.housingCompliance).toMatch(/personalized-advertising restrictions for housing/i);
+    expect(google.housingCompliance).toMatch(/does not use Meta's 'Special Ad Category' label/i);
+    expect(meta.housingCompliance).toMatch(/Housing Special Ad Category/);
+    for (const b of PAID_BLUEPRINTS) {
+      if (b.platform.startsWith("google") || b.platform === "local-services") {
+        expect(b.housingCompliance).not.toMatch(/Special Ad Category is mandatory/);
+      }
+    }
+  });
+
+  it("keeps the hard activation gate blocked on every required item", () => {
+    const report = buildPaidReadiness();
+    expect(report.activation).toBe("BLOCKED");
+    expect(report.unmet).toBe(PAID_PREREQUISITES.length);
+    const ids = PAID_PREREQUISITES.map(p => p.id).sort();
+    expect(ids).toEqual(["analytics", "budget", "compliance", "crm", "domain", "measurement", "publication"]);
+  });
+});
+
+describe("acquisition funnel (source → client → referral loop)", () => {
+  const report = buildAcquisitionFunnel();
+
+  it("covers every required audience class across every stage", () => {
+    expect(report.status).toBe("READY");
+    expect(report.blockers).toBe(0);
+    expect(AUDIENCE_FUNNELS.map(p => p.audience).sort()).toEqual([...REQUIRED_AUDIENCE_CLASSES].sort());
+    for (const p of AUDIENCE_FUNNELS) {
+      for (const key of FUNNEL_STAGE_KEYS) expect(String(p[key]).length).toBeGreaterThan(0);
+    }
+  });
+
+  it("only maps to governed public paths and adds no indexable URLs", () => {
+    const governed = new Set(governedPaths());
+    const before = indexablePaths().length;
+    for (const p of AUDIENCE_FUNNELS) {
+      for (const path of [p.canonicalPage, p.guideOrAssessment, p.leadCapture, p.consultation, p.ctaPath, p.reviewReferralPath]) {
+        expect(governed.has(path)).toBe(true);
+      }
+    }
+    expect(indexablePaths().length).toBe(before);
+  });
+
+  it("closes a review / referral loop for every audience", () => {
+    for (const p of AUDIENCE_FUNNELS) {
+      expect(p.reviewReferralLoop.trim().length).toBeGreaterThan(0);
+      expect(p.reviewReferralPath.startsWith("/")).toBe(true);
+    }
+  });
+
+  it("detects a missing stage, an invalid path, and a missing referral loop", () => {
+    const brokenStage = AUDIENCE_FUNNELS.map(p => (p.audience === "future-seller" ? { ...p, leadCapture: "" } : p));
+    expect(validateFunnel(brokenStage).some(f => f.severity === "BLOCKER" && f.stage === "leadCapture")).toBe(true);
+
+    const brokenPath = AUDIENCE_FUNNELS.map(p => (p.audience === "investor" ? { ...p, canonicalPage: "/not-a-real-page" } : p));
+    expect(validateFunnel(brokenPath).some(f => f.severity === "BLOCKER" && /governed route inventory/.test(f.reason))).toBe(true);
+
+    const brokenLoop = AUDIENCE_FUNNELS.map(p => (p.audience === "downsizer" ? { ...p, reviewReferralPath: "/nope" } : p));
+    expect(validateFunnel(brokenLoop).some(f => f.stage === "reviewReferralLoop")).toBe(true);
+
+    const missingAudience = AUDIENCE_FUNNELS.filter(p => p.audience !== "past-client");
+    expect(validateFunnel(missingAudience).some(f => f.stage === "coverage")).toBe(true);
+  });
+
+  it("carries no PII and no fabricated proof or results", () => {
+    const text = JSON.stringify(AUDIENCE_FUNNELS) + JSON.stringify(CAMPAIGN_ASSETS.map(a => a.body));
+    expect(text).not.toMatch(/@[a-z0-9-]+\.(?:com|net|org)/i);
+    expect(text).not.toMatch(/\b\d{3}[-.\s]\d{3}[-.\s]\d{4}\b/);
+    expect(text).not.toMatch(/\b\d+\s*(?:5-star|star) reviews?\b/i);
+    expect(text).not.toMatch(/\bsold \d+ homes\b/i);
   });
 });
