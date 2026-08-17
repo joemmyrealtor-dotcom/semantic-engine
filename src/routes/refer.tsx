@@ -115,8 +115,9 @@ function ReferRoute() {
             <CheckCircle2 className="size-6 text-evergreen" aria-hidden="true" />
             <h2 className="mt-3 font-serif text-2xl text-heritage">Referral received</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              I will reach out to your client within one business day and let you know how it goes.
-              Nothing is shared with anyone else.
+              I will reach out to your client and let you know how it goes. Timing depends on the
+              situation and current availability, so no fixed turnaround is promised. Nothing is
+              shared with anyone else.
             </p>
             <Button asChild className="mt-5" variant="outline">
               <Link to="/for/$audience" params={{ audience: "attorneys" }}>
