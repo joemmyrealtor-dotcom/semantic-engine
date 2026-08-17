@@ -82,6 +82,7 @@ import { Route as AdminRecoveryRouteImport } from './routes/admin.recovery'
 import { Route as AdminPartnersRouteImport } from './routes/admin.partners'
 import { Route as AdminMonitoringRouteImport } from './routes/admin.monitoring'
 import { Route as AdminLeadDeliveryRouteImport } from './routes/admin.lead-delivery'
+import { Route as AdminGrowthCommandRouteImport } from './routes/admin.growth-command'
 import { Route as AdminDeploymentRouteImport } from './routes/admin.deployment'
 import { Route as AdminCutoverRouteImport } from './routes/admin.cutover'
 import { Route as AdminBackupsRouteImport } from './routes/admin.backups'
@@ -455,6 +456,11 @@ const AdminLeadDeliveryRoute = AdminLeadDeliveryRouteImport.update({
   path: '/admin/lead-delivery',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminGrowthCommandRoute = AdminGrowthCommandRouteImport.update({
+  id: '/admin/growth-command',
+  path: '/admin/growth-command',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminDeploymentRoute = AdminDeploymentRouteImport.update({
   id: '/admin/deployment',
   path: '/admin/deployment',
@@ -532,6 +538,7 @@ export interface FileRoutesByFullPath {
   '/admin/backups': typeof AdminBackupsRoute
   '/admin/cutover': typeof AdminCutoverRoute
   '/admin/deployment': typeof AdminDeploymentRoute
+  '/admin/growth-command': typeof AdminGrowthCommandRoute
   '/admin/lead-delivery': typeof AdminLeadDeliveryRoute
   '/admin/monitoring': typeof AdminMonitoringRoute
   '/admin/partners': typeof AdminPartnersRoute
@@ -614,6 +621,7 @@ export interface FileRoutesByTo {
   '/admin/backups': typeof AdminBackupsRoute
   '/admin/cutover': typeof AdminCutoverRoute
   '/admin/deployment': typeof AdminDeploymentRoute
+  '/admin/growth-command': typeof AdminGrowthCommandRoute
   '/admin/lead-delivery': typeof AdminLeadDeliveryRoute
   '/admin/monitoring': typeof AdminMonitoringRoute
   '/admin/partners': typeof AdminPartnersRoute
@@ -697,6 +705,7 @@ export interface FileRoutesById {
   '/admin/backups': typeof AdminBackupsRoute
   '/admin/cutover': typeof AdminCutoverRoute
   '/admin/deployment': typeof AdminDeploymentRoute
+  '/admin/growth-command': typeof AdminGrowthCommandRoute
   '/admin/lead-delivery': typeof AdminLeadDeliveryRoute
   '/admin/monitoring': typeof AdminMonitoringRoute
   '/admin/partners': typeof AdminPartnersRoute
@@ -781,6 +790,7 @@ export interface FileRouteTypes {
     | '/admin/backups'
     | '/admin/cutover'
     | '/admin/deployment'
+    | '/admin/growth-command'
     | '/admin/lead-delivery'
     | '/admin/monitoring'
     | '/admin/partners'
@@ -863,6 +873,7 @@ export interface FileRouteTypes {
     | '/admin/backups'
     | '/admin/cutover'
     | '/admin/deployment'
+    | '/admin/growth-command'
     | '/admin/lead-delivery'
     | '/admin/monitoring'
     | '/admin/partners'
@@ -945,6 +956,7 @@ export interface FileRouteTypes {
     | '/admin/backups'
     | '/admin/cutover'
     | '/admin/deployment'
+    | '/admin/growth-command'
     | '/admin/lead-delivery'
     | '/admin/monitoring'
     | '/admin/partners'
@@ -1028,6 +1040,7 @@ export interface RootRouteChildren {
   AdminBackupsRoute: typeof AdminBackupsRoute
   AdminCutoverRoute: typeof AdminCutoverRoute
   AdminDeploymentRoute: typeof AdminDeploymentRoute
+  AdminGrowthCommandRoute: typeof AdminGrowthCommandRoute
   AdminLeadDeliveryRoute: typeof AdminLeadDeliveryRoute
   AdminMonitoringRoute: typeof AdminMonitoringRoute
   AdminPartnersRoute: typeof AdminPartnersRoute
@@ -1581,6 +1594,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLeadDeliveryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/growth-command': {
+      id: '/admin/growth-command'
+      path: '/admin/growth-command'
+      fullPath: '/admin/growth-command'
+      preLoaderRoute: typeof AdminGrowthCommandRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/deployment': {
       id: '/admin/deployment'
       path: '/admin/deployment'
@@ -1698,6 +1718,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminBackupsRoute: AdminBackupsRoute,
   AdminCutoverRoute: AdminCutoverRoute,
   AdminDeploymentRoute: AdminDeploymentRoute,
+  AdminGrowthCommandRoute: AdminGrowthCommandRoute,
   AdminLeadDeliveryRoute: AdminLeadDeliveryRoute,
   AdminMonitoringRoute: AdminMonitoringRoute,
   AdminPartnersRoute: AdminPartnersRoute,
