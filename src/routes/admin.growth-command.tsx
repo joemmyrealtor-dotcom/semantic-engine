@@ -14,9 +14,10 @@ import { buildBrandReadiness } from "@/lib/marketing/brand-system";
 import { buildProofOperationsReport } from "@/lib/marketing/proof-operations";
 import { buildAcquisitionCadence, CADENCE_KIND_LABEL, WEEKLY_QUOTA } from "@/lib/marketing/acquisition-cadence";
 import { buildGrowthMeasurement, type MetricReading } from "@/lib/marketing/growth-metrics";
-import { compareTargets, NINETY_DAY_TARGETS } from "@/lib/marketing/growth-targets";
+import { compareTargets, NINETY_DAY_TARGETS, RECALIBRATION_RULE, TARGET_LABEL } from "@/lib/marketing/growth-targets";
 import { buildCampaignReadiness, CAMPAIGN_ASSETS } from "@/lib/marketing/acquisition-campaigns";
 import { buildFunnelMap } from "@/lib/marketing/funnel-map";
+import { buildAcquisitionFunnel } from "@/lib/marketing/acquisition-funnel";
 import { buildPaidReadiness, PAID_BLUEPRINTS, PAID_GUARDRAILS } from "@/lib/marketing/paid-readiness";
 import { loadConversionEvents } from "@/lib/marketing/conversion-store";
 import { queuedLeads } from "@/lib/marketing/lead-capture";
@@ -94,6 +95,7 @@ function GrowthCommandPanel() {
   const campaigns = buildCampaignReadiness();
   const paid = buildPaidReadiness();
   const funnel = buildFunnelMap();
+  const acquisitionFunnel = buildAcquisitionFunnel();
 
   return (
     <>
@@ -107,6 +109,18 @@ function GrowthCommandPanel() {
           <StatCard label="Proof" value={proof.status} note={`${proof.publishable} publishable records`} />
           <StatCard label="Campaigns" value={campaigns.status} note={`${campaigns.total} drafts, ${campaigns.activated} activated`} />
           <StatCard label="Paid acquisition" value={paid.activation} note={`${paid.unmet} prerequisites unmet`} />
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <StatCard
+            label="Funnel readiness"
+            value={acquisitionFunnel.status}
+            note={`${acquisitionFunnel.audiences} audience classes · ${acquisitionFunnel.stages.length} stages · ${acquisitionFunnel.blockers} blockers`}
+          />
+          <StatCard
+            label="Campaign coverage"
+            value={`${campaigns.total} drafts`}
+            note={`${campaigns.missingTracks.length} tracks and ${campaigns.missingSegments.length} audience segments missing`}
+          />
         </div>
 
         <SectionTitle>Brand operating system</SectionTitle>
@@ -220,6 +234,43 @@ function GrowthCommandPanel() {
           ) : null}
         </div>
 
+        <SectionTitle>Acquisition funnel readiness (source → client → referral loop)</SectionTitle>
+        <div className="rounded-lg border border-border bg-card p-4 text-sm">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant={acquisitionFunnel.status === "READY" ? "default" : "destructive"}>{acquisitionFunnel.status}</Badge>
+            <span className="text-muted-foreground">{acquisitionFunnel.detail}</span>
+          </div>
+          <ul className="mt-3 space-y-2">
+            {acquisitionFunnel.paths.map(p => (
+              <li key={p.audience} className="border-t border-border pt-2 first:border-0 first:pt-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-medium">{p.label}</span>
+                  <Badge variant="secondary">{p.pipelineLabel}</Badge>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {p.source} → {p.canonicalPage} → {p.guideOrAssessment} → {p.leadCapture} → score → {p.crmSituation} → {p.consultation} → client → {p.reviewReferralPath}
+                </p>
+                <p className="text-xs text-muted-foreground">{p.reviewReferralLoop}</p>
+              </li>
+            ))}
+          </ul>
+          {acquisitionFunnel.findings.length > 0 ? (
+            <ul className="mt-3 list-disc pl-5 text-muted-foreground">
+              {acquisitionFunnel.findings.map((f, i) => (
+                <li key={i}>
+                  <Badge variant={f.severity === "BLOCKER" ? "destructive" : "secondary"} className="mr-2">
+                    {f.severity}
+                  </Badge>
+                  {f.audience} · {f.stage}: {f.reason}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          <p className="mt-2 text-xs text-muted-foreground">
+            Structural map only — no contact data, no PII, no external write, nothing activated.
+          </p>
+        </div>
+
         <SectionTitle>Measurement</SectionTitle>
         <div className="rounded-lg border border-border bg-card p-4">
           <p className="text-sm text-muted-foreground">
@@ -235,10 +286,10 @@ function GrowthCommandPanel() {
           </ul>
         </div>
 
-        <SectionTitle>90-day planning targets</SectionTitle>
+        <SectionTitle>90-day planning targets (Task 36)</SectionTitle>
         <div className="rounded-lg border border-border bg-card p-4 text-sm">
           <p className="text-muted-foreground">
-            Planning assumptions only — labelled TARGET, never presented as results or forecasts.
+            {TARGET_LABEL} only — never presented as results, forecasts, or benchmarks. {RECALIBRATION_RULE}
           </p>
           <ul className="mt-2">
             {comparisons.map(c => (
@@ -247,8 +298,9 @@ function GrowthCommandPanel() {
                 <span>{c.label}</span>
                 <span className="ml-auto tabular-nums">
                   {typeof c.actual === "number" ? `${c.actual} / ` : ""}
-                  {c.target}
+                  {c.display}
                 </span>
+                <p className="w-full text-xs text-muted-foreground">{c.note}</p>
               </li>
             ))}
           </ul>
@@ -263,7 +315,7 @@ function GrowthCommandPanel() {
                 <Badge variant="secondary">{a.status}</Badge>
                 <span className="font-medium">{a.subject ?? a.id}</span>
                 <span className="text-muted-foreground">
-                  {a.phase} · {a.channel} · {a.audience}
+                  {a.phase} · {a.track} · day {a.dayOffset} · {a.channel} · {a.audience}
                 </span>
                 <span className="ml-auto text-xs text-muted-foreground">NOT ACTIVATED</span>
               </li>
@@ -283,6 +335,8 @@ function GrowthCommandPanel() {
                 <div className="font-medium">{b.label}</div>
                 <p className="text-muted-foreground">{b.intent}</p>
                 <p className="text-xs text-muted-foreground">{b.audienceBasis}</p>
+                <p className="text-xs text-muted-foreground">{b.housingCompliance}</p>
+                <p className="text-xs text-muted-foreground">{b.measurement}</p>
               </li>
             ))}
           </ul>

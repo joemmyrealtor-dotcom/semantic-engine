@@ -16,6 +16,7 @@ export type MetricStatus = "MEASURED" | "UNAVAILABLE" | "NOT_CONNECTED" | "TARGE
 
 export type MetricSystem =
   | "app-events"
+  | "not-instrumented"
   | "search-console"
   | "ga4"
   | "crm"
@@ -42,11 +43,14 @@ export const GROWTH_METRICS: GrowthMetricSpec[] = [
   { id: "captured_leads", label: "Captured leads", group: "lead", system: "app-events", definition: "Lead payloads captured on this device." },
   { id: "qualified_leads", label: "Qualified leads", group: "lead", system: "app-events", definition: "Leads scored Qualified or Hot by the internal model." },
   { id: "hot_leads", label: "Hot leads", group: "lead", system: "app-events", definition: "Leads scored Hot by the internal model." },
+  { id: "qualified_visitors", label: "Qualified visitors", group: "traffic", system: "not-instrumented", definition: "Visitors matching the qualified-visitor definition (situation-relevant landing page + meaningful engagement depth). Distinct from raw sessions and NOT measurable yet — never compare the qualified-visitor target to a raw session count." },
   { id: "partner_referrals", label: "Partner referrals", group: "lead", system: "crm", definition: "Referrals attributed to a named referral professional. Requires CRM delivery verification." },
+  { id: "referral_relationships", label: "Referral relationships", group: "lead", system: "crm", definition: "Named referral professionals with a documented, reciprocal-free working relationship. CRM/operator-owned." },
   { id: "appointments", label: "Appointments", group: "sales", system: "crm", definition: "Booked consultations. CRM-owned." },
   { id: "show_rate", label: "Show rate", group: "sales", system: "crm", definition: "Appointments held ÷ appointments booked. CRM-owned." },
   { id: "signed_clients", label: "Signed clients", group: "sales", system: "crm", definition: "Signed engagements. CRM-owned." },
   { id: "closings", label: "Closings", group: "sales", system: "crm", definition: "Closed transactions. CRM-owned." },
+  { id: "closed_or_pending", label: "Closed or pending transactions", group: "sales", system: "crm", definition: "Transactions closed or under contract/pending. CRM-owned. Never estimated here." },
   { id: "revenue", label: "Revenue", group: "sales", system: "crm", definition: "Recorded revenue. CRM-owned. Never estimated or modelled here." },
   { id: "cpl", label: "Cost per lead (CPL)", group: "efficiency", system: "operator-entry", definition: "Spend ÷ captured leads. Requires verified spend, which does not exist while paid acquisition is blocked." },
   { id: "cpa", label: "Cost per acquisition (CPA)", group: "efficiency", system: "operator-entry", definition: "Spend ÷ signed clients. Requires verified spend and CRM outcomes." },
@@ -91,6 +95,7 @@ const NOT_CONNECTED_NOTE: Record<MetricSystem, string> = {
   crm: "CRM delivery is not verified. Sales-stage values cannot be read.",
   apollo: "Apollo is not connected. Outreach data cannot be read.",
   "operator-entry": "Requires verified spend and CRM outcomes; neither is available.",
+  "not-instrumented": "No instrumentation exists for this definition yet. The target remains TARGET_ONLY and must never be compared to raw sessions.",
 };
 
 export interface GrowthMeasurementInput {
@@ -151,6 +156,7 @@ export function buildGrowthMeasurement(
 
   const systemConnected: Record<MetricSystem, boolean> = {
     "app-events": true,
+    "not-instrumented": false,
     "search-console": availability.searchConsole,
     ga4: availability.ga4,
     crm: availability.crm,
