@@ -124,7 +124,8 @@ function GrowthCommandPanel() {
                   <Badge variant={f.severity === "BLOCKER" ? "destructive" : "secondary"} className="mr-2">
                     {f.severity}
                   </Badge>
-                  {f.message}
+                  <span className="mr-2 font-medium">{f.id}</span>
+                  {f.reason}
                 </li>
               ))}
             </ul>

@@ -27,7 +27,7 @@ describe("brand operating system", () => {
   it("flags fabricated proof claims", () => {
     const findings = validateBrandCopy({
       id: "test",
-      surface: "test",
+      
       text: "The #1 agent with hundreds of 5-star reviews — act now, guaranteed results!",
     });
     expect(findings.length).toBeGreaterThan(0);
