@@ -93,7 +93,8 @@ function ReferRoute() {
         <h1 className="mt-2 font-serif text-4xl text-heritage">Refer a client</h1>
         <p className="mt-4 text-muted-foreground">
           For attorneys, CPAs, fiduciaries, advisors, and senior service professionals. I will
-          contact your client within one business day and report the outcome back to you either way.
+          contact your client and report the outcome back to you either way. Timing depends on the
+          situation and current availability, so no fixed turnaround is promised.
         </p>
 
         <ul className="mt-6 space-y-2 rounded-lg border border-border bg-card p-5">
