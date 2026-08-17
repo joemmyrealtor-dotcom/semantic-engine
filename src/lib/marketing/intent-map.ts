@@ -188,8 +188,8 @@ function staticRecords(): SearchIntentRecord[] {
     record({
       path: "/about",
       pageType: "trust",
-      title: "About JM Advisory Press",
-      primaryKeyword: "jm advisory press",
+      title: "About Legacy Forge and Joe Melendez",
+      primaryKeyword: "legacy forge joe melendez",
       intent: "navigational",
       funnelStage: "consideration",
     }),

@@ -303,4 +303,4 @@ export function queuedLeads(): CrmLeadPayload[] {
 }
 
 export const CONSENT_TEXT =
-  "I agree to receive the requested guide and related follow-up from Legacy Forge / JM Advisory Press. I can unsubscribe at any time. My information is not sold.";
+  "I agree to receive the requested guide and related follow-up from Legacy Forge (Joe Melendez, DRE #01513916, Coldwell Banker Diamond). I can unsubscribe at any time. My information is not sold.";

@@ -42,7 +42,7 @@ function PublicHeader() {
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4 md:px-6">
         <Link to="/home" className="flex flex-col leading-tight">
           <span className="text-[10px] uppercase tracking-[0.22em] text-gold">
-            {BRAND.publisher}
+            {BRAND.eyebrow}
           </span>
           <span className="font-serif text-lg text-heritage">{BRAND.name}</span>
         </Link>

@@ -404,7 +404,9 @@ export function guideMarkdown(guide: GuideDefinition): string {
     `_${guide.promise}_`,
     "",
     `Audience: ${guide.audience}`,
-    `Version ${guide.version} · Legacy Forge, JM Advisory Press`,
+    `Version ${guide.version} · Legacy Forge`,
+    "",
+    LEGAL_DISCLOSURE,
     "",
   ];
   for (const s of guide.sections) {
