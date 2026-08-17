@@ -52,7 +52,7 @@ describe("public identity", () => {
       // (WS-001) in the local data layer. Neither reaches a public surface.
       if (f.endsWith(join("marketing", "positioning.ts"))) return false;
       if (f.endsWith(join("data", "seed.ts")) || f.endsWith(join("data", "db.ts"))) {
-        return !/JM Advisory Press/.test(text.replace(/"WS-001"[^\n]*/g, ""));
+        return /JM Advisory Press/.test(text.replace(/"WS-001"[^\n]*/g, ""));
       }
       return true;
     });
