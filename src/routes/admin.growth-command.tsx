@@ -16,6 +16,7 @@ import { buildAcquisitionCadence, CADENCE_KIND_LABEL, WEEKLY_QUOTA } from "@/lib
 import { buildGrowthMeasurement, type MetricReading } from "@/lib/marketing/growth-metrics";
 import { compareTargets, NINETY_DAY_TARGETS } from "@/lib/marketing/growth-targets";
 import { buildCampaignReadiness, CAMPAIGN_ASSETS } from "@/lib/marketing/acquisition-campaigns";
+import { buildFunnelMap } from "@/lib/marketing/funnel-map";
 import { buildPaidReadiness, PAID_BLUEPRINTS, PAID_GUARDRAILS } from "@/lib/marketing/paid-readiness";
 import { loadConversionEvents } from "@/lib/marketing/conversion-store";
 import { queuedLeads } from "@/lib/marketing/lead-capture";
@@ -92,6 +93,7 @@ function GrowthCommandPanel() {
   const comparisons = compareTargets(measurement.readings, NINETY_DAY_TARGETS);
   const campaigns = buildCampaignReadiness();
   const paid = buildPaidReadiness();
+  const funnel = buildFunnelMap();
 
   return (
     <>
@@ -180,6 +182,42 @@ function GrowthCommandPanel() {
             <p className="mt-3 text-muted-foreground">Weekly quotas met; sphere touches respect the two-week minimum gap.</p>
           )}
           <p className="mt-2 text-xs text-muted-foreground">Every item is a DRAFT. Nothing is scheduled or published from here.</p>
+        </div>
+
+        <SectionTitle>Acquisition funnel map</SectionTitle>
+        <div className="rounded-lg border border-border bg-card p-4 text-sm">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant={funnel.status === "MAPPED" ? "default" : "destructive"}>{funnel.status}</Badge>
+            <span className="text-muted-foreground">{funnel.detail}</span>
+          </div>
+          <ol className="mt-3 space-y-2">
+            {funnel.stages.map((s, i) => (
+              <li key={s.id} className="border-t border-border pt-2 first:border-0 first:pt-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="tabular-nums text-muted-foreground">{i + 1}.</span>
+                  <span className="font-medium">{s.label}</span>
+                  <Badge variant="secondary">{s.ctaLabel}</Badge>
+                  <span className="ml-auto text-xs text-muted-foreground">{s.owner}</span>
+                </div>
+                <p className="text-muted-foreground">{s.visitorIntent}</p>
+                <p className="text-xs text-muted-foreground">
+                  Advance: {s.advanceCriteria} · Measurement: {s.measurement}
+                </p>
+              </li>
+            ))}
+          </ol>
+          {funnel.leaks.length > 0 ? (
+            <ul className="mt-3 list-disc pl-5 text-muted-foreground">
+              {funnel.leaks.map((l, i) => (
+                <li key={i}>
+                  <Badge variant={l.severity === "BLOCKER" ? "destructive" : "secondary"} className="mr-2">
+                    {l.severity}
+                  </Badge>
+                  {l.stageId}: {l.reason}
+                </li>
+              ))}
+            </ul>
+          ) : null}
         </div>
 
         <SectionTitle>Measurement</SectionTitle>
