@@ -13,6 +13,7 @@ import { buildGrowthMeasurement, GROWTH_METRICS } from "../growth-metrics";
 import { NINETY_DAY_TARGETS, compareTargets } from "../growth-targets";
 import { CAMPAIGN_ASSETS, buildCampaignReadiness, campaignViolations } from "../acquisition-campaigns";
 import { PAID_BLUEPRINTS, PAID_PREREQUISITES, buildPaidReadiness } from "../paid-readiness";
+import { CLASSIFICATION_STAGE, FUNNEL_STAGES, buildFunnelMap, funnelLeaks } from "../funnel-map";
 
 describe("brand operating system", () => {
   it("defines pillars and a full CTA ladder", () => {
@@ -161,5 +162,43 @@ describe("paid readiness", () => {
     expect(report.activation).toBe("BLOCKED");
     expect(report.unmet).toBe(PAID_PREREQUISITES.length);
     expect(PAID_BLUEPRINTS.every(b => b.status === "BLOCKED" && b.activated === false)).toBe(true);
+  });
+});
+
+describe("acquisition funnel map", () => {
+  it("maps every stage with a forward CTA and no structural blockers", () => {
+    const map = buildFunnelMap();
+    expect(map.status).toBe("MAPPED");
+    expect(map.leaks.filter(l => l.severity === "BLOCKER")).toEqual([]);
+    expect(map.stages.every(s => s.ctaPath.length > 0 && s.advanceCriteria.length > 0)).toBe(true);
+  });
+
+  it("runs stranger → client → advocacy in order", () => {
+    expect(FUNNEL_STAGES.map(s => s.id)).toEqual([
+      "awareness",
+      "consideration",
+      "evaluation",
+      "capture",
+      "qualification",
+      "conversation",
+      "client",
+      "advocacy",
+    ]);
+  });
+
+  it("routes every lead classification to a real stage", () => {
+    const ids = new Set(FUNNEL_STAGES.map(s => s.id));
+    for (const stage of Object.values(CLASSIFICATION_STAGE)) expect(ids.has(stage)).toBe(true);
+  });
+
+  it("leaves sales-stage measurement to the CRM rather than estimating it", () => {
+    const client = FUNNEL_STAGES.find(s => s.id === "client")!;
+    expect(client.owner).toBe("crm");
+    expect(client.measurement).toMatch(/never estimated/i);
+  });
+
+  it("detects a broken stage", () => {
+    const broken = FUNNEL_STAGES.map(s => (s.id === "awareness" ? { ...s, entryPaths: [], ctaPath: "" } : s));
+    expect(funnelLeaks(broken).some(l => l.severity === "BLOCKER")).toBe(true);
   });
 });
