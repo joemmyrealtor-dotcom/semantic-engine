@@ -11,6 +11,7 @@
 // opt-out respecting.
 
 import { CTA_BY_RUNG, type CtaRung } from "./brand-system";
+import { LEGAL_DISCLOSURE, LICENSE } from "./positioning";
 
 export type CampaignPhase = "pre-launch" | "launch" | "education" | "reactivation" | "referral-partner" | "post-launch";
 
@@ -100,6 +101,7 @@ const BASE_GUARDRAILS = [
   "No urgency, scarcity, or fear framing.",
   "One-click opt-out on every list message; opt-outs honoured immediately.",
   "DRAFT only: no send, no schedule, no external write.",
+  "First-contact assets must render the licensee/responsible-broker disclosure (BPC 10140.6).",
 ];
 
 /**
@@ -144,6 +146,7 @@ function asset(input: AssetInput): CampaignAsset {
     status: "DRAFT",
     activated: false,
     guardrails: [...BASE_GUARDRAILS, ...(input.extraGuardrails ?? [])],
+    legalDisclosure: CAMPAIGN_LEGAL_DISCLOSURE,
   };
 }
 
