@@ -1,34 +1,46 @@
-## Read-only production health verification
+# Marketing Claim Sweep — Read-Only Findings and Proposed Corrections
 
-Scope: https://semantic-engine.lovable.app. No edits to code, schema, secrets, users, memberships, RLS, gate evidence, backup evidence, or publication state.
+Read-only sweep of rendered public routes/content and DRAFT outbound templates. No files were edited.
 
-### Checks
+## Items that should be corrected before production
 
-1. **Route reachability** — HTTP GET each of `/`, `/concepts`, `/publications`, `/agents`, `/operations`, `/integrations`, `/admin/monitoring`, `/admin/deployment`; expect 200.
-2. **Published/live** — confirm production URL serves the app (not a placeholder).
-3. **Public API**
-   - `GET /api/public/v1/catalog` → 200
-   - `GET /api/public/v1/registry/concepts` (no bearer) → 401
-   - `GET /api/public/v1/registry/concepts` with invalid bearer → 401
-   - `GET /api/public/v1/knowledge/foo` (no bearer) → 401
-   - `GET /api/public/v1/knowledge/foo` with invalid bearer → 401
-4. **Authoritative fingerprint** — sign in as Owner via managed Supabase session (if `LOVABLE_BROWSER_AUTH_STATUS=injected`), load `/admin/deployment`, capture fingerprint; expect `srv-a0840ca6`.
-5. **Launch gates** — on same page, verify H1 v7, H2 v4, H3 v3, H4 v3 all PASS on `srv-a0840ca6`.
-6. **Production GO** — verify GO panel shows UNLOCKED.
-7. **Monitoring** — load `/admin/monitoring`; classify any CRITICAL as server-authoritative vs. known client-local `MON-SEED-001` seed artifact.
-8. **Security scan** — `security--get_scan_results`; expect 0 critical.
-9. **Supabase linter** — `supabase--linter`; expect exactly 6 SECURITY DEFINER warnings, materially unchanged.
+### 1. Referral page promises a one-business-day contact (rendered-public)
+- `src/routes/refer.tsx:96` — "I will contact your client within one business day and report the outcome back to you either way."
+- `src/routes/refer.tsx:117` — "I will reach out to your client within one business day and let you know how it goes."
 
-### Method
+This is an explicit service-level promise and directly contradicts the neutral timing language already adopted on `/contact` ("Response times vary with the day and the volume of inquiries; no specific turnaround is promised.").
 
-- Playwright (headless) + curl for HTTP checks (screenshots per admin route).
-- Tool calls: `security--get_scan_results`, `supabase--linter`.
-- If `LOVABLE_BROWSER_AUTH_STATUS` ≠ `injected`, mark checks 4–7 unverifiable and report the signed-out limitation instead of attempting sign-in.
+### 2. Professional audience page promises same/next-business-day triage (rendered-public)
+- `src/lib/partners/pages.ts:238` — standards entry "Fast triage — same or next business day", rendered on `/for/$audience` via `src/routes/for.$audience.tsx:155`.
 
-### Output
+Same class of unsupported turnaround promise, on an indexed public route.
 
-Single report: each check with observed evidence (status codes, screenshot paths, fingerprint, gate versions, finding counts). Explicit notes on any unverifiable check. No file writes, no attestations, no state changes. Rollback baseline `BL-20260721T165326Z-postremediation` untouched.
+## Items reviewed and classified as acceptable (no change proposed)
 
-### Incident triggers (report only, do not remediate)
+| Location | Snippet | Class |
+|---|---|---|
+| `src/lib/marketing/content.ts:648` | "Book a no-cost strategy call…" | Rendered-public, factually verifiable (the call is free); no outcome claim |
+| `src/lib/marketing/content.ts:681` | "…no specific turnaround is promised." | Rendered-public, safely qualified |
+| `src/routes/contact.tsx:22-23` | "Response times vary… no specific turnaround is promised." | Rendered-public, safely qualified |
+| `src/components/guide-lead-form.tsx:79` | "You get the downloadable guide immediately." | Rendered-public, describes an actual instant download, not a service promise |
+| `src/lib/marketing/lead-magnets.ts` (multiple) | "A free … guide" | Rendered-public, factual (guides are free) |
+| `src/routes/attorney-partners.tsx:96,123,150,177` | "Best fit for firms…" | Rendered-public, audience-fit statement, not a superlative self-claim |
+| `src/lib/marketing/content.ts:812,829,888` | "no results are guaranteed", "No guaranteed results", "No testimonials, ratings, or outcomes are published" | Rendered-public disclaimers — protective, keep |
+| `src/lib/partners/sequences.ts:69,88`; `src/lib/partners/linkedin.ts:35` | "no cost, no strings", "no-cost second opinion" | DRAFT-only (admin surface `/admin/partners`), factual offer |
+| `src/lib/marketing/acquisition-campaigns.ts:296,328,341,366,381,411` | "free reference library", "result immediately", "unsubscribe … works immediately" | DRAFT-only, NOT ACTIVATED; "immediately" refers to opt-out/assessment mechanics, not service response |
+| `src/lib/marketing/quality-gate.ts:36`; `social-preview.ts:27`; `acquisition-campaigns.ts:475`; `gbp.ts` | superlative/guarantee regex blocklists | Internal-only guardrails |
+| `src/lib/marketing/proof.ts`, `proof-operations.ts`, `schema.ts` | testimonial/rating machinery | Internal-only; `proof.ts:201` confirms zero published reviews/ratings/results |
 
-Fingerprint drift; STALE/FAIL/BLOCKED gate; auth failure; route failure; bearer enforcement failure; critical monitoring alert; new critical security finding; change to the six accepted SECURITY DEFINER warnings.
+No rendered public claims of ratings, reviews, transaction volume, market leadership, or guarantees were found.
+
+## Proposed correction (if authorized)
+
+Narrow copy-only patch, two files:
+
+1. `src/routes/refer.tsx` — replace both "within one business day" promises with neutral language consistent with `/contact`: contact will be made and the outcome reported back either way, with no promised turnaround.
+2. `src/lib/partners/pages.ts:238` — replace the "same or next business day" standard with a non-time-bound commitment (e.g. prompt triage and a reported outcome either way).
+
+Optionally extend `src/lib/marketing/__tests__/brand-compliance.test.ts` with an assertion that no rendered public route/content module contains business-day or fixed-turnaround promise language, so the removed `/contact` promise and these two cannot regress.
+
+### Boundaries preserved
+Copy-only. No publish/deploy, no DNS/domain/discovery/account changes, no external sends, no `PUBLIC_SITE_ORIGIN` change, no governed `/` change, no indexable-URL or sitemap change (still 126), all campaign assets remain DRAFT/NOT ACTIVATED, Tasks 14–18 statuses unchanged (production remains BLOCKED).
