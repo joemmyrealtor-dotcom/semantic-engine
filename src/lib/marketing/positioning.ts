@@ -9,10 +9,51 @@ import { PUBLIC_SITE_ORIGIN } from "./site";
 export const CORE_PROMISE =
   "Make smarter real estate decisions. Protect your equity. Follow a clear plan.";
 
+/**
+ * California advertising-compliance identity.
+ *
+ * Compliance basis (encoded here, not rendered as legal advice copy):
+ *  * BPC 10140.6 — solicitation material intended as a first point of contact
+ *    must carry the licensee's name, license identification number, and the
+ *    responsible broker's identity.
+ *  * BPC 10015.4 — defines "responsible broker identity".
+ * DRE record: 01513916 Melendez, Joseph Anthony — salesperson under
+ * Coldwell Banker Diamond (Red Door Realty & Investments Inc., DRE 01953240).
+ *
+ * Never render a street address here: none is independently evidenced.
+ */
+export const LICENSE = {
+  /** Public-facing advisor name. */
+  advisorName: "Joe Melendez",
+  /** Legal/license disclosure name. */
+  legalName: "Joseph Anthony Melendez",
+  designation: "California Real Estate Salesperson",
+  dreLicense: "01513916",
+  brokerageDba: "Coldwell Banker Diamond",
+  responsibleBroker: "Red Door Realty & Investments Inc.",
+  responsibleBrokerDre: "01953240",
+  phone: "562-640-1466",
+  phoneHref: "tel:+15626401466",
+  email: "joe@cb-diamond.com",
+  emailHref: "mailto:joe@cb-diamond.com",
+  equalHousing: "Equal Housing Opportunity",
+} as const;
+
+/** One-line, reusable disclosure for any first-point-of-contact asset. */
+export const LEGAL_DISCLOSURE = `${LICENSE.legalName} (${LICENSE.advisorName}), ${LICENSE.designation}, DRE #${LICENSE.dreLicense} · ${LICENSE.brokerageDba} · Responsible broker: ${LICENSE.responsibleBroker}, DRE #${LICENSE.responsibleBrokerDre} · ${LICENSE.phone} · ${LICENSE.email} · ${LICENSE.equalHousing}`;
+
 export const BRAND = {
   name: "Legacy Forge",
-  publisher: "JM Advisory Press",
-  advisor: "Joe Melendez",
+  /**
+   * Public publisher identity is the consumer brand. "JM Advisory Press" is
+   * retained only as an internal imprint label and must never be rendered on
+   * a public surface.
+   */
+  publisher: "Legacy Forge",
+  /** Internal-only imprint name. Not for public rendering. */
+  internalImprint: "JM Advisory Press",
+  eyebrow: "Orange County Real Estate",
+  advisor: LICENSE.advisorName,
   /** Single source of truth lives in ./site.ts — never hard-code an origin. */
   origin: PUBLIC_SITE_ORIGIN,
   serviceArea: [
@@ -26,6 +67,7 @@ export const BRAND = {
     "Orange County",
   ],
 } as const;
+
 
 export type EntryPathId =
   | "sellers"
