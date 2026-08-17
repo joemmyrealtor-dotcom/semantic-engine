@@ -27,7 +27,7 @@ export const Route = createFileRoute("/attorney-partners")({
           url: absoluteUrl("/attorney-partners"),
           provider: {
             "@type": "Organization",
-            name: "JM Advisory Press",
+            name: "Legacy Forge",
             url: absoluteUrl("/"),
           },
           areaServed: "US",
