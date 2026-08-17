@@ -333,7 +333,7 @@ describe("Task 33 paid measurement readiness", () => {
     const meta = PAID_BLUEPRINTS.find(b => b.platform === "meta")!;
     expect(meta.measurement).toMatch(/Conversions API/);
     expect(meta.measurement).toMatch(/CRM lead-quality signals/i);
-    expect(meta.measurement).toMatch(/not connected or sent today/i);
+    expect(meta.measurement).toMatch(/is connected or sent today/i);
     expect(meta.activated).toBe(false);
   });
 
