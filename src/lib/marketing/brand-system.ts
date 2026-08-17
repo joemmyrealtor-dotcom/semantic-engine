@@ -82,7 +82,7 @@ export const MESSAGE_PILLARS: MessagePillar[] = [
     supports: [
       "Process and authority explained in sequence.",
       "Keep / rent / sell comparison structure.",
-      "Referral to counsel for legal questions — never legal advice here.",
+      "Legal questions are referred to counsel; this content is educational only.",
     ],
     paths: ["/probate", "/inherited-property", "/attorney-partners"],
   },
