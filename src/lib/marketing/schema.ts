@@ -97,6 +97,8 @@ function brokerageNode(): JsonLdNode {
     "@type": "RealEstateAgent",
     "@id": ENTITY_ID.brokerage,
     name: LICENSE.brokerageDba,
+    url: `${PUBLIC_SITE_ORIGIN}/home`,
+    areaServed: BRAND.serviceArea.map(name => ({ "@type": "AdministrativeArea", name })),
     telephone: LICENSE.phone,
     email: LICENSE.email,
     identifier: {
@@ -113,6 +115,7 @@ function responsibleBrokerNode(): JsonLdNode {
     "@type": "Organization",
     "@id": ENTITY_ID.responsibleBroker,
     name: LICENSE.responsibleBroker,
+    url: `${PUBLIC_SITE_ORIGIN}/home`,
     description: `Responsible broker of record for ${LICENSE.brokerageDba}.`,
     identifier: {
       "@type": "PropertyValue",
