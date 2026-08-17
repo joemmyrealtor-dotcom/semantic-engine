@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { LICENSE } from "../positioning";
 import { buildBrandReadiness, CTA_LADDER, MESSAGE_PILLARS, validateBrandCopy } from "../brand-system";
 import {
   MAX_REQUESTS_PER_ENGAGEMENT,
