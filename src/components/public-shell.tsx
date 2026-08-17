@@ -16,7 +16,14 @@ import {
 } from "@/components/ui/accordion";
 import { cn } from "@/lib/utils";
 import { PUBLIC_NAV, PUBLIC_LEGAL_NAV, type PublicPage } from "@/lib/marketing/content";
-import { BRAND, CORE_PROMISE, ENTRY_PATHS, TRUST_PROOF } from "@/lib/marketing/positioning";
+import {
+  BRAND,
+  CORE_PROMISE,
+  ENTRY_PATHS,
+  LICENSE,
+  TRUST_PROOF,
+} from "@/lib/marketing/positioning";
+
 import { captureAttribution } from "@/lib/marketing/attribution";
 import { recordIntentVisit } from "@/lib/marketing/lead-scoring";
 import { trackEvent } from "@/lib/marketing/analytics";
