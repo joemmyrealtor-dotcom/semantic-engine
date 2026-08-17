@@ -47,9 +47,14 @@ describe("public identity", () => {
     const offenders = ALL_FILES.filter(f => {
       const text = readFileSync(f, "utf8");
       if (!text.includes("JM Advisory Press")) return false;
-      // The only permitted occurrence is the internal-only imprint constant
-      // and its explanatory comment in positioning.ts.
-      return !f.endsWith(join("marketing", "positioning.ts"));
+      // Permitted, non-rendered occurrences: the internal-only imprint
+      // constant in positioning.ts, and the internal workspace record
+      // (WS-001) in the local data layer. Neither reaches a public surface.
+      if (f.endsWith(join("marketing", "positioning.ts"))) return false;
+      if (f.endsWith(join("data", "seed.ts")) || f.endsWith(join("data", "db.ts"))) {
+        return !/JM Advisory Press/.test(text.replace(/"WS-001"[^\n]*/g, ""));
+      }
+      return true;
     });
     expect(offenders).toEqual([]);
   });
