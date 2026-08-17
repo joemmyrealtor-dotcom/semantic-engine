@@ -220,3 +220,47 @@ describe("indexable inventory", () => {
     expect(indexablePaths().length).toBe(126);
   });
 });
+
+describe("service-level promise hygiene (rendered public surfaces)", () => {
+  // Fixed-turnaround promises on public surfaces are unsupported service-level
+  // claims. Mechanical immediacy (instant downloads, opt-out processing) is a
+  // description of system behaviour, not a response-time promise, and is not
+  // scanned here. Editorial guide bodies that cite statutory business-day
+  // periods (e.g. the three-business-day Closing Disclosure rule) are factual
+  // and out of scope.
+  const TURNAROUND_RE =
+    /\b(?:same|next|one|1)[ -]business[ -]day\b|\bwithin\s+(?:one|1|a)\s+business\s+day\b|\bwithin\s+24\s+hours\b|\bsame[ -]day\s+(?:response|reply|callback)\b/i;
+
+  const PUBLIC_SURFACES = ALL_FILES.filter(f => {
+    if (f.includes(join("src", "routes")) && !f.includes(join("routes", "admin"))) return true;
+    if (f.includes(join("src", "components")) && !f.includes(join("components", "ui"))) return true;
+    if (f.endsWith(join("marketing", "content.ts"))) return true;
+    if (f.endsWith(join("partners", "pages.ts"))) return true;
+    return false;
+  });
+
+  it("scans a non-empty set of rendered public sources", () => {
+    expect(PUBLIC_SURFACES.length).toBeGreaterThan(10);
+  });
+
+  it("promises no fixed response turnaround on any public surface", () => {
+    const offenders: string[] = [];
+    for (const file of PUBLIC_SURFACES) {
+      for (const line of readFileSync(file, "utf8").split("\n")) {
+        if (TURNAROUND_RE.test(line)) offenders.push(`${file}: ${line.trim()}`);
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  it("keeps the neutral response-timing language on the contact surface", () => {
+    expect(PUBLIC_PAGES.contact.metaDescription).not.toMatch(TURNAROUND_RE);
+    const contact = readFileSync(join(SRC, "routes", "contact.tsx"), "utf8");
+    expect(contact).toContain("no specific turnaround is promised");
+  });
+
+  it("keeps protective no-guarantee disclaimers in place", () => {
+    const legal = JSON.stringify(PUBLIC_PAGES);
+    expect(legal).toContain("no results are guaranteed");
+  });
+});

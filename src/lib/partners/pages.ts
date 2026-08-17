@@ -235,7 +235,7 @@ export const PROFESSIONAL_PAGES: Record<ProfessionalAudience, ProfessionalPage> 
       "No poaching management accounts",
       "No referral fees paid or accepted",
       "Honest answer even when it costs me the listing",
-      "Fast triage — same or next business day",
+      "Prompt situation triage and documented follow-through",
     ],
     kitBlurb:
       "A pre-list scope-and-return worksheet and a vesting-issue triage sheet.",

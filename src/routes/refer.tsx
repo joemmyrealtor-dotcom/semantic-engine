@@ -93,7 +93,8 @@ function ReferRoute() {
         <h1 className="mt-2 font-serif text-4xl text-heritage">Refer a client</h1>
         <p className="mt-4 text-muted-foreground">
           For attorneys, CPAs, fiduciaries, advisors, and senior service professionals. I will
-          contact your client within one business day and report the outcome back to you either way.
+          contact your client and report the outcome back to you either way. Timing depends on the
+          situation and current availability, so no fixed turnaround is promised.
         </p>
 
         <ul className="mt-6 space-y-2 rounded-lg border border-border bg-card p-5">
@@ -114,8 +115,9 @@ function ReferRoute() {
             <CheckCircle2 className="size-6 text-evergreen" aria-hidden="true" />
             <h2 className="mt-3 font-serif text-2xl text-heritage">Referral received</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              I will reach out to your client within one business day and let you know how it goes.
-              Nothing is shared with anyone else.
+              I will reach out to your client and let you know how it goes. Timing depends on the
+              situation and current availability, so no fixed turnaround is promised. Nothing is
+              shared with anyone else.
             </p>
             <Button asChild className="mt-5" variant="outline">
               <Link to="/for/$audience" params={{ audience: "attorneys" }}>
