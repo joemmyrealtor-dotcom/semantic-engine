@@ -166,9 +166,9 @@ export const PAID_BLUEPRINTS: PaidBlueprint[] = [
     label: "Google Search — high-intent decision questions",
     intent: "Capture people already searching a specific decision question, not brand or generic 'realtor near me' terms.",
     destinations: ["/sellers", "/probate", "/inherited-property", "/downsizing", "/distressed-property", "/answers", "/guides", "/assessments", "/investing"],
-    audienceBasis: "Keyword intent only. No demographic, ZIP-radius, or life-event audience targeting of housing-related campaigns.",
+    audienceBasis: "Keyword intent only. No demographic, ZIP-code, or life-event audience targeting of housing-related campaigns. Radius targeting (>=1 km) would be permitted by Google, but is excluded by internal Legacy Forge policy.",
     housingCompliance:
-      "Google: housing ads are subject to Google's current personalized-advertising restrictions for housing, which limit targeting and exclusion by demographics, ZIP-code radius, gender, age, parental status, marital status, and detailed interest categories. Google does not use Meta's 'Special Ad Category' label; do not apply that term here.",
+      "Google: US/Canada housing ads are a restricted personalized-advertising category. Google prohibits targeting or exclusion by age, gender, parental status, marital status, and ZIP code, and restricts detailed-interest and similar-audience targeting. Radius targeting is NOT prohibited by Google: it is permitted provided the radius is at least 1 km (about 0.6 mi). Google does not use Meta's 'Special Ad Category' label; do not apply that term here. INTERNAL POLICY (Legacy Forge, stricter than Google requires): we use broad geography only and no radius targeting on housing campaigns.",
     measurement:
       "Enhanced conversions for leads must be designed around Google Data Manager / API-compatible first-party conversion measurement with consented, hashed first-party data — not a deprecated legacy-only offline click-ID import assumption. Nothing is connected, configured, or sent today.",
     clusters: ["seller-intent", "probate-inherited", "downsizing", "distressed-preforeclosure", "equity-sell-vs-rent"],
@@ -193,9 +193,9 @@ export const PAID_BLUEPRINTS: PaidBlueprint[] = [
     label: "Meta — educational reach",
     intent: "Distribute educational answers and guides. Never a listing or valuation offer.",
     destinations: ["/guides", "/local-guides", "/answers"],
-    audienceBasis: "Broad geography only. No age, gender, ZIP-radius, or detailed targeting of housing audiences.",
+    audienceBasis: "Broad geography only. No age, gender, ZIP-code, or detailed targeting of housing audiences.",
     housingCompliance:
-      "Meta: the Housing Special Ad Category is mandatory where applicable, which restricts age, gender, ZIP-radius, and detailed targeting and disables lookalike audiences in their standard form.",
+      "Meta: the Housing Special Ad Category is mandatory where applicable. It restricts age, gender, and detailed targeting, limits geographic targeting to a minimum 15-mile radius or broader area, and disables standard lookalike audiences. This is Meta policy only and must never be described as a Google requirement.",
     measurement:
       "Future readiness only: measurement and optimization would use the Meta Conversions API with consented server-side events plus CRM lead-quality signals, so optimization reflects qualified outcomes rather than raw form fills. No pixel, dataset, CAPI endpoint, or CRM signal is connected or sent today.",
     clusters: [],
@@ -281,7 +281,7 @@ export const PAID_PREREQUISITES: PaidPrerequisite[] = [
 
 export const PAID_GUARDRAILS: string[] = [
   "Platform-specific housing compliance: Meta's Housing Special Ad Category where applicable; Google's current housing personalized-ad targeting restrictions. The two are not interchangeable.",
-  "No age, gender, familial-status, disability, national-origin, or ZIP-radius targeting.",
+  "No age, gender, familial-status, marital-status, disability, national-origin, or ZIP-code targeting on housing campaigns. Radius targeting is permitted by Google at >=1 km, but internal Legacy Forge policy excludes it.",
   "No exclusion audiences built from demographic or neighbourhood proxies.",
   "Educational destinations only. No listing, valuation, or 'what's your home worth' offer.",
   "No results, ratings, testimonials, or market statistics in ad copy unless verified, sourced, and dated.",
