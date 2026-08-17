@@ -1,3 +1,4 @@
+import { LEGAL_DISCLOSURE } from "@/lib/marketing/positioning";
 // Task 26 — Outreach sequences (draft-first).
 //
 // Five touches over ~30 days, written as professional peer correspondence.
@@ -26,9 +27,8 @@ export interface OutreachSequence {
   touches: SequenceTouch[];
 }
 
-const SIGNOFF = `Joe Melendez
-JM Advisory Press · Legacy Forge
-Brea, California`;
+const SIGNOFF = `Joe Melendez · Legacy Forge
+${LEGAL_DISCLOSURE}`;
 
 function touches(context: {
   opener: string;

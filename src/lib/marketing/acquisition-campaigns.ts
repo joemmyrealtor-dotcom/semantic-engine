@@ -11,6 +11,7 @@
 // opt-out respecting.
 
 import { CTA_BY_RUNG, type CtaRung } from "./brand-system";
+import { LEGAL_DISCLOSURE, LICENSE } from "./positioning";
 
 export type CampaignPhase = "pre-launch" | "launch" | "education" | "reactivation" | "referral-partner" | "post-launch";
 
@@ -89,6 +90,8 @@ export interface CampaignAsset {
   status: "DRAFT";
   activated: false;
   guardrails: string[];
+  /** Reusable BPC 10140.6 licensee/responsible-broker disclosure. */
+  legalDisclosure: string;
 }
 
 const BASE_GUARDRAILS = [
@@ -98,9 +101,18 @@ const BASE_GUARDRAILS = [
   "No urgency, scarcity, or fear framing.",
   "One-click opt-out on every list message; opt-outs honoured immediately.",
   "DRAFT only: no send, no schedule, no external write.",
+  "First-contact assets must render the licensee/responsible-broker disclosure (BPC 10140.6).",
 ];
 
-const SIGNOFF = "— {{advisor_name}}, JM Advisory Press\nEducational only. Not legal, tax, or financial advice. Equal Housing Opportunity.\nUnsubscribe: {{unsubscribe_link}}";
+/**
+ * Reusable first-point-of-contact disclosure (BPC 10140.6 / 10015.4):
+ * licensee name, license number, and responsible broker identity must appear
+ * on solicitation material. Every DRAFT asset exposes it via
+ * `legalDisclosure` so no future asset can omit it.
+ */
+export const CAMPAIGN_LEGAL_DISCLOSURE = LEGAL_DISCLOSURE;
+
+const SIGNOFF = `— ${LICENSE.advisorName}, Legacy Forge\n${CAMPAIGN_LEGAL_DISCLOSURE}\nEducational only. Not legal, tax, or financial advice.\nUnsubscribe: {{unsubscribe_link}}`;
 
 interface AssetInput {
   id: string;
@@ -134,6 +146,7 @@ function asset(input: AssetInput): CampaignAsset {
     status: "DRAFT",
     activated: false,
     guardrails: [...BASE_GUARDRAILS, ...(input.extraGuardrails ?? [])],
+    legalDisclosure: CAMPAIGN_LEGAL_DISCLOSURE,
   };
 }
 

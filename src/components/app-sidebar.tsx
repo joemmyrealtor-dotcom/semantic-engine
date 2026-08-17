@@ -41,7 +41,7 @@ export function AppSidebar() {
   return (
     <aside className="hidden md:flex w-60 shrink-0 flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
       <div className="px-5 py-5 border-b border-sidebar-border">
-        <div className="text-[11px] tracking-[0.2em] uppercase text-sidebar-primary font-medium">JM Advisory Press</div>
+        <div className="text-[11px] tracking-[0.2em] uppercase text-sidebar-primary font-medium">Legacy Forge</div>
         <div className="font-serif text-lg leading-tight mt-1">Legacy Platform</div>
         <div className="text-xs text-sidebar-foreground/80">v2.0 · Local Demo</div>
       </div>

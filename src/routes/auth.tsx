@@ -24,7 +24,7 @@ export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
       { title: "Sign in — Legacy Platform" },
-      { name: "description", content: "Sign in to the JM Advisory Press Legacy Platform." },
+      { name: "description", content: "Sign in to the Legacy Forge platform." },
     ],
   }),
   component: AuthPage,
@@ -101,7 +101,7 @@ function AuthPage() {
 
   return (
     <>
-      <PageHeader title={title} description="Access the JM Advisory Press governance surface." />
+      <PageHeader title={title} description="Access the Legacy Forge governance surface." />
       <PageBody>
         <div className="max-w-md">
           <form onSubmit={handleSubmit} className="editorial-card p-6 space-y-4">

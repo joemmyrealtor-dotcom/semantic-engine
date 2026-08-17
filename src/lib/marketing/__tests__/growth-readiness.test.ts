@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { LICENSE } from "../positioning";
 import { buildBrandReadiness, CTA_LADDER, MESSAGE_PILLARS, validateBrandCopy } from "../brand-system";
 import {
   MAX_REQUESTS_PER_ENGAGEMENT,
@@ -404,7 +405,12 @@ describe("acquisition funnel (source → client → referral loop)", () => {
   });
 
   it("carries no PII and no fabricated proof or results", () => {
-    const text = JSON.stringify(AUDIENCE_FUNNELS) + JSON.stringify(CAMPAIGN_ASSETS.map(a => a.body));
+    // The licensee's own business phone/email are required disclosure data
+    // (BPC 10140.6), not third-party PII, so they are stripped before the
+    // PII scan rather than treated as a violation.
+    const text = (JSON.stringify(AUDIENCE_FUNNELS) + JSON.stringify(CAMPAIGN_ASSETS.map(a => a.body)))
+      .split(LICENSE.email).join("")
+      .split(LICENSE.phone).join("");
     expect(text).not.toMatch(/@[a-z0-9-]+\.(?:com|net|org)/i);
     expect(text).not.toMatch(/\b\d{3}[-.\s]\d{3}[-.\s]\d{4}\b/);
     expect(text).not.toMatch(/\b\d+\s*(?:5-star|star) reviews?\b/i);

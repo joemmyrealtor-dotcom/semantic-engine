@@ -16,7 +16,14 @@ import {
 } from "@/components/ui/accordion";
 import { cn } from "@/lib/utils";
 import { PUBLIC_NAV, PUBLIC_LEGAL_NAV, type PublicPage } from "@/lib/marketing/content";
-import { BRAND, CORE_PROMISE, ENTRY_PATHS, TRUST_PROOF } from "@/lib/marketing/positioning";
+import {
+  BRAND,
+  CORE_PROMISE,
+  ENTRY_PATHS,
+  LICENSE,
+  TRUST_PROOF,
+} from "@/lib/marketing/positioning";
+
 import { captureAttribution } from "@/lib/marketing/attribution";
 import { recordIntentVisit } from "@/lib/marketing/lead-scoring";
 import { trackEvent } from "@/lib/marketing/analytics";
@@ -35,7 +42,7 @@ function PublicHeader() {
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4 md:px-6">
         <Link to="/home" className="flex flex-col leading-tight">
           <span className="text-[10px] uppercase tracking-[0.22em] text-gold">
-            {BRAND.publisher}
+            {BRAND.eyebrow}
           </span>
           <span className="font-serif text-lg text-heritage">{BRAND.name}</span>
         </Link>
@@ -83,12 +90,45 @@ function PublicHeader() {
   );
 }
 
+/**
+ * Licensee disclosure block.
+ *
+ * BPC 10140.6 / 10015.4: public solicitation surfaces carry the licensee's
+ * name, license number, and responsible broker identity. No street address is
+ * rendered — none is independently evidenced.
+ */
+function LicenseDisclosure() {
+  return (
+    <div className="space-y-1 text-xs text-muted-foreground" data-testid="license-disclosure">
+      <p>
+        {LICENSE.advisorName}, {LICENSE.designation}, DRE #{LICENSE.dreLicense} ·{" "}
+        {LICENSE.brokerageDba}
+      </p>
+      <p>
+        Responsible broker: {LICENSE.responsibleBroker}, DRE #{LICENSE.responsibleBrokerDre}
+      </p>
+      <p>
+        <a className="hover:text-heritage" href={LICENSE.phoneHref}>
+          {LICENSE.phone}
+        </a>
+        {" · "}
+        <a className="hover:text-heritage" href={LICENSE.emailHref}>
+          {LICENSE.email}
+        </a>
+      </p>
+      <p>
+        Educational content only. Not legal, tax, or financial advice. {LICENSE.equalHousing}.
+      </p>
+    </div>
+  );
+}
+
 function PublicFooter() {
   return (
     <footer className="mt-20 border-t border-border bg-card">
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 md:grid-cols-3 md:px-6">
         <div>
-          <div className="text-[10px] uppercase tracking-[0.22em] text-gold">{BRAND.publisher}</div>
+          <div className="text-[10px] uppercase tracking-[0.22em] text-gold">{BRAND.eyebrow}</div>
           <div className="mt-1 font-serif text-xl text-heritage">{BRAND.name}</div>
           <p className="mt-3 max-w-xs text-sm text-muted-foreground">{CORE_PROMISE}</p>
         </div>
@@ -119,19 +159,19 @@ function PublicFooter() {
               </li>
             ))}
           </ul>
-          <p className="mt-4 text-xs text-muted-foreground">
-            Educational content only. Not legal, tax, or financial advice. Equal Housing
-            Opportunity.
-          </p>
         </div>
       </div>
+      <div className="mx-auto max-w-6xl border-t border-border px-4 py-6 md:px-6">
+        <LicenseDisclosure />
+      </div>
       <div className="border-t border-border py-4 text-center text-xs text-muted-foreground">
-        © {new Date().getFullYear()} {BRAND.publisher}. Serving{" "}
+        © {new Date().getFullYear()} {BRAND.name}. Serving{" "}
         {BRAND.serviceArea.slice(0, 6).join(", ")}, and greater Orange County.
       </div>
     </footer>
   );
 }
+
 
 export function PublicShell({ children }: { children: React.ReactNode }) {
   const [, setReady] = useState(false);

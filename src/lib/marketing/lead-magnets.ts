@@ -4,6 +4,7 @@
 // guide is hard-coded in a component. Adding a guide is a data change.
 
 import type { EntryPathId } from "./positioning";
+import { LEGAL_DISCLOSURE } from "./positioning";
 
 export type GuideStatus = "Draft" | "Published";
 
@@ -404,7 +405,9 @@ export function guideMarkdown(guide: GuideDefinition): string {
     `_${guide.promise}_`,
     "",
     `Audience: ${guide.audience}`,
-    `Version ${guide.version} · Legacy Forge, JM Advisory Press`,
+    `Version ${guide.version} · Legacy Forge`,
+    "",
+    LEGAL_DISCLOSURE,
     "",
   ];
   for (const s of guide.sections) {

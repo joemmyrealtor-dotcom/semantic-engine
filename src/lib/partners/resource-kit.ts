@@ -1,3 +1,4 @@
+import { LEGAL_DISCLOSURE } from "@/lib/marketing/positioning";
 // Task 26 — Professional Resource Kit.
 //
 // Given away with no reciprocity requirement. The kit is generated as
@@ -222,7 +223,7 @@ export function kitMarkdown(kit: ResourceKit): string {
     "",
     kit.intro,
     "",
-    "Prepared by Joe Melendez · JM Advisory Press · Brea, California",
+    `Prepared by ${LEGAL_DISCLOSURE}`,
     "",
     "This kit is provided free of charge. There is no reciprocity requirement and no",
     "obligation of any kind. It is educational material, not legal, tax, or financial advice.",

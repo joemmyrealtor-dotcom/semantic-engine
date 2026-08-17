@@ -592,7 +592,7 @@ export const PUBLIC_PAGES: Record<string, PublicPage> = {
   about: {
     slug: "/about",
     navLabel: "About",
-    metaTitle: "About Legacy Forge and Joe Melendez | JM Advisory Press",
+    metaTitle: "About Legacy Forge and Joe Melendez | Legacy Forge",
     metaDescription:
       "Legacy Forge is the research and advisory system behind Joe Melendez's real estate practice: governed guides, decision tools, and a clear plan for every situation.",
     eyebrow: "About",
@@ -630,8 +630,8 @@ export const PUBLIC_PAGES: Record<string, PublicPage> = {
     ],
     faqs: [
       {
-        q: "What is JM Advisory Press?",
-        a: "JM Advisory Press is the publishing entity behind the Legacy Forge guide library and its governance process.",
+        q: "Who is behind Legacy Forge?",
+        a: "Legacy Forge is the educational brand and guide library. Joe Melendez is the licensed California real estate salesperson behind it (DRE #01513916), working through the brokerage Coldwell Banker Diamond, whose responsible broker is Red Door Realty & Investments Inc. (DRE #01953240).",
       },
       {
         q: "Do you charge for a consultation?",
@@ -678,7 +678,7 @@ export const PUBLIC_PAGES: Record<string, PublicPage> = {
     faqs: [
       {
         q: "How quickly will I hear back?",
-        a: "Same business day for most inquiries, and immediately for notices of default or trustee's sale.",
+        a: "Response times vary with the day and the volume of inquiries, so no specific turnaround is promised. If you have received a notice of default or a notice of trustee's sale, say so in your message — those are reviewed first because the timeline is statutory.",
       },
       {
         q: "Am I committing to anything?",
@@ -692,7 +692,7 @@ export const PUBLIC_PAGES: Record<string, PublicPage> = {
     navLabel: "Privacy",
     metaTitle: "Privacy Policy | Legacy Forge",
     metaDescription:
-      "How Legacy Forge and JM Advisory Press collect, use, store, and share personal information submitted through this website.",
+      "How Legacy Forge collects, uses, stores, and shares personal information submitted through this website.",
     eyebrow: "Legal",
     headline: "Privacy Policy",
     subhead:
@@ -857,7 +857,7 @@ export const PUBLIC_PAGES: Record<string, PublicPage> = {
     valueProps: [
       {
         title: "Named authorship",
-        body: "Content is written by Joe Melendez and published by JM Advisory Press. There is no anonymous byline and no undisclosed syndication.",
+        body: "Content is written by Joe Melendez, a licensed California real estate salesperson (DRE #01513916) with Coldwell Banker Diamond, and published under the Legacy Forge brand. There is no anonymous byline and no undisclosed syndication.",
       },
       {
         title: "Experience-based",
@@ -908,7 +908,7 @@ export const PUBLIC_PAGES: Record<string, PublicPage> = {
     faqs: [
       {
         q: "Who writes the guides on this site?",
-        a: "Joe Melendez writes the guides, and JM Advisory Press publishes them. Authorship is shown on each guide rather than left anonymous.",
+        a: "Joe Melendez writes the guides and they are published under the Legacy Forge brand. Authorship is shown on each guide rather than left anonymous.",
       },
       {
         q: "Is this legal or tax advice?",

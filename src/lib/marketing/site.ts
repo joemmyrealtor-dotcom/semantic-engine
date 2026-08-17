@@ -49,6 +49,8 @@ export const ENTITY_ID = {
   brand: `${PUBLIC_SITE_ORIGIN}/#brand`,
   person: `${PUBLIC_SITE_ORIGIN}/#advisor`,
   service: `${PUBLIC_SITE_ORIGIN}/#advisory-service`,
+  brokerage: `${PUBLIC_SITE_ORIGIN}/#brokerage`,
+  responsibleBroker: `${PUBLIC_SITE_ORIGIN}/#responsible-broker`,
 } as const;
 
 /**
@@ -60,7 +62,7 @@ export const SOCIAL_CARD = {
   url: absoluteUrl("/social-card.png"),
   width: "1200",
   height: "630",
-  alt: "Legacy Forge by JM Advisory Press — real estate decision guides for Orange County",
+  alt: "Legacy Forge — real estate decision guides for Orange County",
   type: "image/png",
 } as const;
 
