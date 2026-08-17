@@ -7,17 +7,24 @@
 //    simply absent — an incomplete graph beats a fabricated one.
 //  * Every node carries a stable @id from site.ts so pages merge cleanly.
 
-import { BRAND, CORE_PROMISE } from "./positioning";
+import { BRAND, CORE_PROMISE, LICENSE } from "./positioning";
 import { ENTITY_ID, PUBLIC_SITE_ORIGIN, SITE_LANGUAGE, SOCIAL_CARD, absoluteUrl } from "./site";
 
 export type JsonLdNode = Record<string, unknown>;
 
-/** Fields that must never appear in emitted schema (unverified in repo). */
+/**
+ * Fields that must never appear in emitted schema (unverified in repo).
+ *
+ * `telephone`/`email` are deliberately NOT forbidden: the licensee's business
+ * phone and email are independently evidenced and are required contact data on
+ * California solicitation material (BPC 10140.6). Street address remains
+ * forbidden — no office address is evidenced, so no LocalBusiness NAP is
+ * emitted.
+ */
 export const FORBIDDEN_SCHEMA_KEYS = [
   "address",
   "streetAddress",
   "postalCode",
-  "telephone",
   "geo",
   "openingHours",
   "openingHoursSpecification",
@@ -45,11 +52,11 @@ function organizationNode(): JsonLdNode {
   return {
     "@type": "Organization",
     "@id": ENTITY_ID.organization,
-    name: BRAND.publisher,
+    name: BRAND.name,
     url: `${PUBLIC_SITE_ORIGIN}/home`,
     brand: { "@id": ENTITY_ID.brand },
     description:
-      "Publisher of Legacy Forge, a governed library of educational real estate decision guides.",
+      "Legacy Forge publishes a governed library of educational real estate decision guides.",
   };
 }
 
@@ -66,9 +73,52 @@ function personNode(): JsonLdNode {
   return {
     "@type": "Person",
     "@id": ENTITY_ID.person,
-    name: BRAND.advisor,
-    worksFor: { "@id": ENTITY_ID.organization },
+    name: LICENSE.advisorName,
+    alternateName: LICENSE.legalName,
+    jobTitle: LICENSE.designation,
+    telephone: LICENSE.phone,
+    email: LICENSE.email,
+    worksFor: { "@id": ENTITY_ID.brokerage },
+    identifier: {
+      "@type": "PropertyValue",
+      propertyID: "California DRE License",
+      value: LICENSE.dreLicense,
+    },
     knowsAbout: KNOWS_ABOUT,
+  };
+}
+
+/**
+ * Brokerage (DBA) and its responsible broker legal entity (BPC 10015.4).
+ * No street address, geo, hours, rating, or review — none is evidenced.
+ */
+function brokerageNode(): JsonLdNode {
+  return {
+    "@type": "RealEstateAgent",
+    "@id": ENTITY_ID.brokerage,
+    name: LICENSE.brokerageDba,
+    telephone: LICENSE.phone,
+    email: LICENSE.email,
+    identifier: {
+      "@type": "PropertyValue",
+      propertyID: "California DRE License",
+      value: LICENSE.responsibleBrokerDre,
+    },
+    parentOrganization: { "@id": ENTITY_ID.responsibleBroker },
+  };
+}
+
+function responsibleBrokerNode(): JsonLdNode {
+  return {
+    "@type": "Organization",
+    "@id": ENTITY_ID.responsibleBroker,
+    name: LICENSE.responsibleBroker,
+    description: `Responsible broker of record for ${LICENSE.brokerageDba}.`,
+    identifier: {
+      "@type": "PropertyValue",
+      propertyID: "California DRE License",
+      value: LICENSE.responsibleBrokerDre,
+    },
   };
 }
 
@@ -93,8 +143,10 @@ function serviceNode(areaServed: readonly string[]): JsonLdNode {
     "@id": ENTITY_ID.service,
     name: `${BRAND.name} — ${BRAND.advisor}`,
     url: `${PUBLIC_SITE_ORIGIN}/home`,
-    parentOrganization: { "@id": ENTITY_ID.organization },
+    parentOrganization: { "@id": ENTITY_ID.brokerage },
     employee: { "@id": ENTITY_ID.person },
+    telephone: LICENSE.phone,
+    email: LICENSE.email,
     knowsAbout: KNOWS_ABOUT,
     areaServed: areaServed.map(name => ({
       "@type": "AdministrativeArea",
@@ -108,7 +160,15 @@ function serviceNode(areaServed: readonly string[]): JsonLdNode {
 export function siteGraph(areaServed: readonly string[] = BRAND.serviceArea): JsonLdNode {
   return {
     "@context": "https://schema.org",
-    "@graph": [websiteNode(), organizationNode(), brandNode(), personNode(), serviceNode(areaServed)],
+    "@graph": [
+      websiteNode(),
+      organizationNode(),
+      brandNode(),
+      personNode(),
+      brokerageNode(),
+      responsibleBrokerNode(),
+      serviceNode(areaServed),
+    ],
   };
 }
 
