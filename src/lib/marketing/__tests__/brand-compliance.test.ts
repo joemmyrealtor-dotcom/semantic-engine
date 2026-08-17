@@ -18,6 +18,7 @@ import { PUBLIC_PAGES } from "../content";
 import { CAMPAIGN_ASSETS } from "../acquisition-campaigns";
 import { PAID_BLUEPRINTS, PAID_GUARDRAILS } from "../paid-readiness";
 import { CONSENT_TEXT } from "../lead-capture";
+import { indexablePaths } from "../indexation";
 
 const SRC = join(process.cwd(), "src");
 
@@ -211,5 +212,11 @@ describe("Google vs Meta housing policy accuracy", () => {
       expect(b.status).toBe("BLOCKED");
       expect(b.activated).toBe(false);
     }
+  });
+});
+
+describe("indexable inventory", () => {
+  it("adds or removes no indexable URLs (baseline 126)", () => {
+    expect(indexablePaths().length).toBe(126);
   });
 });
