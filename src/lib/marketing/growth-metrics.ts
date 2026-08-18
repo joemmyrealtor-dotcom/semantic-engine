@@ -9,6 +9,7 @@
 // is reported as NOT_CONNECTED or UNAVAILABLE until an evidenced connection
 // exists. This module connects to nothing.
 
+import { evaluateQualifiedVisitors } from "./qualified-visitor";
 import { computeConversionMetrics, type ConversionMetrics } from "./conversion-store";
 import type { MarketingEvent } from "./analytics";
 
@@ -43,7 +44,7 @@ export const GROWTH_METRICS: GrowthMetricSpec[] = [
   { id: "captured_leads", label: "Captured leads", group: "lead", system: "app-events", definition: "Lead payloads captured on this device." },
   { id: "qualified_leads", label: "Qualified leads", group: "lead", system: "app-events", definition: "Leads scored Qualified or Hot by the internal model." },
   { id: "hot_leads", label: "Hot leads", group: "lead", system: "app-events", definition: "Leads scored Hot by the internal model." },
-  { id: "qualified_visitors", label: "Qualified visitors", group: "traffic", system: "not-instrumented", definition: "Visitors matching the qualified-visitor definition (situation-relevant landing page + meaningful engagement depth). Distinct from raw sessions and NOT measurable yet — never compare the qualified-visitor target to a raw session count." },
+  { id: "qualified_visitors", label: "Qualified visitors", group: "traffic", system: "app-events", definition: "Sessions meeting every criterion of the internal qualified-visitor definition in qualified-visitor.ts: situation-relevant entry, meaningful engagement depth, and at least one governed intent interaction. Behaviour only — no PII and no protected traits. Distinct from raw sessions; a session count is never substituted for this value." },
   { id: "partner_referrals", label: "Partner referrals", group: "lead", system: "crm", definition: "Referrals attributed to a named referral professional. Requires CRM delivery verification." },
   { id: "referral_relationships", label: "Referral relationships", group: "lead", system: "crm", definition: "Named referral professionals with a documented, reciprocal-free working relationship. CRM/operator-owned." },
   { id: "appointments", label: "Appointments", group: "sales", system: "crm", definition: "Booked consultations. CRM-owned." },
@@ -137,6 +138,7 @@ export function buildGrowthMeasurement(
   const events = input.events;
   const hasEvents = Array.isArray(events) && events.length > 0;
   const conversion = hasEvents ? computeConversionMetrics(events!) : null;
+  const qualifiedVisitors = hasEvents ? evaluateQualifiedVisitors(events!) : null;
 
   const appValue: Record<string, number | undefined> = conversion
     ? {
@@ -148,6 +150,9 @@ export function buildGrowthMeasurement(
         consultation_requests: conversion.consultationRequests,
         qualified_leads: conversion.qualifiedLeads,
         hot_leads: conversion.hotLeads,
+        // Qualified visitors are evaluated by the internal definition, never
+        // derived from, or defaulted to, the session count.
+        qualified_visitors: qualifiedVisitors?.qualified,
       }
     : {};
   if (typeof input.capturedLeads === "number") appValue["captured_leads"] = input.capturedLeads;
