@@ -13,6 +13,7 @@
 
 import { LICENSE } from "./positioning";
 import { indexablePaths, NON_INDEXABLE_PUBLIC_PATHS } from "./indexation";
+import { ASSESSMENTS } from "./assessments";
 import { indexableRecords, type SearchIntentRecord } from "./intent-map";
 
 export type NextActionKind = "learn" | "evaluate" | "talk" | "refer";
@@ -98,6 +99,19 @@ function evaluateAction(record: SearchIntentRecord): NextAction {
       rationale: "Situation-matched assessment declared in the intent map.",
     };
   }
+  // On the assessment hub itself, route to a concrete assessment rather than
+  // back to the page the visitor is already reading.
+  if (record.path === "/assessments") {
+    const first = ASSESSMENTS[0];
+    if (first) {
+      return {
+        kind: "evaluate",
+        label: `Start the ${first.title.toLowerCase()}`,
+        to: `/assessments/${first.slug}`,
+        rationale: "Hub pages hand off to a concrete assessment, not to themselves.",
+      };
+    }
+  }
   return {
     kind: "evaluate",
     label: "Find the right assessment",
@@ -173,7 +187,9 @@ export function mobileConversionPaths(): string[] {
     .sort();
 }
 
-const MOBILE_BAR_SET = new Set([...mobileConversionPaths(), "/refer"]);
+// Indexable, public, high-intent only. Non-indexable workflow routes such as
+// /refer are deliberately excluded.
+const MOBILE_BAR_SET = new Set(mobileConversionPaths());
 
 export function showsMobileConversionBar(pathname: string): boolean {
   const clean = pathname.replace(/\/+$/, "") || "/";
