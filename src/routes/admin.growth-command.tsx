@@ -18,6 +18,7 @@ import { compareTargets, NINETY_DAY_TARGETS, RECALIBRATION_RULE, TARGET_LABEL } 
 import { buildCampaignReadiness, CAMPAIGN_ASSETS } from "@/lib/marketing/acquisition-campaigns";
 import { buildFunnelMap } from "@/lib/marketing/funnel-map";
 import { buildAcquisitionFunnel } from "@/lib/marketing/acquisition-funnel";
+import { buildLaunchConversionReadiness } from "@/lib/marketing/launch-conversion-readiness";
 import { buildPaidReadiness, PAID_BLUEPRINTS, PAID_GUARDRAILS } from "@/lib/marketing/paid-readiness";
 import { loadConversionEvents } from "@/lib/marketing/conversion-store";
 import { queuedLeads } from "@/lib/marketing/lead-capture";
@@ -95,6 +96,7 @@ function GrowthCommandPanel() {
   const campaigns = buildCampaignReadiness();
   const paid = buildPaidReadiness();
   const funnel = buildFunnelMap();
+  const launch = buildLaunchConversionReadiness();
   const acquisitionFunnel = buildAcquisitionFunnel();
 
   return (
@@ -121,6 +123,40 @@ function GrowthCommandPanel() {
             value={`${campaigns.total} drafts`}
             note={`${campaigns.missingTracks.length} tracks and ${campaigns.missingSegments.length} audience segments missing`}
           />
+        </div>
+
+        <SectionTitle>Launch conversion readiness</SectionTitle>
+        <div className="rounded-lg border border-border bg-card p-4 text-sm" data-testid="launch-conversion-readiness">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant={tone(launch.internalState)}>INTERNAL {launch.internalState}</Badge>
+            <Badge variant="destructive">EXTERNAL {launch.externalState}</Badge>
+            <span className="text-muted-foreground">
+              {launch.audit.ready}/{launch.audit.total} URLs conversion-ready · {launch.audit.brokenCtaCount} broken CTAs ·{" "}
+              {launch.indexableUrlCount} indexable URLs
+            </span>
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Read-only. Nothing here publishes, deploys, sends, or changes the Owner-controlled release gates.
+          </p>
+          {(["INTERNAL", "EXTERNAL"] as const).map(scope => (
+            <div key={scope} className="mt-3">
+              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                {scope === "INTERNAL" ? "Ready internal" : "Blocked external"}
+              </p>
+              <ul className="mt-1 space-y-2">
+                {launch.lines
+                  .filter(l => l.scope === scope)
+                  .map(l => (
+                    <li key={l.id} className="flex flex-wrap items-center gap-2 border-t border-border pt-2 first:border-0 first:pt-0">
+                      <Badge variant={tone(l.state)}>{l.state}</Badge>
+                      <span className="font-medium">{l.label}</span>
+                      <span className="ml-auto text-xs tabular-nums text-muted-foreground">{l.value}</span>
+                      <p className="w-full text-xs text-muted-foreground">{l.detail}</p>
+                    </li>
+                  ))}
+              </ul>
+            </div>
+          ))}
         </div>
 
         <SectionTitle>Brand operating system</SectionTitle>
