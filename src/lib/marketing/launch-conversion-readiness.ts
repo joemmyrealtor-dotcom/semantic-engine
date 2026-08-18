@@ -51,7 +51,7 @@ export function buildLaunchConversionReadiness(
 ): LaunchConversionReadiness {
   const audit = buildConversionAudit(now);
   const brand = buildBrandReadiness();
-  const proof = buildProofOperationsReport(undefined, now);
+  const proof = buildProofOperationsReport(now);
   const paid = buildPaidReadiness();
   const paths = indexablePaths();
   const activatedCampaigns = CAMPAIGN_ASSETS.filter(a => a.status !== "DRAFT").length;
@@ -117,7 +117,7 @@ export function buildLaunchConversionReadiness(
       "brand-disclosure",
       "Brand and license disclosure",
       "INTERNAL",
-      brand.status === "PASS" ? "READY" : "REVIEW",
+      brand.status === "READY" ? "READY" : "REVIEW",
       `DRE #${LICENSE.dreLicense}`,
       LEGAL_DISCLOSURE,
     ),
