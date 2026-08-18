@@ -6,21 +6,20 @@ import { LOCAL_HUBS, citiesForCluster } from "@/lib/marketing/local-pages";
 import { publicMeta, canonicalLink } from "@/lib/marketing/seo";
 import { jsonLdScript, siteGraph, breadcrumbGraph } from "@/lib/marketing/schema";
 
-const PATH = "/local";
 const TITLE = "Local situation pages for Orange County | Legacy Forge";
 const DESCRIPTION =
   "Probate, inherited property, divorce, trust, selling, and distressed-property decisions answered city by city across north Orange County.";
 
 export const Route = createFileRoute("/local/")({
   head: () => ({
-    meta: publicMeta({ path: PATH, title: TITLE, description: DESCRIPTION }),
-    links: [canonicalLink(PATH)],
+    meta: publicMeta({ path: "/local", title: TITLE, description: DESCRIPTION }),
+    links: [canonicalLink("/local")],
     scripts: [
       jsonLdScript(siteGraph()),
       jsonLdScript(
         breadcrumbGraph([
           { name: "Home", path: "/home" },
-          { name: "Local", path: PATH },
+          { name: "Local", path: "/local" },
         ]),
       ),
     ],
