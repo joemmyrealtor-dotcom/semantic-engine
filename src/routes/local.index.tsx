@@ -33,7 +33,7 @@ function LocalIndex() {
       <Breadcrumbs
         crumbs={[
           { name: "Home", path: "/home" },
-          { name: "Local", path: PATH },
+          { name: "Local", path: "/local" },
         ]}
       />
       <header className="mx-auto max-w-6xl px-4 pt-8 pb-8 md:px-6 md:pt-12">
