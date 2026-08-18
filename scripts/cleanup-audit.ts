@@ -1,10 +1,10 @@
-import { indexablePaths } from "@/lib/marketing/intent-map";
+import { indexableRecords } from "@/lib/marketing/intent-map";
 import { buildConversionAudit } from "@/lib/marketing/conversion-audit";
 import { buildLaunchConversionReadiness } from "@/lib/marketing/launch-conversion-readiness";
 import { buildCampaignReadiness } from "@/lib/marketing/acquisition-campaigns";
 import { buildPaidReadiness } from "@/lib/marketing/paid-readiness";
 
-console.log("indexablePaths.length:", indexablePaths().length);
+console.log("indexablePaths.length:", indexableRecords().length);
 const audit = buildConversionAudit();
 console.log("conversionAudit:", JSON.stringify({
   total: audit.total,
