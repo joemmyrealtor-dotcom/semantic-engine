@@ -102,7 +102,7 @@ export function assetsFor(answer: AnswerRecord): DistributionAsset[] {
       channel: "x",
       title: answer.question,
       body: `${answer.question} ${clamp(short, 180)} ${url}`,
-      cta: "Read more",
+      cta: "Read the full breakdown",
     },
     {
       channel: "youtube",
@@ -184,7 +184,7 @@ export function localAssetsFor(spec: LocalPageSpec): DistributionAsset[] {
       channel: "x",
       title: spec.question,
       body: `${spec.question} ${clamp(short, 170)} ${url}`,
-      cta: "Read more",
+      cta: "Read the full breakdown",
     },
     {
       channel: "youtube",
