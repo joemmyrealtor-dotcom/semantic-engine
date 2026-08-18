@@ -29,7 +29,9 @@ export type MarketingEventName =
   | "partner_kit_requested"
   | "partner_referral_started"
   | "partner_referral_submitted"
-  | "lead_submitted";
+  | "lead_submitted"
+  /** Internal qualified-visitor definition (see qualified-visitor.ts). */
+  | "qualified_visitor";
 
 
 /** Legacy names kept working; mapped onto the canonical schema. */

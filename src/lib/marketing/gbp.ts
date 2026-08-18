@@ -93,7 +93,7 @@ export function weeklyPostTemplates(): PostTemplate[] {
     type: "Update" as const,
     title: spec.question.slice(0, 58),
     body: `${spec.directAnswer.split(". ").slice(0, 2).join(". ").trim()}. Written for ${spec.place}, with the decision path and what it costs. Educational only — not legal, tax, or financial advice.`,
-    cta: "Learn more",
+    cta: "Read the decision guide",
     url: absoluteUrl(spec.path),
   }));
 }

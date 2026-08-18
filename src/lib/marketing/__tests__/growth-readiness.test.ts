@@ -280,10 +280,11 @@ describe("Task 36 canonical targets", () => {
 
   it("never compares the qualified-visitor target to raw sessions", () => {
     const qualified = NINETY_DAY_TARGETS.find(t => t.metricId === "qualified_visitors")!;
-    expect(qualified.measurable).toBe(false);
+    expect(qualified.measurable).toBe(true);
     expect(NINETY_DAY_TARGETS.some(t => t.metricId === "sessions")).toBe(false);
+    // A measured session count must never satisfy the qualified-visitor target.
     const comparisons = compareTargets(
-      [{ id: "sessions", status: "MEASURED", value: 9999 }, { id: "qualified_visitors", status: "MEASURED", value: 9999 }],
+      [{ id: "sessions", status: "MEASURED", value: 9999 }],
       NINETY_DAY_TARGETS,
     );
     const qc = comparisons.find(c => c.metricId === "qualified_visitors")!;
@@ -291,9 +292,11 @@ describe("Task 36 canonical targets", () => {
     expect(qc.actual).toBeUndefined();
   });
 
-  it("registers qualified_visitors as a distinct, uninstrumented metric", () => {
+  it("registers qualified_visitors as a distinct, internally instrumented metric", () => {
     const spec = GROWTH_METRICS.find(m => m.id === "qualified_visitors")!;
-    expect(spec.system).toBe("not-instrumented");
+    expect(spec.system).toBe("app-events");
+    expect(spec.definition).toMatch(/never substituted/i);
+    // With no events recorded there is no measured value — never a fake zero.
     const reading = buildGrowthMeasurement().readings.find(r => r.id === "qualified_visitors")!;
     expect(reading.status).not.toBe("MEASURED");
     expect(reading.value).toBeUndefined();

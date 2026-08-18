@@ -28,6 +28,7 @@ import { captureAttribution } from "@/lib/marketing/attribution";
 import { recordIntentVisit } from "@/lib/marketing/lead-scoring";
 import { trackEvent } from "@/lib/marketing/analytics";
 import { ConsentBanner } from "@/components/consent-banner";
+import { MobileConversionBar } from "@/components/mobile-conversion-bar";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { AnswerFirst } from "@/components/answer-first";
 import { ContentProvenance } from "@/components/content-provenance";
@@ -174,20 +175,23 @@ function PublicFooter() {
 
 
 export function PublicShell({ children }: { children: React.ReactNode }) {
-  const [, setReady] = useState(false);
+  const [pathname, setPathname] = useState("");
   useEffect(() => {
     captureAttribution();
     const path = window.location.pathname;
     recordIntentVisit(path);
     trackEvent("page_view", { label: path, dedupeKey: `page_view|${path}` });
-    setReady(true);
+    setPathname(path);
   }, []);
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <PublicHeader />
       <main className="flex-1">{children}</main>
       <PublicFooter />
+      {/* Keeps the last footer row clear of the mobile bar. */}
+      <div className="h-16 md:hidden" aria-hidden="true" />
       <ConsentBanner />
+      <MobileConversionBar pathname={pathname} />
     </div>
   );
 }
