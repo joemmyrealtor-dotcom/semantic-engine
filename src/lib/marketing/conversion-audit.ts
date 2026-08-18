@@ -16,6 +16,7 @@ import {
   type NextAction,
 } from "./conversion-paths";
 import { LICENSE } from "./positioning";
+import { PUBLIC_LEGAL_NAV, PUBLIC_NAV } from "./content";
 
 export type ConversionFinding =
   | "no-next-action"
@@ -68,6 +69,17 @@ export interface ConversionAuditReport {
 
 function inboundMap(records: SearchIntentRecord[]): Map<string, number> {
   const counts = new Map<string, number>();
+  // Shell navigation links every page in the primary and legal menus.
+  for (const nav of [...PUBLIC_NAV, ...PUBLIC_LEGAL_NAV]) {
+    counts.set(nav.to, (counts.get(nav.to) ?? 0) + 1);
+  }
+  // A hub renders its own children, so a declared parentHub is a real
+  // inbound link from that hub to this page.
+  for (const record of records) {
+    if (record.parentHub && record.parentHub !== record.path) {
+      counts.set(record.path, (counts.get(record.path) ?? 0) + 1);
+    }
+  }
   for (const record of records) {
     const targets = new Set<string>([
       ...record.supportingPages,
@@ -127,7 +139,8 @@ export function auditPageConversion(
       detail: "Decision-intent page offers no path into a conversation.",
     });
   }
-  if (highIntent && !hasEvaluatePath && record.pageType !== "utility" && record.pageType !== "trust") {
+  const isEvaluateHub = record.path === "/assessments";
+  if (highIntent && !hasEvaluatePath && !isEvaluateHub && record.pageType !== "utility" && record.pageType !== "trust") {
     issues.push({
       finding: "high-intent-without-evaluate",
       severity: "error",
