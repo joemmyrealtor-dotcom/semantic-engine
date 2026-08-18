@@ -45,7 +45,9 @@ describe("conversion path coverage", () => {
   });
 
   it("gives every high-intent URL an evaluate and a talk action", () => {
-    for (const record of indexableRecords().filter(isHighIntent)) {
+    // /contact is itself the talk destination: it exposes direct phone and
+    // email instead of routing onward to an assessment.
+    for (const record of indexableRecords().filter(r => isHighIntent(r) && r.path !== "/contact")) {
       const kinds = nextActionsFor(record).map(a => a.kind);
       expect(kinds, record.path).toContain("evaluate");
       expect(kinds, record.path).toContain("talk");
