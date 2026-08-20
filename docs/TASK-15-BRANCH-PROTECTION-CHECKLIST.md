@@ -1,6 +1,7 @@
 # Task 15 — Branch Protection Evidence Checklist
 
-**Repository:** `joemelendezrealty.com` is now hosted at `https://github.com/joemmyrealtor-dotcom/semantic-engine`  
+**Repository:** `joemmyrealtor-dotcom/semantic-engine`  
+**Website domain:** `joemelendezrealty.com`
 **Branch:** `main`  
 **Status:** Pending owner-supplied evidence to mark **PASS**
 
