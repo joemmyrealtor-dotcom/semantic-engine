@@ -42,6 +42,7 @@ export function usePatchSave<T>(opts: PatchOptions<T>): {
   const [conflict, setConflict] = useState(false);
   const inFlight = useRef(false);
   const lastFailed = useRef<Partial<T> | null>(null);
+  const pending = useRef<Partial<T> | null>(null);
 
   const run = useCallback(async (partial: Partial<T>) => {
     if (isStalePatchConflict(opts.expectedUpdatedAt?.(), opts.currentUpdatedAt?.())) {
@@ -58,7 +59,6 @@ export function usePatchSave<T>(opts: PatchOptions<T>): {
       setConflict(false);
       lastFailed.current = null;
       setLastSavedAt(Date.now());
-      setDirty(false);
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       setError(msg);
@@ -67,21 +67,34 @@ export function usePatchSave<T>(opts: PatchOptions<T>): {
       inFlight.current = false;
       setSaving(false);
     }
+    // Replay anything typed while this write was in flight so keystrokes
+    // are never dropped.
+    const queued = pending.current;
+    if (queued) {
+      pending.current = null;
+      await run(queued);
+      return;
+    }
+    if (!lastFailed.current) setDirty(false);
   }, [opts]);
 
   const patch = useCallback(async (partial: Partial<T>) => {
     setDirty(true);
     if (inFlight.current) {
-      // merge into pending queue by shallow-collapse of last failed
-      lastFailed.current = { ...(lastFailed.current ?? {}), ...partial };
+      pending.current = mergePendingPatch(pending.current, partial);
       return;
     }
     await run(partial);
   }, [run]);
 
   const retry = useCallback(() => {
-    if (lastFailed.current) void run(lastFailed.current);
+    const payload = mergePendingPatch(lastFailed.current, pending.current ?? {});
+    if (Object.keys(payload).length) {
+      pending.current = null;
+      void run(payload);
+    }
   }, [run]);
+
 
   return { patch, state: { saving, dirty, error, lastSavedAt, retry, conflict } };
 }
