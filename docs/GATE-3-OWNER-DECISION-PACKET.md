@@ -112,7 +112,7 @@ Lovable documentation.
 
 ---
 
-## R3 — Re-proposed RPO / RTO table (PROPOSED ONLY — NOT ACCEPTED)
+## R3 — RPO / RTO table (ACCEPTED — Owner: Joe Melendez, 2026-08-21T18:56:51Z)
 
 Row 1 is re-derived against the now-verified daily snapshot cadence. The database RPO is bounded by
 the documented daily-backup interval; PITR is unavailable, so sub-daily recovery is not claimed.
@@ -135,8 +135,15 @@ inferred; no remediation opened.
 (`DR-I2`), app boot against restored target 1.62 s (`DR-I2BOOT`), application snapshot restore
 38.111 ms this gate / 0.248 s in Phase 2B, recovery regression 55/55 PASS.
 
-**These values are PROPOSED. Acceptance is not recorded.** No downstream gate may cite them as
-accepted.
+**Acceptance recorded.** Rows 1–7 as presented are **ACCEPTED** by Owner Joe Melendez on
+2026-08-21T18:56:51Z against Git commit `6c6f10d4f1ebbbbca11235e68322e728922b9f4a`. Database RPO
+accepted at **≤ 24 hours**. Monitoring item M-1 (2026-08-10 backup gap) remains **OPEN for
+monitoring**; no backup failure is inferred. See `docs/GATE-3-R3-ACCEPTANCE.md` for the binding
+record and packet SHA-256.
+
+This acceptance establishes recovery objectives only. It does **not** authorize a database restore,
+code rollback, DNS change, custom-domain activation, merge, publish, deployment, or the T17-1 /
+T17-10 migration.
 
 
 ---
@@ -177,9 +184,9 @@ are now optional improvements, not R2 blockers — R2 has cleared on platform ev
 | --- | --- | --- |
 | R1 | Plan defined, **nothing executed**, not approved | Owner runs the 6 steps, then sends release URL + tarball SHA-256 + byte size + download timestamp |
 | R2 | **PASS** — values verified from owner screenshots + official Lovable documentation; monitoring item M-1 (missing Aug 10 entry) open | Cleared |
-| R3 | Table re-proposed with **≤ 24 h** database RPO | Owner approves or revises the 7 rows |
+| R3 | **ACCEPTED** — rows 1–7 approved by Owner Joe Melendez, 2026-08-21T18:56:51Z; DB RPO ≤ 24 h; M-1 open | Cleared |
 
-Gate 3 remains **PARTIAL** (R1 pending, R3 unapproved). Production remains **BLOCKED**. T17-1 /
+Gate 3 remains **PARTIAL** (R1 pending and unexecuted). Production remains **BLOCKED**. T17-1 /
 T17-10 not run.
 
 
