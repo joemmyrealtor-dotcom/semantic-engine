@@ -1,0 +1,80 @@
+{
+  "baselineId": "BL-GATE3-20260821T161600Z",
+  "gate": 3,
+  "status": "PARTIAL",
+  "productionStatus": "BLOCKED",
+  "executedAt": "2026-08-21T16:16:00Z",
+  "scope": "Recovery baseline only. T17-1/T17-10 domain migration not executed.",
+  "code": {
+    "head": "34edc0450bd0db1da74ae6243f0fbbed5c96d753",
+    "commitAt": "2026-08-21T16:05:22Z",
+    "workingTree": "clean",
+    "serverFingerprint": "srv-34edc045",
+    "schemaVersion": 10,
+    "export": {
+      "artifact": "git archive --format=tar HEAD",
+      "bytes": 3952640,
+      "sha256": "8fe3ab87dcf06432916764a06a623d25550b58cb11aab9d3da5e32c5e3953383",
+      "location": "sandbox /tmp/gate3/checkpoint.tar (ephemeral)"
+    }
+  },
+  "database": {
+    "publicTables": 21,
+    "rlsEnabledTables": 21,
+    "policies": 62,
+    "functions": 11,
+    "triggers": 18,
+    "migrationsApplied": 13,
+    "storageBuckets": 0,
+    "totalRows": 26,
+    "contentFingerprintMd5": "162ae0f512749dd49db1a67f68bdbd9d",
+    "secretsExposed": false
+  },
+  "restoreTest": {
+    "drillId": "DR-GATE3-20260821T161559Z",
+    "environment": "isolated in-process harness",
+    "productionOverwritten": false,
+    "start": "2026-08-21T16:15:59.839Z",
+    "finish": "2026-08-21T16:16:00.007Z",
+    "backupId": "BKP-001",
+    "backupBytes": 443824,
+    "backupEntities": 191,
+    "backupSha256": "83b10ee363f17ca39001a468207062813a577530c5b1d1044fb7c01fb389da84",
+    "integrity": "PASS",
+    "restoreMs": 38.111,
+    "migrationVerification": "PASS",
+    "regressionTests": "55/55 PASS"
+  },
+  "retainedDrills": [
+    "DR-I2-20260811T173051Z",
+    "DR-I2BOOT-20260811T190919Z",
+    "BL-APPDRILL-20260727T153835212Z"
+  ],
+  "proposedObjectives": {
+    "accepted": false,
+    "rpoDatabase": "<= 5 minutes",
+    "rpoCode": "0 (commit-granular)",
+    "rtoCodeRollback": "<= 30 minutes",
+    "rtoDatabaseRestore": "<= 60 minutes",
+    "rtoAppSnapshotRestore": "<= 5 minutes",
+    "rtoDnsDomainRollback": "<= 4 hours"
+  },
+  "unverified": [
+    {
+      "id": "R1",
+      "item": "Immutable off-platform repository checkpoint (tag/release asset + SHA-256)",
+      "reason": "sandbox artifact is ephemeral; tag push requires owner"
+    },
+    {
+      "id": "R2",
+      "item": "Platform physical backup listing and PITR window",
+      "reason": "owner-only surface, not readable from this environment"
+    },
+    {
+      "id": "R3",
+      "item": "Owner acceptance of proposed RPO/RTO values",
+      "reason": "explicit approval required before recording as accepted"
+    }
+  ],
+  "prohibitedActionsTaken": []
+}
