@@ -135,8 +135,15 @@ inferred; no remediation opened.
 (`DR-I2`), app boot against restored target 1.62 s (`DR-I2BOOT`), application snapshot restore
 38.111 ms this gate / 0.248 s in Phase 2B, recovery regression 55/55 PASS.
 
-**These values are PROPOSED. Acceptance is not recorded.** No downstream gate may cite them as
-accepted.
+**Acceptance recorded.** Rows 1–7 as presented are **ACCEPTED** by Owner Joe Melendez on
+2026-08-21T18:56:51Z against Git commit `6c6f10d4f1ebbbbca11235e68322e728922b9f4a`. Database RPO
+accepted at **≤ 24 hours**. Monitoring item M-1 (2026-08-10 backup gap) remains **OPEN for
+monitoring**; no backup failure is inferred. See `docs/GATE-3-R3-ACCEPTANCE.md` for the binding
+record and packet SHA-256.
+
+This acceptance establishes recovery objectives only. It does **not** authorize a database restore,
+code rollback, DNS change, custom-domain activation, merge, publish, deployment, or the T17-1 /
+T17-10 migration.
 
 
 ---
