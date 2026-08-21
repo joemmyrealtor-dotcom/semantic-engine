@@ -112,7 +112,7 @@ Lovable documentation.
 
 ---
 
-## R3 — Re-proposed RPO / RTO table (PROPOSED ONLY — NOT ACCEPTED)
+## R3 — RPO / RTO table (ACCEPTED — Owner: Joe Melendez, 2026-08-21T18:56:51Z)
 
 Row 1 is re-derived against the now-verified daily snapshot cadence. The database RPO is bounded by
 the documented daily-backup interval; PITR is unavailable, so sub-daily recovery is not claimed.
