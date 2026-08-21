@@ -164,9 +164,10 @@ accepted.
 | Permissions | Requires a privileged database read (service-role or a dedicated read-only backup role) executed server-side only; write credentials for the off-platform bucket; owner custody of the encryption key. No client-side code may hold any of these |
 | Security requirements | Encryption key never stored in the repository or client bundle; credentials stored as platform secrets only; artifacts encrypted before leaving the platform; storage bucket private with no public read; checksum verified on both write and restore; no secret value written to logs, audit rows, or evidence documents; backup contents treated as PII-bearing and access-logged |
 | Approval gates | (1) Owner approves the design and the storage destination; (2) Owner approves creation of the required secrets and the encryption-key custody procedure; (3) Owner approves the recurring cost; (4) first successful run + first successful restore test are recorded before R2 is re-evaluated; (5) Owner approves the resulting revised R3 row 1 |
-| Effect if completed | Provides a verified recurring backup process, converting R3 row 1 from unbounded to the configured schedule interval |
+| Effect if completed | Provides an owner-held recurring backup independent of the platform, tightening R3 row 1 below the 24-hour daily cadence |
 
-**Neither path is implemented.** No scheduler, secret, bucket, or job has been created.
+**Neither path is implemented.** No scheduler, secret, bucket, or job has been created. Both paths
+are now optional improvements, not R2 blockers — R2 has cleared on platform evidence.
 
 ---
 
@@ -175,8 +176,10 @@ accepted.
 | Item | State | Cleared by |
 | --- | --- | --- |
 | R1 | Plan defined, **nothing executed**, not approved | Owner runs the 6 steps, then sends release URL + tarball SHA-256 + byte size + download timestamp |
-| R2 | Owner evidence collected — **all four values UNVERIFIED**, no Backups surface exists | Path A or Path B completing and producing real values |
-| R3 | Table re-proposed with unbounded database RPO | Owner approves or revises the 7 rows |
+| R2 | **PASS** — values verified from owner screenshots + official Lovable documentation; monitoring item M-1 (missing Aug 10 entry) open | Cleared |
+| R3 | Table re-proposed with **≤ 24 h** database RPO | Owner approves or revises the 7 rows |
 
-Gate 3 remains **PARTIAL**. Production remains **BLOCKED**. No PASS is inferred.
+Gate 3 remains **PARTIAL** (R1 pending, R3 unapproved). Production remains **BLOCKED**. T17-1 /
+T17-10 not run.
+
 
