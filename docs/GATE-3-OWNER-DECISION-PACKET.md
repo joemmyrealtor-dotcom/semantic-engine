@@ -184,9 +184,9 @@ are now optional improvements, not R2 blockers — R2 has cleared on platform ev
 | --- | --- | --- |
 | R1 | Plan defined, **nothing executed**, not approved | Owner runs the 6 steps, then sends release URL + tarball SHA-256 + byte size + download timestamp |
 | R2 | **PASS** — values verified from owner screenshots + official Lovable documentation; monitoring item M-1 (missing Aug 10 entry) open | Cleared |
-| R3 | Table re-proposed with **≤ 24 h** database RPO | Owner approves or revises the 7 rows |
+| R3 | **ACCEPTED** — rows 1–7 approved by Owner Joe Melendez, 2026-08-21T18:56:51Z; DB RPO ≤ 24 h; M-1 open | Cleared |
 
-Gate 3 remains **PARTIAL** (R1 pending, R3 unapproved). Production remains **BLOCKED**. T17-1 /
+Gate 3 remains **PARTIAL** (R1 pending and unexecuted). Production remains **BLOCKED**. T17-1 /
 T17-10 not run.
 
 
