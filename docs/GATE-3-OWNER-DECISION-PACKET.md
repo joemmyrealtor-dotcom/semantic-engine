@@ -78,46 +78,58 @@ be edited, replaced, or re-uploaded; the tag it points at is also frozen.
 
 ---
 
-## R2 — Backup platform and read-only lookup path (OWNER EVIDENCE RECORDED)
+## R2 — Backup platform and read-only lookup path (PASS)
 
-**Backup platform:** the managed Lovable Cloud backend (managed Postgres). Backups, if any, are
-platform-managed; they are not created or scheduled by application code.
+**Backup platform:** the managed Lovable Cloud backend (managed Postgres). A **Backups** panel does
+exist at Cloud → Database → Backups; it lists daily snapshots with a "Restore to this backup"
+action per row. It was reached read-only; nothing was changed and no backup or restore was started.
 
-**Owner-side observation (2026-08-21, read-only, nothing changed):** the Cloud menu exposes
-Overview, Emails, Database, Users, Storage, Secrets, Jobs, Edge functions, SQL editor, Logs, Usage.
-**There is no Backups entry.** No backup, retention, or PITR surface is reachable by the owner.
+**Evidence:** two owner-side screenshots of Cloud → Database → Backups (2026-08-21, 11:48 local /
+18:48 UTC), plus official Lovable documentation stating daily backups with retention of roughly
+14 days and no point-in-time recovery.
 
 | # | Value | Recorded state |
 | --- | --- | --- |
-| 1 | Latest successful backup timestamp | **UNVERIFIED** |
-| 2 | Retention period | **UNVERIFIED** |
-| 3 | PITR status | **UNVERIFIED** |
-| 4 | Earliest recoverable time | **UNVERIFIED** |
+| 1 | Latest successful backup timestamp | **2026-08-21T07:36:26Z** (verified — screenshot) |
+| 2 | Observed retention window | **2026-08-08 → 2026-08-21** (13 snapshots visible) |
+| 3 | Official platform retention | **Up to ~14 days** (Lovable documentation) |
+| 4 | PITR status | **Not available** — recovery uses daily snapshots |
+| 5 | Oldest visible recoverable snapshot | **2026-08-08T07:34:03Z** |
 
-Explicitly **not** recorded: PITR is *not* recorded as disabled; no daily-backup cadence is assumed;
-no 24-hour RPO is assumed. Absence of a UI panel is absence of evidence, not evidence of absence.
+### Observed snapshot list (verbatim from the panel)
 
-R2 is therefore recorded as **evidence-collected, values UNVERIFIED** — it does not clear.
+Aug 21 07:36:26Z · Aug 20 07:35:31Z · Aug 19 07:38:58Z · Aug 18 07:39:18Z · Aug 17 07:33:56Z ·
+Aug 16 07:36:33Z · Aug 15 07:39:13Z · Aug 14 07:36:29Z · Aug 13 07:38:09Z · Aug 12 07:39:41Z ·
+Aug 11 07:37:27Z · Aug 9 07:37:51Z · Aug 8 07:34:03Z
+
+**Observed gap:** there is **no August 10, 2026 entry** between Aug 9 and Aug 11. This is recorded
+as an *observed gap in the listing* only. No backup failure is inferred: the platform has published
+no evidence of a failed or skipped run, and the cause (missed run, retention trim, or display
+behaviour) is unknown. Tracked as a monitoring item, not as a defect.
+
+R2 is recorded as **PASS** — values verified from owner-side screenshot evidence and official
+Lovable documentation.
 
 ---
 
 ## R3 — Re-proposed RPO / RTO table (PROPOSED ONLY — NOT ACCEPTED)
 
-Row 1 is re-derived from **verified recovery mechanisms only**. The only verified database recovery
-mechanism today is the on-demand logical snapshot/restore drill (`DR-I2-20260811T173051Z`,
-`DR-GATE3-20260821T161559Z`). There is no verified recurring backup process, so the database RPO
-cannot be a fixed interval; it is **unbounded and equal to the elapsed time since the most recent
-verified logical backup**.
+Row 1 is re-derived against the now-verified daily snapshot cadence. The database RPO is bounded by
+the documented daily-backup interval; PITR is unavailable, so sub-daily recovery is not claimed.
 
 | # | System | Objective | Proposed value | Measurement point | Owner | Recovery priority |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | Database (managed Postgres) | **RPO** | **Unbounded — equals time elapsed since the latest verified logical backup** (no recurring backup process verified; platform backup/PITR UNVERIFIED per R2) | `now()` minus timestamp of the most recent integrity-verified logical snapshot | Owner (Joe) | P1 — highest |
+| 1 | Database (managed Postgres) | **RPO** | **≤ 24 hours** — documented daily snapshot cadence; no PITR, so sub-daily recovery is not available | `now()` minus the timestamp of the latest snapshot listed in Cloud → Database → Backups (latest verified: 2026-08-21T07:36:26Z) | Owner (Joe) | P1 — highest |
 | 2 | Application code (`main`) | **RPO** | 0 (commit-granular) | Last merged commit on protected `main`; no unversioned production code exists | Owner (Joe) via protected PR | P1 |
 | 3 | Application code rollback | **RTO** | ≤ 30 minutes | Revert PR opened → required check `SECURITY DEFINER execute grants` green → merged → rebuilt fingerprint matches `srv-34edc045` | Owner (Joe) | P1 |
-| 4 | Database restore (from a verified logical snapshot) | **RTO** | ≤ 60 minutes | Restore initiated → post-restore verification passes (21 tables / 21 RLS / 62 policies / 11 functions / 18 triggers, content fingerprint `162ae0f512749dd49db1a67f68bdbd9d`) | Owner (Joe) | P1 |
+| 4 | Database restore (platform daily snapshot) | **RTO** | ≤ 60 minutes | Restore initiated from the Backups panel → post-restore verification passes (21 tables / 21 RLS / 62 policies / 11 functions / 18 triggers, content fingerprint `162ae0f512749dd49db1a67f68bdbd9d`) | Owner (Joe) | P1 |
 | 5 | Application snapshot restore (`/admin/backups`) | **RTO** | ≤ 5 minutes | Operator clicks Restore (reason ≥ 8 chars + typed `RESTORE`) → integrity PASS + migration verification PASS | Operator / Owner | P2 |
 | 6 | DNS routing (`joemelendezrealty.com`) | **RTO** | ≤ 4 hours | Registrar record change saved → authoritative + public resolver agreement via `dig` | Owner (Joe) at registrar | P3 |
 | 7 | Custom-domain activation / `PUBLIC_SITE_ORIGIN` | **RTO** | ≤ 4 hours (bound to row 6) | Origin revert commit merged **and** domain deactivated → all 126 URLs emit the reverted origin | Owner (Joe) | P3 — reverts as one unit with row 6 |
+
+**Monitoring item M-1:** missing 2026-08-10 snapshot in the Backups listing. Action: re-inspect the
+panel on the next gate review and confirm whether daily entries remain contiguous. No failure
+inferred; no remediation opened.
 
 **Supporting measurements (already evidenced, not objectives):** logical DB restore 0.265 s
 (`DR-I2`), app boot against restored target 1.62 s (`DR-I2BOOT`), application snapshot restore
@@ -125,6 +137,7 @@ verified logical backup**.
 
 **These values are PROPOSED. Acceptance is not recorded.** No downstream gate may cite them as
 accepted.
+
 
 ---
 
