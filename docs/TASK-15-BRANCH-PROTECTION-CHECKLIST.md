@@ -3,7 +3,7 @@
 **Repository:** `joemmyrealtor-dotcom/semantic-engine`  
 **Website domain:** `joemelendezrealty.com`
 **Branch:** `main`  
-**Status:** Pending owner-supplied evidence to mark **PASS**
+**Status:** **PASS** — Option A screenshot evidence accepted 2026-08-21
 
 ---
 
@@ -13,9 +13,23 @@
 |---|---|
 | 2026-08-21 | Owner reported saving the `main` rule with all six controls in the approved state. |
 | 2026-08-21 | Programmatic verification **not possible** — the GitHub connector was declined, so no API read of `/branches/main/protection` could be performed from Lovable. |
-| 2026-08-21 | Task 15 remains **NOT VERIFIED**. Owner-supplied Option A, B, or C evidence is still required. |
+| 2026-08-21 | **Option A evidence received.** Two screenshots of `settings/branch_protection_rules/81939926` for `main` show: Require a pull request before merging ✅ (Require approvals ✅, 1 approval); Require status checks to pass before merging ✅ with Require branches to be up to date ✅ and **`SECURITY DEFINER execute grants` (GitHub Actions) listed under "Status checks that are required"**; Do not allow bypassing the above settings ✅; Allow force pushes ❌; Allow deletions ❌. |
+| 2026-08-21 | **Task 15 marked PASS.** All six required controls verified against this checklist. |
+
+### Evidence state verified (all six controls)
+
+| Setting | Required | Observed |
+|---|---|---|
+| Require a pull request before merging | ✅ | ✅ Checked |
+| Require status checks to pass before merging | ✅ | ✅ Checked |
+| `SECURITY DEFINER execute grants` required | ✅ | ✅ Listed as required (GitHub Actions) |
+| Do not allow bypassing the above settings | ✅ | ✅ Checked |
+| Allow force pushes | ❌ | ❌ Unchecked |
+| Allow deletions | ❌ | ❌ Unchecked |
 
 ---
+
+
 
 
 ## Required evidence to mark Task 15 PASS
