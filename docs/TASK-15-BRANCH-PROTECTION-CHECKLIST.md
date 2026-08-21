@@ -7,6 +7,17 @@
 
 ---
 
+## Verification log
+
+| Date (UTC) | Event |
+|---|---|
+| 2026-08-21 | Owner reported saving the `main` rule with all six controls in the approved state. |
+| 2026-08-21 | Programmatic verification **not possible** — the GitHub connector was declined, so no API read of `/branches/main/protection` could be performed from Lovable. |
+| 2026-08-21 | Task 15 remains **NOT VERIFIED**. Owner-supplied Option A, B, or C evidence is still required. |
+
+---
+
+
 ## Required evidence to mark Task 15 PASS
 
 Provide **one** of the following for the `main` branch:
