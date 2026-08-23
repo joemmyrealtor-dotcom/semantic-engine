@@ -62,21 +62,33 @@ export function usePatchSave<T>(opts: PatchOptions<T>): {
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       setError(msg);
-      lastFailed.current = partial;
+      lastFailed.current = mergePendingPatch(lastFailed.current, partial);
     } finally {
       inFlight.current = false;
       setSaving(false);
     }
+    const queued = pending.current;
+    if (lastFailed.current) {
+      // This attempt failed: fold anything typed meanwhile into the retained
+      // payload instead of replaying it separately, so the failed keys are
+      // never erased by a subsequent successful write.
+      if (queued) {
+        pending.current = null;
+        lastFailed.current = mergePendingPatch(lastFailed.current, queued);
+      }
+      setDirty(true);
+      return;
+    }
     // Replay anything typed while this write was in flight so keystrokes
     // are never dropped.
-    const queued = pending.current;
     if (queued) {
       pending.current = null;
       await run(queued);
       return;
     }
-    if (!lastFailed.current) setDirty(false);
+    setDirty(false);
   }, [opts]);
+
 
   const patch = useCallback(async (partial: Partial<T>) => {
     setDirty(true);
