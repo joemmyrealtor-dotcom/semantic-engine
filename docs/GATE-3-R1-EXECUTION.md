@@ -72,13 +72,15 @@ Prohibited in this step: no branch push, no merge, no `main` update, no publish/
 
 ## 4. GitHub UI steps (immutability)
 
-1. Settings → Rules → Rulesets → New ruleset → New tag ruleset
+1. Settings → Rules → Rulesets → New ruleset → New tag ruleset — **DONE 2026-08-24, Step 5 = PASS**
    - Name: `baseline-tags-immutable`
    - Enforcement: Active
-   - Target tags → Include by pattern: `baseline/*`
-   - Rules: Restrict updates ✔ · Restrict deletions ✔ · Restrict creations (optional, add owner bypass if enabled)
-   - Bypass list: empty
+   - Target tags → Include by pattern: `baseline/**` (verified saved)
+   - Rules: Restrict updates ✔ · Restrict deletions ✔ · Restrict creations OFF (allows the one-time Step 6 tag push)
+   - Bypass list: empty (verified "Bypass list is empty")
+   - Evidence: two owner screenshots of the saved ruleset (`Ruleset created` banner, 2026-08-24 10:07–10:08 local)
 2. Settings → General → Releases → enable **Immutable releases** (if available on the plan).
+
 3. Releases → Draft a new release
    - Tag: `baseline/BL-GATE3-20260821T161600Z` (existing tag — do not create a new one)
    - Title: `Gate 3 Recovery Baseline — BL-GATE3-20260821T161600Z`
