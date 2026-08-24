@@ -49,8 +49,8 @@ git fetch --all --tags
 git cat-file -t 34edc0450bd0db1da74ae6243f0fbbed5c96d753   # -> commit
 git log -1 --format='%H%n%ad%n%s' 34edc0450bd0db1da74ae6243f0fbbed5c96d753
 
-# 2) Verify content binding BEFORE tagging
-git archive --format=tar 34edc0450bd0db1da74ae6243f0fbbed5c96d753 | sha256sum
+# 2) Verify content binding BEFORE tagging (normalized line endings — PINNED)
+git -c core.autocrlf=false -c core.eol=lf archive --format=tar 34edc0450bd0db1da74ae6243f0fbbed5c96d753 | sha256sum
 # expected: 8fe3ab87dcf06432916764a06a623d25550b58cb11aab9d3da5e32c5e3953383
 
 # 3) Create the annotated baseline tag on the target commit (NOT HEAD)
