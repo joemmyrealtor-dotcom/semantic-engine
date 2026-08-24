@@ -1,6 +1,6 @@
 # Gate 3 — R1 Immutable Off-Platform Checkpoint (Execution Record)
 
-Status: EXECUTED AND VERIFIED · R1 = PASS (evidence recorded 2026-08-24T20:11:29Z; A-1 open)
+Status: EXECUTED AND VERIFIED · R1 = PASS (evidence recorded 2026-08-24T20:11:29Z; A-1 closed 2026-08-24T20:31:49Z)
 
 ## 1. Confirmed target
 
@@ -143,7 +143,7 @@ Evidence captured: 2026-08-24T20:11:29Z · Executed by: Joe Melendez · Reposito
 | Published | 2026-08-24T19:53:17Z · draft `false` · pre-release `false` · immutable `true` · latest `No` | PASS |
 | GitHub archive filename | `BL-GATE3-20260821T161600Z.tar.gz` | recorded |
 | GitHub archive size | 978,345 bytes | recorded (recompressed artifact, non-binding) |
-| GitHub archive SHA-256 | `7A3422D55BFDC66ED4C9A8CBC100241ACC4866B688B675E204D06BCD5FEBC9FA6` (as submitted) | **A-1 OPEN** — 65 hex characters; a SHA-256 is 64. Transcription anomaly, non-blocking. |
+| GitHub archive SHA-256 | `7A3422D55BFDC66ED4C9ABCBC100241ACC4866B68B675E204D06BCD5FEBC9FA6` | **A-1 CLOSED** — 64 hex characters; recaptured 2026-08-24T20:31:49Z. |
 | Tag ruleset | `baseline-tags-immutable` · Active · target `baseline/**` · bypass empty · restrict updates ON · deletions ON · creations OFF | PASS |
 
 **Binding note (accepted):** the release API `targetCommitish: main` is GitHub release metadata only. The
@@ -151,23 +151,23 @@ authoritative binding is the remote annotated tag's peeled `^{}` reference, whic
 `34edc0450bd0db1da74ae6243f0fbbed5c96d753`. Independent content binding is the tree SHA and normalized
 tar SHA-256 above, both re-verified in this sandbox.
 
-**A-1 (open, monitoring):** re-capture the published `.tar.gz` SHA-256 (expect exactly 64 hex chars) and
-replace the value above. This affects only the convenience copy of the GitHub-generated archive; it does
-not affect tag→commit binding, the tree SHA, or the normalized tar SHA-256, so it does not gate R1.
+**A-1 (closed, 2026-08-24T20:31:49Z):** re-captured the published `.tar.gz` SHA-256. The replacement value has
+exactly 64 hex characters and 978,345 bytes. This affects only the convenience copy of the GitHub-generated
+archive; it does not affect tag→commit binding, the tree SHA, or the normalized tar SHA-256.
 
 Negative controls, all confirmed NO: main branch updated · merge or PR opened · publish/deploy ·
 DNS record changed · `PUBLIC_SITE_ORIGIN` changed · T17-1 / T17-10 migration run.
 
-**R1 = PASS (2026-08-24T20:11:29Z), A-1 open.**
+**R1 = PASS (2026-08-24T20:11:29Z), A-1 closed 2026-08-24T20:31:49Z.**
 
 ## 6. Verification performed on return of evidence (read-only) — DONE
 
 - Re-verified `34edc045` presence, tree SHA, normalized tar SHA-256, and byte size in-sandbox: all match.
 - Confirmed tag→commit binding and ruleset/release fields against the submitted evidence.
-- Recorded A-1 (GitHub archive hash length anomaly) as open, non-blocking.
+- Recorded A-1 (GitHub archive hash length anomaly) as **closed** (recaptured 2026-08-24T20:31:49Z, 64 hex chars, 978,345 bytes), non-binding.
 
 ## 7. Status after this record
 
-Gate 3: **PASS** · R1: **PASS** (A-1 open) · R2: PASS (M-1 open) · R3: ACCEPTED (2026-08-21T18:56:51Z) ·
+Gate 3: **PASS** · R1: **PASS** (A-1 closed 2026-08-24T20:31:49Z) · R2: PASS (M-1 open) · R3: ACCEPTED (2026-08-21T18:56:51Z) ·
 126-URL migration: NOT RUN · Production: **BLOCKED** pending separate explicit approval.
 
