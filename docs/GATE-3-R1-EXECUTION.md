@@ -62,7 +62,8 @@ git rev-list -n 1 baseline/BL-GATE3-20260821T161600Z   # -> 34edc045...
 git push origin refs/tags/baseline/BL-GATE3-20260821T161600Z
 
 # 5) Local off-platform archive + hash (retain off GitHub)
-git archive --format=tar.gz -o BL-GATE3-20260821T161600Z.tar.gz \
+git -c core.autocrlf=false -c core.eol=lf archive --format=tar.gz \
+  -o BL-GATE3-20260821T161600Z.tar.gz \
   baseline/BL-GATE3-20260821T161600Z
 sha256sum BL-GATE3-20260821T161600Z.tar.gz | tee BL-GATE3-20260821T161600Z.tar.gz.sha256
 ```
