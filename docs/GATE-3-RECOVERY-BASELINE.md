@@ -37,8 +37,8 @@ published as immutable release
 `https://github.com/joemmyrealtor-dotcom/semantic-engine/releases/tag/baseline/BL-GATE3-20260821T161600Z`
 (draft false, pre-release false, not latest). Tree SHA `00a2784c2455b59116fa00d5c229891724e43caf` and normalized
 tar SHA-256 `8fe3ab87…3383` (3,952,640 bytes, `core.autocrlf=false` / `core.eol=lf`) re-verified in-sandbox.
-GitHub-generated archive `BL-GATE3-20260821T161600Z.tar.gz`, 978,345 bytes; its submitted SHA-256 has 65 hex
-characters and is tracked as **A-1 (open, non-blocking)** for re-capture. Full record:
+GitHub-generated archive `BL-GATE3-20260821T161600Z.tar.gz`, 978,345 bytes; its submitted SHA-256 is
+`7A3422D55BFDC66ED4C9ABCBC100241ACC4866B68B675E204D06BCD5FEBC9FA6` (64 hex characters; **A-1 closed**, recaptured 2026-08-24T20:31:49Z). Full record:
 `docs/GATE-3-R1-EXECUTION.md` §5b.
 
 ## 2. Database backup evidence & inventory
@@ -182,8 +182,8 @@ restore test, recovery regression, rollback procedures, dry-run report, R1 immut
 checkpoint, R2 platform backup evidence, R3 owner-accepted recovery objectives.
 
 Open monitoring items (non-blocking): **M-1** — 2026-08-10 backup gap, re-inspect at next gate review.
-**A-1** — submitted GitHub `.tar.gz` SHA-256 has 65 hex characters; re-capture and replace. Neither
-affects the tag→commit binding, the tree SHA, or the normalized tar SHA-256.
+**A-1** — CLOSED 2026-08-24T20:31:49Z. Recaptured GitHub `.tar.gz` SHA-256 has 64 hex characters and matches the
+published release archive. It does not affect the tag→commit binding, the tree SHA, or the normalized tar SHA-256.
 
 **Production remains BLOCKED.** Gate 3 PASS establishes recovery evidence only. It does not authorize a
 deploy, publish, DNS change, custom-domain activation, `PUBLIC_SITE_ORIGIN` change, or the

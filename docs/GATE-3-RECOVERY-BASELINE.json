@@ -77,9 +77,9 @@
     "archiveNormalization": "core.autocrlf=false, core.eol=lf",
     "githubArchiveFilename": "BL-GATE3-20260821T161600Z.tar.gz",
     "githubArchiveBytes": 978345,
-    "githubArchiveSha256Submitted": "7A3422D55BFDC66ED4C9A8CBC100241ACC4866B688B675E204D06BCD5FEBC9FA6",
-    "githubArchiveSha256Anomaly": "A-1: submitted value is 65 hex characters; SHA-256 is 64. Non-binding artifact; re-capture required.",
-    "release": {
+      "githubArchiveSha256Submitted": "7A3422D55BFDC66ED4C9ABCBC100241ACC4866B68B675E204D06BCD5FEBC9FA6",
+      "githubArchiveSha256Anomaly": "A-1: CLOSED 2026-08-24T20:31:49Z. 64 hex characters, 978,345 bytes. Non-binding artifact.",
+      "release": {
       "url": "https://github.com/joemmyrealtor-dotcom/semantic-engine/releases/tag/baseline/BL-GATE3-20260821T161600Z",
       "title": "Gate 3 Recovery Baseline - BL-GATE3-20260821T161600Z",
       "publishedAt": "2026-08-24T19:53:17Z",
@@ -108,8 +108,7 @@
     "openItems": ["M-1: 2026-08-10 backup gap open for monitoring; no failure inferred"]
   },
   "openMonitoringItems": [
-    { "id": "M-1", "item": "2026-08-10 backup gap", "blocking": false },
-    { "id": "A-1", "item": "GitHub .tar.gz SHA-256 submitted with 65 hex characters; re-capture", "blocking": false }
+    { "id": "M-1", "item": "2026-08-10 backup gap", "blocking": false }
   ],
   "unverified": [],
   "prohibitedActionsTaken": []
