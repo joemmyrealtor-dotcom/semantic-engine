@@ -164,10 +164,10 @@ DNS record changed · `PUBLIC_SITE_ORIGIN` changed · T17-1 / T17-10 migration r
 
 - Re-verified `34edc045` presence, tree SHA, normalized tar SHA-256, and byte size in-sandbox: all match.
 - Confirmed tag→commit binding and ruleset/release fields against the submitted evidence.
-- Recorded A-1 (GitHub archive hash length anomaly) as open, non-blocking.
+- Recorded A-1 (GitHub archive hash length anomaly) as **closed** (recaptured 2026-08-24T20:31:49Z, 64 hex chars, 978,345 bytes), non-binding.
 
 ## 7. Status after this record
 
-Gate 3: **PASS** · R1: **PASS** (A-1 open) · R2: PASS (M-1 open) · R3: ACCEPTED (2026-08-21T18:56:51Z) ·
+Gate 3: **PASS** · R1: **PASS** (A-1 closed 2026-08-24T20:31:49Z) · R2: PASS (M-1 open) · R3: ACCEPTED (2026-08-21T18:56:51Z) ·
 126-URL migration: NOT RUN · Production: **BLOCKED** pending separate explicit approval.
 
