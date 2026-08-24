@@ -162,7 +162,7 @@ explicitly. No downstream gate may cite them as accepted before that approval.
 | 3 | Publish immutable off-platform checkpoint | PASS (R1) | 2026-08-24T19:53:17Z | owner-executed tag + immutable release | `docs/GATE-3-R1-EXECUTION.md` §5b |
 | 4 | Database structural inventory | PASS | 2026-08-21T16:15:45Z | read-only SQL on `public` | §2 |
 | 5 | Database content fingerprint | PASS | 2026-08-21T16:15:50Z | read-only SQL | §2 |
-| 6 | Platform physical backup / PITR window | UNVERIFIED (R2) | — | owner-only surface | §8 |
+| 6 | Platform physical backup / PITR window | PASS (R2, M-1 open) | 2026-08-21T07:36:00Z | owner-supplied Backups panel evidence | `docs/GATE-3-OWNER-DECISION-PACKET.md` §R2 |
 | 7 | Isolated restore dry-run | PASS (38.111 ms) | 2026-08-21T16:15:59Z | in-process harness | §3a |
 | 8 | Backup integrity verification | PASS | 2026-08-21T16:16:00Z | `verifyBackupIntegrity` | §3a |
 | 9 | Post-restore migration verification | PASS (0 issues) | 2026-08-21T16:16:00Z | `verifyMigration` | §3a |
