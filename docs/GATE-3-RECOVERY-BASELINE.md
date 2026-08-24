@@ -170,33 +170,39 @@ explicitly. No downstream gate may cite them as accepted before that approval.
 | 11 | Backend logical restore parity | PASS (retained) | 2026-08-11T17:30:51Z | `DR-I2` drill | `docs/TASK-16-I2-RESTORE-DRILL.md` |
 | 12 | App boot against restored target | PASS (retained) | 2026-08-11T19:09:19Z | `DR-I2BOOT` drill | `docs/TASK-16-I2-APP-BOOT-DRILL.md` |
 | 13 | Rollback procedures documented | PASS | 2026-08-21T16:16:00Z | this document | §4 |
-| 14 | RPO / RTO recorded as accepted | PENDING OWNER APPROVAL | — | Joe | §5 |
+| 14 | RPO / RTO recorded as accepted | ACCEPTED (R3) | 2026-08-21T18:56:51Z | owner acceptance | `docs/GATE-3-R3-ACCEPTANCE.md` |
 | 15 | Production untouched | PASS | throughout | read-only DB access; no deploy/DNS/CRM action | — |
 
 ## 7. Gate 3 status
 
-**Gate 3: PARTIAL — NOT PASS.**
+**Gate 3: PASS (2026-08-24T20:11:29Z).**
 
 Passing: code checkpoint, repository export hash, database inventory and fingerprint, isolated
-restore test, recovery regression, rollback procedures, dry-run report.
+restore test, recovery regression, rollback procedures, dry-run report, R1 immutable off-platform
+checkpoint, R2 platform backup evidence, R3 owner-accepted recovery objectives.
 
-Blocking: R1 (immutable off-platform checkpoint), R2 (platform backup / PITR evidence),
-and owner acceptance of the proposed RPO / RTO values. Gate 3 is recorded PASS only when those
-three items carry retained evidence. No PASS is inferred.
+Open monitoring items (non-blocking): **M-1** — 2026-08-10 backup gap, re-inspect at next gate review.
+**A-1** — submitted GitHub `.tar.gz` SHA-256 has 65 hex characters; re-capture and replace. Neither
+affects the tag→commit binding, the tree SHA, or the normalized tar SHA-256.
 
-## 8. Owner actions to clear UNVERIFIED items
+**Production remains BLOCKED.** Gate 3 PASS establishes recovery evidence only. It does not authorize a
+deploy, publish, DNS change, custom-domain activation, `PUBLIC_SITE_ORIGIN` change, or the
+T17-1 / T17-10 126-URL migration, all of which require separate explicit approval.
 
-**R1 — immutable checkpoint**
-1. `git tag -a baseline/BL-GATE3-20260821T161600Z 34edc0450bd0db1da74ae6243f0fbbed5c96d753 -m "Gate 3 recovery baseline"`
-2. `git push origin baseline/BL-GATE3-20260821T161600Z`
-3. Download `https://github.com/joemmyrealtor-dotcom/semantic-engine/archive/refs/tags/baseline/BL-GATE3-20260821T161600Z.tar.gz`
-4. Run `sha256sum` on the download and paste the tag URL + hash here.
+## 8. Owner actions — CLEARED
 
-**R2 — platform backup / PITR evidence**
-1. Open backend project settings → Database → Backups.
-2. Record: most recent successful backup timestamp, retention window, and whether PITR is enabled
-   with its earliest recoverable timestamp.
-3. Paste those three values (no keys, no connection strings, no passwords) here.
+**R1 — immutable checkpoint: CLEARED 2026-08-24.** Annotated tag
+`baseline/BL-GATE3-20260821T161600Z` pushed and protected by ruleset `baseline-tags-immutable`
+(Active, `baseline/**`, bypass empty, updates + deletions restricted, creations off); immutable release
+published 2026-08-24T19:53:17Z at
+`https://github.com/joemmyrealtor-dotcom/semantic-engine/releases/tag/baseline/BL-GATE3-20260821T161600Z`
+(draft false, pre-release false, not latest). Full evidence: `docs/GATE-3-R1-EXECUTION.md` §5b.
+Residual: A-1 (archive hash re-capture).
 
-**RPO / RTO acceptance**
-Reply approving the §5 table as-is, or supply revised values, and it will be recorded as accepted.
+**R2 — platform backup / PITR evidence: CLEARED (PASS).** Latest snapshot 2026-08-21T07:36:00Z,
+retention ~14 days, PITR not available on the current plan. M-1 (2026-08-10 gap) open for monitoring.
+Evidence: `docs/GATE-3-OWNER-DECISION-PACKET.md` §R2.
+
+**RPO / RTO acceptance: CLEARED (ACCEPTED).** Rows 1–7 accepted by Joe Melendez at
+2026-08-21T18:56:51Z; database RPO ≤ 24 hours. Evidence: `docs/GATE-3-R3-ACCEPTANCE.md`.
+
