@@ -1,7 +1,8 @@
 {
   "baselineId": "BL-GATE3-20260821T161600Z",
   "gate": 3,
-  "status": "PARTIAL",
+  "status": "PASS",
+  "statusRecordedAt": "2026-08-24T20:11:29Z",
   "productionStatus": "BLOCKED",
   "executedAt": "2026-08-21T16:16:00Z",
   "scope": "Recovery baseline only. T17-1/T17-10 domain migration not executed.",
