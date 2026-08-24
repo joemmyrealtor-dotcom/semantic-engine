@@ -125,14 +125,49 @@ Negative controls (must all be NO):
   T17-1 / T17-10 migration run:   [N]
 
 Attachments: screenshot of tag ruleset, screenshot of published release.
-```
+## 5b. R1 FINAL EVIDENCE — RECORDED AND VERIFIED (2026-08-24)
 
-## 6. Verification I will perform on return of evidence (read-only)
+Evidence captured: 2026-08-24T20:11:29Z · Executed by: Joe Melendez · Repository: `joemmyrealtor-dotcom/semantic-engine`
 
-- Re-verify `34edc045` presence and tar SHA-256 in-sandbox.
-- Confirm tag→commit binding and ruleset/release fields against this form.
-- Update `docs/GATE-3-OWNER-DECISION-PACKET.md` §R1 to PASS and re-issue Gate 3 status.
+| Item | Value | Verification |
+| --- | --- | --- |
+| Tag | `baseline/BL-GATE3-20260821T161600Z` (annotated, existing tag reused) | PASS |
+| Peeled `^{}` target commit | `34edc0450bd0db1da74ae6243f0fbbed5c96d753` | PASS (re-verified in-sandbox: object type `commit`) |
+| Commit subject | Verified branch protection | PASS |
+| Tree SHA | `00a2784c2455b59116fa00d5c229891724e43caf` | PASS (re-computed in-sandbox) |
+| Normalized tar SHA-256 | `8fe3ab87dcf06432916764a06a623d25550b58cb11aab9d3da5e32c5e3953383` | PASS (re-computed in-sandbox) |
+| Normalized tar size | 3,952,640 bytes | PASS (re-computed in-sandbox) |
+| Archive normalization | `core.autocrlf=false`, `core.eol=lf` | PASS (pinned, §2) |
+| Release URL | https://github.com/joemmyrealtor-dotcom/semantic-engine/releases/tag/baseline/BL-GATE3-20260821T161600Z | PASS |
+| Release title | Gate 3 Recovery Baseline - BL-GATE3-20260821T161600Z | PASS |
+| Published | 2026-08-24T19:53:17Z · draft `false` · pre-release `false` · immutable `true` · latest `No` | PASS |
+| GitHub archive filename | `BL-GATE3-20260821T161600Z.tar.gz` | recorded |
+| GitHub archive size | 978,345 bytes | recorded (recompressed artifact, non-binding) |
+| GitHub archive SHA-256 | `7A3422D55BFDC66ED4C9A8CBC100241ACC4866B688B675E204D06BCD5FEBC9FA6` (as submitted) | **A-1 OPEN** — 65 hex characters; a SHA-256 is 64. Transcription anomaly, non-blocking. |
+| Tag ruleset | `baseline-tags-immutable` · Active · target `baseline/**` · bypass empty · restrict updates ON · deletions ON · creations OFF | PASS |
+
+**Binding note (accepted):** the release API `targetCommitish: main` is GitHub release metadata only. The
+authoritative binding is the remote annotated tag's peeled `^{}` reference, which resolves to
+`34edc0450bd0db1da74ae6243f0fbbed5c96d753`. Independent content binding is the tree SHA and normalized
+tar SHA-256 above, both re-verified in this sandbox.
+
+**A-1 (open, monitoring):** re-capture the published `.tar.gz` SHA-256 (expect exactly 64 hex chars) and
+replace the value above. This affects only the convenience copy of the GitHub-generated archive; it does
+not affect tag→commit binding, the tree SHA, or the normalized tar SHA-256, so it does not gate R1.
+
+Negative controls, all confirmed NO: main branch updated · merge or PR opened · publish/deploy ·
+DNS record changed · `PUBLIC_SITE_ORIGIN` changed · T17-1 / T17-10 migration run.
+
+**R1 = PASS (2026-08-24T20:11:29Z), A-1 open.**
+
+## 6. Verification performed on return of evidence (read-only) — DONE
+
+- Re-verified `34edc045` presence, tree SHA, normalized tar SHA-256, and byte size in-sandbox: all match.
+- Confirmed tag→commit binding and ruleset/release fields against the submitted evidence.
+- Recorded A-1 (GitHub archive hash length anomaly) as open, non-blocking.
 
 ## 7. Status after this record
 
-Gate 3: PARTIAL · R1: APPROVED, TARGET CONFIRMED, UNEXECUTED · R2: PASS (M-1 open) · R3: ACCEPTED (2026-08-21T18:56:51Z) · 126-URL migration: NOT RUN · Production: BLOCKED
+Gate 3: **PASS** · R1: **PASS** (A-1 open) · R2: PASS (M-1 open) · R3: ACCEPTED (2026-08-21T18:56:51Z) ·
+126-URL migration: NOT RUN · Production: **BLOCKED** pending separate explicit approval.
+
