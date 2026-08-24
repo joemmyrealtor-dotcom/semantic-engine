@@ -1,6 +1,6 @@
 # Gate 3 — R1 Immutable Off-Platform Checkpoint (Execution Record)
 
-Status: APPROVED · TARGET CONFIRMED · AWAITING OWNER EXECUTION ON GITHUB
+Status: EXECUTED AND VERIFIED · R1 = PASS (evidence recorded 2026-08-24T20:11:29Z; A-1 open)
 
 ## 1. Confirmed target
 
