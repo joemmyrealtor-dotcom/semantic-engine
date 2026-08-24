@@ -1,3 +1,4 @@
+import { isProvisionalOrigin } from "../site";
 import { describe, expect, it } from "vitest";
 import { indexableRecords, intentMap, missingIntentRecords, orphanIntentRecords, getIntentRecord } from "../intent-map";
 import {
@@ -200,9 +201,10 @@ describe("indexing launch package", () => {
     expect(pkg.verificationPlans.every(p => p.submitted === false)).toBe(true);
   });
 
-  it("blocks while the canonical origin is provisional", () => {
-    expect(pkg.originStatus.status).toBe("BLOCKED");
-    expect(pkg.readiness).toBe("BLOCKED");
+  it("tracks the canonical origin state (Gate 5: production origin configured)", () => {
+    const provisional = isProvisionalOrigin(pkg.originStatus.origin);
+    expect(pkg.originStatus.status).toBe(provisional ? "BLOCKED" : "PASS");
+    if (provisional) expect(pkg.readiness).toBe("BLOCKED");
   });
 
   it("allows AI crawlers and disallows operator surfaces", () => {

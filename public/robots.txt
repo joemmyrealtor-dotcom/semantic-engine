@@ -40,4 +40,4 @@ Allow: /
 User-agent: Applebot-Extended
 Allow: /
 
-Sitemap: https://semantic-engine.lovable.app/sitemap.xml
+Sitemap: https://joemelendezrealty.com/sitemap.xml
