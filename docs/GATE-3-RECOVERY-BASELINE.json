@@ -1,7 +1,8 @@
 {
   "baselineId": "BL-GATE3-20260821T161600Z",
   "gate": 3,
-  "status": "PARTIAL",
+  "status": "PASS",
+  "statusRecordedAt": "2026-08-24T20:11:29Z",
   "productionStatus": "BLOCKED",
   "executedAt": "2026-08-21T16:16:00Z",
   "scope": "Recovery baseline only. T17-1/T17-10 domain migration not executed.",
@@ -50,31 +51,67 @@
     "DR-I2BOOT-20260811T190919Z",
     "BL-APPDRILL-20260727T153835212Z"
   ],
-  "proposedObjectives": {
-    "accepted": false,
-    "rpoDatabase": "<= 5 minutes",
+  "acceptedObjectives": {
+    "accepted": true,
+    "acceptedBy": "Joe Melendez",
+    "acceptedAt": "2026-08-21T18:56:51Z",
+    "record": "docs/GATE-3-R3-ACCEPTANCE.md",
+    "rpoDatabase": "<= 24 hours",
     "rpoCode": "0 (commit-granular)",
     "rtoCodeRollback": "<= 30 minutes",
     "rtoDatabaseRestore": "<= 60 minutes",
     "rtoAppSnapshotRestore": "<= 5 minutes",
     "rtoDnsDomainRollback": "<= 4 hours"
   },
-  "unverified": [
-    {
-      "id": "R1",
-      "item": "Immutable off-platform repository checkpoint (tag/release asset + SHA-256)",
-      "reason": "sandbox artifact is ephemeral; tag push requires owner"
+  "r1Checkpoint": {
+    "status": "PASS",
+    "evidenceCapturedAt": "2026-08-24T20:11:29Z",
+    "repository": "joemmyrealtor-dotcom/semantic-engine",
+    "tag": "baseline/BL-GATE3-20260821T161600Z",
+    "tagType": "annotated",
+    "peeledCommit": "34edc0450bd0db1da74ae6243f0fbbed5c96d753",
+    "commitSubject": "Verified branch protection",
+    "treeSha1": "00a2784c2455b59116fa00d5c229891724e43caf",
+    "normalizedTarSha256": "8fe3ab87dcf06432916764a06a623d25550b58cb11aab9d3da5e32c5e3953383",
+    "normalizedTarBytes": 3952640,
+    "archiveNormalization": "core.autocrlf=false, core.eol=lf",
+    "githubArchiveFilename": "BL-GATE3-20260821T161600Z.tar.gz",
+    "githubArchiveBytes": 978345,
+    "githubArchiveSha256Submitted": "7A3422D55BFDC66ED4C9A8CBC100241ACC4866B688B675E204D06BCD5FEBC9FA6",
+    "githubArchiveSha256Anomaly": "A-1: submitted value is 65 hex characters; SHA-256 is 64. Non-binding artifact; re-capture required.",
+    "release": {
+      "url": "https://github.com/joemmyrealtor-dotcom/semantic-engine/releases/tag/baseline/BL-GATE3-20260821T161600Z",
+      "title": "Gate 3 Recovery Baseline - BL-GATE3-20260821T161600Z",
+      "publishedAt": "2026-08-24T19:53:17Z",
+      "draft": false,
+      "prerelease": false,
+      "immutable": true,
+      "markedLatest": false,
+      "targetCommitishNote": "release metadata reports 'main'; binding is the peeled tag ref"
     },
-    {
-      "id": "R2",
-      "item": "Platform physical backup listing and PITR window",
-      "reason": "owner-only surface, not readable from this environment"
+    "tagRuleset": {
+      "name": "baseline-tags-immutable",
+      "enforcement": "Active",
+      "target": "baseline/**",
+      "bypassListEmpty": true,
+      "restrictUpdates": true,
+      "restrictDeletions": true,
+      "restrictCreations": false
     },
-    {
-      "id": "R3",
-      "item": "Owner acceptance of proposed RPO/RTO values",
-      "reason": "explicit approval required before recording as accepted"
-    }
+    "sandboxReverification": "commit present; tree SHA, normalized tar SHA-256, and byte size all match"
+  },
+  "r2BackupEvidence": {
+    "status": "PASS",
+    "latestSnapshot": "2026-08-21T07:36:00Z",
+    "retentionDays": 14,
+    "pitrAvailable": false,
+    "openItems": ["M-1: 2026-08-10 backup gap open for monitoring; no failure inferred"]
+  },
+  "openMonitoringItems": [
+    { "id": "M-1", "item": "2026-08-10 backup gap", "blocking": false },
+    { "id": "A-1", "item": "GitHub .tar.gz SHA-256 submitted with 65 hex characters; re-capture", "blocking": false }
   ],
+  "unverified": [],
   "prohibitedActionsTaken": []
 }
+
