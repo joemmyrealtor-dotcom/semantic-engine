@@ -1,6 +1,6 @@
 # Gate 3 — R1 Immutable Off-Platform Checkpoint (Execution Record)
 
-Status: EXECUTED AND VERIFIED · R1 = PASS (evidence recorded 2026-08-24T20:11:29Z; A-1 open)
+Status: EXECUTED AND VERIFIED · R1 = PASS (evidence recorded 2026-08-24T20:11:29Z; A-1 closed 2026-08-24T20:31:49Z)
 
 ## 1. Confirmed target
 
