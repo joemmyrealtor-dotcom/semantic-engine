@@ -21,9 +21,21 @@ Rationale: the Gate 3 recovery drill and repository export SHA-256 bind to this 
 
 | Artifact | Algorithm | Value |
 | --- | --- | --- |
-| `git archive --format=tar 34edc045` | SHA-256 | `8fe3ab87dcf06432916764a06a623d25550b58cb11aab9d3da5e32c5e3953383` |
+| Tree object of `34edc045` | SHA-1 | `00a2784c2455b59116fa00d5c229891724e43caf` |
+| Normalized `git archive --format=tar 34edc045` | SHA-256 | `8fe3ab87dcf06432916764a06a623d25550b58cb11aab9d3da5e32c5e3953383` |
+| Archive size | bytes | `3952640` |
 
-This matches the Gate 3 recovery baseline export SHA-256 (`8fe3ab87…3383`). GitHub's generated `.tar.gz`/`.zip` release archives are recompressed and will hash differently; record their hashes separately in §5.
+**Canonical archive command (PINNED — line-ending normalization is mandatory):**
+
+```bash
+git -c core.autocrlf=false -c core.eol=lf archive --format=tar 34edc0450bd0db1da74ae6243f0fbbed5c96d753
+```
+
+On Windows, the default `core.autocrlf=true` rewrites LF to CRLF inside the archive and yields the non-canonical hash `251e7686c5293550fb244a1e6b27ca391b3a3a2191ee8d6c79e3cb3b7bd9e1cb`. That is a packaging artifact, not a content difference; the tree SHA `00a2784c…3caf` is identical either way.
+
+Step 3 verified by owner on 2026-08-23: tree SHA, normalized SHA-256, and byte size all match the Gate 3 baseline. Step 3 = PASS.
+
+GitHub's generated `.tar.gz`/`.zip` release archives are recompressed and will hash differently; record their hashes separately in §5.
 
 ## 3. Exact command block (owner runs locally; requires push rights)
 
