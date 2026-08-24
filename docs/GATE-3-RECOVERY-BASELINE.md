@@ -30,9 +30,16 @@ GSC/Bing submission, or CRM send occurred during this gate.
 | Location | sandbox `/tmp/gate3/checkpoint.tar` (ephemeral) |
 | Reproduction | `git archive --format=tar 34edc045 \| sha256sum` — deterministic for this commit |
 
-**UNVERIFIED — R1:** an immutable off-platform copy (GitHub release asset or annotated tag
-`baseline/BL-GATE3-20260821T161600Z`) has not been created; the sandbox artifact is ephemeral.
-Owner steps in §8.
+**VERIFIED — R1 (2026-08-24T20:11:29Z):** the immutable off-platform checkpoint exists. Annotated tag
+`baseline/BL-GATE3-20260821T161600Z` (peeled `^{}` → `34edc0450bd0db1da74ae6243f0fbbed5c96d753`), protected by
+tag ruleset `baseline-tags-immutable` (Active, `baseline/**`, bypass empty, updates + deletions restricted),
+published as immutable release
+`https://github.com/joemmyrealtor-dotcom/semantic-engine/releases/tag/baseline/BL-GATE3-20260821T161600Z`
+(draft false, pre-release false, not latest). Tree SHA `00a2784c2455b59116fa00d5c229891724e43caf` and normalized
+tar SHA-256 `8fe3ab87…3383` (3,952,640 bytes, `core.autocrlf=false` / `core.eol=lf`) re-verified in-sandbox.
+GitHub-generated archive `BL-GATE3-20260821T161600Z.tar.gz`, 978,345 bytes; its submitted SHA-256 has 65 hex
+characters and is tracked as **A-1 (open, non-blocking)** for re-capture. Full record:
+`docs/GATE-3-R1-EXECUTION.md` §5b.
 
 ## 2. Database backup evidence & inventory
 
