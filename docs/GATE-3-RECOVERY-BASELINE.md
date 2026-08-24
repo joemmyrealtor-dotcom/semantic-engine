@@ -159,7 +159,7 @@ explicitly. No downstream gate may cite them as accepted before that approval.
 | --- | --- | --- | --- | --- | --- |
 | 1 | Capture HEAD + tree status | PASS | 2026-08-21T16:15:39Z | `git rev-parse` / `git status` | §1 |
 | 2 | Produce repo export + SHA-256 | PASS | 2026-08-21T16:15:40Z | `git archive` + `sha256sum` | §1 |
-| 3 | Publish immutable off-platform checkpoint | UNVERIFIED (R1) | — | owner action required | §8 |
+| 3 | Publish immutable off-platform checkpoint | PASS (R1) | 2026-08-24T19:53:17Z | owner-executed tag + immutable release | `docs/GATE-3-R1-EXECUTION.md` §5b |
 | 4 | Database structural inventory | PASS | 2026-08-21T16:15:45Z | read-only SQL on `public` | §2 |
 | 5 | Database content fingerprint | PASS | 2026-08-21T16:15:50Z | read-only SQL | §2 |
 | 6 | Platform physical backup / PITR window | UNVERIFIED (R2) | — | owner-only surface | §8 |
