@@ -96,7 +96,11 @@ export function usePatchSave<T>(opts: PatchOptions<T>): {
       pending.current = mergePendingPatch(pending.current, partial);
       return;
     }
-    await run(partial);
+    // Fold any retained failed payload into this write so previously failed
+    // keys are re-sent (and never erased by a later successful write).
+    const payload = mergePendingPatch<T>(lastFailed.current, partial);
+    lastFailed.current = null;
+    await run(payload);
   }, [run]);
 
   const retry = useCallback(() => {
