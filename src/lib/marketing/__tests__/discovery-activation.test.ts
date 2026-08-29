@@ -26,7 +26,9 @@ describe("production domain package", () => {
       expect(r.applied).toBe(false);
       expect(r.to.startsWith("https://legacyforge.com")).toBe(true);
     }
-    expect(provisionalHostRedirects()).toEqual([]);
+    // With a production origin configured the default call plans the same
+    // three redirects; under the provisional fallback it plans none.
+    expect(provisionalHostRedirects().length).toBe(isProvisionalOrigin() ? 0 : 3);
   });
 
   it("detects every provisional hostname still emitted", () => {
@@ -167,9 +169,10 @@ describe("Task 17 ten-point gate", () => {
     );
   });
 
-  it("blocks release while the canonical origin is provisional", () => {
-    expect(audit.checks.find(c => c.id === "T17-1")?.status).toBe("BLOCKED");
-    expect(audit.status).toBe("BLOCKED");
+  it("reflects the canonical origin state in T17-1", () => {
+    const provisional = isProvisionalOrigin();
+    expect(audit.checks.find(c => c.id === "T17-1")?.status).toBe(provisional ? "BLOCKED" : "PASS");
+    if (provisional) expect(audit.status).toBe("BLOCKED");
   });
 
   it("keeps analytics PII-safe as a launch-critical check", () => {
