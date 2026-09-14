@@ -62,7 +62,7 @@ export const SOCIAL_CARD = {
   url: absoluteUrl("/social-card.png"),
   width: "1200",
   height: "630",
-  alt: "Legacy Forge — real estate decision guides for Orange County",
+  alt: "Legacy Forge — real estate decision guides for North Orange County",
   type: "image/png",
 } as const;
 

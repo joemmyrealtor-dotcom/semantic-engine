@@ -52,7 +52,7 @@ export const BRAND = {
   publisher: "Legacy Forge",
   /** Internal-only imprint name. Not for public rendering. */
   internalImprint: "JM Advisory Press",
-  eyebrow: "Orange County Real Estate",
+  eyebrow: "North Orange County Real Estate",
   advisor: LICENSE.advisorName,
   /** Single source of truth lives in ./site.ts — never hard-code an origin. */
   origin: PUBLIC_SITE_ORIGIN,
@@ -64,7 +64,7 @@ export const BRAND = {
     "La Mirada",
     "Yorba Linda",
     "Orange",
-    "Orange County",
+    "North Orange County",
   ],
 } as const;
 
@@ -157,8 +157,8 @@ export const TRUST_PROOF: { label: string; detail: string }[] = [
       "Interactive decision trees and readiness assessments give you a structured answer you can act on, whether or not you ever hire us.",
   },
   {
-    label: "Orange County focus",
-    detail: `Local work concentrated in ${BRAND.serviceArea.slice(0, 7).join(", ")}, and the surrounding Orange County submarkets.`,
+    label: "North Orange County focus",
+    detail: `Local work concentrated in ${BRAND.serviceArea.slice(0, 7).join(", ")}, and adjacent Los Angeles County communities.`,
   },
 ];
 

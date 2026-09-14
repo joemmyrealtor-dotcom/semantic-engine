@@ -167,7 +167,7 @@ function PublicFooter() {
       </div>
       <div className="border-t border-border py-4 text-center text-xs text-muted-foreground">
         © {new Date().getFullYear()} {BRAND.name}. Serving{" "}
-        {BRAND.serviceArea.slice(0, 6).join(", ")}, and greater Orange County.
+        {BRAND.serviceArea.slice(0, 6).join(", ")}, and adjacent Los Angeles County communities.
       </div>
     </footer>
   );
