@@ -7,9 +7,9 @@ import { BRAND, CORE_PROMISE } from "@/lib/marketing/positioning";
 import { publicMeta, canonicalLink } from "@/lib/marketing/seo";
 import { jsonLdScript, siteGraph, breadcrumbGraph } from "@/lib/marketing/schema";
 
-const TITLE = "Orange County Real Estate Guidance — Sellers, Buyers, Probate | Legacy Forge";
+const TITLE = "North Orange County Real Estate Guidance — Sellers, Probate | Legacy Forge";
 const DESCRIPTION =
-  "Make smarter real estate decisions, protect your equity, and follow a clear plan. Guides and advisory for Orange County sellers, buyers, executors, heirs, downsizers, and investors.";
+  "Protect your equity and follow a clear plan. Guides and advisory for North Orange County and adjacent LA County sellers, buyers, executors, heirs, downsizers, and investors.";
 
 export const Route = createFileRoute("/home")({
   head: () => ({
@@ -29,7 +29,7 @@ function PublicHome() {
     <PublicShell>
       <section className="mx-auto max-w-6xl px-4 pt-16 pb-12 md:px-6 md:pt-24">
         <div className="text-[10px] uppercase tracking-[0.22em] text-gold">
-          {BRAND.publisher} · Orange County
+          {BRAND.publisher} · North Orange County
         </div>
         <h1 className="mt-4 max-w-4xl font-serif text-4xl leading-tight text-heritage md:text-6xl">
           {CORE_PROMISE}
@@ -50,7 +50,7 @@ function PublicHome() {
       </section>
 
       <AnswerFirst
-        question="Where should I start with an Orange County property decision?"
+        question="Where should I start with a North Orange County property decision?"
         answer="Start with your situation, not a home valuation. Selling, buying, probate, inherited property, downsizing, distress, and investment each carry different math, deadlines, and risks, so pick the path below and work its plan. Every path gives you the numbers on one page and a written sequence before you commit to anything."
         points={[
           "Pick the situation that matches yours — seven paths, seven plans.",
