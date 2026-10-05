@@ -20,9 +20,10 @@ describe("canonical origin gate (Task 17)", () => {
 describe("release audit", () => {
   const audit = buildReleaseAudit();
 
-  it("never reports PASS while the origin is provisional", () => {
-    expect(audit.status).not.toBe("PASS");
-    expect(audit.checks.find(c => c.id === "T17-1")?.status).toBe("BLOCKED");
+  it("reports T17-1 from the configured canonical origin", () => {
+    const provisional = isProvisionalOrigin();
+    expect(audit.checks.find(c => c.id === "T17-1")?.status).toBe(provisional ? "BLOCKED" : "PASS");
+    if (provisional) expect(audit.status).not.toBe("PASS");
   });
 
   it("keeps the governed console and private routes out of the index", () => {
