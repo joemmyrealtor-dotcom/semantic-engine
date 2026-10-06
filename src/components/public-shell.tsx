@@ -26,7 +26,7 @@ import {
 
 import { captureAttribution } from "@/lib/marketing/attribution";
 import { recordIntentVisit } from "@/lib/marketing/lead-scoring";
-import { trackEvent } from "@/lib/marketing/analytics";
+import { trackEvent, trackAction } from "@/lib/marketing/analytics";
 import { ConsentBanner } from "@/components/consent-banner";
 import { MobileConversionBar } from "@/components/mobile-conversion-bar";
 import { Breadcrumbs } from "@/components/breadcrumbs";
