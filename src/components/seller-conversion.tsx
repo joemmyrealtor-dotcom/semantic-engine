@@ -21,7 +21,7 @@ export function SellerConversion() {
               selling plan — before you commit to anything.
             </p>
             <ul className="mt-6 space-y-2 text-sm text-muted-foreground">
-              <li>23+ years in local real estate</li>
+              <li>Licensed since 2005</li>
               <li>Based in Brea</li>
               <li>DRE #{LICENSE.dreLicense}</li>
             </ul>
@@ -44,9 +44,9 @@ export function SellerConversion() {
             </div>
           ) : (
             <LeadCaptureForm
-              heading="Get my home value & selling strategy"
+              heading="Get My Home Value and Selling Strategy"
               blurb="A few short fields. No obligation."
-              submitLabel="Get my home value & selling strategy"
+              submitLabel="Get My Home Value and Selling Strategy"
               formId="sellers:home-value"
               leadSource="Seller home value request"
               campaign="seller-conversion"
