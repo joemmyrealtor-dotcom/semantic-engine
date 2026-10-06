@@ -3,6 +3,7 @@ import { PublicShell, MarketingPage } from "@/components/public-shell";
 import { PUBLIC_PAGES } from "@/lib/marketing/content";
 import { publicHead } from "@/lib/marketing/head";
 import { LICENSE } from "@/lib/marketing/positioning";
+import { trackAction } from "@/lib/marketing/analytics";
 
 export const Route = createFileRoute("/contact")({
   head: () => publicHead("contact"),
@@ -24,12 +25,12 @@ function PublicMarketingRoute() {
         </p>
         <ul className="mt-4 space-y-2 text-sm">
           <li>
-            <a className="font-medium text-heritage underline" href={LICENSE.phoneHref}>
+            <a className="font-medium text-heritage underline" href={LICENSE.phoneHref} onClick={() => trackAction("phone_clicked", { label: "contact" })}>
               {LICENSE.phone}
             </a>
           </li>
           <li>
-            <a className="font-medium text-heritage underline" href={LICENSE.emailHref}>
+            <a className="font-medium text-heritage underline" href={LICENSE.emailHref} onClick={() => trackAction("email_clicked", { label: "contact" })}>
               {LICENSE.email}
             </a>
           </li>
