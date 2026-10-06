@@ -1,3 +1,4 @@
+import { cityListingChecklist } from "@/lib/marketing/seller-hooks";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -127,6 +128,15 @@ function CityGuideRoute() {
               ))}
             </ul>
           </div>
+        </section>
+
+        <section aria-label="Before you list" className="mx-auto max-w-3xl px-4 pt-14 md:px-6">
+          <h2 className="font-serif text-2xl text-heritage">Before you list in {guide.city}</h2>
+          <ol className="mt-5 list-decimal space-y-2 pl-5 text-sm text-muted-foreground">
+            {cityListingChecklist(guide.city).map(item => (
+              <li key={item}>{item}</li>
+            ))}
+          </ol>
         </section>
 
         <div className="mx-auto max-w-3xl px-4 py-14 md:px-6">

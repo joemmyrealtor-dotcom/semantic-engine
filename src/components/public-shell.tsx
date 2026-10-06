@@ -26,7 +26,7 @@ import {
 
 import { captureAttribution } from "@/lib/marketing/attribution";
 import { recordIntentVisit } from "@/lib/marketing/lead-scoring";
-import { trackEvent } from "@/lib/marketing/analytics";
+import { trackEvent, trackAction } from "@/lib/marketing/analytics";
 import { ConsentBanner } from "@/components/consent-banner";
 import { MobileConversionBar } from "@/components/mobile-conversion-bar";
 import { Breadcrumbs } from "@/components/breadcrumbs";
@@ -109,11 +109,11 @@ function LicenseDisclosure() {
         Responsible broker: {LICENSE.responsibleBroker}, DRE #{LICENSE.responsibleBrokerDre}
       </p>
       <p>
-        <a className="hover:text-heritage" href={LICENSE.phoneHref}>
+        <a className="hover:text-heritage" href={LICENSE.phoneHref} onClick={() => trackAction("phone_clicked", { label: "footer" })}>
           {LICENSE.phone}
         </a>
         {" · "}
-        <a className="hover:text-heritage" href={LICENSE.emailHref}>
+        <a className="hover:text-heritage" href={LICENSE.emailHref} onClick={() => trackAction("email_clicked", { label: "footer" })}>
           {LICENSE.email}
         </a>
       </p>
