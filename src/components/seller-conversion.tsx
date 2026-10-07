@@ -29,18 +29,18 @@ export function SellerConversion() {
           {done ? (
             <div role="status" className="rounded-lg border border-border bg-background p-6">
               <CheckCircle2 className="size-6 text-evergreen" aria-hidden="true" />
-              <h3 className="mt-3 font-serif text-xl text-heritage">Thank you{done ? `, ${done}` : ""} — your request is in.</h3>
+              <h3 className="mt-3 font-serif text-xl text-heritage">Thank you. Your request is in.</h3>
               <p className="mt-2 text-sm text-muted-foreground">
-                What happens next: Joe reviews recent sales near your home and contacts you to confirm details. Response
-                times vary; no specific turnaround is promised.
+                Joe will review recent sales near your home and follow up to confirm the property details and your goals.
               </p>
               <p className="mt-4 text-sm">
                 Prefer to talk now?{" "}
                 <a className="font-medium text-heritage underline" href={LICENSE.phoneHref}
                   onClick={() => trackAction("phone_clicked", { label: "seller-thank-you" })}>
-                  Call {LICENSE.phone}
+                  Call Joe at (562) 640-1466.
                 </a>
               </p>
+              <p className="mt-4 text-xs text-muted-foreground">Your information will be used to respond to this request.</p>
             </div>
           ) : (
             <LeadCaptureForm
