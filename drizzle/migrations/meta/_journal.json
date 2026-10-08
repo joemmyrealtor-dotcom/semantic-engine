@@ -8,6 +8,13 @@
       "when": 1791476107360,
       "tag": "0000_create_lead_submissions",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791480469937,
+      "tag": "0001_lead_submissions_crm_tracking",
+      "breakpoints": true
     }
   ]
 }

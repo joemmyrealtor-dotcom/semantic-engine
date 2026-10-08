@@ -1,225 +1,193 @@
-// Task 25 — HubSpot transport (server side).
-//
-// One endpoint for every public lead flow. Behavior:
-//   - upsert contacts by email (never creates duplicates)
-//   - first-touch attribution is written once and never overwritten
-//   - latest-touch attribution is refreshed on every conversion
-//   - deals are only opened for qualified intent (see shouldCreateDeal)
-//   - failures are classified retryable vs permanent for the client queue
-//
-// With no HubSpot connection linked the call succeeds in "test" mode so the
-// public forms keep working and the local queue retains everything.
+// Lead endpoint (server side). Owner decisions (Oct 8 2026):
+//   - A lead is delivered only once it is saved in lead_submissions.
+//   - The idempotency key is client-generated and unique in the database;
+//     the server lead ID (row id) is separate.
+//   - Anonymous callers can only create. No list/read/update/delete/export.
+//   - Rate limiting, server-side field validation and bot checks run first.
+//   - Follow Up Boss is the only CRM for this release (HubSpot skipped).
 
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { FIRST_TOUCH_PROPERTIES, shouldCreateDeal } from "./crm-schema";
 
 const payloadSchema = z.object({
-  properties: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])),
+  properties: z.record(z.string().max(60), z.union([z.string().max(2000), z.number(), z.boolean()])),
   pipeline: z.string().max(60),
   formId: z.string().max(120),
-  idempotencyKey: z.string().max(200),
+  idempotencyKey: z.string().min(16).max(200),
+  bot: z.object({ hp: z.string().max(200), elapsedMs: z.number() }).optional(),
 });
+
+/** Server-side field validation of the lead itself. */
+export const leadFieldsSchema = z.object({
+  firstname: z.string().trim().min(1).max(60),
+  email: z.string().trim().email().max(255),
+  phone: z.string().trim().max(30).regex(/^[0-9()+\-.\s]*$/),
+  city: z.string().trim().min(1).max(80),
+  lf_situation: z.string().trim().min(1).max(60),
+  lf_timeline: z.string().trim().min(1).max(30),
+  lf_property_address: z.string().max(160),
+  lf_motivation: z.string().max(600),
+  lf_consent: z.literal(true),
+});
+
+export const MIN_FILL_MS = 2500;
+export const RATE_LIMIT = { windowSeconds: 600, max: 5 };
+
+/** Bot check: honeypot must be empty and the form must not be filled instantly. */
+export function looksLikeBot(bot?: { hp: string; elapsedMs: number }): boolean {
+  if (!bot) return true;
+  return bot.hp.trim() !== "" || bot.elapsedMs < MIN_FILL_MS;
+}
 
 export type CrmSubmitAction = "created" | "updated" | "queued";
 
 export interface CrmSubmitResult {
   ok: boolean;
-  mode: "hubspot" | "test";
+  mode: "fub" | "database";
   action: CrmSubmitAction;
+  /** Server-generated lead_submissions row id (separate from the idempotency key). */
+  submissionId?: string;
+  /** True when this idempotency key was already saved. */
+  duplicate?: boolean;
   contactId?: string;
   dealId?: string;
   retryable?: boolean;
   status?: number;
   message?: string;
-  /** Server-generated lead_submissions row id. */
-  submissionId?: string;
 }
 
-const GATEWAY_URL = "https://connector-gateway.lovable.dev/hubspot";
+const FUB_URL = "https://api.followupboss.com/v1/events";
 
-function retryableStatus(status: number): boolean {
-  return status === 408 || status === 429 || status >= 500;
-}
-
-async function forwardToHubspot(data: z.infer<typeof payloadSchema>): Promise<CrmSubmitResult> {
-    const lovableKey = process.env["LOVABLE_API_KEY"];
-    const hubspotKey = process.env["HUBSPOT_API_KEY"];
-
-    if (!lovableKey || !hubspotKey) {
-      return {
-        ok: true,
-        mode: "test",
-        action: "queued",
-        message: "Saved to the lead database; HubSpot is not connected.",
-      };
-    }
-
-    const headers = {
-      Authorization: `Bearer ${lovableKey}`,
-      "X-Connection-Api-Key": hubspotKey,
+async function forwardToFollowUpBoss(
+  p: Record<string, string | number | boolean>,
+  formId: string,
+): Promise<{ ok: boolean; skipped?: boolean; personId?: string; error?: string }> {
+  const key = process.env["FOLLOW_UP_BOSS_API_KEY"];
+  if (!key) return { ok: false, skipped: true, error: "Follow Up Boss not connected" };
+  const body = {
+    source: "Legacy Forge website",
+    system: "LegacyForge",
+    type: formId.startsWith("sellers") ? "Seller Inquiry" : "General Inquiry",
+    message: [p["lf_motivation"], p["lf_property_address"] && `Property: ${p["lf_property_address"]}`]
+      .filter(Boolean)
+      .join("\n"),
+    person: {
+      firstName: String(p["firstname"] ?? ""),
+      emails: [{ value: String(p["email"] ?? "") }],
+      ...(p["phone"] ? { phones: [{ value: String(p["phone"]) }] } : {}),
+      tags: [formId, String(p["lf_timeline"] ?? "")].filter(Boolean),
+    },
+    ...(p["lf_property_address"]
+      ? { property: { street: String(p["lf_property_address"]), city: String(p["city"] ?? "") } }
+      : {}),
+  };
+  const res = await fetch(FUB_URL, {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${btoa(`${key}:`)}`,
       "Content-Type": "application/json",
-    };
-    const email = String(data.properties["email"] ?? "").trim().toLowerCase();
-    if (!email) {
-      return { ok: false, mode: "hubspot", action: "queued", retryable: false, message: "Missing email" };
-    }
-
-    const fail = (status: number, body: string): CrmSubmitResult => {
-      console.error(`HubSpot request failed [${status}]: ${body}`);
-      return {
-        ok: false,
-        mode: "hubspot",
-        action: "queued",
-        status,
-        retryable: retryableStatus(status),
-        message: `HubSpot request failed [${status}]: ${body.slice(0, 400)}`,
-      };
-    };
-
-    // 1. Look the contact up by email so we upsert instead of duplicating.
-    const search = await fetch(`${GATEWAY_URL}/crm/v3/objects/contacts/search`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        filterGroups: [{ filters: [{ propertyName: "email", operator: "EQ", value: email }] }],
-        properties: ["email", "lf_delivery_key", ...FIRST_TOUCH_PROPERTIES],
-        limit: 1,
-      }),
-    });
-    if (!search.ok) return fail(search.status, await search.text());
-
-    const found = (await search.json()) as {
-      results?: { id: string; properties?: Record<string, string | null> }[];
-    };
-    const existing = found.results?.[0];
-
-    // Same conversion already delivered — do not write again.
-    if (existing?.properties?.["lf_delivery_key"] === data.idempotencyKey) {
-      return {
-        ok: true,
-        mode: "hubspot",
-        action: "updated",
-        contactId: existing.id,
-        message: "Already delivered (idempotent no-op).",
-      };
-    }
-
-    // 2. Preserve first-touch attribution on existing contacts.
-    const properties: Record<string, string | number | boolean> = {
-      ...data.properties,
-      email,
-      lf_delivery_key: data.idempotencyKey,
-    };
-    if (existing) {
-      for (const key of FIRST_TOUCH_PROPERTIES) {
-        const stored = existing.properties?.[key];
-        if (stored) delete properties[key];
-      }
-    }
-
-    const res = await fetch(
-      existing
-        ? `${GATEWAY_URL}/crm/v3/objects/contacts/${existing.id}`
-        : `${GATEWAY_URL}/crm/v3/objects/contacts`,
-      {
-        method: existing ? "PATCH" : "POST",
-        headers,
-        body: JSON.stringify({ properties }),
-      },
-    );
-    if (!res.ok) return fail(res.status, await res.text());
-
-    const contact = (await res.json()) as { id?: string };
-    const contactId = contact.id ?? existing?.id;
-
-    // 3. Promote to a deal only when intent justifies it.
-    let dealId: string | undefined;
-    const promote = shouldCreateDeal({
-      classification: String(data.properties["lf_lead_classification"] ?? ""),
-      consultationRequested: data.properties["lf_consultation_requested"] === true,
-      timeline: String(data.properties["lf_timeline"] ?? ""),
-    });
-    if (promote && contactId) {
-      const deal = await fetch(`${GATEWAY_URL}/crm/v3/objects/deals`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
-          properties: {
-            dealname: `${data.properties["firstname"] ?? "Lead"} — ${data.pipeline}`,
-            pipeline: data.pipeline,
-            lf_lead_classification: data.properties["lf_lead_classification"] ?? "",
-            lf_situation: data.properties["lf_situation"] ?? "",
-            lf_timeline: data.properties["lf_timeline"] ?? "",
-          },
-          associations: [
-            {
-              to: { id: contactId },
-              types: [{ associationCategory: "HUBSPOT_DEFINED", associationTypeId: 3 }],
-            },
-          ],
-        }),
-      });
-      if (deal.ok) {
-        dealId = ((await deal.json()) as { id?: string }).id;
-      } else {
-        // A contact was still created/updated; deal failure must not lose the lead.
-        console.error(`HubSpot deal creation failed [${deal.status}]: ${await deal.text()}`);
-      }
-    }
-
-    return {
-      ok: true,
-      mode: "hubspot",
-      action: existing ? "updated" : "created",
-      ...(contactId ? { contactId } : {}),
-      ...(dealId ? { dealId } : {}),
-    };
+      "X-System": "LegacyForge",
+    },
+    body: JSON.stringify(body),
+  });
+  const text = await res.text();
+  if (!res.ok) {
+    console.error(`Follow Up Boss request failed [${res.status}]: ${text.slice(0, 300)}`);
+    return { ok: false, error: `[${res.status}] ${text.slice(0, 300)}` };
+  }
+  let personId: string | undefined;
+  try {
+    personId = String((JSON.parse(text) as { id?: number }).id ?? "") || undefined;
+  } catch {
+    /* empty body (204) is fine */
+  }
+  return { ok: true, ...(personId ? { personId } : {}) };
 }
 
-/**
- * Approved lead endpoint. A lead counts as delivered only once it is saved
- * in the private lead_submissions table; the server returns its own
- * submission ID (one per idempotency key). HubSpot forwarding is best-effort
- * on top of that and never decides success.
- */
+const fail = (message: string, retryable: boolean, status?: number): CrmSubmitResult => ({
+  ok: false, mode: "database", action: "queued", retryable, message, ...(status ? { status } : {}),
+});
+
 export const submitCrmLead = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => payloadSchema.parse(input))
   .handler(async ({ data }): Promise<CrmSubmitResult> => {
-    const email = String(data.properties["email"] ?? "").trim().toLowerCase();
-    if (!email) {
-      return { ok: false, mode: "hubspot", action: "queued", retryable: false, message: "Missing email" };
-    }
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: row, error } = await supabaseAdmin
-      .from("lead_submissions")
-      .upsert(
-        { idempotency_key: data.idempotencyKey, form_id: data.formId, pipeline: data.pipeline, email, payload: data.properties },
-        { onConflict: "idempotency_key", ignoreDuplicates: false },
-      )
-      .select("id")
-      .single();
-    if (error || !row) {
-      console.error("lead_submissions insert failed:", error?.message);
-      return { ok: false, mode: "hubspot", action: "queued", retryable: true, message: "Lead could not be saved" };
-    }
-    const submissionId = row.id;
+    if (looksLikeBot(data.bot)) return fail("Submission rejected", false, 400);
 
-    let crm: CrmSubmitResult;
-    try {
-      crm = await forwardToHubspot(data);
-    } catch (e) {
-      crm = { ok: false, mode: "hubspot", action: "queued", message: e instanceof Error ? e.message : "CRM error" };
-    }
-    await supabaseAdmin
+    const fields = leadFieldsSchema.safeParse(data.properties);
+    if (!fields.success) return fail("Invalid lead fields", false, 422);
+    const email = fields.data.email.toLowerCase();
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { getRequestHeader } = await import("@tanstack/react-start/server");
+    const ip =
+      getRequestHeader("cf-connecting-ip") ??
+      getRequestHeader("x-forwarded-for")?.split(",")[0]?.trim() ??
+      "unknown";
+    const { data: rl } = await supabaseAdmin.rpc("consume_rate_limit", {
+      p_key: `lead-submit:${ip}`,
+      p_window_seconds: RATE_LIMIT.windowSeconds,
+      p_max: RATE_LIMIT.max,
+    });
+    if (rl && rl[0] && rl[0].allowed === false) return fail("Too many requests — please call instead", false, 429);
+
+    // Insert; a repeat of the same client key returns the existing row.
+    let duplicate = false;
+    let row: { id: string; crm_status: string } | null = null;
+    const ins = await supabaseAdmin
       .from("lead_submissions")
-      .update({ crm_status: crm.ok ? (crm.mode === "test" ? "stored" : `hubspot_${crm.action}`) : "crm_failed" })
-      .eq("id", submissionId);
+      .insert({ idempotency_key: data.idempotencyKey, form_id: data.formId, pipeline: data.pipeline, email, payload: data.properties })
+      .select("id, crm_status")
+      .single();
+    if (ins.error?.code === "23505") {
+      duplicate = true;
+      const ex = await supabaseAdmin
+        .from("lead_submissions")
+        .select("id, crm_status")
+        .eq("idempotency_key", data.idempotencyKey)
+        .single();
+      row = ex.data;
+    } else if (ins.error) {
+      console.error("lead_submissions insert failed:", ins.error.message);
+      return fail("Lead could not be saved", true, 500);
+    } else {
+      row = ins.data;
+    }
+    if (!row) return fail("Lead could not be saved", true, 500);
+
+    // Database-to-CRM: forward unless this row already reached Follow Up Boss.
+    let mode: CrmSubmitResult["mode"] = "database";
+    let contactId: string | undefined;
+    if (row.crm_status !== "fub_sent") {
+      let fub: Awaited<ReturnType<typeof forwardToFollowUpBoss>>;
+      try {
+        fub = await forwardToFollowUpBoss(data.properties, data.formId);
+      } catch (e) {
+        fub = { ok: false, error: e instanceof Error ? e.message : "CRM error" };
+      }
+      if (fub.ok) {
+        mode = "fub";
+        contactId = fub.personId;
+      }
+      const { data: cur } = await supabaseAdmin.from("lead_submissions").select("crm_attempts").eq("id", row.id).single();
+      await supabaseAdmin
+        .from("lead_submissions")
+        .update({
+          crm_status: fub.ok ? "fub_sent" : fub.skipped ? "stored" : "fub_failed",
+          crm_attempts: (cur?.crm_attempts ?? 0) + (fub.skipped ? 0 : 1),
+          crm_last_error: fub.ok ? null : (fub.error ?? null),
+          ...(fub.personId ? { fub_person_id: fub.personId } : {}),
+        })
+        .eq("id", row.id);
+    } else {
+      mode = "fub";
+    }
 
     return {
-      ...crm,
       ok: true,
-      submissionId,
-      message: crm.ok ? crm.message : `Saved; CRM forwarding failed: ${crm.message ?? ""}`.trim(),
+      mode,
+      action: duplicate ? "updated" : "created",
+      submissionId: row.id,
+      duplicate,
+      ...(contactId ? { contactId } : {}),
     };
   });
