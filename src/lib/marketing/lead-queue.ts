@@ -31,7 +31,11 @@ export interface LeadDelivery {
   hubspotContactId?: string;
   hubspotDealId?: string;
   submissionId?: string;
-  deliveryMode?: "hubspot" | "test";
+  deliveryMode?: "fub" | "database";
+  /** Bot-check signals sent with the request (not personal data). */
+  bot?: { hp: string; elapsedMs: number };
+  /** Expiry for the session-stored draft. */
+  expiresAt?: string;
   result?: string;
   error?: string;
 }
@@ -39,8 +43,25 @@ export interface LeadDelivery {
 export const MAX_ATTEMPTS = 5;
 const BASE_DELAY_MS = 5_000;
 const MAX_DELAY_MS = 15 * 60_000;
-const QUEUE_KEY = "lf.lead-queue.v1";
-const MAX_RECORDS = 200;
+const QUEUE_KEY = "lf.lead-drafts.v2";
+const MAX_RECORDS = 50;
+export const DRAFT_TTL_MS = 24 * 60 * 60 * 1000;
+
+function store(): Storage | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return window.sessionStorage;
+  } catch {
+    return null;
+  }
+}
+
+/** Client-generated idempotency key, reused on retries of the same draft. */
+export function newIdempotencyKey(): string {
+  return typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
+}
 
 /** Exponential backoff with a hard ceiling. Pure — unit tested. */
 export function backoffMs(attempts: number): number {
@@ -66,32 +87,41 @@ export function idempotencyKeyFor(input: {
   ].join("|");
 }
 
-export function loadQueue(): LeadDelivery[] {
-  if (typeof window === "undefined") return [];
+export function loadQueue(now = Date.now()): LeadDelivery[] {
+  const st = store();
+  if (!st) return [];
   try {
-    const raw = window.localStorage.getItem(QUEUE_KEY);
-    return raw ? (JSON.parse(raw) as LeadDelivery[]) : [];
+    const raw = st.getItem(QUEUE_KEY);
+    const list = raw ? (JSON.parse(raw) as LeadDelivery[]) : [];
+    return list.filter(r => !r.expiresAt || Date.parse(r.expiresAt) > now);
   } catch {
     return [];
   }
 }
 
 export function saveQueue(records: LeadDelivery[]): void {
-  if (typeof window === "undefined") return;
+  const st = store();
+  if (!st) return;
   try {
-    window.localStorage.setItem(QUEUE_KEY, JSON.stringify(records.slice(-MAX_RECORDS)));
+    st.setItem(QUEUE_KEY, JSON.stringify(records.slice(-MAX_RECORDS)));
   } catch {
     /* storage unavailable — in-flight delivery still proceeds */
   }
 }
 
 export function clearQueue(): void {
-  if (typeof window === "undefined") return;
+  const st = store();
+  if (!st) return;
   try {
-    window.localStorage.removeItem(QUEUE_KEY);
+    st.removeItem(QUEUE_KEY);
   } catch {
     /* noop */
   }
+}
+
+/** Clear the browser copy right after a confirmed database save. */
+export function removeRecord(id: string): void {
+  saveQueue(loadQueue().filter(r => r.id !== id));
 }
 
 function upsertRecord(record: LeadDelivery): void {
@@ -110,25 +140,42 @@ export function enqueueDelivery(input: {
   payload: CrmLeadPayload;
   pipeline: string;
   formId: string;
-  idempotencyKey: string;
+  bot?: { hp: string; elapsedMs: number };
 }): { record: LeadDelivery; duplicate: boolean } {
   const list = loadQueue();
-  const existing = list.find(r => r.idempotencyKey === input.idempotencyKey);
-  if (existing && existing.status !== "permanently_failed") {
-    return { record: existing, duplicate: true };
+  const email = input.payload.email.trim().toLowerCase();
+  // Retry of an unsent draft for the same form + email reuses its key.
+  const existing = list.find(
+    r => r.formId === input.formId && r.payload.email.trim().toLowerCase() === email && r.status !== "delivered",
+  );
+  const now = new Date();
+  if (existing) {
+    const refreshed: LeadDelivery = {
+      ...existing,
+      payload: input.payload,
+      status: existing.status === "permanently_failed" ? "pending" : existing.status,
+      attempts: existing.status === "permanently_failed" ? 0 : existing.attempts,
+      ...(input.bot ? { bot: input.bot } : {}),
+      nextAttemptAt: "",
+      updatedAt: now.toISOString(),
+      expiresAt: new Date(now.getTime() + DRAFT_TTL_MS).toISOString(),
+    };
+    upsertRecord(refreshed);
+    return { record: refreshed, duplicate: false };
   }
 
-  const now = new Date().toISOString();
   const record: LeadDelivery = {
-    id: `LD-${now.replace(/[-:.TZ]/g, "")}-${Math.random().toString(36).slice(2, 8)}`,
-    idempotencyKey: input.idempotencyKey,
+    id: `LD-${now.toISOString().replace(/[-:.TZ]/g, "")}-${Math.random().toString(36).slice(2, 8)}`,
+    idempotencyKey: newIdempotencyKey(),
     payload: input.payload,
     pipeline: input.pipeline,
     formId: input.formId,
     status: "pending",
     attempts: 0,
-    createdAt: now,
-    updatedAt: now,
+    createdAt: now.toISOString(),
+    updatedAt: now.toISOString(),
+    expiresAt: new Date(now.getTime() + DRAFT_TTL_MS).toISOString(),
+    ...(input.bot ? { bot: input.bot } : {}),
   };
   list.push(record);
   saveQueue(list);
@@ -165,9 +212,9 @@ export function applyResult(record: LeadDelivery, result: CrmSubmitResult): Lead
       status: "delivered",
       deliveryMode: result.mode,
       result:
-        result.mode === "test"
-          ? "Retained locally (HubSpot not connected)"
-          : `Contact ${result.action}`,
+        result.mode === "database"
+          ? "Saved to lead database"
+          : `Saved and sent to Follow Up Boss`,
       ...(result.contactId ? { hubspotContactId: result.contactId } : {}),
       ...(result.dealId ? { hubspotDealId: result.dealId } : {}),
       ...(result.submissionId ? { submissionId: result.submissionId } : {}),
@@ -182,7 +229,7 @@ export function applyResult(record: LeadDelivery, result: CrmSubmitResult): Lead
       ...base,
       status: "permanently_failed",
       error: result.message ?? "Delivery failed",
-      result: retryable ? `Gave up after ${attempts} attempts` : "Rejected by HubSpot",
+      result: retryable ? `Gave up after ${attempts} attempts` : "Rejected by lead endpoint",
     };
   }
   return {
@@ -202,7 +249,7 @@ async function send(record: LeadDelivery, transport: Transport): Promise<LeadDel
   } catch (error) {
     result = {
       ok: false,
-      mode: "hubspot",
+      mode: "database",
       action: "queued",
       retryable: true,
       message: error instanceof Error ? error.message : "Network error",
@@ -223,6 +270,19 @@ export async function sendRecord(
   return send(record, transport);
 }
 
+export async function sendRecordWithResult(
+  record: LeadDelivery,
+  transport: Transport,
+): Promise<{ next: LeadDelivery; duplicate: boolean }> {
+  let duplicate = false;
+  const next = await send(record, async r => {
+    const res = await transport(r);
+    duplicate = Boolean(res.duplicate);
+    return res;
+  });
+  return { next, duplicate };
+}
+
 /**
  * Bulk delivery pause. Controlled live CRM verification requires that the
  * existing queue is never drained implicitly; only explicit operator action
@@ -232,6 +292,7 @@ const PAUSE_KEY = "lf.lead-queue.bulk-paused.v1";
 
 export function isBulkDeliveryPaused(): boolean {
   if (typeof window === "undefined") return true;
+  if (window.localStorage.getItem("lf.lead-queue.v1")) window.localStorage.removeItem("lf.lead-queue.v1");
   // Default: paused. Only an explicit "false" enables bulk flushing.
   return window.localStorage.getItem(PAUSE_KEY) !== "false";
 }
