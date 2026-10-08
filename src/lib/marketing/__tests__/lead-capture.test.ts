@@ -208,7 +208,7 @@ describe("deduplication and browser copy", () => {
 
   it("retries a failed draft with the same client-generated key", async () => {
     const seen: string[] = [];
-    const fail: Transport = vi.fn(async r => { seen.push(r.idempotencyKey); return { ok: false, mode: "database", action: "queued", retryable: true, message: "down" }; });
+    const fail: Transport = vi.fn(async r => { seen.push(r.idempotencyKey); return { ok: false, mode: "database" as const, action: "queued" as const, retryable: true, message: "down" }; });
     await capture({ guideId: "LM-001" }, fail);
     await capture({ guideId: "LM-001" }, fail);
     expect(seen).toHaveLength(2);
