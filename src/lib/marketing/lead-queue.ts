@@ -30,6 +30,7 @@ export interface LeadDelivery {
   nextAttemptAt?: string;
   hubspotContactId?: string;
   hubspotDealId?: string;
+  submissionId?: string;
   deliveryMode?: "hubspot" | "test";
   result?: string;
   error?: string;
@@ -169,6 +170,7 @@ export function applyResult(record: LeadDelivery, result: CrmSubmitResult): Lead
           : `Contact ${result.action}`,
       ...(result.contactId ? { hubspotContactId: result.contactId } : {}),
       ...(result.dealId ? { hubspotDealId: result.dealId } : {}),
+      ...(result.submissionId ? { submissionId: result.submissionId } : {}),
       error: "",
       nextAttemptAt: "",
     };

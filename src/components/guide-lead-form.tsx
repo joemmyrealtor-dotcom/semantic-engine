@@ -94,8 +94,8 @@ export function GuideLeadForm({ guide }: { guide: GuideDefinition }) {
         trackAction("lead_magnet_downloaded", {
           guideId: guide.id,
           leadMagnet: guide.id,
-          situation: values.situation,
-          city: values.city,
+          formId: `guide:${guide.slug}`,
+          success: true,
         });
       }}
     />

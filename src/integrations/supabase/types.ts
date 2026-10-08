@@ -499,6 +499,39 @@ export type Database = {
           },
         ]
       }
+      lead_submissions: {
+        Row: {
+          created_at: string
+          crm_status: string
+          email: string
+          form_id: string
+          id: string
+          idempotency_key: string
+          payload: Json
+          pipeline: string
+        }
+        Insert: {
+          created_at?: string
+          crm_status?: string
+          email: string
+          form_id: string
+          id?: string
+          idempotency_key: string
+          payload: Json
+          pipeline: string
+        }
+        Update: {
+          created_at?: string
+          crm_status?: string
+          email?: string
+          form_id?: string
+          id?: string
+          idempotency_key?: string
+          payload?: Json
+          pipeline?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           active_workspace_id: string | null

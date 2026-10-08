@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ENTRY_PATHS } from "@/lib/marketing/positioning";
+import { ENTRY_PATHS, LICENSE } from "@/lib/marketing/positioning";
 import type { LeadQualification } from "@/lib/marketing/assessments";
 import {
   CONSENT_TEXT,
@@ -46,6 +46,7 @@ export interface LeadCaptureFormProps {
 export function LeadCaptureForm(props: LeadCaptureFormProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [pending, setPending] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -85,7 +86,14 @@ export function LeadCaptureForm(props: LeadCaptureFormProps) {
         ...(props.readinessLevel ? { readinessLevel: props.readinessLevel } : {}),
         ...(props.qualification ? { qualification: props.qualification } : {}),
       });
+      if (!outcome.delivered) {
+        setFailed(true);
+        return;
+      }
+      setFailed(false);
       props.onSuccess?.(outcome, parsed.data);
+    } catch {
+      setFailed(true);
     } finally {
       setPending(false);
     }
@@ -201,6 +209,12 @@ export function LeadCaptureForm(props: LeadCaptureFormProps) {
         {pending && <Loader2 className="mr-1 size-4 animate-spin" aria-hidden="true" />}
         {props.submitLabel}
       </Button>
+      {failed && (
+        <p role="alert" data-testid="lead-delivery-failed" className="mt-3 text-sm text-destructive">
+          We couldn't send your request just now. Your details are saved on this device — please try again, or call Joe at{" "}
+          <a className="underline" href={LICENSE.phoneHref}>(562) 640-1466</a>.
+        </p>
+      )}
       {props.disclaimer && (
         <p className="mt-3 text-xs text-muted-foreground">{props.disclaimer}</p>
       )}
