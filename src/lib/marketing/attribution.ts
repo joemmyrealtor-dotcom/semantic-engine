@@ -73,11 +73,26 @@ export function readLatestAttribution(): Attribution | null {
   return read(LAST_KEY) ?? read(KEY);
 }
 
+/** Approved UTM value: short token of letters, digits, . _ - + only. */
+export function safeUtm(v: string | null | undefined, fallback = ""): string {
+  const t = (v ?? "").trim().toLowerCase();
+  return /^[a-z0-9._+-]{1,60}$/.test(t) ? t : fallback;
+}
+
+/** Referrer reduced to its host name — never the full URL. */
+export function referrerHost(ref: string): string {
+  try {
+    return ref ? new URL(ref).hostname.replace(/^www\./, "") : "";
+  } catch {
+    return "";
+  }
+}
+
 function currentTouch(): Attribution & { hasCampaignSignal: boolean } {
   const params = new URLSearchParams(window.location.search);
   const fallback = classifyReferrer(document.referrer || "");
   const utm: Record<string, string> = {};
-  for (const [param, field] of UTM_KEYS) utm[field] = params.get(param) ?? "";
+  for (const [param, field] of UTM_KEYS) utm[field] = safeUtm(params.get(param));
   const hasCampaignSignal =
     Boolean(utm.source || utm.medium || utm.campaign) || fallback.medium !== "none";
 
@@ -87,7 +102,7 @@ function currentTouch(): Attribution & { hasCampaignSignal: boolean } {
     campaign: utm.campaign || "(none)",
     content: utm.content ?? "",
     term: utm.term ?? "",
-    referrer: document.referrer || "",
+    referrer: referrerHost(document.referrer || ""),
     landingPage: window.location.pathname,
     firstSeenAt: new Date().toISOString(),
     hasCampaignSignal,
