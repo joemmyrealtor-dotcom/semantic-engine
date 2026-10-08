@@ -32,6 +32,8 @@ export interface CrmSubmitResult {
   retryable?: boolean;
   status?: number;
   message?: string;
+  /** Server-generated lead_submissions row id. */
+  submissionId?: string;
 }
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/hubspot";
@@ -40,9 +42,7 @@ function retryableStatus(status: number): boolean {
   return status === 408 || status === 429 || status >= 500;
 }
 
-export const submitCrmLead = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => payloadSchema.parse(input))
-  .handler(async ({ data }): Promise<CrmSubmitResult> => {
+async function forwardToHubspot(data: z.infer<typeof payloadSchema>): Promise<CrmSubmitResult> {
     const lovableKey = process.env["LOVABLE_API_KEY"];
     const hubspotKey = process.env["HUBSPOT_API_KEY"];
 
@@ -51,7 +51,7 @@ export const submitCrmLead = createServerFn({ method: "POST" })
         ok: true,
         mode: "test",
         action: "queued",
-        message: "HubSpot is not connected yet; the lead was validated and retained locally.",
+        message: "Saved to the lead database; HubSpot is not connected.",
       };
     }
 
@@ -174,5 +174,52 @@ export const submitCrmLead = createServerFn({ method: "POST" })
       action: existing ? "updated" : "created",
       ...(contactId ? { contactId } : {}),
       ...(dealId ? { dealId } : {}),
+    };
+}
+
+/**
+ * Approved lead endpoint. A lead counts as delivered only once it is saved
+ * in the private lead_submissions table; the server returns its own
+ * submission ID (one per idempotency key). HubSpot forwarding is best-effort
+ * on top of that and never decides success.
+ */
+export const submitCrmLead = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => payloadSchema.parse(input))
+  .handler(async ({ data }): Promise<CrmSubmitResult> => {
+    const email = String(data.properties["email"] ?? "").trim().toLowerCase();
+    if (!email) {
+      return { ok: false, mode: "hubspot", action: "queued", retryable: false, message: "Missing email" };
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row, error } = await supabaseAdmin
+      .from("lead_submissions")
+      .upsert(
+        { idempotency_key: data.idempotencyKey, form_id: data.formId, pipeline: data.pipeline, email, payload: data.properties },
+        { onConflict: "idempotency_key", ignoreDuplicates: false },
+      )
+      .select("id")
+      .single();
+    if (error || !row) {
+      console.error("lead_submissions insert failed:", error?.message);
+      return { ok: false, mode: "hubspot", action: "queued", retryable: true, message: "Lead could not be saved" };
+    }
+    const submissionId = row.id;
+
+    let crm: CrmSubmitResult;
+    try {
+      crm = await forwardToHubspot(data);
+    } catch (e) {
+      crm = { ok: false, mode: "hubspot", action: "queued", message: e instanceof Error ? e.message : "CRM error" };
+    }
+    await supabaseAdmin
+      .from("lead_submissions")
+      .update({ crm_status: crm.ok ? (crm.mode === "test" ? "stored" : `hubspot_${crm.action}`) : "crm_failed" })
+      .eq("id", submissionId);
+
+    return {
+      ...crm,
+      ok: true,
+      submissionId,
+      message: crm.ok ? crm.message : `Saved; CRM forwarding failed: ${crm.message ?? ""}`.trim(),
     };
   });
