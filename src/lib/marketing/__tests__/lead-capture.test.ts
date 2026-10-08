@@ -54,10 +54,10 @@ const validValues = {
 
 /** Transport doubles. */
 const ok = (extra: Record<string, unknown> = {}): Transport =>
-  vi.fn(async () => ({ ok: true, mode: "hubspot" as const, action: "created" as const, contactId: "C-1", ...extra }));
+  vi.fn(async () => ({ ok: true, mode: "fub" as const, action: "created" as const, contactId: "C-1", ...extra }));
 const transient: Transport = vi.fn(async () => ({
   ok: false,
-  mode: "hubspot" as const,
+  mode: "fub" as const,
   action: "queued" as const,
   retryable: true,
   status: 503,
@@ -65,7 +65,7 @@ const transient: Transport = vi.fn(async () => ({
 }));
 const permanent: Transport = vi.fn(async () => ({
   ok: false,
-  mode: "hubspot" as const,
+  mode: "fub" as const,
   action: "queued" as const,
   retryable: false,
   status: 400,
@@ -282,7 +282,7 @@ describe("queue reliability", () => {
       id: "x", idempotencyKey: "k", payload: {} as never, pipeline: "seller", formId: "f",
       status: "pending" as const, attempts: 0, createdAt: "", updatedAt: "",
     };
-    const next = applyResult(base, { ok: true, mode: "hubspot", action: "updated", contactId: "C-9" });
+    const next = applyResult(base, { ok: true, mode: "fub", action: "updated", contactId: "C-9" });
     expect(next.status).toBe("delivered");
     expect(base.attempts).toBe(0);
   });
