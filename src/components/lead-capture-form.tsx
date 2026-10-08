@@ -3,7 +3,7 @@
 // Presentation only: validation, scoring, CRM mapping and analytics all
 // live in src/lib/marketing/lead-capture.ts.
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -47,6 +47,7 @@ export function LeadCaptureForm(props: LeadCaptureFormProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [pending, setPending] = useState(false);
   const [failed, setFailed] = useState(false);
+  const startedAt = useRef(Date.now());
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -85,6 +86,7 @@ export function LeadCaptureForm(props: LeadCaptureFormProps) {
         ...(props.assessmentId ? { assessmentId: props.assessmentId } : {}),
         ...(props.readinessLevel ? { readinessLevel: props.readinessLevel } : {}),
         ...(props.qualification ? { qualification: props.qualification } : {}),
+        bot: { hp: String(fd.get("company_website") ?? ""), elapsedMs: Date.now() - startedAt.current },
       });
       if (!outcome.delivered) {
         setFailed(true);
@@ -100,10 +102,16 @@ export function LeadCaptureForm(props: LeadCaptureFormProps) {
   }
 
   return (
-    <form onSubmit={onSubmit} noValidate className="rounded-lg border border-border bg-card p-6">
+    <form onSubmit={onSubmit} noValidate className="relative rounded-lg border border-border bg-card p-6">
       <h2 className="font-serif text-2xl text-heritage">{props.heading}</h2>
       {props.blurb && <p className="mt-2 text-sm text-muted-foreground">{props.blurb}</p>}
       {props.children}
+
+      {/* Bot trap: hidden from people and screen readers; bots fill it in. */}
+      <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
+        <label htmlFor="company_website">Company website</label>
+        <input id="company_website" name="company_website" type="text" tabIndex={-1} autoComplete="off" />
+      </div>
 
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
         <Field id="firstName" label="First name" error={errors["firstName"]}>

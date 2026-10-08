@@ -502,9 +502,12 @@ export type Database = {
       lead_submissions: {
         Row: {
           created_at: string
+          crm_attempts: number
+          crm_last_error: string | null
           crm_status: string
           email: string
           form_id: string
+          fub_person_id: string | null
           id: string
           idempotency_key: string
           payload: Json
@@ -512,9 +515,12 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          crm_attempts?: number
+          crm_last_error?: string | null
           crm_status?: string
           email: string
           form_id: string
+          fub_person_id?: string | null
           id?: string
           idempotency_key: string
           payload: Json
@@ -522,9 +528,12 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          crm_attempts?: number
+          crm_last_error?: string | null
           crm_status?: string
           email?: string
           form_id?: string
+          fub_person_id?: string | null
           id?: string
           idempotency_key?: string
           payload?: Json

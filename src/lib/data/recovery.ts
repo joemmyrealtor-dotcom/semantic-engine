@@ -205,22 +205,22 @@ export const CRM_FAILURE_KINDS: CrmFailureKind[] = [
 export function simulateCrmResponse(kind: CrmFailureKind): CrmSubmitResult {
   switch (kind) {
     case "success":
-      return { ok: true, mode: "hubspot", action: "created", contactId: "CT-SIM-1" };
+      return { ok: true, mode: "fub", action: "created", contactId: "CT-SIM-1" };
     case "duplicate_contact":
       // Duplicate is a success path: the contact is updated, never doubled.
-      return { ok: true, mode: "hubspot", action: "updated", contactId: "CT-SIM-1" };
+      return { ok: true, mode: "fub", action: "updated", contactId: "CT-SIM-1" };
     case "unavailable":
-      return { ok: false, mode: "hubspot", action: "queued", retryable: true, message: "HubSpot unavailable" };
+      return { ok: false, mode: "fub", action: "queued", retryable: true, message: "HubSpot unavailable" };
     case "timeout":
-      return { ok: false, mode: "hubspot", action: "queued", retryable: true, message: "Request timed out" };
+      return { ok: false, mode: "fub", action: "queued", retryable: true, message: "Request timed out" };
     case "http_5xx":
-      return { ok: false, mode: "hubspot", action: "queued", retryable: true, message: "HubSpot 503" };
+      return { ok: false, mode: "fub", action: "queued", retryable: true, message: "HubSpot 503" };
     case "http_4xx":
-      return { ok: false, mode: "hubspot", action: "queued", retryable: false, message: "HubSpot 400 invalid property" };
+      return { ok: false, mode: "fub", action: "queued", retryable: false, message: "HubSpot 400 invalid property" };
     case "partial_failure":
       // Contact landed, deal association failed — retryable, and the retry is
       // duplicate-safe because the contact upsert is idempotent.
-      return { ok: false, mode: "hubspot", action: "queued", retryable: true, message: "Contact created, deal association failed" };
+      return { ok: false, mode: "fub", action: "queued", retryable: true, message: "Contact created, deal association failed" };
   }
 }
 
@@ -363,14 +363,13 @@ export async function runLeadRecoveryDrill(opts: {
     const email = `drill-${i}@recovery.test`;
     const key = idempotencyKeyFor({ email, formId: "recovery-drill" });
     keys.push(key);
-    enqueueDelivery({ payload: demoPayload(email), pipeline: "seller", formId: "recovery-drill", idempotencyKey: key });
+    enqueueDelivery({ payload: demoPayload(email), pipeline: "seller", formId: "recovery-drill" });
   }
   // Duplicate submission of the first lead — must not create a second record.
   enqueueDelivery({
     payload: demoPayload("drill-0@recovery.test"),
     pipeline: "seller",
     formId: "recovery-drill",
-    idempotencyKey: keys[0]!,
   });
 
   await flushQueue(scriptedTransport([outageKind]));

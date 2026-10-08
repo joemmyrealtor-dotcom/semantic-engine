@@ -12,14 +12,10 @@ import { scoreLead, intentVisitCount, type LeadScore } from "./lead-scoring";
 import { trackAction } from "./analytics";
 import { submitCrmLead } from "./lead-capture.functions";
 import {
-  dueRecords,
   enqueueDelivery,
-
-  flushQueue,
-  isBulkDeliveryPaused,
-  sendRecord,
-
-  idempotencyKeyFor,
+  removeRecord,
+  sendRecordWithResult,
+  loadQueue,
   type LeadDelivery,
   type Transport,
 } from "./lead-queue";
@@ -133,6 +129,8 @@ export interface LeadCaptureInput {
   readinessLevel?: string;
   qualification?: LeadQualification;
   attribution?: Attribution | null;
+  /** Bot-check signals: honeypot value and time spent filling the form. */
+  bot?: { hp: string; elapsedMs: number };
 }
 
 export function buildCrmLeadPayload(
@@ -213,13 +211,14 @@ export interface LeadCaptureOutcome {
 }
 
 /** The transport used by the delivery queue: one HubSpot upsert per record. */
-export const hubspotTransport: Transport = record =>
+export const leadEndpointTransport: Transport = record =>
   submitCrmLead({
     data: {
       properties: record.payload as unknown as Record<string, string | number | boolean>,
       pipeline: record.pipeline,
       formId: record.formId,
       idempotencyKey: record.idempotencyKey,
+      ...(record.bot ? { bot: record.bot } : {}),
     },
   });
 
@@ -229,40 +228,24 @@ export const hubspotTransport: Transport = record =>
  */
 export async function captureLead(
   input: LeadCaptureInput,
-  transport: Transport = hubspotTransport,
+  transport: Transport = leadEndpointTransport,
 ): Promise<LeadCaptureOutcome> {
   const score = scoreLeadFor(input);
   const payload = buildCrmLeadPayload({ ...input, score });
   const pipeline = pipelineForSituation(input.values.situation).id;
 
-  queueLead(payload);
-
-  const idempotencyKey = idempotencyKeyFor({
-    email: input.values.email,
-    formId: input.formId,
-    ...(input.guideId ? { guideId: input.guideId } : {}),
-    ...(input.assessmentId ? { assessmentId: input.assessmentId } : {}),
-  });
-  const { record, duplicate } = enqueueDelivery({
+  // Browser backup first (session-only, 24h), then send.
+  const { record } = enqueueDelivery({
     payload,
     pipeline,
     formId: input.formId,
-    idempotencyKey,
+    ...(input.bot ? { bot: input.bot } : {}),
   });
-
-  // While bulk delivery is paused (default), deliver only this conversion —
-  // never drain historical queue records implicitly. A record that is already
-  // delivered (or waiting on backoff) is left untouched.
-  const dueNow = dueRecords().some(r => r.id === record.id);
-  const delivery = isBulkDeliveryPaused()
-    ? dueNow
-      ? await sendRecord(record, transport)
-      : record
-    : ((await flushQueue(transport)).find(r => r.id === record.id) ?? record);
-
-
+  const { next: delivery, duplicate } = await sendRecordWithResult(record, transport);
 
   const delivered = delivery.status === "delivered";
+  // Confirmed database save: clear the browser copy immediately.
+  if (delivered) removeRecord(record.id);
   if (!duplicate && delivered) {
     trackAction(input.assessmentId || input.guideId ? "lead_submitted" : "contact_submitted", {
       formId: input.formId,
@@ -278,29 +261,9 @@ export async function captureLead(
 }
 
 
-const STORE_KEY = "lf.leads.v1";
-
-/** Retain the payload locally so nothing is lost if the CRM is unreachable. */
-export function queueLead(payload: CrmLeadPayload): void {
-  if (typeof window === "undefined") return;
-  try {
-    const raw = window.localStorage.getItem(STORE_KEY);
-    const list = raw ? (JSON.parse(raw) as CrmLeadPayload[]) : [];
-    list.push(payload);
-    window.localStorage.setItem(STORE_KEY, JSON.stringify(list.slice(-50)));
-  } catch {
-    /* storage unavailable — submission already went to the CRM transport */
-  }
-}
-
+/** Unsent drafts held in this browser tab (session storage, 24h). */
 export function queuedLeads(): CrmLeadPayload[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = window.localStorage.getItem(STORE_KEY);
-    return raw ? (JSON.parse(raw) as CrmLeadPayload[]) : [];
-  } catch {
-    return [];
-  }
+  return loadQueue().map(r => r.payload);
 }
 
 export const CONSENT_TEXT =

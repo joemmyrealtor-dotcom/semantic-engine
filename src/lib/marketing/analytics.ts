@@ -7,7 +7,7 @@
 //   - first-touch and latest-touch attribution attached to every event
 //   - nothing is forwarded to vendors without analytics consent
 
-import { readAttribution, readLatestAttribution } from "./attribution";
+import { readAttribution, readLatestAttribution, referrerHost, safeUtm } from "./attribution";
 import { analyticsAllowed } from "./consent";
 import { recordConversionEvent } from "./conversion-store";
 
@@ -142,13 +142,13 @@ export function trackEvent(
 
   const payload: MarketingEvent = {
     event,
-    source: last?.source ?? "direct",
-    medium: last?.medium ?? "none",
-    campaign: last?.campaign ?? "(none)",
-    content: last?.content ?? "",
-    referrer: stripQuery(last?.referrer ?? ""),
-    originalSource: first?.source ?? "direct",
-    originalCampaign: first?.campaign ?? "(none)",
+    source: safeUtm(last?.source, "direct"),
+    medium: safeUtm(last?.medium, "none"),
+    campaign: safeUtm(last?.campaign, "(none)"),
+    content: safeUtm(last?.content),
+    referrer: referrerHost(last?.referrer?.includes("://") ? last.referrer : last?.referrer ? `https://${last.referrer}` : ""),
+    originalSource: safeUtm(first?.source, "direct"),
+    originalCampaign: safeUtm(first?.campaign, "(none)"),
     landingPage: stripQuery(first?.landingPage ?? ""),
     pagePath: currentPath(),
     occurredAt: new Date().toISOString(),
