@@ -58,6 +58,10 @@ export interface MarketingEventProps {
   leadClassification?: string;
   leadScore?: number;
   label?: string;
+  formId?: string;
+  pagePath?: string;
+  ctaLocation?: string;
+  success?: boolean;
   /** Optional explicit dedupe key; defaults to name + identifying props. */
   dedupeKey?: string;
 }
@@ -93,9 +97,22 @@ export function scrubValue(value: string): string {
   return value.replace(EMAIL_RE, "[redacted]").replace(PHONE_RE, "[redacted]");
 }
 
+/** Sensitive personal context: lives in the private lead record only. */
+const DROPPED_KEYS = new Set(["city", "situation", "readinessLevel", "leadScore", "leadClassification", "leadTier", "assessmentResult"]);
+
+/** Drop query string and hash from a URL or path before tracking. */
+export function stripQuery(url: string): string {
+  return url.split(/[?#]/)[0] ?? "";
+}
+
+function currentPath(): string {
+  return typeof window === "undefined" ? "" : window.location.pathname;
+}
+
 function scrubProps(props: MarketingEventProps): MarketingEventProps {
   const out: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(props)) {
+    if (DROPPED_KEYS.has(k)) continue;
     out[k] = typeof v === "string" ? scrubValue(v) : v;
   }
   return out as MarketingEventProps;
@@ -113,7 +130,7 @@ export function trackEvent(
   const { dedupeKey, ...rest } = scrubProps(props);
   const key =
     dedupeKey ??
-    [event, rest.guideId, rest.assessmentId, rest.city, rest.label].filter(Boolean).join("|");
+    [event, rest.guideId, rest.assessmentId, rest.label].filter(Boolean).join("|");
 
   // Repeatable actions (submissions, clicks) are allowed to fire again only
   // when they carry a distinct dedupe key; view-style events fire once.
@@ -129,10 +146,11 @@ export function trackEvent(
     medium: last?.medium ?? "none",
     campaign: last?.campaign ?? "(none)",
     content: last?.content ?? "",
-    referrer: last?.referrer ?? "",
+    referrer: stripQuery(last?.referrer ?? ""),
     originalSource: first?.source ?? "direct",
     originalCampaign: first?.campaign ?? "(none)",
-    landingPage: first?.landingPage ?? "",
+    landingPage: stripQuery(first?.landingPage ?? ""),
+    pagePath: currentPath(),
     occurredAt: new Date().toISOString(),
     ...rest,
   };

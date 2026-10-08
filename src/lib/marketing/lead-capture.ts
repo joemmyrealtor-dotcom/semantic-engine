@@ -208,6 +208,8 @@ export interface LeadCaptureOutcome {
   pipeline: string;
   delivery: LeadDelivery;
   duplicate: boolean;
+  /** True only after the lead endpoint confirmed it saved the lead. */
+  delivered: boolean;
 }
 
 /** The transport used by the delivery queue: one HubSpot upsert per record. */
@@ -260,20 +262,19 @@ export async function captureLead(
 
 
 
-  if (!duplicate) {
+  const delivered = delivery.status === "delivered";
+  if (!duplicate && delivered) {
     trackAction(input.assessmentId || input.guideId ? "lead_submitted" : "contact_submitted", {
-      situation: input.values.situation,
-      city: input.values.city,
+      formId: input.formId,
+      ctaLocation: input.formId,
+      success: true,
       ...(input.guideId ? { leadMagnet: input.guideId, guideId: input.guideId } : {}),
       ...(input.assessmentId ? { assessmentId: input.assessmentId } : {}),
-      ...(input.readinessLevel ? { readinessLevel: input.readinessLevel } : {}),
-      leadClassification: score.classification,
-      leadScore: score.points,
       label: input.formId,
     });
   }
 
-  return { payload, score, pipeline, delivery, duplicate };
+  return { payload, score, pipeline, delivery, duplicate, delivered };
 }
 
 
