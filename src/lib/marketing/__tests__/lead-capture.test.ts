@@ -13,6 +13,7 @@ import {
 import { resetEvents, recentEvents, trackEvent, scrubValue } from "@/lib/marketing/analytics";
 import { setConsent, resetConsent } from "@/lib/marketing/consent";
 import { captureLead, leadFormSchema, queuedLeads } from "@/lib/marketing/lead-capture";
+import { stripQuery } from "@/lib/marketing/analytics";
 import {
   applyResult,
   backoffMs,
@@ -288,14 +289,44 @@ describe("queue reliability", () => {
 });
 
 describe("conversion dashboard", () => {
-  it("aggregates the funnel by city and situation", async () => {
+  it("keeps city and situation out of the funnel", async () => {
     trackEvent("page_view", { label: "/guides", city: "Irvine", situation: "sellers" });
     await captureLead(
       { values: validValues, leadSource: "guide", campaign: "c", formId: "guide:a", guideId: "LM-001" },
       ok(),
     );
     const metrics = computeConversionMetrics(loadConversionEvents());
-    expect(metrics.byCity.find(r => r.key === "Irvine")?.conversions).toBe(1);
-    expect(metrics.hotLeads + metrics.qualifiedLeads).toBeGreaterThan(0);
+    // Owner decision: city and situation never enter analytics.
+    expect(metrics.byCity).toHaveLength(0);
+    expect(metrics.bySituation).toHaveLength(0);
+  });
+});
+
+describe("owner tracking decision (Oct 8 2026)", () => {
+  it("fires no submission event when the lead endpoint fails", async () => {
+    setConsent({ analytics: "granted" });
+    const out = await captureLead(
+      { values: validValues, leadSource: "seller", campaign: "c", formId: "sellers:home-value" },
+      transient,
+    );
+    expect(out.delivered).toBe(false);
+    expect(recentEvents().filter(e => e.event === "contact_submitted")).toHaveLength(0);
+  });
+
+  it("fires exactly one event after confirmed delivery, without city or situation", async () => {
+    const out = await captureLead(
+      { values: validValues, leadSource: "seller", campaign: "c", formId: "sellers:home-value" },
+      ok(),
+    );
+    expect(out.delivered).toBe(true);
+    const evs = recentEvents().filter(e => e.event === "contact_submitted");
+    expect(evs).toHaveLength(1);
+    expect(evs[0]?.formId).toBe("sellers:home-value");
+    expect(evs[0]?.success).toBe(true);
+    expect(JSON.stringify(evs[0])).not.toMatch(/"city"|"situation"|Irvine/);
+  });
+
+  it("strips query strings from tracked URLs", () => {
+    expect(stripQuery("/sellers?utm_source=x#top")).toBe("/sellers");
   });
 });

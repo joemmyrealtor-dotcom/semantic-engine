@@ -36,7 +36,7 @@ export function SellerConversion() {
               <p className="mt-4 text-sm">
                 Prefer to talk now?{" "}
                 <a className="font-medium text-heritage underline" href={LICENSE.phoneHref}
-                  onClick={() => trackAction("phone_clicked", { label: "seller-thank-you" })}>
+                  onClick={() => trackAction("phone_clicked", { label: "seller_thank_you_phone", ctaLocation: "seller_thank_you_phone" })}>
                   Call Joe at (562) 640-1466.
                 </a>
               </p>
@@ -71,7 +71,7 @@ export function SellerConversion() {
         </div>
         <p className="mt-6 text-sm">
           <Link to="/contact" className="font-medium text-heritage underline"
-            onClick={() => trackAction("consultation_clicked", { label: "seller-hooks" })}>
+            onClick={() => trackAction("consultation_clicked", { label: "seller_questions_cta", ctaLocation: "seller_questions_cta" })}>
             Talk through your situation with Joe
           </Link>
         </p>

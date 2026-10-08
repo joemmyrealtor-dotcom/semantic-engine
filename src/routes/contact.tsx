@@ -25,12 +25,12 @@ function PublicMarketingRoute() {
         </p>
         <ul className="mt-4 space-y-2 text-sm">
           <li>
-            <a className="font-medium text-heritage underline" href={LICENSE.phoneHref} onClick={() => trackAction("phone_clicked", { label: "contact" })}>
+            <a className="font-medium text-heritage underline" href={LICENSE.phoneHref} onClick={() => trackAction("phone_clicked", { label: "contact_phone", ctaLocation: "contact_phone" })}>
               {LICENSE.phone}
             </a>
           </li>
           <li>
-            <a className="font-medium text-heritage underline" href={LICENSE.emailHref} onClick={() => trackAction("email_clicked", { label: "contact" })}>
+            <a className="font-medium text-heritage underline" href={LICENSE.emailHref} onClick={() => trackAction("email_clicked", { label: "contact_email", ctaLocation: "contact_email" })}>
               {LICENSE.email}
             </a>
           </li>

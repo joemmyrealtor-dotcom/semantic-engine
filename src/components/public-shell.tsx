@@ -109,11 +109,11 @@ function LicenseDisclosure() {
         Responsible broker: {LICENSE.responsibleBroker}, DRE #{LICENSE.responsibleBrokerDre}
       </p>
       <p>
-        <a className="hover:text-heritage" href={LICENSE.phoneHref} onClick={() => trackAction("phone_clicked", { label: "footer" })}>
+        <a className="hover:text-heritage" href={LICENSE.phoneHref} onClick={() => trackAction("phone_clicked", { label: "footer_phone", ctaLocation: "footer_phone" })}>
           {LICENSE.phone}
         </a>
         {" · "}
-        <a className="hover:text-heritage" href={LICENSE.emailHref} onClick={() => trackAction("email_clicked", { label: "footer" })}>
+        <a className="hover:text-heritage" href={LICENSE.emailHref} onClick={() => trackAction("email_clicked", { label: "footer_email", ctaLocation: "footer_email" })}>
           {LICENSE.email}
         </a>
       </p>
