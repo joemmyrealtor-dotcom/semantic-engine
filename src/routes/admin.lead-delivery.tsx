@@ -17,7 +17,7 @@ import {
   type LeadDelivery,
 } from "@/lib/marketing/lead-queue";
 
-import { hubspotTransport } from "@/lib/marketing/lead-capture";
+import { leadEndpointTransport } from "@/lib/marketing/lead-capture";
 
 export const Route = createFileRoute("/admin/lead-delivery")({
   head: () => ({
@@ -105,7 +105,7 @@ function LeadDeliveryPanel() {
             size="sm"
             onClick={async () => {
               setBusy("all");
-              await flushQueue(hubspotTransport, Date.now() + 60 * 60_000);
+              await flushQueue(leadEndpointTransport, Date.now() + 60 * 60_000);
               setBusy(null);
               refresh();
             }}
@@ -164,7 +164,7 @@ function LeadDeliveryPanel() {
                     disabled={busy !== null || r.status === "delivered"}
                     onClick={async () => {
                       setBusy(r.id);
-                      await retryDelivery(r.id, hubspotTransport);
+                      await retryDelivery(r.id, leadEndpointTransport);
                       setBusy(null);
                       refresh();
                     }}

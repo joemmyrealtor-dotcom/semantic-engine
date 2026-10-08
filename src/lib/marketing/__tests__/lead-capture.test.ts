@@ -174,7 +174,8 @@ describe("lead capture and CRM mapping", () => {
     expect(payload.lf_lead_signals).toContain("Timeline");
     expect(delivery.status).toBe("delivered");
     expect(delivery.hubspotContactId).toBe("C-1");
-    expect(queuedLeads()).toHaveLength(1);
+    // Confirmed save clears the browser copy.
+    expect(queuedLeads()).toHaveLength(0);
   });
 
   it("promotes only qualified intent to a deal", () => {
@@ -184,44 +185,48 @@ describe("lead capture and CRM mapping", () => {
   });
 });
 
-describe("deduplication", () => {
+describe("deduplication and browser copy", () => {
   const capture = (over: Record<string, unknown>, t: Transport) =>
     captureLead(
       { values: validValues, leadSource: "guide", campaign: "c", formId: "guide:a", ...over } as never,
       t,
     );
 
-  it("same email + same guide is one delivery", async () => {
-    const t = ok();
-    await capture({ guideId: "LM-001" }, t);
-    const second = await capture({ guideId: "LM-001" }, t);
-    expect(second.duplicate).toBe(true);
-    expect(loadQueue()).toHaveLength(1);
-    expect(t).toHaveBeenCalledTimes(1);
+  it("clears the browser copy immediately after a confirmed save", async () => {
+    await capture({ guideId: "LM-001" }, ok());
+    expect(loadQueue()).toHaveLength(0);
+    expect(window.localStorage.getItem("lf.leads.v1")).toBeNull();
   });
 
-  it("same email + different guide is a contact update, not a new contact", async () => {
-    const t = ok();
-    await capture({ guideId: "LM-001", formId: "guide:a" }, t);
-    await capture({ guideId: "LM-002", formId: "guide:b" }, t);
-    const q = loadQueue();
-    expect(q).toHaveLength(2);
-    expect(new Set(q.map(r => r.payload.email)).size).toBe(1);
-    expect(new Set(q.map(r => r.idempotencyKey)).size).toBe(2);
+  it("keeps a failed draft in session storage with a 24-hour expiry", async () => {
+    await capture({ guideId: "LM-001" }, transient);
+    const [d] = loadQueue();
+    expect(window.sessionStorage.getItem("lf.lead-drafts.v2")).toContain(d!.id);
+    expect(Date.parse(d!.expiresAt!) - Date.parse(d!.createdAt)).toBe(24 * 60 * 60 * 1000);
+    expect(loadQueue(Date.now() + 25 * 60 * 60 * 1000)).toHaveLength(0);
   });
 
-  it("assessment plus guide, returning campaign, and repeat device submissions stay unique", async () => {
-    const t = ok();
-    await capture({ guideId: "LM-001", formId: "guide:a" }, t);
-    await capture({ assessmentId: "AS-001", formId: "assessment:seller" }, t);
-    setLocation("?utm_source=facebook&utm_medium=social&utm_campaign=retarget");
-    captureAttribution();
-    await capture({ guideId: "LM-001", formId: "guide:a" }, t); // repeat submit
-    expect(loadQueue()).toHaveLength(2);
-    expect(deliveryStats().delivered).toBe(2);
+  it("retries a failed draft with the same client-generated key", async () => {
+    const seen: string[] = [];
+    const fail: Transport = vi.fn(async r => { seen.push(r.idempotencyKey); return { ok: false, mode: "database", action: "queued", retryable: true, message: "down" }; });
+    await capture({ guideId: "LM-001" }, fail);
+    await capture({ guideId: "LM-001" }, fail);
+    expect(seen).toHaveLength(2);
+    expect(seen[0]).toBe(seen[1]);
+    expect(seen[0]!.length).toBeGreaterThanOrEqual(16);
+    expect(seen[0]).not.toContain("joe@example.com");
   });
 
-  it("derives a stable idempotency key", () => {
+  it("fires no event when the server reports a duplicate key", async () => {
+    resetEvents();
+    const dup: Transport = vi.fn(async () => ({ ok: true, mode: "database" as const, action: "updated" as const, duplicate: true, submissionId: "S-1" }));
+    const out = await capture({ guideId: "LM-001" }, dup);
+    expect(out.delivered).toBe(true);
+    expect(out.duplicate).toBe(true);
+    expect(recentEvents().filter(e => e.event === "lead_submitted")).toHaveLength(0);
+  });
+
+  it("derives a stable legacy idempotency key", () => {
     expect(idempotencyKeyFor({ email: "A@B.com ", formId: "f", guideId: "g" })).toBe(
       idempotencyKeyFor({ email: "a@b.com", formId: "f", guideId: "g" }),
     );
@@ -328,5 +333,28 @@ describe("owner tracking decision (Oct 8 2026)", () => {
 
   it("strips query strings from tracked URLs", () => {
     expect(stripQuery("/sellers?utm_source=x#top")).toBe("/sellers");
+  });
+});
+
+describe("lead endpoint protections", () => {
+  it("rejects bots: filled honeypot or instant submit", async () => {
+    const { looksLikeBot, MIN_FILL_MS } = await vi.importActual<typeof import("@/lib/marketing/lead-capture.functions")>("@/lib/marketing/lead-capture.functions");
+    expect(looksLikeBot({ hp: "spam.com", elapsedMs: 10_000 })).toBe(true);
+    expect(looksLikeBot({ hp: "", elapsedMs: 500 })).toBe(true);
+    expect(looksLikeBot(undefined)).toBe(true);
+    expect(looksLikeBot({ hp: "", elapsedMs: MIN_FILL_MS + 1 })).toBe(false);
+  });
+
+  it("limits each visitor to 5 submissions per 10 minutes", async () => {
+    const { RATE_LIMIT } = await vi.importActual<typeof import("@/lib/marketing/lead-capture.functions")>("@/lib/marketing/lead-capture.functions");
+    expect(RATE_LIMIT).toEqual({ windowSeconds: 600, max: 5 });
+  });
+
+  it("only approved UTM tokens and referrer host names are kept", async () => {
+    const { safeUtm, referrerHost } = await import("@/lib/marketing/attribution");
+    expect(safeUtm("Google")).toBe("google");
+    expect(safeUtm("<script>", "direct")).toBe("direct");
+    expect(safeUtm("a b c", "x")).toBe("x");
+    expect(referrerHost("https://www.google.com/search?q=sell+inherited+home")).toBe("google.com");
   });
 });
