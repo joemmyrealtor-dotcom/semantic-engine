@@ -15,6 +15,20 @@
       "when": 1791480469937,
       "tag": "0001_lead_submissions_crm_tracking",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791559708613,
+      "tag": "0002_lead_delivery_retry",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791559833289,
+      "tag": "0003_enable_cron_net",
+      "breakpoints": true
     }
   ]
 }

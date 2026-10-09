@@ -89,6 +89,7 @@ import { Route as PublicationsNewRouteImport } from './routes/publications.new'
 import { Route as ReleasesIdRouteImport } from './routes/releases.$id'
 import { Route as LocalClusterIndexRouteImport } from './routes/local.$cluster.index'
 import { Route as LocalClusterCityRouteImport } from './routes/local.$cluster.$city'
+import { Route as ApiPublicHooksLeadDeliveryRouteImport } from './routes/api/public/hooks/lead-delivery'
 import { Route as ApiPublicV1SplatRouteImport } from './routes/api/public/v1/$'
 
 const IndexRoute = IndexRouteImport.update({
@@ -491,6 +492,12 @@ const LocalClusterCityRoute = LocalClusterCityRouteImport.update({
   path: '/local/$cluster/$city',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksLeadDeliveryRoute =
+  ApiPublicHooksLeadDeliveryRouteImport.update({
+    id: '/api/public/hooks/lead-delivery',
+    path: '/api/public/hooks/lead-delivery',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicV1SplatRoute = ApiPublicV1SplatRouteImport.update({
   id: '/api/public/v1/$',
   path: '/api/public/v1/$',
@@ -578,6 +585,7 @@ export interface FileRoutesByFullPath {
   '/publications/': typeof PublicationsIndexRoute
   '/local/$cluster/$city': typeof LocalClusterCityRoute
   '/local/$cluster/': typeof LocalClusterIndexRoute
+  '/api/public/hooks/lead-delivery': typeof ApiPublicHooksLeadDeliveryRoute
   '/api/public/v1/$': typeof ApiPublicV1SplatRoute
 }
 export interface FileRoutesByTo {
@@ -661,6 +669,7 @@ export interface FileRoutesByTo {
   '/publications': typeof PublicationsIndexRoute
   '/local/$cluster/$city': typeof LocalClusterCityRoute
   '/local/$cluster': typeof LocalClusterIndexRoute
+  '/api/public/hooks/lead-delivery': typeof ApiPublicHooksLeadDeliveryRoute
   '/api/public/v1/$': typeof ApiPublicV1SplatRoute
 }
 export interface FileRoutesById {
@@ -745,6 +754,7 @@ export interface FileRoutesById {
   '/publications/': typeof PublicationsIndexRoute
   '/local/$cluster/$city': typeof LocalClusterCityRoute
   '/local/$cluster/': typeof LocalClusterIndexRoute
+  '/api/public/hooks/lead-delivery': typeof ApiPublicHooksLeadDeliveryRoute
   '/api/public/v1/$': typeof ApiPublicV1SplatRoute
 }
 export interface FileRouteTypes {
@@ -830,6 +840,7 @@ export interface FileRouteTypes {
     | '/publications/'
     | '/local/$cluster/$city'
     | '/local/$cluster/'
+    | '/api/public/hooks/lead-delivery'
     | '/api/public/v1/$'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -913,6 +924,7 @@ export interface FileRouteTypes {
     | '/publications'
     | '/local/$cluster/$city'
     | '/local/$cluster'
+    | '/api/public/hooks/lead-delivery'
     | '/api/public/v1/$'
   id:
     | '__root__'
@@ -996,6 +1008,7 @@ export interface FileRouteTypes {
     | '/publications/'
     | '/local/$cluster/$city'
     | '/local/$cluster/'
+    | '/api/public/hooks/lead-delivery'
     | '/api/public/v1/$'
   fileRoutesById: FileRoutesById
 }
@@ -1078,6 +1091,7 @@ export interface RootRouteChildren {
   PublicationsIndexRoute: typeof PublicationsIndexRoute
   LocalClusterCityRoute: typeof LocalClusterCityRoute
   LocalClusterIndexRoute: typeof LocalClusterIndexRoute
+  ApiPublicHooksLeadDeliveryRoute: typeof ApiPublicHooksLeadDeliveryRoute
   ApiPublicV1SplatRoute: typeof ApiPublicV1SplatRoute
 }
 
@@ -1643,6 +1657,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LocalClusterCityRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/lead-delivery': {
+      id: '/api/public/hooks/lead-delivery'
+      path: '/api/public/hooks/lead-delivery'
+      fullPath: '/api/public/hooks/lead-delivery'
+      preLoaderRoute: typeof ApiPublicHooksLeadDeliveryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/v1/$': {
       id: '/api/public/v1/$'
       path: '/api/public/v1/$'
@@ -1756,6 +1777,7 @@ const rootRouteChildren: RootRouteChildren = {
   PublicationsIndexRoute: PublicationsIndexRoute,
   LocalClusterCityRoute: LocalClusterCityRoute,
   LocalClusterIndexRoute: LocalClusterIndexRoute,
+  ApiPublicHooksLeadDeliveryRoute: ApiPublicHooksLeadDeliveryRoute,
   ApiPublicV1SplatRoute: ApiPublicV1SplatRoute,
 }
 export const routeTree = rootRouteImport

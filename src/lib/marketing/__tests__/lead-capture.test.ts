@@ -337,12 +337,21 @@ describe("owner tracking decision (Oct 8 2026)", () => {
 });
 
 describe("lead endpoint protections", () => {
-  it("rejects bots: filled honeypot or instant submit", async () => {
-    const { looksLikeBot, MIN_FILL_MS } = await vi.importActual<typeof import("@/lib/marketing/lead-capture.functions")>("@/lib/marketing/lead-capture.functions");
-    expect(looksLikeBot({ hp: "spam.com", elapsedMs: 10_000 })).toBe(true);
-    expect(looksLikeBot({ hp: "", elapsedMs: 500 })).toBe(true);
-    expect(looksLikeBot(undefined)).toBe(true);
-    expect(looksLikeBot({ hp: "", elapsedMs: MIN_FILL_MS + 1 })).toBe(false);
+  it("rejects a filled honeypot or missing bot block", async () => {
+    const { assessBot } = await vi.importActual<typeof import("@/lib/marketing/lead-delivery-policy")>("@/lib/marketing/lead-delivery-policy");
+    expect(assessBot({ hp: "spam.com", elapsedMs: 10_000 }, 1).reject).toBe(true);
+    expect(assessBot(undefined, 1).reject).toBe(true);
+  });
+
+  it("does not reject a fast first submission (autofill), only flags it", async () => {
+    const { assessBot } = await vi.importActual<typeof import("@/lib/marketing/lead-delivery-policy")>("@/lib/marketing/lead-delivery-policy");
+    expect(assessBot({ hp: "", elapsedMs: 500 }, 1)).toEqual({ reject: false, risk: "fast" });
+  });
+
+  it("rejects a fast submission paired with repeat requests", async () => {
+    const { assessBot } = await vi.importActual<typeof import("@/lib/marketing/lead-delivery-policy")>("@/lib/marketing/lead-delivery-policy");
+    expect(assessBot({ hp: "", elapsedMs: 500 }, 2).reject).toBe(true);
+    expect(assessBot({ hp: "", elapsedMs: 3000 }, 3).reject).toBe(false);
   });
 
   it("limits each visitor to 5 submissions per 10 minutes", async () => {
