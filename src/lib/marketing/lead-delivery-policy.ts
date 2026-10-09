@@ -2,7 +2,12 @@
 
 export type DeliveryStatus = "pending" | "retrying" | "delivered" | "dead_letter";
 
-/** Waits after each failed attempt: 1m, 5m, 15m, 1h, 6h, 24h. */
+/**
+ * Earliest wait after each failed attempt: 1m, 5m, 15m, 1h, 6h, 24h.
+ * These are approximate windows: the scheduled job runs every 5 minutes, so
+ * a retry happens on the first run after its due time (up to ~5 min later).
+ * Every lead is saved to the database before any send, so none is lost.
+ */
 export const RETRY_DELAYS_MS = [
   60_000, 300_000, 900_000, 3_600_000, 21_600_000, 86_400_000,
 ] as const;
