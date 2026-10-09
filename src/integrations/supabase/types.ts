@@ -499,43 +499,96 @@ export type Database = {
           },
         ]
       }
+      lead_delivery_alerts: {
+        Row: {
+          acknowledged: boolean
+          created_at: string
+          id: string
+          kind: string
+          message: string
+          submission_id: string
+        }
+        Insert: {
+          acknowledged?: boolean
+          created_at?: string
+          id?: string
+          kind?: string
+          message: string
+          submission_id: string
+        }
+        Update: {
+          acknowledged?: boolean
+          created_at?: string
+          id?: string
+          kind?: string
+          message?: string
+          submission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_delivery_alerts_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "lead_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_submissions: {
         Row: {
+          bot_risk: string | null
           created_at: string
           crm_attempts: number
           crm_last_error: string | null
           crm_status: string
+          dead_lettered_at: string | null
+          delivered_at: string | null
+          delivery_status: string
           email: string
           form_id: string
           fub_person_id: string | null
           id: string
           idempotency_key: string
+          locked_until: string | null
+          next_attempt_at: string
           payload: Json
           pipeline: string
         }
         Insert: {
+          bot_risk?: string | null
           created_at?: string
           crm_attempts?: number
           crm_last_error?: string | null
           crm_status?: string
+          dead_lettered_at?: string | null
+          delivered_at?: string | null
+          delivery_status?: string
           email: string
           form_id: string
           fub_person_id?: string | null
           id?: string
           idempotency_key: string
+          locked_until?: string | null
+          next_attempt_at?: string
           payload: Json
           pipeline: string
         }
         Update: {
+          bot_risk?: string | null
           created_at?: string
           crm_attempts?: number
           crm_last_error?: string | null
           crm_status?: string
+          dead_lettered_at?: string | null
+          delivered_at?: string | null
+          delivery_status?: string
           email?: string
           form_id?: string
           fub_person_id?: string | null
           id?: string
           idempotency_key?: string
+          locked_until?: string | null
+          next_attempt_at?: string
           payload?: Json
           pipeline?: string
         }
@@ -988,6 +1041,34 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_due_lead_deliveries: {
+        Args: { p_limit: number; p_lock_seconds: number }
+        Returns: {
+          bot_risk: string | null
+          created_at: string
+          crm_attempts: number
+          crm_last_error: string | null
+          crm_status: string
+          dead_lettered_at: string | null
+          delivered_at: string | null
+          delivery_status: string
+          email: string
+          form_id: string
+          fub_person_id: string | null
+          id: string
+          idempotency_key: string
+          locked_until: string | null
+          next_attempt_at: string
+          payload: Json
+          pipeline: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "lead_submissions"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       cleanup_rate_limit_buckets: { Args: never; Returns: number }
       consume_rate_limit: {
         Args: { p_key: string; p_max: number; p_window_seconds: number }
