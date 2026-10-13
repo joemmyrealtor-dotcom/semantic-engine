@@ -47,6 +47,8 @@ function ReferRoute() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [pending, setPending] = useState(false);
   const [done, setDone] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const startedAt = useRef(Date.now());
 
   useEffect(() => {
     trackAction("partner_referral_started", { label: "refer" });
@@ -79,8 +81,18 @@ function ReferRoute() {
     setErrors({});
     setPending(true);
     try {
-      await submitReferral(parsed.data);
+      const out = await submitReferral(parsed.data, {
+        hp: String(fd.get("company_website") ?? ""),
+        elapsedMs: Date.now() - startedAt.current,
+      });
+      if (!out.lead.delivered) {
+        setFailed(true);
+        return;
+      }
+      setFailed(false);
       setDone(true);
+    } catch {
+      setFailed(true);
     } finally {
       setPending(false);
     }
