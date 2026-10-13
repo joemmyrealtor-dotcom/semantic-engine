@@ -1,6 +1,6 @@
 // Task 26 — Secure referral intake: /refer
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { CheckCircle2, Loader2, ShieldCheck } from "lucide-react";
 import { PublicShell } from "@/components/public-shell";
@@ -47,6 +47,8 @@ function ReferRoute() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [pending, setPending] = useState(false);
   const [done, setDone] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const startedAt = useRef(Date.now());
 
   useEffect(() => {
     trackAction("partner_referral_started", { label: "refer" });
@@ -79,8 +81,18 @@ function ReferRoute() {
     setErrors({});
     setPending(true);
     try {
-      await submitReferral(parsed.data);
+      const out = await submitReferral(parsed.data, {
+        hp: String(fd.get("company_website") ?? ""),
+        elapsedMs: Date.now() - startedAt.current,
+      });
+      if (!out.lead.delivered) {
+        setFailed(true);
+        return;
+      }
+      setFailed(false);
       setDone(true);
+    } catch {
+      setFailed(true);
     } finally {
       setPending(false);
     }
@@ -129,8 +141,12 @@ function ReferRoute() {
           <form
             onSubmit={onSubmit}
             noValidate
-            className="mt-8 rounded-lg border border-border bg-card p-6"
+            className="relative mt-8 rounded-lg border border-border bg-card p-6"
           >
+            <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
+              <label htmlFor="company_website">Company website</label>
+              <input id="company_website" name="company_website" type="text" tabIndex={-1} autoComplete="off" />
+            </div>
             <h2 className="font-serif text-2xl text-heritage">About you</h2>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <Field id="partnerName" label="Your name" error={errors["partnerName"]}>
@@ -238,6 +254,12 @@ function ReferRoute() {
               {pending && <Loader2 className="mr-1 size-4 animate-spin" aria-hidden="true" />}
               Send referral
             </Button>
+            {failed && (
+              <p role="alert" className="mt-3 text-sm text-destructive">
+                We couldn't send this referral just now. Please try again, or call Joe at{" "}
+                <a className="underline" href="tel:+15626401466">(562) 640-1466</a>.
+              </p>
+            )}
             <p className="mt-3 text-xs text-muted-foreground">
               No referral fees are paid or accepted. This form is for professional referrals only.
             </p>

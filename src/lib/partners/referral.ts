@@ -73,7 +73,10 @@ export interface ReferralOutcome {
  * Submit a professional referral. Routes to the situation-matched HubSpot
  * pipeline and links the client record to the referring professional.
  */
-export async function submitReferral(values: ReferralValues): Promise<ReferralOutcome> {
+export async function submitReferral(
+  values: ReferralValues,
+  bot?: { hp: string; elapsedMs: number },
+): Promise<ReferralOutcome> {
   const label = partnerType(values.partnerTypeId)?.label ?? "professional";
   const attribution = `${values.partnerName}${values.partnerFirm ? ` — ${values.partnerFirm}` : ""} (${label})`;
 
@@ -94,7 +97,11 @@ export async function submitReferral(values: ReferralValues): Promise<ReferralOu
     leadSource: "partner-referral",
     campaign: `referral:${values.partnerTypeId}`,
     formId: `referral:${values.partnerTypeId}`,
+    ...(bot ? { bot } : {}),
   });
+
+  // Only record the partner relationship once the lead was actually saved.
+  if (!lead.delivered) return { lead, partnerId: "", partnerCreated: false };
 
   // Keep the referring professional in the partner store, deduplicated.
   const { partner, created } = upsertPartner(
